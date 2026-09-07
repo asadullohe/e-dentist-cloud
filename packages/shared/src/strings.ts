@@ -103,3 +103,12 @@ export const SECTION_LABELS = {
   reports: 'Hisobotlar',
   settings: 'Sozlamalar',
 } as const
+
+// Bemorlar
+export const PATIENT_TEXT = {
+  not_found: 'Bemor topilmadi',
+  has_records: 'Bu bemorda tashrif yoki toʻlov yozuvlari bor — avval ularni oʻchirish kerak',
+  created: 'Bemor qoʻshildi',
+  updated: 'Bemor maʼlumoti yangilandi',
+  deleted: 'Bemor oʻchirildi',
+} as const

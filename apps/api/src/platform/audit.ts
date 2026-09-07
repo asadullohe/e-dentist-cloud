@@ -14,6 +14,13 @@ export const AUDIT_ACTION = {
   logged_out: 'logged_out',
   role_changed: 'role_changed',
   staff_changed: 'staff_changed',
+  patient_created: 'patient_created',
+  patient_updated: 'patient_updated',
+  patient_deleted: 'patient_deleted',
+  /// Tibbiy maʼlumot uchun koʻrish ham yoziladi (tz.md 12-boʻlim).
+  /// Faqat kartochka ochilganda — roʻyxat soʻrovlari yozilmaydi, aks holda
+  /// audit jadvali foydasiz shovqinga toʻlib ketadi
+  patient_viewed: 'patient_viewed',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

@@ -7,9 +7,9 @@
 import { randomBytes } from 'node:crypto'
 import { Redis } from 'ioredis'
 
-export const SESSION_COOKIE = 'ed_sessiya'
+export const SESSION_COOKIE = 'ed_session'
 const SESSION_TTL = 60 * 60 * 24 * 7 // 7 kun
-const sessionKey = (id: string) => `sessiya:${id}`
+const sessionKey = (id: string) => `session:${id}`
 
 export interface SessionData {
   userId: string

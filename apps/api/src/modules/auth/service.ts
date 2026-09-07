@@ -73,7 +73,7 @@ export async function register(
     throw errors.validation({ email: AUTH_TEXT.disposable_email })
   }
 
-  const check = await deps.rateLimiter.hit(`royxat:ip:${ip}`, REGISTER_IP_LIMIT, REGISTER_WINDOW)
+  const check = await deps.rateLimiter.hit(`register:ip:${ip}`, REGISTER_IP_LIMIT, REGISTER_WINDOW)
   if (!check.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_registrations)
 
   // Klinikaning id si bazadan emas, shu yerdan: RLS siyosati yozuvni
@@ -150,10 +150,10 @@ export async function verifyEmail(deps: AuthDeps, token: string): Promise<void> 
 }
 
 export async function login(deps: AuthDeps, input: LoginInput, ip: string): Promise<string> {
-  const ipCheck = await deps.rateLimiter.hit(`kirish:ip:${ip}`, LOGIN_IP_LIMIT, LOGIN_WINDOW)
+  const ipCheck = await deps.rateLimiter.hit(`login:ip:${ip}`, LOGIN_IP_LIMIT, LOGIN_WINDOW)
   if (!ipCheck.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_attempts)
 
-  const accountKey = `kirish:hisob:${input.email}`
+  const accountKey = `login:account:${input.email}`
   const accountCheck = await deps.rateLimiter.hit(accountKey, LOGIN_ACCOUNT_LIMIT, LOGIN_WINDOW)
   if (!accountCheck.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_attempts)
 

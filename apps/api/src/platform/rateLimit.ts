@@ -20,7 +20,7 @@ export interface RateLimiter {
 
 export function createRateLimiter(redisUrl: string): RateLimiter {
   const redis = new Redis(redisUrl)
-  const k = (key: string) => `cheklov:${key}`
+  const k = (key: string) => `ratelimit:${key}`
 
   return {
     async hit(key, limit, windowSeconds) {

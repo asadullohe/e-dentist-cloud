@@ -266,8 +266,17 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > bir jadvalda siyosat borligini, va `TENANT_MODELS` soni bazadagi ijarachi
 > jadvallari soniga tengligini. Nazorat qilib koʻrildi — modelni ataylab
 > olib tashlaganda test qizaradi.
-- [ ] **2.2 `patients` moduli** — CRUD, qidiruv (F.I.O. va telefon boʻyicha), sahifalash,
-      + koʻp ijarachilik testi
+- [x] **2.2 `patients` moduli** — CRUD, qidiruv, sahifalash. 18 ta test, shundan
+      4 tasi koʻp ijarachilikka. Sinov muhiti `test-support/harness.ts` ga chiqarildi —
+      keyingi modullar ham shundan foydalanadi
+
+> **Qidiruv apostrofsiz ham topadi**
+>
+> Oʻzbekcha ismlarda apostrof uch xil yoziladi (`Gʻ`, `G'`, `G’`), ustiga odam
+> uni umuman yozmasligi ham mumkin — klaviaturada topish qiyin. Shuning uchun
+> bemorda `fio_search` ustuni bor: `searchKey()` apostrofni butunlay olib
+> tashlaydi. `normalizeName` esa oʻzgarmadi — u takrorlarni aniqlashda
+> ishlatiladi va u yerda apostrof farqi saqlangani maʼqul.
 - [ ] **2.3 Bemorlar sahifasi** — roʻyxat, qidiruv, ustun filtrlari, yangi bemor formasi
 - [ ] **2.4 `packages/teeth`** — `lib/teeth.js` TypeScript ga oʻtkaziladi
       (FDI, sut tishlari, `archLayout`, `bridgeSpan`, materiallar)

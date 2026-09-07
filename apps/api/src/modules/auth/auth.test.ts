@@ -53,10 +53,10 @@ beforeAll(async () => {
   // Hisoblagichlar Redis da qoladi — oldingi ishga tushirishdan
   // qolgani testni yiqitmasin
   for (const k of [
-    'royxat:ip:127.0.0.1',
-    'kirish:ip:127.0.0.1',
-    `kirish:hisob:${EMAIL}`,
-    `kirish:hisob:${LIMIT_EMAIL}`,
+    'register:ip:127.0.0.1',
+    'login:ip:127.0.0.1',
+    `login:account:${EMAIL}`,
+    `login:account:${LIMIT_EMAIL}`,
   ]) {
     await rateLimiter.reset(k)
   }
@@ -231,11 +231,11 @@ describe('kirish va sessiya', () => {
     })
     expect(r.statusCode).toBe(200)
 
-    const c = r.cookies.find((x) => x.name === 'ed_sessiya')
+    const c = r.cookies.find((x) => x.name === 'ed_session')
     expect(c).toBeDefined()
     expect(c?.httpOnly).toBe(true)
     expect(c?.sameSite?.toLowerCase()).toBe('lax')
-    cookie = `ed_sessiya=${c?.value}`
+    cookie = `ed_session=${c?.value}`
   })
 
   it('notoʻgʻri parol va mavjud boʻlmagan pochta — bir xil xato', async () => {
@@ -295,7 +295,7 @@ describe('ruxsat tekshiruvi', () => {
       url: '/api/auth/login',
       payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
     })
-    cookie = `ed_sessiya=${r.cookies.find((x) => x.name === 'ed_sessiya')?.value}`
+    cookie = `ed_session=${r.cookies.find((x) => x.name === 'ed_session')?.value}`
   })
 
   it('egasida patients.read bor — oʻtadi', async () => {
