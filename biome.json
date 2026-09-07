@@ -34,5 +34,34 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/api/src/modules/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "../*/repo*",
+                      "../*/routes*",
+                      "../*/schema*",
+                      "**/modules/*/repo*",
+                      "**/modules/*/routes*",
+                      "**/modules/*/schema*"
+                    ],
+                    "message": "Bir modul boshqa modulning jadvaliga soʻrov yubormaydi — faqat service.ts ga murojaat qiling (tz.md, 2-boʻlim)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

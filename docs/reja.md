@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.3**
+**Hozirgi task: 1.5**
 
 ---
 
@@ -54,13 +54,23 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
       yashirish» sozlamasiga bogʻliq emas (u koʻrinish masalasi → `packages/ui`), va
       raqam guruhlash `toLocaleString` oʻrniga qoʻlda — server va brauzer bir xil
       matn chiqarishi uchun. Maydon nomi `full_name` → `fio` (tz.md modeliga mos)
-- [ ] **1.3 `apps/api` skeleti** — Fastify, `platform/` (konfiguratsiya, log, xatolar),
-      `GET /api/health`. **Diqqat:** konteynerga `TZ=Asia/Tashkent` berilishi shart —
-      aks holda `todayStr()` UTC dan olib, «bugun» besh soatga surilib ketadi
-      → `localhost:3000/api/health` → `{"ok":true,"data":{"status":"ok"}}`
-- [ ] **1.4 Javob shakli va xato ishlovchisi** — `{ok,data}` / `{ok,error:{code,message}}`
-      hamma joyda. Xato matni oʻzbekcha, texnik tafsilot faqat logda
-      → mavjud boʻlmagan URL ham shu shaklda javob qaytaradi
+- [x] **1.3 `apps/api` skeleti** — Fastify 5, `platform/` qatlami: `config.ts`
+      (muhit oʻzgaruvchilari zod bilan tekshiriladi — notoʻgʻri boʻlsa server
+      koʻtarilmaydi), `tz.ts`, `errors.ts`, `javob.ts`, `server.ts`.
+      `GET /api/health` sana va vaqtni ham qaytaradi — vaqt zonasini bir qarashda
+      tekshirish uchun. Vaqt zonasi muhitdan keladi (`TZ=Asia/Tashkent`) va ishga
+      tushishda tasdiqlanadi: ESM da importlar modul tanasidan oldin bajarilgani
+      uchun uni kod ichida oʻrnatib boʻlmaydi
+- [x] **1.4 Javob shakli va xato ishlovchisi** — `AppXato` sinfi, xato kodi → HTTP
+      holati moslashuvi bir joyda. Mavjud boʻlmagan manzil, buzuq JSON va kutilmagan
+      xato — hammasi bir xil shaklda. Texnik tafsilot javobga chiqmasligini test
+      qorovullaydi (baza paroli bor xato otiladi, javobda yoʻqligi tekshiriladi)
+
+> **Modul chegarasi endi lint bilan majburlanadi**
+>
+> `biome.json` da `noRestrictedImports`: bir modul boshqa modulning `repo.ts`,
+> `routes.ts` yoki `schema.ts` iga import qila olmaydi — faqat `service.ts` ga.
+> TZ ning eng muhim arxitektura qoidasi kod koʻrigida qidirilmaydi, lint ushlaydi.
 
 ### Koʻp ijarachilik — eng xavfli qatlam
 
