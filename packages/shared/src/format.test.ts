@@ -7,6 +7,8 @@ import {
   formatDateTime,
   formatMonth,
   formatSom,
+  maskDisplayDate,
+  parseDisplayDate,
   toDbDate,
   todayISO,
 } from './format.js'
@@ -140,5 +142,28 @@ describe('bazaSanasi va kunQoshib', () => {
         .toISOString()
         .slice(0, 10),
     ).toBe('2026-10-09')
+  })
+})
+
+describe('parseDisplayDate va maskDisplayDate', () => {
+  it('KK/OO/YYYY dan YYYY-MM-DD ga oʻgiradi', () => {
+    expect(parseDisplayDate('12/05/1990')).toBe('1990-05-12')
+  })
+
+  it('mavjud boʻlmagan sanani rad etadi', () => {
+    expect(parseDisplayDate('31/02/2020')).toBeNull()
+    expect(parseDisplayDate('12/13/2020')).toBeNull()
+  })
+
+  it('toʻliq boʻlmagan sanani rad etadi', () => {
+    expect(parseDisplayDate('12/05')).toBeNull()
+    expect(parseDisplayDate('')).toBeNull()
+  })
+
+  it('kiritish paytida chiziqcha qoʻyadi', () => {
+    expect(maskDisplayDate('12')).toBe('12')
+    expect(maskDisplayDate('1205')).toBe('12/05')
+    expect(maskDisplayDate('12051990')).toBe('12/05/1990')
+    expect(maskDisplayDate('12/05/1990')).toBe('12/05/1990')
   })
 })

@@ -277,7 +277,22 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > bemorda `fio_search` ustuni bor: `searchKey()` apostrofni butunlay olib
 > tashlaydi. `normalizeName` esa oʻzgarmadi — u takrorlarni aniqlashda
 > ishlatiladi va u yerda apostrof farqi saqlangani maʼqul.
-- [ ] **2.3 Bemorlar sahifasi** — roʻyxat, qidiruv, ustun filtrlari, yangi bemor formasi
+- [x] **2.3 Bemorlar sahifasi** — roʻyxat, qidiruv (kechiktirilgan), sahifalash,
+      qoʻshish/tahrirlash oynasi, oʻchirishni tasdiqlash. shadcn `Table`, `Dialog`,
+      `AlertDialog` bilan. Sana KK/OO/YYYY koʻrinishida kiritiladi va koʻrsatiladi
+      (`maskDisplayDate` / `parseDisplayDate`)
+
+> **Ustun filtrlari keyinroq**
+>
+> TZ da «ustun filtrlari» ham bor. Hozircha bitta umumiy qidiruv qilindi —
+> F.I.O. va telefon boʻyicha. Ustun boʻyicha alohida filtrlar qarzdorlik va
+> tashrif sanasi qoʻshilgandan keyin (2.10) maʼnoli boʻladi.
+
+> **Yon menyu mobil ekranda hali yigʻilmaydi**
+>
+> Jadval va sarlavha tor ekranga moslashdi, lekin yon menyu 224px joy egallab
+> turaveradi. Telefonda kabinetni ochish uchun uni yigʻiladigan qilish kerak —
+> alohida task sifatida bosqich 2 oxirida.
 - [ ] **2.4 `packages/teeth`** — `lib/teeth.js` TypeScript ga oʻtkaziladi
       (FDI, sut tishlari, `archLayout`, `bridgeSpan`, materiallar)
 - [ ] **2.5 `ToothChart` komponenti** — oflayn loyihadan koʻchiriladi,
@@ -298,6 +313,8 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 - [ ] **2.15 Excel: import commit** — yozish, hisobot (qoʻshildi / yangilandi / oʻtkazildi),
       xatolar alohida faylga, `audit_log` ga bitta yozuv
 - [ ] **2.16 `schedule` moduli va Qabul jadvali sahifasi** — oylik kalendar, kunlik roʻyxat
+- [ ] **2.17 Mobil koʻrinish** — yon menyuni yigʻiladigan qilish (shadcn `Sheet`),
+      jadvallarni tor ekranga moslash
 
 ---
 

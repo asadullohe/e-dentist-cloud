@@ -112,3 +112,38 @@ export const PATIENT_TEXT = {
   updated: 'Bemor maʼlumoti yangilandi',
   deleted: 'Bemor oʻchirildi',
 } as const
+
+// Bemorlar sahifasi
+export const PATIENT_UI = {
+  title: 'Bemorlar',
+  add: 'Yangi bemor',
+  edit_title: 'Bemorni tahrirlash',
+  add_title: 'Yangi bemor',
+  search: 'F.I.O. yoki telefon boʻyicha qidirish',
+  empty: 'Hozircha bemor yoʻq. «Yangi bemor» tugmasi bilan qoʻshing',
+  nothing_found: 'Qidiruv boʻyicha hech narsa topilmadi',
+  col_fio: 'F.I.O.',
+  col_phone: 'Telefon',
+  col_age: 'Yoshi',
+  col_address: 'Manzil',
+  fio: 'F.I.O.',
+  phone: 'Telefon',
+  birth_date: 'Tugʻilgan sana',
+  address: 'Manzil',
+  note: 'Izoh',
+  note_hint: 'Allergiya, surunkali kasalliklar',
+  save: 'Saqlash',
+  saving: 'Saqlanmoqda…',
+  cancel: 'Bekor qilish',
+  remove: 'Oʻchirish',
+  removing: 'Oʻchirilmoqda…',
+  remove_title: 'Bemorni oʻchirasizmi?',
+  remove_text: (fio: string) =>
+    `«${fio}» kartochkasi butunlay oʻchiriladi. Bu amalni qaytarib boʻlmaydi.`,
+  total: (n: number) => `Jami: ${n} ta`,
+  years: (n: number) => `${n} yosh`,
+  page_of: (page: number, pages: number) => `${page} / ${pages}`,
+  prev: 'Oldingi',
+  next: 'Keyingi',
+  date_placeholder: 'KK/OO/YYYY',
+} as const

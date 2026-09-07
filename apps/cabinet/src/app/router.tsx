@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
 import { Login } from '@/pages/Login'
+import { Patients } from '@/pages/Patients'
 import { Placeholder } from '@/pages/Placeholder'
 import { Register } from '@/pages/Register'
 import { VerifyEmail } from '@/pages/VerifyEmail'
@@ -36,7 +37,9 @@ export function Router() {
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Dashboard />} />
-          {NAV_SECTIONS.map((section) => (
+          <Route path="patients" element={<Patients />} />
+          {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
+          {NAV_SECTIONS.filter((section) => section.path !== '/patients').map((section) => (
             <Route
               key={section.path}
               path={section.path.slice(1)}

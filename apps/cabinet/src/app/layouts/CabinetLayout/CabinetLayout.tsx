@@ -9,7 +9,7 @@ export function CabinetLayout() {
   return (
     <div className="flex min-h-full">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto px-8 pt-7 pb-12">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 pt-7 pb-12 sm:px-8">
         <TrialBanner clinic={session?.clinic ?? null} />
         <Outlet />
       </main>
