@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.turbo/
+
+# Muhit va maxfiy narsalar — HECH QACHON repoga tushmasin
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Baza va yuklangan fayllar (lokal ishlab chiqishda)
+pgdata/
+minio-data/
+
+.DS_Store
+*.log
