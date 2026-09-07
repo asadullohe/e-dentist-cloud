@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.1**
+**Hozirgi task: 1.2**
 
 ---
 
@@ -44,9 +44,11 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 
 ### Skelet
 
-- [ ] **1.1 Monorepo skeleti** — npm workspaces, `tsconfig.base.json`, prettier, eslint,
-      `apps/` va `packages/` papkalari
-      → `npm install` xatosiz oʻtadi, `npm run typecheck` boʻsh loyihada yashil
+- [x] **1.1 Monorepo skeleti** — npm workspaces (`apps/*`, `packages/*`),
+      `tsconfig.base.json` (qatʼiy rejim + `noUncheckedIndexedAccess`),
+      Biome 2.5 — format va lint bitta asbobda (nuqtali vergulsiz, bir tirnoq —
+      oflayn loyiha uslubi), Vitest, tsx. `@e-dentist/api` `@e-dentist/shared` dan
+      import qila oladi
 - [ ] **1.2 `packages/shared`** — `strings.ts` (barcha oʻzbekcha matnlar), `format.ts`,
       `validation.ts`, `types.ts`. Oflayn loyihadagi `format.js` va `validation.js` dan
       koʻchiriladi va TypeScript ga oʻtkaziladi

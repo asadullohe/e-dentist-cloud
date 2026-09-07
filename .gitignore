@@ -16,3 +16,7 @@ minio-data/
 
 .DS_Store
 *.log
+
+# TypeScript
+*.tsbuildinfo
+coverage/

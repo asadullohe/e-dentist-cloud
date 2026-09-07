@@ -1,0 +1,32 @@
+{
+  "name": "e-dentist-cloud",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "check": "biome check .",
+    "fix": "biome check --write .",
+    "ci": "biome ci .",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "up": "docker compose up -d",
+    "down": "docker compose down",
+    "logs": "docker compose logs -f",
+    "db": "docker compose exec postgres psql -U edentist -d edentist"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@types/node": "^22",
+    "tsx": "^4",
+    "typescript": "^5",
+    "vitest": "^3"
+  }
+}

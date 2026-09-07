@@ -68,7 +68,8 @@ docs: Contabo oʻrniga Hetzner
 ```
 
 - `.env`, kalitlar, `pgdata/`, `node_modules/` hech qachon commit ga tushmaydi
-- Commit **faqat siz aytganingizda** qilinadi
+- Commit **har task oxirida avtomatik** qilinadi (`bosqich-N-...` branchida).
+  `main` ga qoʻshish esa faqat siz aytganingizda — bosqich tugagach
 
 ## 5. Task qachon «tayyor»
 

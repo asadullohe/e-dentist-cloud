@@ -34,7 +34,8 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 ## Texnologiyalar
 
 Node 22 + TypeScript + Fastify · PostgreSQL 16 + Prisma · Redis (sessiya) ·
-MinIO (fayllar) · React 18 + Vite · Docker Compose.
+MinIO (fayllar) · React 18 + Vite · Docker Compose · Biome (format va lint,
+Prettier/ESLint emas) · Vitest.
 
 Monorepo, npm workspaces: `apps/api`, `apps/cabinet`, `apps/admin`,
 `packages/shared`, `packages/ui`, `packages/teeth`.

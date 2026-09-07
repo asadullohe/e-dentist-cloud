@@ -100,6 +100,7 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Excel | SheetJS (`xlsx`) | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi |
 | Matnlar | Bitta modul, oʻzbekcha | Barcha yozuvlar `packages/shared/strings.ts` da. Rus tili keyin qoʻshilsa — bitta fayl nusxalanadi, kodga tegilmaydi |
 | Deploy | Docker Compose | Bitta `docker compose up`. Kubernetes bu hajmda ortiqcha |
+| Format va lint | Biome | Prettier va ESLint oʻrniga bitta asbob: bitta konfiguratsiya fayli, sezilarli darajada tez. Modul chegarasini `noRestrictedImports` bilan majburlab boʻladi |
 
 > **Ochiq eslatma**
 >
