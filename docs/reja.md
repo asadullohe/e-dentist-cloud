@@ -293,10 +293,22 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > Jadval va sarlavha tor ekranga moslashdi, lekin yon menyu 224px joy egallab
 > turaveradi. Telefonda kabinetni ochish uchun uni yigʻiladigan qilish kerak —
 > alohida task sifatida bosqich 2 oxirida.
-- [ ] **2.4 `packages/teeth`** — `lib/teeth.js` TypeScript ga oʻtkaziladi
-      (FDI, sut tishlari, `archLayout`, `bridgeSpan`, materiallar)
-- [ ] **2.5 `ToothChart` komponenti** — oflayn loyihadan koʻchiriladi,
-      maʼlumot manbai HTTP ga almashtiriladi
+- [x] **2.4 `packages/teeth`** — FDI raqamlash, tish turlari, ravoq geometriyasi,
+      holat va material ranglari. 14 ta test. Oʻzbekcha nomlar bu paketda emas,
+      `shared/strings.ts` da (`TOOTH_STATUS_LABELS`, `CROWN_MATERIAL_LABELS`) —
+      qoidaga koʻra barcha matn bir joyda
+- [x] **2.5 `ToothChart` komponenti** — `entities/tooth/ui/`. Faqat chizadi:
+      maʼlumotni props orqali oladi, bosilganini `onPick` bilan xabar qiladi.
+      Tahrirlash oynasi 2.7 da (`features/tooth-edit`).
+      Brauzerda tekshirildi: doimiy xaritada 32 tish, sut xaritasida 20 tish,
+      koʻprik yoʻlagi va 8 bandli izoh
+
+> **Koʻprik modeli oflayndan farq qiladi**
+>
+> Oflayn ilovada koʻprik `from_tooth` va `to_tooth` bilan saqlanardi, oraliq
+> esa `bridgeSpan` bilan hisoblanardi. Bizning sxemada `teeth: Int[]` — toʻliq
+> roʻyxat saqlanadi. Shuning uchun komponent oraliqni hisoblamaydi, tayyor
+> roʻyxatni chizadi.
 - [ ] **2.6 `visits` moduli** — tashriflar, muolajalar, tish xaritasi API
       (`GET/PUT /api/patients/:id/teeth`)
 - [ ] **2.7 Bemor kartochkasi** — Tashriflar va Tish xaritasi boʻlimlari

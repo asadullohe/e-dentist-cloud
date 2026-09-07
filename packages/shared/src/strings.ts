@@ -147,3 +147,35 @@ export const PATIENT_UI = {
   next: 'Keyingi',
   date_placeholder: 'KK/OO/YYYY',
 } as const
+
+// Tish holatlari. Kalitlar bazada saqlanadi, shuning uchun oʻzgarmaydi
+export const TOOTH_STATUS_LABELS = {
+  soglom: 'Sogʻlom',
+  karies: 'Karies',
+  plomba: 'Plomba',
+  koronka: 'Koronka',
+  koprik: 'Quyma tish (koʻprik)',
+  implant: 'Implant',
+  davolanmoqda: 'Davolanmoqda',
+  olingan: 'Olib tashlangan',
+} as const
+
+// Koronka materiallari. Boʻsh kalit — «koʻrsatilmagan»
+export const CROWN_MATERIAL_LABELS = {
+  '': 'Koʻrsatilmagan',
+  keramika: 'Keramika',
+  'metall-keramika': 'Metall-keramika',
+  sirkoniy: 'Sirkoniy',
+  metall: 'Metall (quyma)',
+  plastmassa: 'Plastmassa',
+} as const
+
+// Tish xaritasi
+export const CHART_UI = {
+  chart_label: 'Tish xaritasi',
+  upper_jaw: 'Yuqori jagʻ',
+  lower_jaw: 'Pastki jagʻ',
+  primary_teeth: 'Sut tishlari',
+  bridge_title: (teeth: readonly number[], material: string) =>
+    `Koʻprik ${teeth[0]}–${teeth[teeth.length - 1]} · ${material}`,
+} as const
