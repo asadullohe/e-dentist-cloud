@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.2**
+**Hozirgi task: 1.3**
 
 ---
 
@@ -49,12 +49,14 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
       Biome 2.5 — format va lint bitta asbobda (nuqtali vergulsiz, bir tirnoq —
       oflayn loyiha uslubi), Vitest, tsx. `@e-dentist/api` `@e-dentist/shared` dan
       import qila oladi
-- [ ] **1.2 `packages/shared`** — `strings.ts` (barcha oʻzbekcha matnlar), `format.ts`,
-      `validation.ts`, `types.ts`. Oflayn loyihadagi `format.js` va `validation.js` dan
-      koʻchiriladi va TypeScript ga oʻtkaziladi
-      → `soum()`, `fmtDate()`, `formatUzPhone()` uchun testlar oʻtadi
+- [x] **1.2 `packages/shared`** — `strings.ts`, `format.ts`, `validation.ts`, `types.ts`.
+      39 ta test oʻtadi. Ikkita ataylab qilingan oʻzgarish: `soum()` endi «summalarni
+      yashirish» sozlamasiga bogʻliq emas (u koʻrinish masalasi → `packages/ui`), va
+      raqam guruhlash `toLocaleString` oʻrniga qoʻlda — server va brauzer bir xil
+      matn chiqarishi uchun. Maydon nomi `full_name` → `fio` (tz.md modeliga mos)
 - [ ] **1.3 `apps/api` skeleti** — Fastify, `platform/` (konfiguratsiya, log, xatolar),
-      `GET /api/health`
+      `GET /api/health`. **Diqqat:** konteynerga `TZ=Asia/Tashkent` berilishi shart —
+      aks holda `todayStr()` UTC dan olib, «bugun» besh soatga surilib ketadi
       → `localhost:3000/api/health` → `{"ok":true,"data":{"status":"ok"}}`
 - [ ] **1.4 Javob shakli va xato ishlovchisi** — `{ok,data}` / `{ok,error:{code,message}}`
       hamma joyda. Xato matni oʻzbekcha, texnik tafsilot faqat logda

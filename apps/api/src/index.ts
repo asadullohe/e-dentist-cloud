@@ -1,5 +1,5 @@
-// Fastify serveri bosqich 1.3 da quriladi. Hozircha faqat skelet
-// va workspace ulanishi ishlayotganini tekshirish uchun.
-import { PAKET } from '@e-dentist/shared'
+// Fastify serveri bosqich 1.3 da quriladi. Hozircha shared paket
+// ulanishini tekshirish uchun.
+import { soum, todayStr } from '@e-dentist/shared'
 
-console.log(`e-dentist api · ${PAKET} ulandi`)
+console.log(`e-dentist api · ${todayStr()} · namuna summa: ${soum(1234567)}`)
