@@ -1,16 +1,28 @@
 import { yuklaConfig } from './platform/config.js'
+import { yaratDb } from './platform/db.js'
+import { konsolPochtasi } from './platform/pochta.js'
 import { yaratServer } from './platform/server.js'
+import { yaratSessiyaSaqlagich } from './platform/sessiya.js'
 import { tekshirVaqtZonasi } from './platform/tz.js'
 
 const config = yuklaConfig()
 tekshirVaqtZonasi(config.TZ)
 
-const app = yaratServer(config)
+// Ishga tushirishda cheklangan ulanish — RLS ostida. DATABASE_URL (egasi)
+// faqat migratsiya va seed uchun
+const db = yaratDb(config.APP_DATABASE_URL)
+const sessiyalar = yaratSessiyaSaqlagich(config.REDIS_URL)
+
+const app = yaratServer(config, {
+  db,
+  sessiyalar,
+  pochta: konsolPochtasi((xabar) => app.log.info(xabar)),
+})
 
 // Docker konteynerni toʻxtatganda ochiq soʻrovlar tugashini kutamiz
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    app.close().then(
+    Promise.allSettled([app.close(), sessiyalar.yop(), db.$disconnect()]).then(
       () => process.exit(0),
       () => process.exit(1),
     )

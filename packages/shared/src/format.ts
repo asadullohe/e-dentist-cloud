@@ -89,6 +89,23 @@ export function age(birthDate: string | null | undefined): number | null {
   return a
 }
 
+// Postgres DATE ustuniga yoziladigan sana.
+//
+// Tuzoq: `new Date()` ga setHours(0,0,0,0) qoʻysak mahalliy yarim tun chiqadi.
+// Toshkent UTC+5 boʻlgani uchun 21-sentabr 00:00 mahalliy = 20-sentabr 19:00
+// UTC, va DATE ustuni kunni 20-sentabr deb saqlaydi — bir kun yoʻqoladi.
+// Shuning uchun kun mahalliy vaqtda olinadi, lekin UTC yarim tuni yoziladi.
+export function bazaSanasi(d: Date = new Date()): Date {
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+}
+
+// Bugundan N kun keyingi sana — DATE ustuni uchun
+export function kunQoshib(kun: number, dan: Date = new Date()): Date {
+  const d = new Date(dan)
+  d.setDate(d.getDate() + kun)
+  return bazaSanasi(d)
+}
+
 // Qarz = tashriflar summasi − toʻlovlar. Manfiy boʻlsa bemor oldindan toʻlagan
 export function debtOf(p: { charges?: number; paid?: number } | null | undefined): number {
   return (p?.charges ?? 0) - (p?.paid ?? 0)

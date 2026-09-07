@@ -41,3 +41,20 @@ export const ROL_NOMI = {
   texnik: 'Texnik',
   kuzatuvchi: 'Kuzatuvchi',
 } as const
+
+// Kirish va roʻyxatdan oʻtish
+export const AUTH = {
+  klinika_nomi_qisqa: 'Klinika nomi kamida 2 belgi boʻlsin',
+  fio_qisqa: 'Ism-familiyani toʻliq yozing',
+  email_notogri: 'Pochta manzili notoʻgʻri yozilgan',
+  parol_qisqa: 'Parol kamida 8 belgidan iborat boʻlsin',
+  parol_uzun: 'Parol juda uzun',
+  telefon_notogri: 'Telefon raqami toʻliq emas',
+  email_band: 'Bu pochta manzili allaqachon roʻyxatdan oʻtgan',
+  // Ataylab umumiy: pochta bor-yoʻqligini oshkor qilmaydi
+  kirish_xato: 'Pochta yoki parol notoʻgʻri',
+  hisob_faolsiz: 'Hisobingiz faolsizlantirilgan. Klinika egasiga murojaat qiling',
+  pochta_tasdiqlanmagan: 'Avval pochtangizni tasdiqlang — havola xatingizga yuborilgan',
+  havola_yaroqsiz: 'Havola yaroqsiz yoki muddati oʻtgan',
+  xat_mavzusi: 'E-Dentist — pochtangizni tasdiqlang',
+} as const

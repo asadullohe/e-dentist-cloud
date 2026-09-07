@@ -45,3 +45,11 @@ SELECT format(
   'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO %I',
   current_user, :'app_user')
 \gexec
+
+-- Kelajakda migratsiya yaratadigan funksiyalarga ham. Bu SECURITY DEFINER
+-- funksiyalar uchun kerak: kirish va pochtani tasdiqlash sessiya kontekstisiz
+-- ishlaydi, RLS esa users jadvalini yopib turadi
+SELECT format(
+  'ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO %I',
+  current_user, :'app_user')
+\gexec

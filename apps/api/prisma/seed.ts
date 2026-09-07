@@ -5,18 +5,11 @@
 // ular har klinikaga nusxalanadi va oʻsha klinikaniki boʻlib qoladi, shuning
 // uchun «umumiy shablon qatori» degan tushuncha kerak emas.
 
-import { ROL_SHABLONI_TAVSIFI, ROL_SHABLONLARI } from '@e-dentist/shared'
+import { kunQoshib, ROL_SHABLONI_TAVSIFI, ROL_SHABLONLARI } from '@e-dentist/shared'
 import { yaratDb } from '../src/platform/db.js'
 
 const DEMO_KLINIKA_ID = '00000000-0000-7000-8000-000000000001'
 const SINOV_KUNI = 14
-
-function sinovTugashSanasi(): Date {
-  const d = new Date()
-  d.setDate(d.getDate() + SINOV_KUNI)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
 
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
@@ -35,7 +28,7 @@ async function main(): Promise<void> {
       name: 'Namuna stomatologiya',
       phone: '+998901234567',
       isTrial: true,
-      expiresAt: sinovTugashSanasi(),
+      expiresAt: kunQoshib(SINOV_KUNI),
     },
     update: {},
   })

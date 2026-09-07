@@ -16,6 +16,8 @@ const Sxema = z.object({
   APP_DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16, 'kamida 16 belgi boʻlishi kerak'),
+  // Tasdiqlash havolasi shu manzilga qurilaadi
+  CABINET_URL: z.string().min(1).default('http://localhost:5173'),
 })
 
 export type Config = z.infer<typeof Sxema>

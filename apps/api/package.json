@@ -8,16 +8,20 @@
     "start": "tsx --env-file=../../.env src/index.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "prisma migrate dev && prisma generate",
     "db:reset": "prisma migrate reset --force",
     "db:seed": "prisma db seed",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:migrate:create": "prisma migrate dev --create-only"
   },
   "dependencies": {
     "@e-dentist/shared": "*",
+    "@fastify/cookie": "^11.1.2",
+    "@node-rs/argon2": "^2.2.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "fastify": "^5.12.3",
+    "ioredis": "^6.0.0",
     "zod": "^4.5.4"
   },
   "devDependencies": {

@@ -2,11 +2,23 @@
 // serverni portga bogʻlamasdan, app.inject() bilan tekshira oladi.
 
 import { randomUUID } from 'node:crypto'
+import cookie from '@fastify/cookie'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
+import { authRoutes } from '../modules/auth/routes.js'
 import { healthRoutes } from '../modules/health/routes.js'
 import type { Config } from './config.js'
+import type { Db } from './db.js'
 import { AppXato, xato } from './errors.js'
 import { xatoJavobi } from './javob.js'
+import { sessiyaHooki } from './kirish.js'
+import type { PochtaYuboruvchi } from './pochta.js'
+import type { SessiyaSaqlagich } from './sessiya.js'
+
+export interface ServerDeps {
+  db: Db
+  sessiyalar: SessiyaSaqlagich
+  pochta: PochtaYuboruvchi
+}
 
 // Har qanday xatoni AppXato ga keltiradi. Foydalanuvchi hech qachon
 // texnik tafsilotni koʻrmaydi — u faqat logga tushadi.
@@ -39,7 +51,7 @@ function loggerSozlamasi(config: Config) {
   }
 }
 
-export function yaratServer(config: Config): FastifyInstance {
+export function yaratServer(config: Config, deps: ServerDeps): FastifyInstance {
   const app = Fastify({
     logger: loggerSozlamasi(config),
     // Soʻrov identifikatori har logda boʻlsin: tibbiy maʼlumot bilan
@@ -62,7 +74,20 @@ export function yaratServer(config: Config): FastifyInstance {
     reply.status(404).send(xatoJavobi(xato.notFound()))
   })
 
+  app.register(cookie)
+  app.addHook('onRequest', sessiyaHooki(deps.sessiyalar))
+
   app.register(healthRoutes, { prefix: '/api' })
+  app.register(authRoutes, {
+    prefix: '/api',
+    deps: {
+      db: deps.db,
+      sessiyalar: deps.sessiyalar,
+      pochta: deps.pochta,
+      cabinetUrl: config.CABINET_URL,
+    },
+    xavfsizCookie: config.NODE_ENV === 'production',
+  })
 
   return app
 }

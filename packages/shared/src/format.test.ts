@@ -1,5 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { age, debtOf, fmtDate, fmtDateTime, fmtMonth, soum, todayStr } from './format.js'
+import {
+  age,
+  bazaSanasi,
+  debtOf,
+  fmtDate,
+  fmtDateTime,
+  fmtMonth,
+  kunQoshib,
+  soum,
+  todayStr,
+} from './format.js'
 
 describe('soum', () => {
   it('minglarni boʻshliq bilan ajratadi', () => {
@@ -108,5 +118,27 @@ describe('debtOf', () => {
   it('maydonlar yoʻq boʻlsa nol', () => {
     expect(debtOf(null)).toBe(0)
     expect(debtOf({})).toBe(0)
+  })
+})
+
+describe('bazaSanasi va kunQoshib', () => {
+  // Toshkent UTC+5: mahalliy yarim tun UTC da oldingi kunga tushadi va
+  // DATE ustuni bir kun kam saqlaydi. Shuning uchun UTC yarim tuni yoziladi
+  it('kun mahalliy vaqtdan olinadi, vaqt esa UTC yarim tuni', () => {
+    const d = bazaSanasi(new Date(2026, 8, 21, 23, 30))
+    expect(d.toISOString()).toBe('2026-09-21T00:00:00.000Z')
+  })
+
+  it('kun qoʻshganda ham surilmaydi', () => {
+    const d = kunQoshib(14, new Date(2026, 8, 7, 23, 59))
+    expect(d.toISOString().slice(0, 10)).toBe('2026-09-21')
+  })
+
+  it('oy chegarasidan oʻtadi', () => {
+    expect(
+      kunQoshib(14, new Date(2026, 8, 25))
+        .toISOString()
+        .slice(0, 10),
+    ).toBe('2026-10-09')
   })
 })

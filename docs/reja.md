@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.10**
+**Hozirgi task: 1.13**
 
 ---
 
@@ -120,22 +120,32 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 
 ### auth moduli
 
-- [ ] **1.10 Roʻyxatdan oʻtish** — `POST /api/auth/register`: klinika + egasi yaratiladi,
-      `is_trial = true`, `expires_at = +14 kun`, 5 rol shabloni nusxalanadi.
-      **Diqqat:** klinikaning `id` si kodda yaratilishi kerak (uuid v7), soʻng oʻsha
-      id bilan sessiya ochiladi — aks holda RLS `INSERT` ni rad etadi, chunki
-      `WITH CHECK` qatorning `id` si sessiyadagi klinikaga teng boʻlishini talab qiladi
-      → yangi klinika bazada, egasi `is_owner` roli bilan
-- [ ] **1.11 Pochtani tasdiqlash** — `POST /api/auth/verify`. Lokalda xat konsolga
-      chiqadi (SMTP hali kerak emas)
-      → tasdiqlanmagan hisob kira olmaydi
-- [ ] **1.12 Kirish, chiqish, me** — `argon2id` parol, Redis sessiya,
-      `httpOnly` + `sameSite=lax` cookie.
-      **Diqqat:** kirishda foydalanuvchi pochta boʻyicha izlanadi, klinika esa hali
-      nomaʼlum — ya'ni sessiya konteksti yoʻq va RLS `users` jadvalini yopib turadi.
-      Yechim: `SECURITY DEFINER` funksiya, faqat kerakli maydonlarni qaytaradi
-      (id, clinic_id, password_hash, status). Butun jadvalni ochib qoʻyish emas
-      → `GET /api/me` foydalanuvchi va ruxsatlarini qaytaradi
+- [x] **1.10 Roʻyxatdan oʻtish** — `POST /api/auth/register`. Klinika `id` si kodda
+      yaratiladi (`platform/uuid.ts`, uuid v7) va sessiya oʻsha id bilan ochiladi —
+      RLS `WITH CHECK` shuni talab qiladi. Parol `argon2id`. Takror pochta → `409`
+- [x] **1.11 Pochtani tasdiqlash** — `POST /api/auth/verify`. Bazada kalitning oʻzi
+      emas, `sha256` xeshi. Ishlatilgan kalit oʻchiriladi — ikki marta ishlamaydi.
+      Lokalda xat konsolga chiqadi
+- [x] **1.12 Kirish, chiqish, me** — Redis sessiya, `httpOnly` + `sameSite=lax` cookie.
+      Ikkita `SECURITY DEFINER` funksiya (`auth_find_user`, `auth_verify_email`):
+      kirish paytida klinika hali nomaʼlum va RLS `users` ni yopib turadi. Funksiyalar
+      faqat kerakli maydonlarni qaytaradi, `search_path` qatʼiy belgilangan
+
+> **Sana ustunlarida bir kunlik xato topildi**
+>
+> Sinov muddati 14 kun oʻrniga 13 kun boʻlib chiqdi. Sabab: `DATE` ustuniga
+> **mahalliy** yarim tun yozilardi, Toshkent esa UTC+5 — 21-sentabr 00:00 mahalliy
+> = 20-sentabr 19:00 UTC, baza esa kunni 20-sentabr deb saqlaydi.
+>
+> Yechim `packages/shared` da: `bazaSanasi()` va `kunQoshib()` kunni mahalliy
+> vaqtdan oladi, lekin UTC yarim tunini yozadi. **Har bir `DATE` ustunida shu
+> funksiyalar ishlatiladi** — tashrif, qabul, toʻlov sanalarida ham.
+
+> **Migratsiyadan keyin klient qayta yaratilishi shart**
+>
+> `prisma migrate dev` klientni har doim ham yangilamaydi. Sxemaga qoʻshilgan
+> maydonlar klientda yoʻq boʻlsa, Prisma tushunarsiz «unknown argument» xatosini
+> beradi. `npm run db:migrate` endi `prisma generate` ni ham chaqiradi.
 - [ ] **1.13 Ruxsat tekshiruvi** — `requirePermission('patients.read')` koʻrinishidagi guard.
       Egasi `staff.manage` va `billing.manage` ni yoʻqota olmaydi
       → ruxsatsiz soʻrov `403` va oʻzbekcha xato beradi
@@ -241,6 +251,8 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 - [ ] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix
 - [ ] **5.4 Statistika va hodisalar**
 - [ ] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
+- [ ] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/pochta.ts`). Serverda
+      haqiqiy pochta kerak, aks holda hech kim roʻyxatdan oʻta olmaydi
 
 ### Server — Hetzner
 
