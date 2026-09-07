@@ -93,7 +93,7 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Til | TypeScript | Tibbiy maʼlumot bilan ishlaganda tip xatolari qimmatga tushadi. Prisma bilan birga sxema oʻzgarsa kod darhol qizaradi |
 | Server | Node 22 + Fastify | Express'dan tez, sxema tekshiruvi ichida. Nest kabi ogʻir emas |
 | Baza | PostgreSQL 16 | Qator darajasidagi xavfsizlik (RLS) bor — koʻp ijarachi uchun ikkinchi himoya qatlami |
-| ORM | Prisma | Migratsiya, tip xavfsizligi, oʻqiladigan sxema fayli |
+| ORM | Prisma 7 | Migratsiya, tip xavfsizligi, oʻqiladigan sxema fayli. 7-versiyada ulanish manzili sxemada emas, `prisma.config.ts` da; klient `@prisma/adapter-pg` orqali ulanadi |
 | Frontend | React 18 + Vite | Mavjud ilovalar bilan bir xil — sahifalar va komponentlarni koʻchirish mumkin |
 | Fayllar | MinIO (S3 mos) | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
@@ -163,9 +163,9 @@ Uch qatlamli himoya:
 | Jadval | Muhim ustunlar | Izoh |
 |---|---|---|
 | `clinics` | name, phone, status, plan, expires_at, is_trial | Ijarachi. Sinov ham shu qator, faqat `is_trial = true` |
-| `users` | clinic_id, role_id, email, password_hash, status | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi |
-| `roles` | clinic_id, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi |
-| `invites` | clinic_id, role_id, email, token, expires_at | Xodimni taklif qilish havolasi, 7 kun amal qiladi |
+| `users` | clinic_id, role_id, email, password_hash, full_name, status, email_verified_at | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi. `email` butun tizimda yagona: 1-versiyada bitta odam ikki klinikada ishlay olmaydi |
+| `roles` | clinic_id, template, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi. `template` — qaysi shablondan kelgani: texnikning boshlangʻich sahifasi shunga qarab tanlanadi |
+| `invites` | clinic_id, role_id, email, token_hash, expires_at, accepted_at | Xodimni taklif qilish havolasi, 7 kun amal qiladi. Bazada kalitning oʻzi emas, **xeshi** saqlanadi — baza sizib chiqsa ham taklifnoma bilan hisob ochib boʻlmaydi |
 | `patients` | clinic_id, fio, phone, birth_date, note | Qidiruv uchun `fio` va `phone` ga indeks |
 | `visits` | patient_id, date, treatment, tooth, price |  |
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
@@ -176,7 +176,7 @@ Uch qatlamli himoya:
 | `expenses` | clinic_id, date, category, amount |  |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, returns | Naryad. `returns` — necha marta qaytgani |
 | `images` | patient_id, key, caption | `key` — MinIO dagi obyekt nomi |
-| `audit_log` | clinic_id, user_id, action, entity, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart |
+| `audit_log` | clinic_id, user_id, action, entity, entity_id, meta, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart. `entity_id` boʻlmasa «qaysi bemor yozuvi» degan savolga javob yoʻq (12-boʻlim talabi) |
 
 Pul **butun songda** saqlanadi (soʻm), sanalar `DATE` tipida. Bu mavjud ilovaning qoidasi — koʻchirishda mos kelishi uchun oʻzgartirilmaydi.
 

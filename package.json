@@ -21,7 +21,10 @@
     "up": "docker compose up -d",
     "down": "docker compose down",
     "logs": "docker compose logs -f",
-    "db": "docker compose exec postgres psql -U edentist -d edentist"
+    "db": "docker compose exec postgres psql -U edentist -d edentist",
+    "db:migrate": "npm exec -w @e-dentist/api -- prisma migrate dev",
+    "db:seed": "npm exec -w @e-dentist/api -- prisma db seed",
+    "db:studio": "npm exec -w @e-dentist/api -- prisma studio"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.12",

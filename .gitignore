@@ -20,3 +20,6 @@ minio-data/
 # TypeScript
 *.tsbuildinfo
 coverage/
+
+# Prisma yaratadigan klient
+apps/api/generated/

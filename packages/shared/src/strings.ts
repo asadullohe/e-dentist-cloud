@@ -32,3 +32,12 @@ export const BELGI_YOQ = '—'
 
 // Pul birligi. Diqqat: «ʻ» — U+02BB, oddiy apostrof emas
 export const PUL_BIRLIGI = 'soʻm'
+
+// Rol shablonlarining koʻrinadigan nomlari
+export const ROL_NOMI = {
+  egasi: 'Egasi',
+  shifokor: 'Shifokor',
+  qabulxona: 'Qabulxona',
+  texnik: 'Texnik',
+  kuzatuvchi: 'Kuzatuvchi',
+} as const

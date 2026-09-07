@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.5**
+**Hozirgi task: 1.7**
 
 ---
 
@@ -74,12 +74,29 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 
 ### Koʻp ijarachilik — eng xavfli qatlam
 
-- [ ] **1.5 Prisma sxema, 1-qism** — `clinics`, `users`, `roles`, `invites`, `audit_log`.
-      Pul — `Int`, sanalar — `DATE`
-      → `npx prisma validate` oʻtadi
-- [ ] **1.6 Birinchi migratsiya va seed** — 5 rol shabloni (Egasi, Shifokor, Qabulxona,
-      Texnik, Kuzatuvchi) va 16+3 ruxsat roʻyxati
-      → bazada jadvallar bor, seed shablonlarni yozadi
+- [x] **1.5 Prisma sxema, 1-qism** — `clinics`, `users`, `roles`, `invites`, `audit_log`.
+      Identifikatorlar UUID v7 (vaqt boʻyicha tartiblangan — indeks uchun yaxshi,
+      ketma-ket son esa umumiy bemorlar sonini oshkor qiladi). Ish sanalari `DATE`,
+      texnik vaqt belgilari `timestamptz`
+- [x] **1.6 Birinchi migratsiya va seed** — `20260907104315_boshlangich`. Rol shablonlari
+      **bazada emas, kodda** (`packages/shared/rollar.ts`): ular har klinikaga nusxalanadi
+      va oʻshaniki boʻlib qoladi, shuning uchun «umumiy shablon qatori» kerak emas.
+      Seed takrorlanadi — ikki marta ishlatilsa ham bitta klinika, beshta rol
+
+> **Sxemada tz.md dan farq qiladigan joylar**
+>
+> Hammasi `tz.md` 5-boʻlimiga yozib qoʻyildi. Eng muhimlari:
+>
+> · `invites.token` oʻrniga `token_hash` — baza sizib chiqsa taklifnoma ishlamasin
+> · `roles.template` qoʻshildi — texnikning boshlangʻich sahifasini aniqlash uchun
+> · `audit_log.entity_id` qoʻshildi — 12-boʻlim «qaysi bemor yozuvi» deb talab qiladi
+> · `users.email` butun tizimda yagona — 1-versiyada bitta odam ikki klinikada
+>   ishlay olmaydi. Kirish faqat pochta bilan boʻlgani uchun shu sodda yoʻl tanlandi
+>
+> **Ruxsat toʻplamlari** `packages/shared/rollar.ts` da, 10 ta test bilan. Texnikka
+> `patients.read` **berilmadi**: u butun kartotekani ochib yuboradi, texnikka kerak
+> boʻlgan yagona narsa — bemorning ismi — naryadning oʻzida keladi (tz.md 7-boʻlim).
+> Toʻplamlar sizga mos kelmasa ayting, bitta fayl oʻzgaradi.
 - [ ] **1.7 Repozitoriya qatlami** — Prisma kengaytmasi har soʻrovga `clinicId` ni
       **avtomatik** qoʻshadi. Qoʻlda yozish imkoniyati yopiladi
       → `clinicId` siz soʻrov yozib boʻlmaydi (kompilyator yoki runtime rad etadi)

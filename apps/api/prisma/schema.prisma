@@ -1,0 +1,162 @@
+// Maʼlumotlar modeli, 1-qism: klinika, xodimlar, rollar, taklifnomalar, audit.
+// Bemorlar va tashriflar bosqich 2.1 da qoʻshiladi.
+//
+// Qoidalar (tz.md 5-boʻlim):
+//   · har ijarachi jadvalida clinic_id ustuni bor
+//   · pul — butun son (soʻm), kasr yoʻq
+//   · ish sanalari DATE, texnik vaqt belgilari timestamptz
+//   · maʼlumot hech qachon oʻchirilmaydi — status bilan faolsizlantiriladi
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+// Ulanish manzili prisma.config.ts da — Prisma 7 dan boshlab sxemada
+// url turmaydi
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────  Klinika  ─────────────────────────────
+
+enum ClinicStatus {
+  active
+  blocked
+}
+
+/// Ijarachi. Sinov ham shu qator, faqat is_trial = true
+model Clinic {
+  id        String       @id @default(uuid(7))
+  name      String
+  phone     String?
+  status    ClinicStatus @default(active)
+  /// Tarif nomi. Narx modeli hali belgilanmagan (reja.md, ochiq savol 1) —
+  /// shuning uchun enum emas, matn
+  plan      String       @default("asosiy")
+  isTrial   Boolean      @default(true) @map("is_trial")
+  /// Obuna tugash sanasi. Bundan keyin faqat oʻqish rejimi
+  expiresAt DateTime     @map("expires_at") @db.Date
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  users    User[]
+  roles    Role[]
+  invites  Invite[]
+  auditLog AuditLog[]
+
+  @@index([status])
+  @@map("clinics")
+}
+
+// ──────────────────────────  Rollar va ruxsatlar  ──────────────────────────
+
+/// Rol shablonlari. Klinika roʻyxatdan oʻtganda beshtasi ham nusxalanadi
+/// va oʻsha klinikaga tegishli boʻlib qoladi (tz.md 6-boʻlim)
+enum RoleTemplate {
+  egasi
+  shifokor
+  qabulxona
+  texnik
+  kuzatuvchi
+}
+
+model Role {
+  id          String       @id @default(uuid(7))
+  clinicId    String       @map("clinic_id")
+  template    RoleTemplate
+  name        String
+  /// packages/shared dagi RUXSATLAR roʻyxatidan
+  permissions String[]
+  /// Egasi roli oʻchirilmaydi va staff.manage / billing.manage ni yoʻqotmaydi
+  isOwner     Boolean      @default(false) @map("is_owner")
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic   @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  users   User[]
+  invites Invite[]
+
+  /// 1-versiyada klinika yangi rol yarata olmaydi — har shablondan bittadan
+  @@unique([clinicId, template])
+  @@index([clinicId])
+  @@map("roles")
+}
+
+// ─────────────────────────────  Xodimlar  ─────────────────────────────
+
+enum UserStatus {
+  active
+  disabled
+}
+
+/// Xodim hech qachon oʻchirilmaydi: ishdan boʻshasa status = disabled.
+/// Uning tashriflari va audit yozuvlari joyida qoladi
+model User {
+  id              String     @id @default(uuid(7))
+  /// Platforma admini uchun boʻsh — u hech qaysi klinikaga tegishli emas
+  clinicId        String?    @map("clinic_id")
+  roleId          String?    @map("role_id")
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  fullName        String?    @map("full_name")
+  status          UserStatus @default(active)
+  /// Tasdiqlanmaguncha kabinet ochilmaydi
+  emailVerifiedAt DateTime?  @map("email_verified_at") @db.Timestamptz(3)
+  lastLoginAt     DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic? @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  role   Role?   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId])
+  @@map("users")
+}
+
+// ────────────────────────────  Taklifnomalar  ────────────────────────────
+
+/// Xodimni taklif qilish havolasi, 7 kun amal qiladi.
+/// Havoladagi kalit bazada saqlanmaydi — faqat uning xeshi. Baza sizib chiqsa
+/// ham taklifnomalar bilan hisob ochib boʻlmaydi
+model Invite {
+  id         String    @id @default(uuid(7))
+  clinicId   String    @map("clinic_id")
+  roleId     String    @map("role_id")
+  email      String
+  tokenHash  String    @unique @map("token_hash")
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  acceptedAt DateTime? @map("accepted_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId])
+  @@index([email])
+  @@map("invites")
+}
+
+// ──────────────────────────────  Audit  ──────────────────────────────
+
+/// Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart (tz.md 12-boʻlim):
+/// kim, qachon, qaysi bemor yozuvini koʻrgani yoki oʻzgartirgani
+model AuditLog {
+  id       String   @id @default(uuid(7))
+  /// Platforma admini amallari uchun boʻsh
+  clinicId String?  @map("clinic_id")
+  /// Muvaffaqiyatsiz kirish urinishida foydalanuvchi nomaʼlum boʻlishi mumkin
+  userId   String?  @map("user_id")
+  action   String
+  entity   String
+  entityId String?  @map("entity_id")
+  /// Qoʻshimcha tafsilot: IP, nechta qator yuklandi va h.k.
+  meta     Json?
+  at       DateTime @default(now()) @db.Timestamptz(3)
+
+  clinic Clinic? @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, at])
+  @@index([entity, entityId])
+  @@map("audit_log")
+}
