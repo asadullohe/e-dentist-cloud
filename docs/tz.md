@@ -314,8 +314,8 @@ _Har modul mustaqil ishlab chiqiladi va alohida testlanadi._
 
 | Modul | Javobgarligi | Boshqalarga bogʻliqligi |
 |---|---|---|
-| `auth` | Kirish, chiqish, sessiya, parolni tiklash | — |
-| `clinics` | Klinika profili, xodimlar, rollar, ruxsatlar, taklifnomalar | auth |
+| `auth` | Kirish, chiqish, sessiya, parol. **`users` jadvaliga egalik qiladi** | clinics |
+| `clinics` | Klinika profili, rollar, ruxsatlar, taklifnomalar. **`clinics` va `roles` jadvallariga egalik qiladi** | — |
 | `patients` | Kartoteka, qidiruv, rasmlar, Excel yuklash va chiqarish | clinics |
 | `visits` | Tashriflar, muolajalar, tish xaritasi | patients, services |
 | `payments` | Toʻlovlar, qarzdorlar roʻyxati | patients, visits |

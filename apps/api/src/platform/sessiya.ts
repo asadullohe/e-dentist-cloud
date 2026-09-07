@@ -15,8 +15,11 @@ export interface SessiyaMazmuni {
   userId: string
   /// Platforma admini uchun boʻsh
   clinicId: string | null
-  roleId: string | null
 }
+
+// Diqqat: roleId bu yerda saqlanmaydi. Egasi xodimning rolini almashtirsa,
+// sessiyadagi nusxa eskirib qolardi va xodim qayta kirmaguncha eski
+// huquqlari bilan ishlab turardi. Rol har tekshiruvda bazadan oʻqiladi
 
 export interface SessiyaSaqlagich {
   yarat(mazmun: SessiyaMazmuni): Promise<string>

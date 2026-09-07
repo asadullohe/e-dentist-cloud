@@ -5,18 +5,21 @@ import { randomUUID } from 'node:crypto'
 import cookie from '@fastify/cookie'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
 import { authRoutes } from '../modules/auth/routes.js'
+import * as auth from '../modules/auth/service.js'
 import { healthRoutes } from '../modules/health/routes.js'
+import type { Cheklagich } from './cheklov.js'
 import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { AppXato, xato } from './errors.js'
 import { xatoJavobi } from './javob.js'
-import { sessiyaHooki } from './kirish.js'
+import { ruxsatTekshiruvi, sessiyaHooki } from './kirish.js'
 import type { PochtaYuboruvchi } from './pochta.js'
 import type { SessiyaSaqlagich } from './sessiya.js'
 
 export interface ServerDeps {
   db: Db
   sessiyalar: SessiyaSaqlagich
+  cheklagich: Cheklagich
   pochta: PochtaYuboruvchi
 }
 
@@ -78,13 +81,24 @@ export function yaratServer(config: Config, deps: ServerDeps): FastifyInstance {
   app.addHook('onRequest', sessiyaHooki(deps.sessiyalar))
 
   app.register(healthRoutes, { prefix: '/api' })
+  // Ruxsat tekshiruvi barcha marshrutlarga ochiladi:
+  //   preHandler: app.talabRuxsat('patients.read')
+  // Ruxsatlar clinics modulidan oʻqiladi — platform modullarni import qilmaydi,
+  // shuning uchun funksiya shu yerda bogʻlanadi
+  app.decorate(
+    'talabRuxsat',
+    ruxsatTekshiruvi((clinicId, userId) => auth.foydalanuvchiRuxsatlari(deps.db, clinicId, userId)),
+  )
+
   app.register(authRoutes, {
     prefix: '/api',
     deps: {
       db: deps.db,
       sessiyalar: deps.sessiyalar,
+      cheklagich: deps.cheklagich,
       pochta: deps.pochta,
       cabinetUrl: config.CABINET_URL,
+      log: (xabar, maʼlumot) => app.log.warn(maʼlumot ?? {}, xabar),
     },
     xavfsizCookie: config.NODE_ENV === 'production',
   })

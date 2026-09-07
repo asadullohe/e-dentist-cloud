@@ -19,6 +19,11 @@ const soxtaDeps: ServerDeps = {
     ochir: async () => {},
     yop: async () => {},
   } satisfies SessiyaSaqlagich,
+  cheklagich: {
+    urin: async () => ({ ruxsat: true, qolganSoniya: 0 }),
+    tozala: async () => {},
+    yop: async () => {},
+  },
   pochta: xotiraPochtasi(),
 }
 

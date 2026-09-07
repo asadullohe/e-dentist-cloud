@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.13**
+**Hozirgi task: 1.16**
 
 ---
 
@@ -146,14 +146,36 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 > `prisma migrate dev` klientni har doim ham yangilamaydi. Sxemaga qoʻshilgan
 > maydonlar klientda yoʻq boʻlsa, Prisma tushunarsiz «unknown argument» xatosini
 > beradi. `npm run db:migrate` endi `prisma generate` ni ham chaqiradi.
-- [ ] **1.13 Ruxsat tekshiruvi** — `requirePermission('patients.read')` koʻrinishidagi guard.
-      Egasi `staff.manage` va `billing.manage` ni yoʻqota olmaydi
-      → ruxsatsiz soʻrov `403` va oʻzbekcha xato beradi
-- [ ] **1.14 Cheklovlar** — kirish urinishlari (IP va hisob boʻyicha),
-      roʻyxatdan oʻtish bitta IP dan kuniga 3 ta, bir martalik pochta rad etiladi
-      → 6-urinishdan keyin vaqtincha bloklanadi
-- [ ] **1.15 `audit_log`** — kirish, roʻyxatdan oʻtish, xodim oʻzgarishi yoziladi
-      → jadvalda yozuvlar koʻrinadi
+- [x] **1.13 Ruxsat tekshiruvi** — `app.talabRuxsat('patients.read')`. Rol ham,
+      ruxsatlar ham **har soʻrovda bazadan** oʻqiladi. Egasi `staff.manage` va
+      `billing.manage` ni yoʻqota olmaydi (`clinics.tekshirRolRuxsatlari`)
+- [x] **1.14 Cheklovlar** — hisob boʻyicha 5/15daq, IP boʻyicha 20/15daq,
+      roʻyxatdan oʻtish 3/kun. Muvaffaqiyatli kirish hisoblagichni tozalaydi.
+      Bir martalik pochta domenlari rad etiladi (`packages/shared/pochta.ts`)
+- [x] **1.15 `audit_log`** — roʻyxatdan oʻtish, tasdiqlash, kirish, kirish xatosi,
+      chiqish. Test yozuvlarda parol yoki xesh yoʻqligini ham tekshiradi
+
+> **Sessiyada `roleId` saqlanmaydi**
+>
+> Dastlab sessiyaga `roleId` yozilgan edi. Test uni ushladi: egasi xodimning
+> rolini almashtirsa, sessiyadagi nusxa eskirib qolardi va xodim **qayta
+> kirmaguncha eski huquqlari bilan ishlab turardi**.
+>
+> Endi sessiyada faqat `userId` va `clinicId`. Har ruxsat tekshiruvida
+> foydalanuvchi va uning roli bazadan oʻqiladi. Yon foyda: faolsizlantirilgan
+> xodimning **ochiq sessiyasi ham** oʻsha zahoti toʻxtaydi.
+
+> **`clinics` moduli ajratildi**
+>
+> Ruxsatlar `roles` jadvalida, u esa `clinics` moduliniki. `auth` unga
+> toʻgʻridan-toʻgʻri murojaat qilayotgan edi — CLAUDE.md dagi asosiy qoida
+> buzilardi. Endi chegara aniq:
+>
+> · `auth` — `users` jadvali: hisob, parol, pochta tasdigʻi
+> · `clinics` — `clinics` va `roles` jadvallari
+>
+> `auth` `clinics/service.ts` ni chaqiradi, tranzaksiya esa umumiy: roʻyxatdan
+> oʻtishda klinika, rollar va egasi bitta tranzaksiyada yaratiladi.
 
 ### Kabinet skeleti
 

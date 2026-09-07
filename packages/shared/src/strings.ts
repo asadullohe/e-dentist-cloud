@@ -56,5 +56,8 @@ export const AUTH = {
   hisob_faolsiz: 'Hisobingiz faolsizlantirilgan. Klinika egasiga murojaat qiling',
   pochta_tasdiqlanmagan: 'Avval pochtangizni tasdiqlang — havola xatingizga yuborilgan',
   havola_yaroqsiz: 'Havola yaroqsiz yoki muddati oʻtgan',
+  bir_martalik_pochta: 'Bir martalik pochta xizmatlari qabul qilinmaydi',
+  kop_urinish: 'Juda koʻp urinish boʻldi. Bir necha daqiqadan keyin qayta urinib koʻring',
+  kop_royxat: 'Bugun bu qurilmadan juda koʻp roʻyxatdan oʻtish boʻldi. Ertaga urinib koʻring',
   xat_mavzusi: 'E-Dentist — pochtangizni tasdiqlang',
 } as const

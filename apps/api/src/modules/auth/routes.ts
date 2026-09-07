@@ -17,7 +17,7 @@ export interface AuthRouteOpts {
 export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) => {
   app.post('/auth/register', async (req) => {
     const kirish = tekshir(RoyxatSxemasi, req.body)
-    return ok(await service.royxatdanOt(opts.deps, kirish))
+    return ok(await service.royxatdanOt(opts.deps, kirish, req.ip))
   })
 
   app.post('/auth/verify', async (req) => {
@@ -28,7 +28,7 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
 
   app.post('/auth/login', async (req, reply) => {
     const kirish = tekshir(KirishSxemasi, req.body)
-    const sessiyaId = await service.kir(opts.deps, kirish)
+    const sessiyaId = await service.kir(opts.deps, kirish, req.ip)
     reply.setCookie(COOKIE_NOMI, sessiyaId, {
       httpOnly: true,
       sameSite: 'lax',
@@ -40,7 +40,7 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
   })
 
   app.post('/auth/logout', async (req, reply) => {
-    if (req.sessiyaId) await service.chiq(opts.deps, req.sessiyaId)
+    if (req.sessiyaId) await service.chiq(opts.deps, req.sessiyaId, req.sessiya)
     reply.clearCookie(COOKIE_NOMI, { path: '/' })
     return ok({ chiqildi: true })
   })

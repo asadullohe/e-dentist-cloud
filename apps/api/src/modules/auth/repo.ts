@@ -1,12 +1,12 @@
-// Baza qatlami. Modulning boshqa qismlari bazaga faqat shu fayl orqali kiradi.
+// auth moduli `users` jadvaliga egalik qiladi: hisob, parol, pochta tasdigʻi.
+// Klinika va rollar — clinics modulida.
 
-import { ROL_SHABLONI_TAVSIFI, ROL_SHABLONLARI } from '@e-dentist/shared'
 import type { Db } from '../../platform/db.js'
-import { ijarachisiz, klinikaSessiyasi } from '../../platform/tenant.js'
+import { ijarachisiz, type KlinikaTx } from '../../platform/tenant.js'
 
 /// auth_find_user funksiyasi qaytaradigan qator.
-/// Bu funksiya SECURITY DEFINER: kirish paytida klinika hali nomaʼlum va RLS
-/// users jadvalini yopib turadi. Funksiya faqat shu maydonlarni beradi
+/// SECURITY DEFINER: kirish paytida klinika hali nomaʼlum va RLS users
+/// jadvalini yopib turadi. Funksiya faqat shu maydonlarni beradi
 export interface AuthQator {
   id: string
   clinic_id: string | null
@@ -30,12 +30,9 @@ export async function tasdiqlaKalit(
   return qatorlar[0] ?? null
 }
 
-export interface YangiKlinika {
-  clinicId: string
-  clinicName: string
-  phone: string | null
-  expiresAt: Date
+export interface YangiEgasi {
   userId: string
+  roleId: string
   email: string
   passwordHash: string
   fullName: string
@@ -43,80 +40,27 @@ export interface YangiKlinika {
   emailVerifyExpiresAt: Date
 }
 
-/// Klinika, beshta rol va egasi — bitta tranzaksiyada.
-///
-/// Diqqat: clinicId chaqiruvchi tomonidan yaratiladi va sessiya konteksti
-/// oʻsha id bilan ochiladi. RLS siyosati `WITH CHECK (id = app_clinic_id())`
-/// deb turadi — bazaning oʻzi id yaratguncha kutib boʻlmaydi
-export async function yaratKlinikaVaEgasi(db: Db, m: YangiKlinika): Promise<void> {
-  await klinikaSessiyasi(db, m.clinicId, async (tx) => {
-    await tx.clinic.create({
-      data: {
-        id: m.clinicId,
-        name: m.clinicName,
-        phone: m.phone,
-        isTrial: true,
-        expiresAt: m.expiresAt,
-      },
-    })
-
-    let egasiRoliId = ''
-    for (const shablon of ROL_SHABLONLARI) {
-      const tavsif = ROL_SHABLONI_TAVSIFI[shablon]
-      const rol = await tx.role.create({
-        data: ijarachisiz({
-          template: shablon,
-          name: tavsif.nom,
-          permissions: [...tavsif.ruxsatlar],
-          isOwner: tavsif.isOwner,
-        }),
-      })
-      if (tavsif.isOwner) egasiRoliId = rol.id
-    }
-
-    await tx.user.create({
-      data: ijarachisiz({
-        id: m.userId,
-        roleId: egasiRoliId,
-        email: m.email,
-        passwordHash: m.passwordHash,
-        fullName: m.fullName,
-        emailVerifyTokenHash: m.emailVerifyTokenHash,
-        emailVerifyExpiresAt: m.emailVerifyExpiresAt,
-      }),
-    })
-
-    await tx.auditLog.create({
-      data: ijarachisiz({
-        userId: m.userId,
-        action: 'royxatdan_otdi',
-        entity: 'clinic',
-        entityId: m.clinicId,
-      }),
-    })
-  })
-}
-
-export async function belgilaKirish(db: Db, clinicId: string, userId: string): Promise<void> {
-  await klinikaSessiyasi(db, clinicId, async (tx) => {
-    await tx.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } })
-    await tx.auditLog.create({
-      data: ijarachisiz({ userId, action: 'kirdi', entity: 'user', entityId: userId }),
-    })
-  })
-}
-
-export async function oqiKabinet(db: Db, clinicId: string, userId: string) {
-  return klinikaSessiyasi(db, clinicId, (tx) =>
-    tx.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        fullName: true,
-        role: { select: { name: true, template: true, permissions: true, isOwner: true } },
-        clinic: { select: { id: true, name: true, isTrial: true, expiresAt: true, status: true } },
-      },
+export async function yaratEgasi(tx: KlinikaTx, m: YangiEgasi): Promise<void> {
+  await tx.user.create({
+    data: ijarachisiz({
+      id: m.userId,
+      roleId: m.roleId,
+      email: m.email,
+      passwordHash: m.passwordHash,
+      fullName: m.fullName,
+      emailVerifyTokenHash: m.emailVerifyTokenHash,
+      emailVerifyExpiresAt: m.emailVerifyExpiresAt,
     }),
-  )
+  })
+}
+
+export async function belgilaKirish(tx: KlinikaTx, userId: string): Promise<void> {
+  await tx.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } })
+}
+
+export async function oqiFoydalanuvchi(tx: KlinikaTx, userId: string) {
+  return tx.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true, fullName: true, roleId: true, status: true },
+  })
 }
