@@ -12,7 +12,7 @@ _Stomatologiya klinikalari uchun brauzerda ishlaydigan obunali xizmat. Mavjud of
 - **Kirish:** Oʻzi roʻyxatdan oʻtadi
 - **Sinov:** 14 kun
 - **Toʻlov:** Qoʻlda, Telegram orqali
-- **Server:** Oʻzbekistonda
+- **Server:** Hetzner (Yevropa) — joylashtirish koʻchma
 - **Rollar:** Klinika oʻzi boshqaradi
 - **Jamoa:** 1 dasturchi
 
@@ -60,7 +60,6 @@ Klinika **oʻzini oʻzi boshqaradi**: egasi xodim qoʻshadi, oʻchiradi va huquq
 - Bir klinika ichida bir nechta filial
 - Avtomatik toʻlov (Payme/Click) — 2-bosqichda
 - SMS eslatmalar va bemor kabineti
-- Bir nechta filial bitta klinika ichida
 - Mobil ilova — brauzer moslashuvchan boʻladi, alohida ilova emas
 
 > **Qaror**
@@ -164,7 +163,7 @@ Uch qatlamli himoya:
 |---|---|---|
 | `clinics` | name, phone, status, plan, expires_at, is_trial | Ijarachi. Sinov ham shu qator, faqat `is_trial = true` |
 | `users` | clinic_id, role_id, email, password_hash, status | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi |
-| `roles` | clinic_id, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 4 ta shablon nusxalanadi |
+| `roles` | clinic_id, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi |
 | `invites` | clinic_id, role_id, email, token, expires_at | Xodimni taklif qilish havolasi, 7 kun amal qiladi |
 | `patients` | clinic_id, fio, phone, birth_date, note | Qidiruv uchun `fio` va `phone` ga indeks |
 | `visits` | patient_id, date, treatment, tooth, price |  |
@@ -186,7 +185,7 @@ _Klinika oʻzini toʻliq qamrab oladi. Siz xodim qoʻshish-oʻchirishga aralashm
 
 ### Model
 
-Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga toʻrtta tayyor rol nusxalanadi va ular **oʻsha klinikaga tegishli** boʻlib qoladi: egasi istalganini tahrirlashi mumkin, bu boshqa klinikalarga taʼsir qilmaydi.
+Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta tayyor rol nusxalanadi va ular **oʻsha klinikaga tegishli** boʻlib qoladi: egasi istalganini tahrirlashi mumkin, bu boshqa klinikalarga taʼsir qilmaydi.
 
 ### Ruxsatlar roʻyxati
 
@@ -213,7 +212,7 @@ Roʻyxat ataylab qisqa — 16 ta ruxsat. Har boʻlim uchun alohida «koʻrish/qo
 
 > **Qaror**
 >
-> 1-versiyada klinika **yangi rol yarata olmaydi**, lekin mavjud toʻrttasining ruxsatlarini oʻzgartira oladi. Sabab: toʻliq konstruktor interfeys, test va qoʻllab-quvvatlash yukini bir necha barobar oshiradi, amalda esa stomatologiyada 3-4 xil roldan koʻpi kerak boʻlmaydi.
+> 1-versiyada klinika **yangi rol yarata olmaydi**, lekin mavjud beshtasining ruxsatlarini oʻzgartira oladi. Sabab: toʻliq konstruktor interfeys, test va qoʻllab-quvvatlash yukini bir necha barobar oshiradi, amalda esa stomatologiyada 3-4 xil roldan koʻpi kerak boʻlmaydi.
 >
 > Muhimi: baza birinchi kundanoq `roles.permissions[]` bilan quriladi. Yangi rol yaratish keyin qoʻshilsa — bu **bitta tugma**, qaytadan yozish emas.
 
@@ -240,7 +239,7 @@ _Shifokor naryad yozadi, texnik bajaradi. Texnik bemor bilan ishlamaydi — u fa
 
 ### Texnik nimani koʻradi
 
-Texnik — klinikaning oddiy xodimi, beshinchi rol shabloni. Oʻz hisobi bilan kiradi va **faqat oʻziga biriktirilgan naryadlarni** koʻradi.
+Texnik — klinikaning oddiy xodimi, alohida rol shabloni. Oʻz hisobi bilan kiradi va **faqat oʻziga biriktirilgan naryadlarni** koʻradi.
 
 | Koʻradi | Koʻrmaydi |
 |---|---|
@@ -361,7 +360,7 @@ Yuklash `patients.write` ruxsatini talab qiladi va `audit_log` ga bitta yozuv si
 
 1. Klinika egasi saytda pochta, klinika nomi va parol kiritadi
 2. Pochtaga tasdiqlash havolasi boradi — tasdiqlanmaguncha kabinet ochilmaydi
-3. Tasdiqlangach klinika yaratiladi: `is_trial = true`, `expires_at = +14 kun`, toʻrtta rol shabloni nusxalanadi, egasi birinchi foydalanuvchi boʻladi
+3. Tasdiqlangach klinika yaratiladi: `is_trial = true`, `expires_at = +14 kun`, beshta rol shabloni nusxalanadi, egasi birinchi foydalanuvchi boʻladi
 4. Sizga Telegramga xabar keladi — nomi, pochtasi, vaqti
 5. Toʻlovdan keyin siz boshqaruv panelida muddatni uzaytirasiz, `is_trial` oʻchadi. Mijoz hech narsa kiritmaydi
 
@@ -485,13 +484,13 @@ _Faqat siz ishlatasiz. Kichik, lekin sotuvning butun boshqaruvi shu yerda._
 
 _Bu boʻlim loyihaning eng jiddiy qismi. Oflayn ilovada bu masalalar yoʻq edi — bulutda ular sizning javobgarligingiz._
 
-> **Server Germaniyada**
+> **Server Yevropada**
 >
-> Server Contabo dan olingan. Oʻzbekiston qonuni (ZRU-547) fuqarolarning shaxsiy maʼlumatlarini mamlakat hududida saqlashni talab qiladi, tibbiy maʼlumot esa alohida himoyalangan toifa.
+> Server Hetzner Cloud dan olinadi (Falkenstein yoki Helsinki) — bosqich 5.6 da. Undan oldin hamma narsa notebookda Docker da ishlaydi. Oʻzbekiston qonuni (ZRU-547) fuqarolarning shaxsiy maʼlumatlarini mamlakat hududida saqlashni talab qiladi, tibbiy maʼlumot esa alohida himoyalangan toifa.
 >
 > Yuridik tekshiruv toʻlov integratsiyasi bosqichiga qoldirilgan — **foydalanuvchining qarori**. Agar oʻshanda maʼlumot mamlakat ichida turishi kerak deb chiqsa, koʻchirish kerak boʻladi.
 >
-> **Shu sabab joylashtirish koʻchma boʻlishi shart:** hamma narsa Docker Compose da, hech qanday provayderga xos xizmat ishlatilmaydi (Contabo ning oʻz bazasi, oʻz obyekt saqlagichi va h.k.). Shunda koʻchirish bir kunlik ish boʻladi.
+> **Shu sabab joylashtirish koʻchma boʻlishi shart:** hamma narsa Docker Compose da, hech qanday provayderga xos xizmat ishlatilmaydi (Hetzner ning boshqariladigan bazasi, obyekt saqlagichi, yuk taqsimlagichi va h.k.). Shunda koʻchirish bir kunlik ish boʻladi.
 
 > **Toʻlov integratsiyasida qayta koʻriladi**
 >
@@ -510,7 +509,7 @@ _Bu boʻlim loyihaning eng jiddiy qismi. Oflayn ilovada bu masalalar yoʻq edi �
 ### Zaxira
 
 - Kunlik `pg_dump`, 30 kunlik saqlash
-- Haftalik toʻliq nusxa — boshqa jismoniy joyga, **lekin baribir Oʻzbekistonda**
+- Haftalik toʻliq nusxa — boshqa jismoniy joyga. Maʼlumot qaysi yurisdiksiyada tursa, zaxira ham **oʻsha yurisdiksiyada**
 - Oyiga bir marta tiklashni sinab koʻrish. Sinalmagan zaxira — zaxira emas
 
 ## 13. Infratuzilma
@@ -519,7 +518,7 @@ _Bitta server yetadi. Boshidan ortiqcha murakkablik qurmang._
 
 | Nima | Talab | Izoh |
 |---|---|---|
-| Server | Contabo VPS (Germaniya) | Olingan. Kechikish ~100 ms — CRUD uchun sezilarli, lekin toʻsiq emas |
+| Server | Hetzner Cloud (Yevropa) | Bosqich 5.6 da olinadi. Tavsiya: CX32 — 4 vCPU / 8 GB / 80 GB. Kechikish ~100 ms — CRUD uchun sezilarli, lekin toʻsiq emas |
 | OS | Ubuntu 24.04 LTS |  |
 | Konteynerlar | api · postgres · redis · minio · caddy | Docker Compose, bitta fayl |
 | Proxy | Caddy | HTTPS avtomatik, sozlash nginx'dan sodda |
@@ -629,7 +628,7 @@ _Kod yozishdan oldin javob berilishi kerak boʻlgan narsalar._
 
 1. **Mijoz bilan shartnoma.** Klinika bilan tuziladigan shartnomada maʼlumot kimga tegishli, zaxira va uzilish boʻyicha javobgarlik qanday yozilishi kerak? Yurist bilan — toʻlov integratsiyasi bosqichida.
 2. **Narx.** Oylik obuna qancha? Sinovdan keyin qanday tarif taklif qilinadi? Bu `billing` modulining tuzilishiga taʼsir qiladi.
-3. ~~**Server provayderi.**~~ Hal qilindi: Contabo (Germaniya), Ubuntu 24.04, 8 GB RAM / 100 GB SSD.
+3. ~~**Server provayderi.**~~ Hal qilindi: Hetzner Cloud, Ubuntu 24.04. Server bosqich 5.6 da olinadi — undan oldin ishlab chiqish notebookda, Docker da.
 4. ~~**Domen.**~~ Hal qilindi: `e-dentist.uz`. Landing Netlify'da apex'da qoladi, ilova `kabinet.e-dentist.uz`, panel `admin.e-dentist.uz`.
 5. **Xodim soni tarifga taʼsir qiladimi?** Cheklovsizmi yoki «5 xodimgacha» kabi bosqichlarmi? Bu `billing` va xodim qoʻshish oqimiga taʼsir qiladi.
 6. **Kim quradi.** Oʻzingizmi yoki dasturchi yollaysizmi? Yollasangiz bu TZ shartnomaga ilova boʻladi.

@@ -3,9 +3,15 @@
 Stomatologiya klinikalari uchun brauzerda ishlaydigan obunali xizmat (SaaS).
 Oʻzbek tilida, koʻp ijarachili.
 
-**Toʻliq texnik topshiriq: [`docs/tz.md`](docs/tz.md)** — arxitektura, maʼlumotlar
-modeli, rollar, modullar, API, bosqichlar. Ish shu hujjatga qarab olib boriladi;
-oʻzgarish kiritilsa oʻsha fayl yangilanadi.
+## Hujjatlar — har sessiya boshida shu uchtasi
+
+| Fayl | Nima uchun |
+|---|---|
+| [`docs/tz.md`](docs/tz.md) | **Nima quriladi.** Bosh nusxa: arxitektura, maʼlumotlar modeli, rollar, modullar, API. Qaror oʻzgarsa shu fayl yangilanadi |
+| [`docs/reja.md`](docs/reja.md) | **Nima navbatda.** Mayda tasklarga boʻlingan reja. Holatning yagona manbai — task tugagach shu yerda belgilanadi |
+| [`docs/ish-tartibi.md`](docs/ish-tartibi.md) | **Qanday ishlaymiz.** Task sikli, git tartibi, «tayyor» mezoni, foydalanuvchiga topshiriq berish shakli |
+
+Ish `reja.md` dagi keyingi belgilanmagan taskdan boshlanadi. Bir vaqtda bitta task.
 
 ## Kelishilgan qarorlar
 
@@ -17,8 +23,8 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 - Toʻlov **qoʻlda**, Telegram orqali. Payme/Click — 2-bosqich
 - Faqat **oʻzbek tili**, lekin barcha matnlar `packages/shared/strings.ts` da
 - **Filial yoʻq**: bitta klinika = bitta joy
-- Rollar tayyor shablon sifatida beriladi; klinika ruxsatlarni oʻzgartira oladi,
-  lekin 1-versiyada yangi rol yarata olmaydi
+- Rollar **5 ta** tayyor shablon: Egasi · Shifokor · Qabulxona · Texnik · Kuzatuvchi.
+  Klinika ruxsatlarni oʻzgartira oladi, lekin 1-versiyada yangi rol yarata olmaydi
 - Bemorlarni **Excel/CSV dan yuklash** shablon orqali; chiqarilgan fayl = shablon
 - **Texnik** (protez ustasi) klinika xodimi, oʻz hisobi bilan kiradi, faqat oʻz
   naryadlarini koʻradi. Holatlar: berildi → tayyor → topshirildi + «qaytarildi»
@@ -70,7 +76,14 @@ Almashtiriladigan yagona qatlam — `window.api.*` oʻrniga HTTP soʻrovlar.
 
 ## Infratuzilma
 
-Contabo VPS (Germaniya), Ubuntu 24.04, 8 GB RAM, 100 GB SSD.
+**Hozircha server yoʻq va kerak emas.** Bosqich 5.6 gacha hamma narsa foydalanuvchining
+notebookida Docker da ishlaydi: `postgres`, `redis`, `minio` konteynerlari, API va
+kabinet `npm run dev` bilan. Lokalda ham baza konteynerda turadi — notebookga
+toʻgʻridan-toʻgʻri Postgres oʻrnatilmaydi, aks holda «menda ishlayapti» muammosi chiqadi.
+
+Keyin: **Hetzner Cloud**, Ubuntu 24.04, tavsiya CX32 (4 vCPU / 8 GB / 80 GB),
+Falkenstein yoki Helsinki. Konteynerlar: api · postgres · redis · minio · caddy.
+
 Domen `e-dentist.uz`: apex va `www` — Netlify'dagi landing (tegilmaydi),
 `kabinet.` va `admin.` — shu server.
 
