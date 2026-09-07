@@ -252,8 +252,20 @@ Koʻp ijarachilik testi yashil.
 
 _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 
-- [ ] **2.1 Prisma sxema, 2-qism** — `patients`, `visits`, `teeth`, `bridges`,
-      `payments`, `appointments`, `services`, `images`. RLS siyosatlari ham darhol
+- [x] **2.1 Prisma sxema, 2-qism** — `patients`, `visits`, `teeth`, `bridges`,
+      `payments`, `appointments`, `services`, `images` + RLS siyosatlari.
+      `TENANT_MODELS` ham yangilandi
+
+> **Qamrovni qorovullaydigan test qoʻshildi**
+>
+> Yangi jadval qoʻshilganda ikki joyni yangilash kerak: RLS siyosati va
+> `TENANT_MODELS`. Bittasi unutilsa **hech qanday xato koʻrinmaydi**, faqat
+> himoya bir qatlamga tushadi.
+>
+> `tenant.test.ts` endi ikkalasini ham tekshiradi: `clinic_id` ustuni bor har
+> bir jadvalda siyosat borligini, va `TENANT_MODELS` soni bazadagi ijarachi
+> jadvallari soniga tengligini. Nazorat qilib koʻrildi — modelni ataylab
+> olib tashlaganda test qizaradi.
 - [ ] **2.2 `patients` moduli** — CRUD, qidiruv (F.I.O. va telefon boʻyicha), sahifalash,
       + koʻp ijarachilik testi
 - [ ] **2.3 Bemorlar sahifasi** — roʻyxat, qidiruv, ustun filtrlari, yangi bemor formasi

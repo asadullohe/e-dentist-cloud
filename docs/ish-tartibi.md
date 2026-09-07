@@ -71,6 +71,15 @@ docs: Contabo oʻrniga Hetzner
 - Commit **har task oxirida avtomatik** qilinadi (`bosqich-N-...` branchida).
   `main` ga qoʻshish esa faqat siz aytganingizda — bosqich tugagach
 
+> **Qoʻlda migratsiya yozilsa — papka nomi UTC da**
+>
+> Prisma migratsiya papkasini **UTC** vaqti bilan nomlaydi. Qoʻlda yozilganda
+> `date` mahalliy vaqtni beradi (Toshkent UTC+5) va papka besh soat oldinga
+> ketadi. Natijada keyingi Prisma migratsiyasi eskilaridan **oldin** turib
+> qoladi, tartib buziladi va migratsiya qayta oʻynatilganda xato beradi.
+>
+> Toʻgʻrisi: `date -u +%Y%m%d%H%M%S`
+
 ## 5. Task qachon «tayyor»
 
 Beshtasi ham bajarilishi shart:
