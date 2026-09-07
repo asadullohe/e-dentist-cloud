@@ -34,8 +34,8 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 ## Texnologiyalar
 
 Node 22 + TypeScript + Fastify · PostgreSQL 16 + Prisma · Redis (sessiya) ·
-MinIO (fayllar) · React 18 + Vite · Docker Compose · Biome (format va lint,
-Prettier/ESLint emas) · Vitest.
+MinIO (fayllar) · React 19 + Vite + Tailwind 4 + shadcn/ui · TanStack Query ·
+Docker Compose · Biome (format va lint, Prettier/ESLint emas) · Vitest.
 
 Monorepo, npm workspaces: `apps/api`, `apps/cabinet`, `apps/admin`,
 `packages/shared`, `packages/ui`, `packages/teeth`.
@@ -91,9 +91,15 @@ apps/cabinet/src/
 Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi **yoʻq**.
 `pages` → `widgets` → `features` → `entities` → `shared`.
 
-- Stillar — **SCSS modullar** (`*.module.scss`). Global tokenlar `app/styles/` da
+- Stillar — **Tailwind 4**. Dizayn tokenlari `app/styles/index.css` da,
+  shadcn kutgan nomlarda (`--background`, `--primary`…) va oflayn ilovaning
+  indigo palitrasidan olingan. Alohida CSS fayl yozilmaydi
+- Komponentlar — **shadcn/ui**: `npx shadcn@latest add <nom> --cwd apps/cabinet`.
+  Ular `shared/ui/` ga tushadi va bizniki hisoblanadi — tahrirlash mumkin
 - API bilan ishlash — **TanStack Query** (`useQuery` / `useMutation`),
   qoʻlbola `useState` + `useEffect` emas
+- Formalar — **react-hook-form + zod**, shadcn `Form` komponenti bilan.
+  Serverdan kelgan maydon xatolari `applyServerErrors` orqali formaga tushadi
 - Har papkada `index.ts` — tashqariga nima chiqishini oʻsha belgilaydi
 
 ## Matn va format qoidalari (oflayn ilovadan koʻchadi)

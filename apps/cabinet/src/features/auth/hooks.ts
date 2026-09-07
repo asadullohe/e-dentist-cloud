@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { SESSION_QUERY_KEY } from '../../entities/session'
+import { SESSION_QUERY_KEY } from '@/entities/session'
 import * as api from './api'
 
 /// Kirgandan keyin sessiya soʻrovi qaytadan oʻqiladi — kim kirgani,

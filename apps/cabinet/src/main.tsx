@@ -1,6 +1,6 @@
 import '@fontsource-variable/bricolage-grotesque'
 import '@fontsource-variable/schibsted-grotesk'
-import './app/styles/tokens.scss'
+import './app/styles/index.css'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

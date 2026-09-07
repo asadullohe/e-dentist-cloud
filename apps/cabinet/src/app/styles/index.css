@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+/* Tungi rejim: `.dark` sinfi ham, oflayn ilovadagi `data-theme` ham ishlaydi */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Dizayn tokenlari — oflayn ilovaning indigo palitrasidan olingan
+ * (e-dentist/src/renderer/src/styles.css). Nomlar shadcn kutgan koʻrinishda,
+ * shuning uchun tayyor komponentlar avtomatik bizning dizaynda chiqadi.
+ *
+ * Diqqat: shadcn dagi `--accent` — bu menyu va tugmalardagi «ustiga
+ * kelgandagi» yuza, brend urgʻu rangi emas. Bizning urgʻu — `--brand-accent`.
+ */
+
+:root {
+  --radius: 0.875rem;
+
+  --background: #f4f5f9;
+  --foreground: #22312f;
+
+  --card: #fdfdff;
+  --card-foreground: #22312f;
+  --popover: #fdfdff;
+  --popover-foreground: #22312f;
+
+  --primary: #3e4c8f;
+  --primary-foreground: #ffffff;
+
+  --secondary: #eaecf3;
+  --secondary-foreground: #22312f;
+  --muted: #eaecf3;
+  --muted-foreground: #5c6b68;
+  --accent: #eaecf3;
+  --accent-foreground: #22312f;
+
+  /* Oflayn ilovada xato matnlari `--accent` bilan chiqardi, indigo palitrada
+   * esa u oltin rang — xato sifatida oʻqilmaydi. Shuning uchun alohida rang */
+  --destructive: #c0432f;
+  --destructive-foreground: #ffffff;
+
+  --border: #dcdfeb;
+  --input: #dcdfeb;
+  --ring: #3e4c8f;
+
+  /* Brendga xos qoʻshimchalar */
+  --brand-deep: #252c54;
+  --brand-accent: #c2913a;
+  --ok: #2e7d4f;
+  --warn: #b97f10;
+  --info: #2b6ca3;
+
+  --font-display: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  --font-body: "Schibsted Grotesk Variable", system-ui, sans-serif;
+}
+
+.dark,
+[data-theme="dark"] {
+  --background: #14161f;
+  --foreground: #e9edea;
+
+  --card: #212536;
+  --card-foreground: #e9edea;
+  --popover: #212536;
+  --popover-foreground: #e9edea;
+
+  --primary: #8f9ce0;
+  --primary-foreground: #0d0f18;
+
+  --secondary: #1b1e2a;
+  --secondary-foreground: #e9edea;
+  --muted: #1b1e2a;
+  --muted-foreground: #93a39f;
+  --accent: #1b1e2a;
+  --accent-foreground: #e9edea;
+
+  --destructive: #ee7d66;
+  --destructive-foreground: #14161f;
+
+  --border: #343a52;
+  --input: #343a52;
+  --ring: #8f9ce0;
+
+  --brand-deep: #0d0f18;
+  --brand-accent: #d9b05e;
+  --ok: #5cb585;
+  --warn: #d9a03a;
+  --info: #6aa5d8;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-accent: var(--brand-accent);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}

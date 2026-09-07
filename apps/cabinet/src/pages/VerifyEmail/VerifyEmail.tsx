@@ -1,10 +1,10 @@
 import { UI_TEXT } from '@e-dentist/shared'
 import { useEffect, useRef } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { AuthLayout } from '../../app/layouts/AuthLayout'
-import { useVerifyEmail } from '../../features/auth'
-import { ApiError } from '../../shared/api'
-import styles from './VerifyEmail.module.scss'
+import { AuthLayout } from '@/app/layouts/AuthLayout'
+import { useVerifyEmail } from '@/features/auth'
+import { ApiError } from '@/shared/api'
+import { Skeleton } from '@/shared/ui'
 
 export function VerifyEmail() {
   const [params] = useSearchParams()
@@ -22,21 +22,33 @@ export function VerifyEmail() {
   }, [mutate, token])
 
   return (
-    <AuthLayout centered footer={<Link to="/login">{UI_TEXT.login}</Link>}>
-      {isPending && <p className={styles.hint}>{UI_TEXT.verifying}</p>}
+    <AuthLayout
+      centered
+      footer={
+        <Link to="/login" className="text-primary hover:underline">
+          {UI_TEXT.login}
+        </Link>
+      }
+    >
+      {isPending && (
+        <div className="space-y-2">
+          <Skeleton className="mx-auto h-9 w-9 rounded-full" />
+          <p className="text-muted-foreground text-sm">{UI_TEXT.verifying}</p>
+        </div>
+      )}
       {isSuccess && (
         <>
-          <div className={styles.icon}>✅</div>
-          <h2 className={styles.title}>{UI_TEXT.verified}</h2>
-          <p className={styles.hint}>{UI_TEXT.verified_hint}</p>
+          <div className="text-4xl">✅</div>
+          <h2 className="font-display mt-2.5 text-lg font-semibold">{UI_TEXT.verified}</h2>
+          <p className="text-muted-foreground mt-2 text-sm">{UI_TEXT.verified_hint}</p>
         </>
       )}
       {isError && (
         <>
-          <div className={styles.icon}>⚠️</div>
-          <div className={styles.error}>
+          <div className="text-4xl">⚠️</div>
+          <p className="text-destructive mt-2.5 text-sm font-medium">
             {error instanceof ApiError ? error.message : UI_TEXT.offline}
-          </div>
+          </p>
         </>
       )}
     </AuthLayout>

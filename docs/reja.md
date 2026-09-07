@@ -203,6 +203,20 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 >
 > Tasdiqlash havolasi ham oʻzgardi: `/tasdiqlash?kalit=` → `/verify?token=`.
 
+> **Tailwind + shadcn/ui, React 19**
+>
+> Tayyor komponentlar kutubxonasi qoʻshildi: 25 ta shadcn komponenti
+> `shared/ui/` da (forma, jadval, oyna, kalendar, bildirishnoma). Ranglar
+> oflayn ilovaning indigo palitrasiga ulangan — tashqi koʻrinish oʻzgarmadi,
+> tungi rejim ham ishlaydi.
+>
+> Yoʻlda React 18 dan 19 ga oʻtishga toʻgʻri keldi: shadcn ning **barcha 25**
+> komponenti `forwardRef` siz yozilgan, ular React 19 ning «ref oddiy prop»
+> xulqiga tayanadi. 18 da `react-hook-form` maydonga `ref` yubora olmasdi —
+> xato boʻlganda kursor maydonga tushmasdi. Sabab `tz.md` 3-boʻlimiga yozildi.
+>
+> `*.module.scss` fayllar olib tashlandi, `sass` paketi ham.
+
 > **Lokalda CORS kerak emas**
 >
 > Vite `/api` ni `localhost:3000` ga uzatadi. Brauzer uchun kabinet ham, API ham

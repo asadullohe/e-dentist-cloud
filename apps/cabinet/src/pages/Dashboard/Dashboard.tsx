@@ -1,19 +1,23 @@
 import { UI_TEXT } from '@e-dentist/shared'
-import { useSession } from '../../entities/session'
-import styles from './Dashboard.module.scss'
+import { useSession } from '@/entities/session'
+import { Card, CardContent } from '@/shared/ui'
 
 export function Dashboard() {
   const { data: session } = useSession()
 
   return (
     <>
-      <div className={styles.head}>
-        <h1 className={styles.title}>
+      <div className="mb-4">
+        <h1 className="font-display text-2xl font-bold tracking-tight">
           {UI_TEXT.welcome}, {session?.user.fullName}
         </h1>
-        <div className={styles.subtitle}>{session?.clinic?.name}</div>
+        <p className="text-muted-foreground mt-1 text-sm">{session?.clinic?.name}</p>
       </div>
-      <div className={styles.card}>{UI_TEXT.dashboard_hint}</div>
+      <Card>
+        <CardContent className="text-muted-foreground text-sm">
+          {UI_TEXT.dashboard_hint}
+        </CardContent>
+      </Card>
     </>
   )
 }

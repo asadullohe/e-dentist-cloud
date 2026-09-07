@@ -37,15 +37,6 @@
   },
   "overrides": [
     {
-      "includes": ["apps/cabinet/src/app/styles/tokens.scss"],
-      "formatter": {
-        "enabled": false
-      },
-      "linter": {
-        "enabled": false
-      }
-    },
-    {
       "includes": ["apps/api/src/modules/**"],
       "linter": {
         "rules": {
@@ -72,5 +63,10 @@
         }
       }
     }
-  ]
+  ],
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
 }

@@ -94,7 +94,10 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Server | Node 22 + Fastify | Express'dan tez, sxema tekshiruvi ichida. Nest kabi ogʻir emas |
 | Baza | PostgreSQL 16 | Qator darajasidagi xavfsizlik (RLS) bor — koʻp ijarachi uchun ikkinchi himoya qatlami |
 | ORM | Prisma 7 | Migratsiya, tip xavfsizligi, oʻqiladigan sxema fayli. 7-versiyada ulanish manzili sxemada emas, `prisma.config.ts` da; klient `@prisma/adapter-pg` orqali ulanadi |
-| Frontend | React 18 + Vite | Mavjud ilovalar bilan bir xil — sahifalar va komponentlarni koʻchirish mumkin |
+| Frontend | React 19 + Vite | Oflayn ilovada 18 edi, lekin shadcn/ui ning barcha komponentlari `forwardRef` siz — ular React 19 ning «ref oddiy prop» xulqiga tayanadi. 18 da qolish 25 ta komponentni har yangilanishdan keyin qoʻlda tuzatishni talab qilardi. Koʻchiriladigan sahifalar oddiy funksiya komponentlari — 19 da ham ishlaydi |
+| UI komponentlari | Tailwind 4 + shadcn/ui | Tayyor, ochiq kodli komponentlar: jadval, oyna, forma, kalendar. Ranglar oflayn ilovaning indigo palitrasiga ulangan — tashqi koʻrinish oʻzgarmaydi |
+| Server holati | TanStack Query | Soʻrovlar keshi, qayta oʻqish, yuklanish holati. Qoʻlbola `useState` + `useEffect` oʻrniga |
+| Forma | react-hook-form + zod | Sxema serverdagi bilan bir xil shaklda, xato matnlari `strings.ts` dan |
 | Fayllar | MinIO (S3 mos) | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
 | Excel | SheetJS (`xlsx`) | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi |

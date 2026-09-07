@@ -1,9 +1,14 @@
+import { fileURLToPath } from 'node:url'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    },
     // Ildizda `prisma` CLI ichidagi Prisma Studio React 19 ni tortib keladi,
     // kabinet esa React 18 da (tz.md 3-boʻlim). Ikkita nusxa boʻlsa
     // react-router bittasini, bizning kod boshqasini koʻradi va hooklar

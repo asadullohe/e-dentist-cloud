@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from '../../shared/api'
+import { ApiError, apiRequest } from '@/shared/api'
 import type { Session } from './model'
 
 /// Kirmagan foydalanuvchi uchun xato emas, `null`. 401 — oddiy holat,

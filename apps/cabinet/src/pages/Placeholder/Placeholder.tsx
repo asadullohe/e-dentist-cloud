@@ -2,8 +2,7 @@
 // Menyu va marshrutlar hozirdan toʻgʻri ishlashi uchun turibdi.
 
 import { UI_TEXT } from '@e-dentist/shared'
-import { Empty } from '../../shared/ui'
-import styles from './Placeholder.module.scss'
+import { Card, EmptyState } from '@/shared/ui'
 
 interface PlaceholderProps {
   title: string
@@ -13,10 +12,10 @@ interface PlaceholderProps {
 export function Placeholder({ title, icon }: PlaceholderProps) {
   return (
     <>
-      <h1 className={styles.title}>{title}</h1>
-      <div className={styles.card}>
-        <Empty icon={icon} text={UI_TEXT.section_soon} />
-      </div>
+      <h1 className="font-display mb-4 text-2xl font-bold tracking-tight">{title}</h1>
+      <Card>
+        <EmptyState icon={icon} text={UI_TEXT.section_soon} />
+      </Card>
     </>
   )
 }

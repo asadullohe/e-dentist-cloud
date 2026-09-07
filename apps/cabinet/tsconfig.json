@@ -3,17 +3,12 @@
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
+    // Avtomatik @types qoʻshilishi oʻchiriladi: prisma CLI ichidagi Prisma
+    // Studio ildizga oʻz React tiplarini tortib keladi
     "types": ["vite/client"],
-    // prisma CLI ichidagi Prisma Studio ildizga @types/react@19 ni tortib
-    // keladi. Kabinetda esa React 18 (tz.md 3-boʻlim). Ikki nusxa boʻlsa
-    // TypeScript «JSX component emas» degan chalkash xato beradi, shuning
-    // uchun React tiplari aniq koʻrsatiladi
     "baseUrl": ".",
     "paths": {
-      "react": ["./node_modules/@types/react"],
-      "react/jsx-runtime": ["./node_modules/@types/react/jsx-runtime"],
-      "react-dom": ["./node_modules/@types/react-dom"],
-      "react-dom/client": ["./node_modules/@types/react-dom/client"]
+      "@/*": ["./src/*"]
     }
   },
   "include": [

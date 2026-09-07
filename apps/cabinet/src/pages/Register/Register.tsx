@@ -1,33 +1,53 @@
 import { formatUzPhone, UI_TEXT } from '@e-dentist/shared'
-import { type FormEvent, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
-import { AuthLayout } from '../../app/layouts/AuthLayout'
-import { useRegister } from '../../features/auth'
-import { fieldErrors, formError } from '../../shared/api'
-import { Field } from '../../shared/ui'
-import styles from './Register.module.scss'
+import { AuthLayout } from '@/app/layouts/AuthLayout'
+import { type RegisterValues, registerSchema, useRegister } from '@/features/auth'
+import { applyServerErrors } from '@/shared/lib'
+import {
+  Button,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+} from '@/shared/ui'
 
 export function Register() {
-  const { mutate, isPending, isSuccess, error } = useRegister()
-  const [clinicName, setClinicName] = useState('')
-  const [phone, setPhone] = useState('')
-  const [fullName, setFullName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { mutateAsync, isPending, isSuccess } = useRegister()
+  const [formError, setFormError] = useState('')
 
-  const fields = fieldErrors(error)
+  const form = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { clinicName: '', phone: '', fullName: '', email: '', password: '' },
+  })
 
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    mutate({ clinicName, phone: phone || undefined, fullName, email, password })
+  async function onSubmit(values: RegisterValues) {
+    setFormError('')
+    try {
+      await mutateAsync({ ...values, phone: values.phone || undefined })
+    } catch (error) {
+      setFormError(applyServerErrors(form, error))
+    }
   }
 
   if (isSuccess) {
     return (
-      <AuthLayout centered footer={<Link to="/login">{UI_TEXT.login}</Link>}>
-        <div className={styles.sentIcon}>📬</div>
-        <h2 className={styles.sentTitle}>{UI_TEXT.mail_sent}</h2>
-        <p className={styles.sentHint}>{UI_TEXT.mail_sent_hint}</p>
+      <AuthLayout
+        centered
+        footer={
+          <Link to="/login" className="text-primary hover:underline">
+            {UI_TEXT.login}
+          </Link>
+        }
+      >
+        <div className="text-4xl">📬</div>
+        <h2 className="font-display mt-2.5 text-lg font-semibold">{UI_TEXT.mail_sent}</h2>
+        <p className="text-muted-foreground mt-2 text-sm">{UI_TEXT.mail_sent_hint}</p>
       </AuthLayout>
     )
   }
@@ -36,53 +56,91 @@ export function Register() {
     <AuthLayout
       footer={
         <>
-          {UI_TEXT.have_account} <Link to="/login">{UI_TEXT.login}</Link>
+          {UI_TEXT.have_account}{' '}
+          <Link to="/login" className="text-primary hover:underline">
+            {UI_TEXT.login}
+          </Link>
         </>
       }
     >
-      <form onSubmit={handleSubmit}>
-        <Field label={UI_TEXT.clinic_name} error={fields.clinicName}>
-          <input
-            className="input"
-            value={clinicName}
-            onChange={(e) => setClinicName(e.target.value)}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+          <FormField
+            control={form.control}
+            name="clinicName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.clinic_name}</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        <Field label={UI_TEXT.phone} error={fields.phone}>
-          <input
-            className="input"
-            value={phone}
-            onChange={(e) => setPhone(formatUzPhone(e.target.value))}
-            placeholder="+998 90 123 45 67"
-            inputMode="tel"
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.phone}</FormLabel>
+                <FormControl>
+                  <Input
+                    inputMode="tel"
+                    placeholder="+998 90 123 45 67"
+                    {...field}
+                    onChange={(event) => field.onChange(formatUzPhone(event.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        <Field label={UI_TEXT.full_name} error={fields.fullName}>
-          <input className="input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-        </Field>
-        <Field label={UI_TEXT.email} error={fields.email}>
-          <input
-            className="input"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.full_name}</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        <Field label={UI_TEXT.password} error={fields.password}>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="new-password"
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.email}</FormLabel>
+                <FormControl>
+                  <Input type="email" autoComplete="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        {formError(error) && <div className={styles.error}>{formError(error)}</div>}
-        <button className={`btn ${styles.submit}`} type="submit" disabled={isPending}>
-          {isPending ? UI_TEXT.sending : UI_TEXT.register}
-        </button>
-      </form>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.password}</FormLabel>
+                <FormControl>
+                  <Input type="password" autoComplete="new-password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? UI_TEXT.sending : UI_TEXT.register}
+          </Button>
+        </form>
+      </Form>
     </AuthLayout>
   )
 }

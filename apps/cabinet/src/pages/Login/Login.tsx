@@ -1,27 +1,39 @@
 import { UI_TEXT } from '@e-dentist/shared'
-import { type FormEvent, useState } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
-import { AuthLayout } from '../../app/layouts/AuthLayout'
-import { useLogin } from '../../features/auth'
-import { fieldErrors, formError } from '../../shared/api'
-import { Field } from '../../shared/ui'
-import styles from './Login.module.scss'
+import { AuthLayout } from '@/app/layouts/AuthLayout'
+import { type LoginValues, loginSchema, useLogin } from '@/features/auth'
+import { applyServerErrors } from '@/shared/lib'
+import {
+  Button,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Input,
+} from '@/shared/ui'
 
 export function Login() {
   const navigate = useNavigate()
-  const { mutateAsync, isPending, error } = useLogin()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const { mutateAsync, isPending } = useLogin()
+  const [formError, setFormError] = useState('')
 
-  const fields = fieldErrors(error)
+  const form = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: '', password: '' },
+  })
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
+  async function onSubmit(values: LoginValues) {
+    setFormError('')
     try {
-      await mutateAsync({ email, password })
+      await mutateAsync(values)
       navigate('/', { replace: true })
-    } catch {
-      // Xato `error` da — quyida koʻrsatiladi
+    } catch (error) {
+      setFormError(applyServerErrors(form, error))
     }
   }
 
@@ -29,34 +41,47 @@ export function Login() {
     <AuthLayout
       footer={
         <>
-          {UI_TEXT.no_account} <Link to="/register">{UI_TEXT.register}</Link>
+          {UI_TEXT.no_account}{' '}
+          <Link to="/register" className="text-primary hover:underline">
+            {UI_TEXT.register}
+          </Link>
         </>
       }
     >
-      <form onSubmit={handleSubmit}>
-        <Field label={UI_TEXT.email} error={fields.email}>
-          <input
-            className="input"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.email}</FormLabel>
+                <FormControl>
+                  <Input type="email" autoComplete="email" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        <Field label={UI_TEXT.password} error={fields.password}>
-          <input
-            className="input"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{UI_TEXT.password}</FormLabel>
+                <FormControl>
+                  <Input type="password" autoComplete="current-password" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </Field>
-        {formError(error) && <div className={styles.error}>{formError(error)}</div>}
-        <button className={`btn ${styles.submit}`} type="submit" disabled={isPending}>
-          {isPending ? UI_TEXT.loading : UI_TEXT.login}
-        </button>
-      </form>
+          {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? UI_TEXT.loading : UI_TEXT.login}
+          </Button>
+        </form>
+      </Form>
     </AuthLayout>
   )
 }
