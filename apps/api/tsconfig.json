@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    // Avtomatik @types qoʻshilishi oʻchiriladi: prisma CLI ichidagi Prisma
+    // Studio @types/react@19 ni ildizga tortib keladi va kabinetdagi 18 bilan
+    // toʻqnashadi. Har ilova faqat oʻziga keraklisini oladi
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "prisma/**/*", "../../packages/shared/src/**/*"]
+}

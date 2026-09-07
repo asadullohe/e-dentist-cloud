@@ -197,17 +197,26 @@ describe('pochtani tasdiqlash', () => {
 
     const egasi = await ega.user.findFirst({ where: { clinicId } })
     expect(egasi?.emailVerifiedAt).not.toBeNull()
-    // Ishlatilgan kalit bazada qolmaydi
-    expect(egasi?.emailVerifyTokenHash).toBeNull()
   })
 
-  it('bitta kalit ikki marta ishlamaydi', async () => {
+  // Havola ikki marta ochilishi oddiy hol: React StrictMode effektni ikki
+  // marta chaqiradi, baʼzi pochta mijozlari esa havolani oldindan ochadi.
+  // Ikkinchi murojaat xato bermasligi kerak
+  it('havola ikki marta ochilsa ham xato bermaydi', async () => {
     const r = await app.inject({
       method: 'POST',
       url: '/api/auth/verify',
       payload: { token: kalitniOl() },
     })
-    expect(r.statusCode).toBe(400)
+    expect(r.statusCode).toBe(200)
+  })
+
+  it('tasdiqlangan vaqt birinchi martadagicha qoladi', async () => {
+    const egasi = await ega.user.findFirst({ where: { clinicId } })
+    const birinchi = egasi?.emailVerifiedAt
+    await app.inject({ method: 'POST', url: '/api/auth/verify', payload: { token: kalitniOl() } })
+    const keyin = await ega.user.findFirst({ where: { clinicId } })
+    expect(keyin?.emailVerifiedAt?.getTime()).toBe(birinchi?.getTime())
   })
 })
 

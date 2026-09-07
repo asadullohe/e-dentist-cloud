@@ -37,6 +37,15 @@
   },
   "overrides": [
     {
+      "includes": ["apps/cabinet/src/styles.css"],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
       "includes": ["apps/api/src/modules/**"],
       "linter": {
         "rules": {

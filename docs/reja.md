@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.16**
+**Hozirgi task: 2.1** — bosqich 1 tugadi
 
 ---
 
@@ -179,15 +179,41 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 
 ### Kabinet skeleti
 
-- [ ] **1.16 `apps/cabinet` skeleti** — Vite + React 18 + router, oflayn loyihadan
-      `styles.css` dizayn tokenlari koʻchiriladi
-      → `npm run dev` boʻsh sahifani ochadi, indigo palitra joyida
-- [ ] **1.17 Kirish va roʻyxatdan oʻtish sahifalari** — forma tekshiruvi,
-      xato matnlari `strings.ts` dan
-      → brauzerdan roʻyxatdan oʻtib, kirib boʻladi
-- [ ] **1.18 Boʻsh kabinet** — yon menyu, «Chiqish», rolga qarab boʻlimlar koʻrinadi/yashiriladi,
-      sinov muddati banneri
-      → kirgandan keyin kabinet ochiladi, ruxsatsiz boʻlim menyuda yoʻq
+- [x] **1.16 `apps/cabinet` skeleti** — Vite 8 + React 18.3.1 + react-router 7.
+      `styles.css` oflayn loyihadan **aynan** koʻchirildi (1005 qator, indigo palitra)
+      va tekshiruvdan chiqarildi — ikkala loyihadagi dizayn ajralib ketmasin.
+      Vebga xos tuzatishlar alohida `kabinet.css` da
+- [x] **1.17 Kirish, roʻyxatdan oʻtish va tasdiqlash sahifalari** — forma xatolari
+      maydon boʻyicha koʻrsatiladi, telefon maskasi `shared` dan
+- [x] **1.18 Boʻsh kabinet** — yon menyu ruxsatlarga qarab shakllanadi, sinov
+      muddati banneri, «Chiqish». Brauzerda tekshirildi: rol «Texnik» ga
+      almashtirilganda menyu bitta boʻlimga qisqaradi, qayta kirish shart emas
+
+> **Lokalda CORS kerak emas**
+>
+> Vite `/api` ni `localhost:3000` ga uzatadi. Brauzer uchun kabinet ham, API ham
+> bitta manzil — xuddi serverdagidek (u yerda Caddy shu ishni qiladi). CORS
+> sozlamasi ham, `credentials` bilan ovoragarchilik ham yoʻq.
+
+> **React nusxasi ikkita boʻlib qolgan edi**
+>
+> `prisma` CLI ichidagi Prisma Studio ildizga React 19 ni tortib keladi, kabinet
+> esa React 18 da (tz.md). Natijada `react-router` bitta nusxani, bizning kod
+> boshqasini koʻrdi va hooklar umuman ishlamadi.
+>
+> Ikki joyda tuzatildi: `vite.config.ts` da `resolve.dedupe`, va
+> `apps/cabinet/tsconfig.json` da React tiplarining yoʻli. Shu bilan birga har
+> ilovaga oʻz `tsconfig` i berildi — API Node uchun, kabinet brauzer uchun.
+
+> **Tasdiqlash havolasi ikki marta ochilishi mumkin**
+>
+> Brauzerdagi sinov nuqsonni ochdi: React StrictMode effektni ikki marta
+> chaqiradi, birinchi soʻrov kalitni ishlatib yuboradi, ikkinchisi «Havola
+> yaroqsiz» deydi. Bu faqat ishlab chiqish muammosi emas — baʼzi pochta
+> mijozlari havolani foydalanuvchidan oldin ochib koʻradi.
+>
+> `auth_verify_email` endi takrorlansa ham bir xil natija beradi (`COALESCE`),
+> mijoz tomonida esa ikkinchi soʻrov umuman yuborilmaydi.
 
 **Bosqich natijasi:** roʻyxatdan oʻtish → pochta tasdiqlash → kirish → boʻsh kabinet.
 Koʻp ijarachilik testi yashil.

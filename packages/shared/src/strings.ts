@@ -61,3 +61,46 @@ export const AUTH = {
   kop_royxat: 'Bugun bu qurilmadan juda koʻp roʻyxatdan oʻtish boʻldi. Ertaga urinib koʻring',
   xat_mavzusi: 'E-Dentist — pochtangizni tasdiqlang',
 } as const
+
+// Kabinet interfeysi
+export const KABINET = {
+  brend: 'E-Dentist',
+  aloqa_yoq: 'Server bilan aloqa yoʻq. Internetni tekshirib, qayta urinib koʻring',
+  kirish: 'Kirish',
+  chiqish: 'Chiqish',
+  royxatdan_otish: 'Roʻyxatdan oʻtish',
+  pochta: 'Pochta',
+  parol: 'Parol',
+  klinika_nomi: 'Klinika nomi',
+  telefon: 'Telefon',
+  fio: 'Ism-familiya',
+  hisobingiz_bormi: 'Hisobingiz bormi?',
+  hisobingiz_yoqmi: 'Hisobingiz yoʻqmi?',
+  yuborilmoqda: 'Yuborilmoqda…',
+  yuklanmoqda: 'Yuklanmoqda…',
+  xat_yuborildi: 'Pochtangizga tasdiqlash havolasi yuborildi',
+  xat_yuborildi_izoh:
+    'Xatni ochib havolani bosing. Xat koʻrinmasa, «Spam» papkasini ham tekshiring.',
+  tasdiqlanmoqda: 'Tasdiqlanmoqda…',
+  tasdiqlandi: 'Pochta tasdiqlandi',
+  tasdiqlandi_izoh: 'Endi hisobingizga kira olasiz.',
+  sinov_qoldi: (kun: number) => `Sinov muddati: ${kun} kun qoldi`,
+  sinov_tugadi: 'Sinov muddati tugadi — faqat oʻqish rejimi',
+  bolim_tayyorlanmoqda: 'Bu boʻlim keyingi bosqichda qoʻshiladi',
+  bolim_yoq: 'Bu boʻlimga ruxsatingiz yoʻq',
+  xush_kelibsiz: 'Xush kelibsiz',
+  bosh_sahifa_izoh:
+    'Kabinet tayyor. Bemorlar, tashriflar va tish xaritasi keyingi bosqichda qoʻshiladi.',
+} as const
+
+// Yon menyu boʻlimlari. Har biri talab qiladigan ruxsat bilan
+export const BOLIMLAR = [
+  { yol: '/bemorlar', nom: 'Bemorlar', ico: '👥', ruxsat: 'patients.read' },
+  { yol: '/qabullar', nom: 'Qabul jadvali', ico: '📅', ruxsat: 'schedule.write' },
+  { yol: '/naryadlar', nom: 'Texnik ishlari', ico: '🦷', ruxsat: 'lab.own' },
+  { yol: '/qarzdorlar', nom: 'Qarzdorlar', ico: '💳', ruxsat: 'payments.read' },
+  { yol: '/narxnoma', nom: 'Narxnoma', ico: '🏷', ruxsat: 'services.manage' },
+  { yol: '/xarajatlar', nom: 'Xarajatlar', ico: '🧾', ruxsat: 'expenses.read' },
+  { yol: '/hisobotlar', nom: 'Hisobotlar', ico: '📊', ruxsat: 'reports.read' },
+  { yol: '/sozlamalar', nom: 'Sozlamalar', ico: '⚙️', ruxsat: 'staff.manage' },
+] as const
