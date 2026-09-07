@@ -1,52 +1,52 @@
 import type { FastifyPluginAsync } from 'fastify'
-import { ok } from '../../platform/javob.js'
-import { talabKirish } from '../../platform/kirish.js'
-import { COOKIE_NOMI } from '../../platform/sessiya.js'
-import { tekshir } from '../../platform/tekshir.js'
-import { KirishSxemasi, RoyxatSxemasi, TasdiqlashSxemasi } from './schema.js'
+import { requireAuth } from '../../platform/guards.js'
+import { ok } from '../../platform/response.js'
+import { SESSION_COOKIE } from '../../platform/session.js'
+import { validateInput } from '../../platform/validate.js'
+import { loginSchema, registerSchema, verifySchema } from './schema.js'
 import * as service from './service.js'
 
-const OMR_SONIYA = 60 * 60 * 24 * 7
+const SESSION_TTL = 60 * 60 * 24 * 7
 
 export interface AuthRouteOpts {
   deps: service.AuthDeps
   /// Prod da cookie faqat HTTPS orqali yuboriladi
-  xavfsizCookie: boolean
+  secureCookie: boolean
 }
 
 export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) => {
   app.post('/auth/register', async (req) => {
-    const kirish = tekshir(RoyxatSxemasi, req.body)
-    return ok(await service.royxatdanOt(opts.deps, kirish, req.ip))
+    const input = validateInput(registerSchema, req.body)
+    return ok(await service.register(opts.deps, input, req.ip))
   })
 
   app.post('/auth/verify', async (req) => {
-    const { token } = tekshir(TasdiqlashSxemasi, req.body)
-    await service.tasdiqla(opts.deps, token)
+    const { token } = validateInput(verifySchema, req.body)
+    await service.verifyEmail(opts.deps, token)
     return ok({ tasdiqlandi: true })
   })
 
   app.post('/auth/login', async (req, reply) => {
-    const kirish = tekshir(KirishSxemasi, req.body)
-    const sessiyaId = await service.kir(opts.deps, kirish, req.ip)
-    reply.setCookie(COOKIE_NOMI, sessiyaId, {
+    const input = validateInput(loginSchema, req.body)
+    const sessionId = await service.login(opts.deps, input, req.ip)
+    reply.setCookie(SESSION_COOKIE, sessionId, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: opts.xavfsizCookie,
+      secure: opts.secureCookie,
       path: '/',
-      maxAge: OMR_SONIYA,
+      maxAge: SESSION_TTL,
     })
     return ok({ kirildi: true })
   })
 
   app.post('/auth/logout', async (req, reply) => {
-    if (req.sessiyaId) await service.chiq(opts.deps, req.sessiyaId, req.sessiya)
-    reply.clearCookie(COOKIE_NOMI, { path: '/' })
+    if (req.sessionId) await service.logout(opts.deps, req.sessionId, req.session)
+    reply.clearCookie(SESSION_COOKIE, { path: '/' })
     return ok({ chiqildi: true })
   })
 
   app.get('/me', async (req) => {
-    const sessiya = talabKirish(req)
-    return ok(await service.men(opts.deps, sessiya))
+    const session = requireAuth(req)
+    return ok(await service.currentUser(opts.deps, session))
   })
 }

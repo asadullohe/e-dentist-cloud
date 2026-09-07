@@ -1,7 +1,7 @@
 // Telefon, pul va forma tekshiruvi. Oflayn ilovadagi lib/validation.js dan.
 // Maydon nomlari tz.md dagi maʼlumotlar modeliga moslandi: full_name → fio.
 
-import { TEKSHIRUV } from './strings.js'
+import { VALIDATION_TEXT } from './strings.js'
 
 // Kiritilgan matndan operator + raqam qismini (9 xona) ajratib oladi.
 // «+998 90 123 45 67», «901234567», «8 90 123 45 67» — hammasi bir xil natija
@@ -51,7 +51,7 @@ export function normalizeName(s: string | null | undefined): string {
     .toLowerCase()
 }
 
-const ISM_RE = /^[a-zA-ZʻʼʹЀ-ӿ' .-]+$/
+const NAME_RE = /^[a-zA-ZʻʼʹЀ-ӿ' .-]+$/
 
 export interface BemorFormasi {
   fio?: string | null
@@ -65,22 +65,22 @@ export type BemorXatolari = Partial<Record<keyof BemorFormasi, string>>
 export function validatePatient(f: BemorFormasi): BemorXatolari {
   const errors: BemorXatolari = {}
 
-  const ism = String(f.fio ?? '')
+  const name = String(f.fio ?? '')
     .replace(/\s+/g, ' ')
     .trim()
-  if (!ism) errors.fio = TEKSHIRUV.fio_shart
-  else if (ism.length < 3) errors.fio = TEKSHIRUV.fio_qisqa
-  else if (!ISM_RE.test(ism)) errors.fio = TEKSHIRUV.fio_harf
+  if (!name) errors.fio = VALIDATION_TEXT.fio_required
+  else if (name.length < 3) errors.fio = VALIDATION_TEXT.fio_too_short
+  else if (!NAME_RE.test(name)) errors.fio = VALIDATION_TEXT.fio_letters_only
 
   // Telefon majburiy emas, lekin kiritilgan boʻlsa toʻliq boʻlishi kerak
   const d = phoneDigits(f.phone)
-  if (d && d.length < 9) errors.phone = TEKSHIRUV.telefon_toliq_emas
+  if (d && d.length < 9) errors.phone = VALIDATION_TEXT.phone_incomplete
 
   if (f.birth_date) {
     const b = new Date(`${f.birth_date}T00:00:00`)
-    if (Number.isNaN(b.getTime())) errors.birth_date = TEKSHIRUV.sana_notogri
-    else if (b > new Date()) errors.birth_date = TEKSHIRUV.sana_kelajak
-    else if (b.getFullYear() < 1900) errors.birth_date = TEKSHIRUV.sana_qadimgi
+    if (Number.isNaN(b.getTime())) errors.birth_date = VALIDATION_TEXT.date_invalid
+    else if (b > new Date()) errors.birth_date = VALIDATION_TEXT.date_in_future
+    else if (b.getFullYear() < 1900) errors.birth_date = VALIDATION_TEXT.date_too_old
   }
 
   return errors

@@ -2,125 +2,131 @@
 // Boshqa modullar auth ga faqat shu fayl orqali murojaat qiladi.
 
 import { createHash, randomBytes } from 'node:crypto'
-import { AUTH, birMartalikPochtami, fmtDate, kunQoshib, type Ruxsat } from '@e-dentist/shared'
-import { AMAL, yozAudit } from '../../platform/audit.js'
-import type { Cheklagich } from '../../platform/cheklov.js'
+import {
+  AUTH_TEXT,
+  addDays,
+  formatDate,
+  isDisposableEmail,
+  type Permission,
+} from '@e-dentist/shared'
+import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
-import { xato } from '../../platform/errors.js'
-import { tekshirParol, xeshlaParol } from '../../platform/parol.js'
-import type { PochtaYuboruvchi } from '../../platform/pochta.js'
-import type { SessiyaMazmuni, SessiyaSaqlagich } from '../../platform/sessiya.js'
-import { klinikaSessiyasi } from '../../platform/tenant.js'
+import { errors } from '../../platform/errors.js'
+import type { Mailer } from '../../platform/mailer.js'
+import { hashPassword, verifyPassword } from '../../platform/password.js'
+import type { RateLimiter } from '../../platform/rateLimit.js'
+import type { SessionData, SessionStore } from '../../platform/session.js'
+import { withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as clinics from '../clinics/service.js'
 import * as repo from './repo.js'
-import type { KirishKirishi, RoyxatKirishi } from './schema.js'
+import type { LoginInput, RegisterInput } from './schema.js'
 
-const SINOV_KUNI = 14
-const TASDIQLASH_SOATI = 24
+const TRIAL_DAYS = 14
+const VERIFY_TOKEN_HOURS = 24
 
 // Cheklovlar. Hisob boʻyicha qattiqroq: bitta hisobga parol tanlashni
 // toʻsish kerak. IP boʻyicha yumshoqroq: bitta klinikada bir necha xodim
 // bitta tarmoqdan kirishi mumkin
-const KIRISH_OYNA = 15 * 60
-const KIRISH_HISOB_CHEGARA = 5
-const KIRISH_IP_CHEGARA = 20
-const ROYXAT_OYNA = 24 * 60 * 60
-const ROYXAT_IP_CHEGARA = 3
+const LOGIN_WINDOW = 15 * 60
+const LOGIN_ACCOUNT_LIMIT = 5
+const LOGIN_IP_LIMIT = 20
+const REGISTER_WINDOW = 24 * 60 * 60
+const REGISTER_IP_LIMIT = 3
 
 export interface AuthDeps {
   db: Db
-  sessiyalar: SessiyaSaqlagich
-  cheklagich: Cheklagich
-  pochta: PochtaYuboruvchi
+  sessions: SessionStore
+  rateLimiter: RateLimiter
+  mailer: Mailer
   cabinetUrl: string
-  log: (xabar: string, maʼlumot?: Record<string, unknown>) => void
+  log: (message: string, meta?: Record<string, unknown>) => void
 }
 
 // Pochta topilmaganda ham parol tekshiruvi bajarilishi kerak: aks holda
 // javob vaqti «bunday pochta bormi» degan savolga javob berib qoʻyadi
-let soxtaXesh: string | null = null
-async function soxtaXeshOl(): Promise<string> {
-  soxtaXesh ??= await xeshlaParol(randomBytes(32).toString('hex'))
-  return soxtaXesh
+let dummyHash: string | null = null
+async function getDummyHash(): Promise<string> {
+  dummyHash ??= await hashPassword(randomBytes(32).toString('hex'))
+  return dummyHash
 }
 
-function kalitYarat(): { kalit: string; xesh: string } {
-  const kalit = randomBytes(32).toString('base64url')
-  return { kalit, xesh: createHash('sha256').update(kalit).digest('hex') }
+function createToken(): { token: string; hash: string } {
+  const token = randomBytes(32).toString('base64url')
+  return { token, hash: createHash('sha256').update(token).digest('hex') }
 }
 
-function soatQoshib(soat: number): Date {
+function addHours(soat: number): Date {
   return new Date(Date.now() + soat * 60 * 60 * 1000)
 }
 
-function pochtaBandmi(e: unknown): boolean {
+function isDuplicateEmail(e: unknown): boolean {
   return typeof e === 'object' && e !== null && (e as { code?: string }).code === 'P2002'
 }
 
-export async function royxatdanOt(
+export async function register(
   deps: AuthDeps,
-  kirish: RoyxatKirishi,
+  input: RegisterInput,
   ip: string,
 ): Promise<{ clinicId: string }> {
-  if (birMartalikPochtami(kirish.email)) {
-    throw xato.validation({ email: AUTH.bir_martalik_pochta })
+  if (isDisposableEmail(input.email)) {
+    throw errors.validation({ email: AUTH_TEXT.disposable_email })
   }
 
-  const cheklov = await deps.cheklagich.urin(`royxat:ip:${ip}`, ROYXAT_IP_CHEGARA, ROYXAT_OYNA)
-  if (!cheklov.ruxsat) throw xato.rateLimited(AUTH.kop_royxat)
+  const check = await deps.rateLimiter.hit(`royxat:ip:${ip}`, REGISTER_IP_LIMIT, REGISTER_WINDOW)
+  if (!check.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_registrations)
 
   // Klinikaning id si bazadan emas, shu yerdan: RLS siyosati yozuvni
   // kiritishdan oldin sessiyada oʻsha id turishini talab qiladi
   const clinicId = uuidV7()
   const userId = uuidV7()
-  const { kalit, xesh } = kalitYarat()
-  const expiresAt = kunQoshib(SINOV_KUNI)
-  const passwordHash = await xeshlaParol(kirish.password)
+  const { token, hash } = createToken()
+  const expiresAt = addDays(TRIAL_DAYS)
+  const passwordHash = await hashPassword(input.password)
 
   try {
-    await klinikaSessiyasi(deps.db, clinicId, async (tx) => {
-      const { egasiRoliId } = await clinics.yaratKlinikaVaRollar(tx, {
+    await withClinic(deps.db, clinicId, async (tx) => {
+      const { ownerRoleId } = await clinics.createClinicWithRoles(tx, {
         clinicId,
-        name: kirish.clinicName,
-        phone: kirish.phone ?? null,
+        name: input.clinicName,
+        phone: input.phone ?? null,
         expiresAt,
       })
-      await repo.yaratEgasi(tx, {
+      await repo.createOwner(tx, {
         userId,
-        roleId: egasiRoliId,
-        email: kirish.email,
+        roleId: ownerRoleId,
+        email: input.email,
         passwordHash,
-        fullName: kirish.fullName,
-        emailVerifyTokenHash: xesh,
-        emailVerifyExpiresAt: soatQoshib(TASDIQLASH_SOATI),
+        fullName: input.fullName,
+        emailVerifyTokenHash: hash,
+        emailVerifyExpiresAt: addHours(VERIFY_TOKEN_HOURS),
       })
-      await yozAudit(tx, {
+      await writeAudit(tx, {
         userId,
-        action: AMAL.royxatdan_otdi,
+        action: AUDIT_ACTION.registered,
         entity: 'clinic',
         entityId: clinicId,
         meta: { ip },
       })
     })
   } catch (e) {
-    if (pochtaBandmi(e)) throw xato.conflict(AUTH.email_band)
+    if (isDuplicateEmail(e)) throw errors.conflict(AUTH_TEXT.email_taken)
     throw e
   }
 
-  await deps.pochta.yubor({
-    kimga: kirish.email,
-    mavzu: AUTH.xat_mavzusi,
-    matn: [
+  await deps.mailer.send({
+    to: input.email,
+    subject: AUTH_TEXT.verify_subject,
+    body: [
       'Assalomu alaykum!',
       '',
-      `«${kirish.clinicName}» uchun E-Dentist hisobi yaratildi.`,
-      `Sinov muddati ${fmtDate(expiresAt.toISOString().slice(0, 10))} gacha.`,
+      `«${input.clinicName}» uchun E-Dentist hisobi yaratildi.`,
+      `Sinov muddati ${formatDate(expiresAt.toISOString().slice(0, 10))} gacha.`,
       '',
       'Pochtangizni tasdiqlash uchun quyidagi havolani oching:',
-      `${deps.cabinetUrl}/tasdiqlash?kalit=${kalit}`,
+      `${deps.cabinetUrl}/verify?token=${token}`,
       '',
-      `Havola ${TASDIQLASH_SOATI} soat amal qiladi.`,
+      `Havola ${VERIFY_TOKEN_HOURS} soat amal qiladi.`,
       'Agar bu siz boʻlmasangiz, xatni eʼtiborsiz qoldiring.',
     ].join('\n'),
   })
@@ -128,63 +134,63 @@ export async function royxatdanOt(
   return { clinicId }
 }
 
-export async function tasdiqla(deps: AuthDeps, kalit: string): Promise<void> {
-  const xesh = createHash('sha256').update(kalit).digest('hex')
-  const natija = await repo.tasdiqlaKalit(deps.db, xesh)
-  if (!natija) throw xato.badRequest(AUTH.havola_yaroqsiz)
+export async function verifyEmail(deps: AuthDeps, token: string): Promise<void> {
+  const hash = createHash('sha256').update(token).digest('hex')
+  const result = await repo.consumeVerifyToken(deps.db, hash)
+  if (!result) throw errors.badRequest(AUTH_TEXT.link_invalid)
 
-  await klinikaSessiyasi(deps.db, natija.clinic_id, (tx) =>
-    yozAudit(tx, {
-      userId: natija.user_id,
-      action: AMAL.pochta_tasdiqlandi,
+  await withClinic(deps.db, result.clinic_id, (tx) =>
+    writeAudit(tx, {
+      userId: result.user_id,
+      action: AUDIT_ACTION.email_verified,
       entity: 'user',
-      entityId: natija.user_id,
+      entityId: result.user_id,
     }),
   )
 }
 
-export async function kir(deps: AuthDeps, kirish: KirishKirishi, ip: string): Promise<string> {
-  const ipCheklov = await deps.cheklagich.urin(`kirish:ip:${ip}`, KIRISH_IP_CHEGARA, KIRISH_OYNA)
-  if (!ipCheklov.ruxsat) throw xato.rateLimited(AUTH.kop_urinish)
+export async function login(deps: AuthDeps, input: LoginInput, ip: string): Promise<string> {
+  const ipCheck = await deps.rateLimiter.hit(`kirish:ip:${ip}`, LOGIN_IP_LIMIT, LOGIN_WINDOW)
+  if (!ipCheck.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_attempts)
 
-  const hisobKaliti = `kirish:hisob:${kirish.email}`
-  const hisobCheklov = await deps.cheklagich.urin(hisobKaliti, KIRISH_HISOB_CHEGARA, KIRISH_OYNA)
-  if (!hisobCheklov.ruxsat) throw xato.rateLimited(AUTH.kop_urinish)
+  const accountKey = `kirish:hisob:${input.email}`
+  const accountCheck = await deps.rateLimiter.hit(accountKey, LOGIN_ACCOUNT_LIMIT, LOGIN_WINDOW)
+  if (!accountCheck.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_attempts)
 
-  const u = await repo.topPochtaBoyicha(deps.db, kirish.email)
+  const u = await repo.findByEmail(deps.db, input.email)
 
   if (!u) {
     // Vaqtni tenglashtirish uchun — natija baribir rad etish.
     // Klinika nomaʼlum, shuning uchun audit emas, oddiy log
-    await tekshirParol(await soxtaXeshOl(), kirish.password)
+    await verifyPassword(await getDummyHash(), input.password)
     deps.log('nomaʼlum pochta bilan kirishga urinish', { ip })
-    throw xato.unauthorized(AUTH.kirish_xato)
+    throw errors.unauthorized(AUTH_TEXT.login_failed_msg)
   }
 
-  if (!(await tekshirParol(u.password_hash, kirish.password))) {
+  if (!(await verifyPassword(u.password_hash, input.password))) {
     if (u.clinic_id) {
-      await klinikaSessiyasi(deps.db, u.clinic_id, (tx) =>
-        yozAudit(tx, {
+      await withClinic(deps.db, u.clinic_id, (tx) =>
+        writeAudit(tx, {
           userId: u.id,
-          action: AMAL.kirish_xatosi,
+          action: AUDIT_ACTION.login_failed,
           entity: 'user',
           entityId: u.id,
           meta: { ip },
         }),
       )
     }
-    throw xato.unauthorized(AUTH.kirish_xato)
+    throw errors.unauthorized(AUTH_TEXT.login_failed_msg)
   }
 
-  if (u.status !== 'active') throw xato.forbidden(AUTH.hisob_faolsiz)
-  if (!u.email_verified_at) throw xato.forbidden(AUTH.pochta_tasdiqlanmagan)
+  if (u.status !== 'active') throw errors.forbidden(AUTH_TEXT.account_disabled)
+  if (!u.email_verified_at) throw errors.forbidden(AUTH_TEXT.email_not_verified)
 
   if (u.clinic_id) {
-    await klinikaSessiyasi(deps.db, u.clinic_id, async (tx) => {
-      await repo.belgilaKirish(tx, u.id)
-      await yozAudit(tx, {
+    await withClinic(deps.db, u.clinic_id, async (tx) => {
+      await repo.markLogin(tx, u.id)
+      await writeAudit(tx, {
         userId: u.id,
-        action: AMAL.kirdi,
+        action: AUDIT_ACTION.loggedIn,
         entity: 'user',
         entityId: u.id,
         meta: { ip },
@@ -193,20 +199,20 @@ export async function kir(deps: AuthDeps, kirish: KirishKirishi, ip: string): Pr
   }
 
   // Muvaffaqiyatli kirishdan keyin hisob hisoblagichi tozalanadi
-  await deps.cheklagich.tozala(hisobKaliti)
+  await deps.rateLimiter.reset(accountKey)
 
-  return deps.sessiyalar.yarat({ userId: u.id, clinicId: u.clinic_id })
+  return deps.sessions.create({ userId: u.id, clinicId: u.clinic_id })
 }
 
-export async function chiq(deps: AuthDeps, sessiyaId: string, sessiya: SessiyaMazmuni | null) {
-  await deps.sessiyalar.ochir(sessiyaId)
-  if (sessiya?.clinicId) {
-    await klinikaSessiyasi(deps.db, sessiya.clinicId, (tx) =>
-      yozAudit(tx, {
-        userId: sessiya.userId,
-        action: AMAL.chiqdi,
+export async function logout(deps: AuthDeps, sessionId: string, session: SessionData | null) {
+  await deps.sessions.destroy(sessionId)
+  if (session?.clinicId) {
+    await withClinic(deps.db, session.clinicId, (tx) =>
+      writeAudit(tx, {
+        userId: session.userId,
+        action: AUDIT_ACTION.logged_out,
         entity: 'user',
-        entityId: sessiya.userId,
+        entityId: session.userId,
       }),
     )
   }
@@ -217,36 +223,36 @@ export async function chiq(deps: AuthDeps, sessiyaId: string, sessiya: SessiyaMa
 /// Rol foydalanuvchidan, ruxsatlar roldan — ikkalasi ham har soʻrovda
 /// bazadan. Faolsizlantirilgan xodimning ochiq sessiyasi ham shu yerda
 /// toʻxtaydi: hisob oʻchirilganda kirish darhol tugashi kerak
-export async function foydalanuvchiRuxsatlari(
+export async function userPermissions(
   db: Db,
   clinicId: string,
   userId: string,
-): Promise<readonly Ruxsat[]> {
-  return klinikaSessiyasi(db, clinicId, async (tx) => {
-    const u = await repo.oqiFoydalanuvchi(tx, userId)
-    if (!u) throw xato.unauthorized()
-    if (u.status !== 'active') throw xato.forbidden(AUTH.hisob_faolsiz)
+): Promise<readonly Permission[]> {
+  return withClinic(db, clinicId, async (tx) => {
+    const u = await repo.findUser(tx, userId)
+    if (!u) throw errors.unauthorized()
+    if (u.status !== 'active') throw errors.forbidden(AUTH_TEXT.account_disabled)
     if (!u.roleId) return []
-    return clinics.ruxsatlarniOl(tx, u.roleId)
+    return clinics.getPermissions(tx, u.roleId)
   })
 }
 
-export async function men(deps: AuthDeps, sessiya: SessiyaMazmuni) {
-  if (!sessiya.clinicId) throw xato.forbidden() // Platforma admini — bosqich 5.2
+export async function currentUser(deps: AuthDeps, session: SessionData) {
+  if (!session.clinicId) throw errors.forbidden() // Platforma admini — bosqich 5.2
 
-  const clinicId = sessiya.clinicId
-  return klinikaSessiyasi(deps.db, clinicId, async (tx) => {
-    const u = await repo.oqiFoydalanuvchi(tx, sessiya.userId)
-    if (!u) throw xato.unauthorized()
+  const clinicId = session.clinicId
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const u = await repo.findUser(tx, session.userId)
+    if (!u) throw errors.unauthorized()
 
-    const klinika = await clinics.oqiKlinika(tx, clinicId)
-    const rol = u.roleId ? await clinics.oqiRol(tx, u.roleId) : null
+    const clinic = await clinics.findClinic(tx, clinicId)
+    const role = u.roleId ? await clinics.findRole(tx, u.roleId) : null
 
     return {
       user: { id: u.id, email: u.email, fullName: u.fullName },
-      clinic: klinika,
-      role: rol ? { name: rol.name, template: rol.template, isOwner: rol.isOwner } : null,
-      permissions: rol?.permissions ?? [],
+      clinic: clinic,
+      role: role ? { name: role.name, template: role.template, isOwner: role.isOwner } : null,
+      permissions: role?.permissions ?? [],
     }
   })
 }

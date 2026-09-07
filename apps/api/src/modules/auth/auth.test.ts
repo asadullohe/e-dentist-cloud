@@ -1,70 +1,70 @@
 // Auth moduli — uchidan uchiga. Haqiqiy baza va Redis bilan ishlaydi,
 // xat esa xotirada ushlanadi: tasdiqlash havolasini oʻsha yerdan olamiz.
 
-import { kunQoshib } from '@e-dentist/shared'
+import { addDays } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { yaratCheklagich } from '../../platform/cheklov.js'
 import type { Config } from '../../platform/config.js'
-import { type Db, yaratDb } from '../../platform/db.js'
-import { xotiraPochtasi } from '../../platform/pochta.js'
-import { yaratServer } from '../../platform/server.js'
-import { yaratSessiyaSaqlagich } from '../../platform/sessiya.js'
+import { createDb, type Db } from '../../platform/db.js'
+import { memoryMailer } from '../../platform/mailer.js'
+import { createRateLimiter } from '../../platform/rateLimit.js'
+import { createServer } from '../../platform/server.js'
+import { createSessionStore } from '../../platform/session.js'
 
-const egaUrl = process.env.DATABASE_URL
+const ownerUrl = process.env.DATABASE_URL
 const appUrl = process.env.APP_DATABASE_URL
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379'
-if (!egaUrl || !appUrl) throw new Error('DATABASE_URL va APP_DATABASE_URL kerak')
+if (!ownerUrl || !appUrl) throw new Error('DATABASE_URL va APP_DATABASE_URL kerak')
 
 const config: Config = {
   NODE_ENV: 'test',
   API_PORT: 3000,
   TZ: 'Asia/Tashkent',
   CABINET_URL: 'http://localhost:5173',
-  DATABASE_URL: egaUrl,
+  DATABASE_URL: ownerUrl,
   APP_DATABASE_URL: appUrl,
   REDIS_URL: redisUrl,
   SESSION_SECRET: 'x'.repeat(16),
 }
 
-const POCHTA = `sinov-${Date.now()}@example.com`
-const KLINIKA = `Sinov klinikasi ${Date.now()}`
-const CHEKLOV_POCHTA = `cheklov-${Date.now()}@example.com`
+const EMAIL = `sinov-${Date.now()}@example.com`
+const CLINIC = `Sinov klinikasi ${Date.now()}`
+const LIMIT_EMAIL = `cheklov-${Date.now()}@example.com`
 
 let app: FastifyInstance
-let ega: Db
+let ownerDb: Db
 let db: Db
-let sessiyalar: ReturnType<typeof yaratSessiyaSaqlagich>
-let cheklagich: ReturnType<typeof yaratCheklagich>
-const pochta = xotiraPochtasi()
+let sessions: ReturnType<typeof createSessionStore>
+let rateLimiter: ReturnType<typeof createRateLimiter>
+const mailer = memoryMailer()
 let clinicId = ''
 
-function kalitniOl(): string {
-  const matn = pochta.xatlar.at(-1)?.matn ?? ''
-  return /kalit=([\w-]+)/.exec(matn)?.[1] ?? ''
+function lastToken(): string {
+  const body = mailer.sent.at(-1)?.body ?? ''
+  return /token=([\w-]+)/.exec(body)?.[1] ?? ''
 }
 
 beforeAll(async () => {
-  ega = yaratDb(egaUrl as string)
-  db = yaratDb(appUrl as string)
-  sessiyalar = yaratSessiyaSaqlagich(redisUrl)
-  cheklagich = yaratCheklagich(redisUrl)
+  ownerDb = createDb(ownerUrl as string)
+  db = createDb(appUrl as string)
+  sessions = createSessionStore(redisUrl)
+  rateLimiter = createRateLimiter(redisUrl)
 
   // Hisoblagichlar Redis da qoladi — oldingi ishga tushirishdan
   // qolgani testni yiqitmasin
   for (const k of [
     'royxat:ip:127.0.0.1',
     'kirish:ip:127.0.0.1',
-    `kirish:hisob:${POCHTA}`,
-    `kirish:hisob:${CHEKLOV_POCHTA}`,
+    `kirish:hisob:${EMAIL}`,
+    `kirish:hisob:${LIMIT_EMAIL}`,
   ]) {
-    await cheklagich.tozala(k)
+    await rateLimiter.reset(k)
   }
 
-  app = yaratServer(config, { db, sessiyalar, cheklagich, pochta })
+  app = createServer(config, { db, sessions, rateLimiter, mailer })
 
   // Ruxsat tekshiruvini sinash uchun himoyalangan marshrut
-  app.get('/sinov/bemorlar', { preHandler: app.talabRuxsat('patients.read') }, async () => ({
+  app.get('/sinov/bemorlar', { preHandler: app.requirePermission('patients.read') }, async () => ({
     ok: true,
   }))
   await app.ready()
@@ -72,15 +72,15 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (clinicId) {
-    await ega.auditLog.deleteMany({ where: { clinicId } })
-    await ega.user.deleteMany({ where: { clinicId } })
-    await ega.role.deleteMany({ where: { clinicId } })
-    await ega.clinic.deleteMany({ where: { id: clinicId } })
+    await ownerDb.auditLog.deleteMany({ where: { clinicId } })
+    await ownerDb.user.deleteMany({ where: { clinicId } })
+    await ownerDb.role.deleteMany({ where: { clinicId } })
+    await ownerDb.clinic.deleteMany({ where: { id: clinicId } })
   }
   await app.close()
-  await sessiyalar.yop()
-  await cheklagich.yop()
-  await ega.$disconnect()
+  await sessions.close()
+  await rateLimiter.close()
+  await ownerDb.$disconnect()
   await db.$disconnect()
 })
 
@@ -90,51 +90,51 @@ describe('roʻyxatdan oʻtish', () => {
       method: 'POST',
       url: '/api/auth/register',
       payload: {
-        clinicName: KLINIKA,
+        clinicName: CLINIC,
         phone: '901234567',
         fullName: 'Karimov Aziz',
-        email: POCHTA,
+        email: EMAIL,
         password: 'juda-yaxshi-parol',
       },
     })
     expect(r.statusCode).toBe(200)
     clinicId = r.json().data.clinicId
 
-    const klinika = await ega.clinic.findUnique({ where: { id: clinicId } })
-    expect(klinika?.name).toBe(KLINIKA)
-    expect(klinika?.isTrial).toBe(true)
+    const clinic = await ownerDb.clinic.findUnique({ where: { id: clinicId } })
+    expect(clinic?.name).toBe(CLINIC)
+    expect(clinic?.isTrial).toBe(true)
 
-    const rollar = await ega.role.findMany({ where: { clinicId } })
-    expect(rollar).toHaveLength(5)
+    const roles = await ownerDb.role.findMany({ where: { clinicId } })
+    expect(roles).toHaveLength(5)
 
-    const egasi = await ega.user.findFirst({ where: { clinicId }, include: { role: true } })
-    expect(egasi?.email).toBe(POCHTA)
-    expect(egasi?.role?.isOwner).toBe(true)
-    expect(egasi?.emailVerifiedAt).toBeNull()
+    const owner = await ownerDb.user.findFirst({ where: { clinicId }, include: { role: true } })
+    expect(owner?.email).toBe(EMAIL)
+    expect(owner?.role?.isOwner).toBe(true)
+    expect(owner?.emailVerifiedAt).toBeNull()
   })
 
   it('sinov muddati 14 kun — DATE ustunida kun surilib ketmaydi', async () => {
-    const klinika = await ega.clinic.findUnique({ where: { id: clinicId } })
-    expect(klinika?.expiresAt.toISOString().slice(0, 10)).toBe(
-      kunQoshib(14).toISOString().slice(0, 10),
+    const clinic = await ownerDb.clinic.findUnique({ where: { id: clinicId } })
+    expect(clinic?.expiresAt.toISOString().slice(0, 10)).toBe(
+      addDays(14).toISOString().slice(0, 10),
     )
   })
 
   it('parol ochiq saqlanmaydi', async () => {
-    const egasi = await ega.user.findFirst({ where: { clinicId } })
-    expect(egasi?.passwordHash).not.toContain('juda-yaxshi-parol')
-    expect(egasi?.passwordHash.startsWith('$argon2id$')).toBe(true)
+    const owner = await ownerDb.user.findFirst({ where: { clinicId } })
+    expect(owner?.passwordHash).not.toContain('juda-yaxshi-parol')
+    expect(owner?.passwordHash.startsWith('$argon2id$')).toBe(true)
   })
 
   it('tasdiqlash xati yuboriladi, kalit esa bazada xesh holida', async () => {
-    expect(pochta.xatlar).toHaveLength(1)
-    expect(pochta.xatlar[0]?.kimga).toBe(POCHTA)
-    const kalit = kalitniOl()
-    expect(kalit.length).toBeGreaterThan(20)
+    expect(mailer.sent).toHaveLength(1)
+    expect(mailer.sent[0]?.to).toBe(EMAIL)
+    const key = lastToken()
+    expect(key.length).toBeGreaterThan(20)
 
-    const egasi = await ega.user.findFirst({ where: { clinicId } })
-    expect(egasi?.emailVerifyTokenHash).not.toBe(kalit)
-    expect(egasi?.emailVerifyTokenHash).toHaveLength(64)
+    const owner = await ownerDb.user.findFirst({ where: { clinicId } })
+    expect(owner?.emailVerifyTokenHash).not.toBe(key)
+    expect(owner?.emailVerifyTokenHash).toHaveLength(64)
   })
 
   it('bir xil pochta bilan ikkinchi marta oʻtib boʻlmaydi', async () => {
@@ -144,7 +144,7 @@ describe('roʻyxatdan oʻtish', () => {
       payload: {
         clinicName: 'Boshqa klinika',
         fullName: 'Boshqa Odam',
-        email: POCHTA,
+        email: EMAIL,
         password: 'juda-yaxshi-parol',
       },
     })
@@ -171,7 +171,7 @@ describe('pochtani tasdiqlash', () => {
     const r = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: POCHTA, password: 'juda-yaxshi-parol' },
+      payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
     })
     expect(r.statusCode).toBe(403)
     expect(r.json().error.message).toMatch(/pochtangizni tasdiqlang/)
@@ -191,12 +191,12 @@ describe('pochtani tasdiqlash', () => {
     const r = await app.inject({
       method: 'POST',
       url: '/api/auth/verify',
-      payload: { token: kalitniOl() },
+      payload: { token: lastToken() },
     })
     expect(r.statusCode).toBe(200)
 
-    const egasi = await ega.user.findFirst({ where: { clinicId } })
-    expect(egasi?.emailVerifiedAt).not.toBeNull()
+    const owner = await ownerDb.user.findFirst({ where: { clinicId } })
+    expect(owner?.emailVerifiedAt).not.toBeNull()
   })
 
   // Havola ikki marta ochilishi oddiy hol: React StrictMode effektni ikki
@@ -206,17 +206,17 @@ describe('pochtani tasdiqlash', () => {
     const r = await app.inject({
       method: 'POST',
       url: '/api/auth/verify',
-      payload: { token: kalitniOl() },
+      payload: { token: lastToken() },
     })
     expect(r.statusCode).toBe(200)
   })
 
   it('tasdiqlangan vaqt birinchi martadagicha qoladi', async () => {
-    const egasi = await ega.user.findFirst({ where: { clinicId } })
-    const birinchi = egasi?.emailVerifiedAt
-    await app.inject({ method: 'POST', url: '/api/auth/verify', payload: { token: kalitniOl() } })
-    const keyin = await ega.user.findFirst({ where: { clinicId } })
-    expect(keyin?.emailVerifiedAt?.getTime()).toBe(birinchi?.getTime())
+    const owner = await ownerDb.user.findFirst({ where: { clinicId } })
+    const first = owner?.emailVerifiedAt
+    await app.inject({ method: 'POST', url: '/api/auth/verify', payload: { token: lastToken() } })
+    const after = await ownerDb.user.findFirst({ where: { clinicId } })
+    expect(after?.emailVerifiedAt?.getTime()).toBe(first?.getTime())
   })
 })
 
@@ -227,7 +227,7 @@ describe('kirish va sessiya', () => {
     const r = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: POCHTA, password: 'juda-yaxshi-parol' },
+      payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
     })
     expect(r.statusCode).toBe(200)
 
@@ -239,29 +239,29 @@ describe('kirish va sessiya', () => {
   })
 
   it('notoʻgʻri parol va mavjud boʻlmagan pochta — bir xil xato', async () => {
-    const notogri = await app.inject({
+    const wrong = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: POCHTA, password: 'boshqa-parol' },
+      payload: { email: EMAIL, password: 'boshqa-parol' },
     })
     const yoq = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: 'umuman-yoq@example.com', password: 'boshqa-parol' },
     })
-    expect(notogri.statusCode).toBe(401)
+    expect(wrong.statusCode).toBe(401)
     expect(yoq.statusCode).toBe(401)
     // Javoblar bir xil boʻlishi shart: aks holda qaysi pochta
     // roʻyxatdan oʻtganini bilib olish mumkin
-    expect(notogri.json()).toEqual(yoq.json())
+    expect(wrong.json()).toEqual(yoq.json())
   })
 
   it('/api/me foydalanuvchi, klinika va ruxsatlarni qaytaradi', async () => {
     const r = await app.inject({ method: 'GET', url: '/api/me', headers: { cookie } })
     expect(r.statusCode).toBe(200)
     const d = r.json().data
-    expect(d.user.email).toBe(POCHTA)
-    expect(d.clinic.name).toBe(KLINIKA)
+    expect(d.user.email).toBe(EMAIL)
+    expect(d.clinic.name).toBe(CLINIC)
     expect(d.role.template).toBe('egasi')
     expect(d.permissions).toHaveLength(17)
     expect(d.permissions).toContain('staff.manage')
@@ -274,11 +274,15 @@ describe('kirish va sessiya', () => {
   })
 
   it('chiqqandan keyin sessiya darhol ishlamaydi', async () => {
-    const chiq = await app.inject({ method: 'POST', url: '/api/auth/logout', headers: { cookie } })
-    expect(chiq.statusCode).toBe(200)
+    const logout = await app.inject({
+      method: 'POST',
+      url: '/api/auth/logout',
+      headers: { cookie },
+    })
+    expect(logout.statusCode).toBe(200)
 
-    const keyin = await app.inject({ method: 'GET', url: '/api/me', headers: { cookie } })
-    expect(keyin.statusCode).toBe(401)
+    const after = await app.inject({ method: 'GET', url: '/api/me', headers: { cookie } })
+    expect(after.statusCode).toBe(401)
   })
 })
 
@@ -289,7 +293,7 @@ describe('ruxsat tekshiruvi', () => {
     const r = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: POCHTA, password: 'juda-yaxshi-parol' },
+      payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
     })
     cookie = `ed_sessiya=${r.cookies.find((x) => x.name === 'ed_sessiya')?.value}`
   })
@@ -307,31 +311,31 @@ describe('ruxsat tekshiruvi', () => {
   // Eng muhim test: ruxsat sessiyada emas, bazadan oʻqiladi. Rol olib
   // qoʻyilganda xodim qayta kirmasdan ham darhol toʻsilishi kerak
   it('rol almashtirilsa — oʻsha zahoti toʻsiladi, qayta kirish shart emas', async () => {
-    const texnik = await ega.role.findFirst({ where: { clinicId, template: 'texnik' } })
-    const egasi = await ega.role.findFirst({ where: { clinicId, template: 'egasi' } })
-    const user = await ega.user.findFirst({ where: { clinicId } })
+    const techRole = await ownerDb.role.findFirst({ where: { clinicId, template: 'texnik' } })
+    const owner = await ownerDb.role.findFirst({ where: { clinicId, template: 'egasi' } })
+    const user = await ownerDb.user.findFirst({ where: { clinicId } })
 
-    await ega.user.update({ where: { id: user?.id }, data: { roleId: texnik?.id } })
-    const toshiq = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
-    expect(toshiq.statusCode).toBe(403)
-    expect(toshiq.json().error.message).toBe('Bu amal uchun ruxsatingiz yoʻq')
+    await ownerDb.user.update({ where: { id: user?.id }, data: { roleId: techRole?.id } })
+    const blocked = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
+    expect(blocked.statusCode).toBe(403)
+    expect(blocked.json().error.message).toBe('Bu amal uchun ruxsatingiz yoʻq')
 
-    await ega.user.update({ where: { id: user?.id }, data: { roleId: egasi?.id } })
-    const yana = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
-    expect(yana.statusCode).toBe(200)
+    await ownerDb.user.update({ where: { id: user?.id }, data: { roleId: owner?.id } })
+    const again = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
+    expect(again.statusCode).toBe(200)
   })
 
   // Xodim ishdan boʻshaganda hisob oʻchirilmaydi, status = disabled boʻladi.
   // Uning ochiq sessiyasi oʻsha zahoti ishlamay qolishi kerak
   it('faolsizlantirilgan xodimning ochiq sessiyasi ham toʻxtaydi', async () => {
-    const user = await ega.user.findFirst({ where: { clinicId } })
-    await ega.user.update({ where: { id: user?.id }, data: { status: 'disabled' } })
+    const user = await ownerDb.user.findFirst({ where: { clinicId } })
+    await ownerDb.user.update({ where: { id: user?.id }, data: { status: 'disabled' } })
 
     const r = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
     expect(r.statusCode).toBe(403)
     expect(r.json().error.message).toMatch(/faolsizlantirilgan/)
 
-    await ega.user.update({ where: { id: user?.id }, data: { status: 'active' } })
+    await ownerDb.user.update({ where: { id: user?.id }, data: { status: 'active' } })
   })
 })
 
@@ -352,20 +356,20 @@ describe('urinishlar cheklovi', () => {
   })
 
   it('5 ta notoʻgʻri urinishdan keyin hisob vaqtincha toʻsiladi', async () => {
-    const urin = () =>
+    const hit = () =>
       app.inject({
         method: 'POST',
         url: '/api/auth/login',
-        payload: { email: CHEKLOV_POCHTA, password: 'notogri' },
+        payload: { email: LIMIT_EMAIL, password: 'notogri' },
       })
 
     for (let i = 0; i < 5; i++) {
-      expect((await urin()).statusCode).toBe(401)
+      expect((await hit()).statusCode).toBe(401)
     }
-    const oltinchi = await urin()
-    expect(oltinchi.statusCode).toBe(429)
-    expect(oltinchi.json().error.code).toBe('rate_limited')
-    expect(oltinchi.json().error.message).toMatch(/Juda koʻp urinish/)
+    const sixth = await hit()
+    expect(sixth.statusCode).toBe(429)
+    expect(sixth.json().error.code).toBe('rate_limited')
+    expect(sixth.json().error.message).toMatch(/Juda koʻp urinish/)
   })
 
   it('muvaffaqiyatli kirish hisoblagichni tozalaydi', async () => {
@@ -373,22 +377,22 @@ describe('urinishlar cheklovi', () => {
       await app.inject({
         method: 'POST',
         url: '/api/auth/login',
-        payload: { email: POCHTA, password: 'notogri' },
+        payload: { email: EMAIL, password: 'notogri' },
       })
     }
-    const kirdi = await app.inject({
+    const loggedIn = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: POCHTA, password: 'juda-yaxshi-parol' },
+      payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
     })
-    expect(kirdi.statusCode).toBe(200)
+    expect(loggedIn.statusCode).toBe(200)
 
     // Tozalangan boʻlsa, yana besh urinishga joy bor
     for (let i = 0; i < 3; i++) {
       const r = await app.inject({
         method: 'POST',
         url: '/api/auth/login',
-        payload: { email: POCHTA, password: 'notogri' },
+        payload: { email: EMAIL, password: 'notogri' },
       })
       expect(r.statusCode).toBe(401)
     }
@@ -397,20 +401,20 @@ describe('urinishlar cheklovi', () => {
 
 describe('audit yozuvlari', () => {
   it('roʻyxatdan oʻtish, tasdiqlash, kirish va xato urinish yozilgan', async () => {
-    const yozuvlar = await ega.auditLog.findMany({ where: { clinicId }, orderBy: { at: 'asc' } })
-    const amallar = yozuvlar.map((y) => y.action)
-    expect(amallar).toContain('royxatdan_otdi')
-    expect(amallar).toContain('pochta_tasdiqlandi')
-    expect(amallar).toContain('kirdi')
-    expect(amallar).toContain('kirish_xatosi')
-    expect(amallar).toContain('chiqdi')
+    const entries = await ownerDb.auditLog.findMany({ where: { clinicId }, orderBy: { at: 'asc' } })
+    const actions = entries.map((y) => y.action)
+    expect(actions).toContain('registered')
+    expect(actions).toContain('email_verified')
+    expect(actions).toContain('logged_in')
+    expect(actions).toContain('login_failed')
+    expect(actions).toContain('logged_out')
   })
 
   it('IP yozilgan, lekin parol yoki kalit yozilmagan', async () => {
-    const royxat = await ega.auditLog.findFirst({ where: { clinicId, action: 'royxatdan_otdi' } })
-    expect((royxat?.meta as { ip?: string })?.ip).toBeTruthy()
-    const hammasi = JSON.stringify(await ega.auditLog.findMany({ where: { clinicId } }))
-    expect(hammasi).not.toContain('juda-yaxshi-parol')
-    expect(hammasi).not.toContain('$argon2id$')
+    const register = await ownerDb.auditLog.findFirst({ where: { clinicId, action: 'registered' } })
+    expect((register?.meta as { ip?: string })?.ip).toBeTruthy()
+    const everything = JSON.stringify(await ownerDb.auditLog.findMany({ where: { clinicId } }))
+    expect(everything).not.toContain('juda-yaxshi-parol')
+    expect(everything).not.toContain('$argon2id$')
   })
 })

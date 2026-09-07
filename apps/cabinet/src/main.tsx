@@ -1,23 +1,16 @@
 import '@fontsource-variable/bricolage-grotesque'
 import '@fontsource-variable/schibsted-grotesk'
-import './styles.css'
-import './kabinet.css'
+import './app/styles/tokens.scss'
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { App } from './App'
-import { AuthTaminlovchi } from './lib/auth'
+import { App } from './app'
 
-const ildiz = document.getElementById('root')
-if (!ildiz) throw new Error('#root topilmadi')
+const root = document.getElementById('root')
+if (!root) throw new Error('#root topilmadi')
 
-createRoot(ildiz).render(
+createRoot(root).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthTaminlovchi>
-        <App />
-      </AuthTaminlovchi>
-    </BrowserRouter>
+    <App />
   </StrictMode>,
 )

@@ -3,7 +3,7 @@
 // --- API javob shakli ---
 // Hamma joyda bir xil. Mavjud oflayn ilovadagi {ok, data|error} qoidasining davomi.
 
-export const XATO_KODLARI = [
+export const ERROR_CODES = [
   'bad_request',
   'unauthorized',
   'forbidden',
@@ -15,30 +15,30 @@ export const XATO_KODLARI = [
   'internal',
 ] as const
 
-export type XatoKodi = (typeof XATO_KODLARI)[number]
+export type ErrorCode = (typeof ERROR_CODES)[number]
 
 export interface ApiOk<T> {
   ok: true
   data: T
 }
 
-export interface ApiXato {
+export interface ApiErrorResponse {
   ok: false
   error: {
-    code: XatoKodi
+    code: ErrorCode
     message: string
     // Forma tekshiruvida: maydon nomi → oʻzbekcha xato matni
     fields?: Record<string, string>
   }
 }
 
-export type ApiJavob<T> = ApiOk<T> | ApiXato
+export type ApiResponse<T> = ApiOk<T> | ApiErrorResponse
 
 // --- Ruxsatlar (tz.md 6, 7 va 14-boʻlim) ---
 // Roʻyxat ataylab qisqa. Har boʻlim uchun alohida «koʻrish/qoʻshish/oʻchirish»
 // uchligi matritsani uch barobar kattalashtiradi va hech kimga kerak boʻlmaydi.
 
-export const RUXSATLAR = [
+export const PERMISSIONS = [
   'patients.read',
   'patients.write',
   'visits.write',
@@ -58,20 +58,20 @@ export const RUXSATLAR = [
   'queue.manage',
 ] as const
 
-export type Ruxsat = (typeof RUXSATLAR)[number]
+export type Permission = (typeof PERMISSIONS)[number]
 
 // --- Rollar ---
 // Klinika roʻyxatdan oʻtganda shu beshtasi nusxalanadi va oʻsha klinikaga
 // tegishli boʻlib qoladi. Ruxsatlar toʻplami 1.6 dagi seed da beriladi.
 
-export const ROL_SHABLONLARI = ['egasi', 'shifokor', 'qabulxona', 'texnik', 'kuzatuvchi'] as const
+export const ROLE_TEMPLATES = ['egasi', 'shifokor', 'qabulxona', 'texnik', 'kuzatuvchi'] as const
 
-export type RolShabloni = (typeof ROL_SHABLONLARI)[number]
+export type RoleTemplate = (typeof ROLE_TEMPLATES)[number]
 
 // --- Yordamchi tiplar ---
 
 // Sana bazada DATE, API da har doim YYYY-MM-DD matn koʻrinishida
-export type IsoSana = string
+export type IsoDate = string
 
 // Pul har doim butun son — soʻm. Kasr yoʻq, float yoʻq
 export type Som = number

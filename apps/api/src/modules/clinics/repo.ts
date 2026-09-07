@@ -1,17 +1,17 @@
 // clinics moduli `clinics` va `roles` jadvallariga egalik qiladi.
 // Boshqa modullar bu yerga emas, service.ts ga murojaat qiladi.
 
-import { ROL_SHABLONI_TAVSIFI, ROL_SHABLONLARI } from '@e-dentist/shared'
-import { ijarachisiz, type KlinikaTx } from '../../platform/tenant.js'
+import { ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
+import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
-export interface YangiKlinika {
+export interface NewClinic {
   clinicId: string
   name: string
   phone: string | null
   expiresAt: Date
 }
 
-export async function yarat(tx: KlinikaTx, m: YangiKlinika): Promise<void> {
+export async function create(tx: ClinicTx, m: NewClinic): Promise<void> {
   await tx.clinic.create({
     data: {
       id: m.clinicId,
@@ -24,38 +24,38 @@ export async function yarat(tx: KlinikaTx, m: YangiKlinika): Promise<void> {
 }
 
 /// Beshta rol shablonini nusxalaydi va egasi rolining id sini qaytaradi
-export async function yaratRolShablonlari(tx: KlinikaTx): Promise<string> {
-  let egasiRoliId = ''
-  for (const shablon of ROL_SHABLONLARI) {
-    const tavsif = ROL_SHABLONI_TAVSIFI[shablon]
-    const rol = await tx.role.create({
-      data: ijarachisiz({
-        template: shablon,
-        name: tavsif.nom,
-        permissions: [...tavsif.ruxsatlar],
-        isOwner: tavsif.isOwner,
+export async function createRoleTemplates(tx: ClinicTx): Promise<string> {
+  let ownerRoleId = ''
+  for (const template of ROLE_TEMPLATES) {
+    const spec = ROLE_TEMPLATE_SPECS[template]
+    const role = await tx.role.create({
+      data: tenantScoped({
+        template: template,
+        name: spec.label,
+        permissions: [...spec.permissions],
+        isOwner: spec.isOwner,
       }),
     })
-    if (tavsif.isOwner) egasiRoliId = rol.id
+    if (spec.isOwner) ownerRoleId = role.id
   }
-  return egasiRoliId
+  return ownerRoleId
 }
 
-export interface RolMaʼlumoti {
+export interface RoleInfo {
   name: string
   template: string
   permissions: string[]
   isOwner: boolean
 }
 
-export async function oqiRol(tx: KlinikaTx, roleId: string): Promise<RolMaʼlumoti | null> {
+export async function findRole(tx: ClinicTx, roleId: string): Promise<RoleInfo | null> {
   return tx.role.findUnique({
     where: { id: roleId },
     select: { name: true, template: true, permissions: true, isOwner: true },
   })
 }
 
-export async function oqiKlinika(tx: KlinikaTx, clinicId: string) {
+export async function findClinic(tx: ClinicTx, clinicId: string) {
   return tx.clinic.findUnique({
     where: { id: clinicId },
     select: { id: true, name: true, isTrial: true, expiresAt: true, status: true },

@@ -5,11 +5,11 @@
 // ular har klinikaga nusxalanadi va oʻsha klinikaniki boʻlib qoladi, shuning
 // uchun «umumiy shablon qatori» degan tushuncha kerak emas.
 
-import { kunQoshib, ROL_SHABLONI_TAVSIFI, ROL_SHABLONLARI } from '@e-dentist/shared'
-import { yaratDb } from '../src/platform/db.js'
+import { addDays, ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
+import { createDb } from '../src/platform/db.js'
 
-const DEMO_KLINIKA_ID = '00000000-0000-7000-8000-000000000001'
-const SINOV_KUNI = 14
+const DEMO_CLINIC_ID = '00000000-0000-7000-8000-000000000001'
+const TRIAL_DAYS = 14
 
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
@@ -19,49 +19,49 @@ async function main(): Promise<void> {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL berilmagan')
 
-  const db = yaratDb(url)
+  const db = createDb(url)
 
-  const klinika = await db.clinic.upsert({
-    where: { id: DEMO_KLINIKA_ID },
+  const clinic = await db.clinic.upsert({
+    where: { id: DEMO_CLINIC_ID },
     create: {
-      id: DEMO_KLINIKA_ID,
+      id: DEMO_CLINIC_ID,
       name: 'Namuna stomatologiya',
       phone: '+998901234567',
       isTrial: true,
-      expiresAt: kunQoshib(SINOV_KUNI),
+      expiresAt: addDays(TRIAL_DAYS),
     },
     update: {},
   })
 
-  for (const shablon of ROL_SHABLONLARI) {
-    const tavsif = ROL_SHABLONI_TAVSIFI[shablon]
+  for (const template of ROLE_TEMPLATES) {
+    const spec = ROLE_TEMPLATE_SPECS[template]
     await db.role.upsert({
-      where: { clinicId_template: { clinicId: klinika.id, template: shablon } },
+      where: { clinicId_template: { clinicId: clinic.id, template: template } },
       create: {
-        clinicId: klinika.id,
-        template: shablon,
-        name: tavsif.nom,
-        permissions: [...tavsif.ruxsatlar],
-        isOwner: tavsif.isOwner,
+        clinicId: clinic.id,
+        template: template,
+        name: spec.label,
+        permissions: [...spec.permissions],
+        isOwner: spec.isOwner,
       },
       // Shablon kodda oʻzgarsa, mavjud klinikada ham yangilansin
       update: {
-        name: tavsif.nom,
-        permissions: [...tavsif.ruxsatlar],
-        isOwner: tavsif.isOwner,
+        name: spec.label,
+        permissions: [...spec.permissions],
+        isOwner: spec.isOwner,
       },
     })
   }
 
-  const rollar = await db.role.findMany({
-    where: { clinicId: klinika.id },
+  const roles = await db.role.findMany({
+    where: { clinicId: clinic.id },
     orderBy: { template: 'asc' },
   })
 
-  console.log(`Klinika: ${klinika.name}`)
-  console.log(`Sinov tugaydi: ${klinika.expiresAt.toISOString().slice(0, 10)}`)
-  console.log(`Rollar (${rollar.length}):`)
-  for (const r of rollar) {
+  console.log(`Klinika: ${clinic.name}`)
+  console.log(`Sinov tugaydi: ${clinic.expiresAt.toISOString().slice(0, 10)}`)
+  console.log(`Rollar (${roles.length}):`)
+  for (const r of roles) {
     console.log(`  ${r.name.padEnd(12)} ${r.permissions.length} ruxsat`)
   }
 

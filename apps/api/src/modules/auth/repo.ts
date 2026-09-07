@@ -2,12 +2,12 @@
 // Klinika va rollar — clinics modulida.
 
 import type { Db } from '../../platform/db.js'
-import { ijarachisiz, type KlinikaTx } from '../../platform/tenant.js'
+import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
 /// auth_find_user funksiyasi qaytaradigan qator.
 /// SECURITY DEFINER: kirish paytida klinika hali nomaʼlum va RLS users
 /// jadvalini yopib turadi. Funksiya faqat shu maydonlarni beradi
-export interface AuthQator {
+export interface AuthUserRow {
   id: string
   clinic_id: string | null
   role_id: string | null
@@ -16,21 +16,21 @@ export interface AuthQator {
   email_verified_at: Date | null
 }
 
-export async function topPochtaBoyicha(db: Db, email: string): Promise<AuthQator | null> {
-  const qatorlar = await db.$queryRaw<AuthQator[]>`SELECT * FROM auth_find_user(${email})`
-  return qatorlar[0] ?? null
+export async function findByEmail(db: Db, email: string): Promise<AuthUserRow | null> {
+  const rows = await db.$queryRaw<AuthUserRow[]>`SELECT * FROM auth_find_user(${email})`
+  return rows[0] ?? null
 }
 
-export async function tasdiqlaKalit(
+export async function consumeVerifyToken(
   db: Db,
-  kalitXeshi: string,
+  tokenHash: string,
 ): Promise<{ user_id: string; clinic_id: string } | null> {
-  const qatorlar = await db.$queryRaw<{ user_id: string; clinic_id: string }[]>`
-    SELECT * FROM auth_verify_email(${kalitXeshi})`
-  return qatorlar[0] ?? null
+  const rows = await db.$queryRaw<{ user_id: string; clinic_id: string }[]>`
+    SELECT * FROM auth_verify_email(${tokenHash})`
+  return rows[0] ?? null
 }
 
-export interface YangiEgasi {
+export interface NewOwner {
   userId: string
   roleId: string
   email: string
@@ -40,9 +40,9 @@ export interface YangiEgasi {
   emailVerifyExpiresAt: Date
 }
 
-export async function yaratEgasi(tx: KlinikaTx, m: YangiEgasi): Promise<void> {
+export async function createOwner(tx: ClinicTx, m: NewOwner): Promise<void> {
   await tx.user.create({
-    data: ijarachisiz({
+    data: tenantScoped({
       id: m.userId,
       roleId: m.roleId,
       email: m.email,
@@ -54,11 +54,11 @@ export async function yaratEgasi(tx: KlinikaTx, m: YangiEgasi): Promise<void> {
   })
 }
 
-export async function belgilaKirish(tx: KlinikaTx, userId: string): Promise<void> {
+export async function markLogin(tx: ClinicTx, userId: string): Promise<void> {
   await tx.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } })
 }
 
-export async function oqiFoydalanuvchi(tx: KlinikaTx, userId: string) {
+export async function findUser(tx: ClinicTx, userId: string) {
   return tx.user.findUnique({
     where: { id: userId },
     select: { id: true, email: true, fullName: true, roleId: true, status: true },

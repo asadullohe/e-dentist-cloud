@@ -4,32 +4,32 @@
 // Jadval platform da: u bitta modulga tegishli emas, hamma modul yozadi.
 
 import type { Prisma } from '../../generated/prisma/client.js'
-import { ijarachisiz, type KlinikaTx } from './tenant.js'
+import { type ClinicTx, tenantScoped } from './tenant.js'
 
-export const AMAL = {
-  royxatdan_otdi: 'royxatdan_otdi',
-  pochta_tasdiqlandi: 'pochta_tasdiqlandi',
-  kirdi: 'kirdi',
-  kirish_xatosi: 'kirish_xatosi',
-  chiqdi: 'chiqdi',
-  rol_ozgardi: 'rol_ozgardi',
-  xodim_ozgardi: 'xodim_ozgardi',
+export const AUDIT_ACTION = {
+  registered: 'registered',
+  email_verified: 'email_verified',
+  loggedIn: 'logged_in',
+  login_failed: 'login_failed',
+  logged_out: 'logged_out',
+  role_changed: 'role_changed',
+  staff_changed: 'staff_changed',
 } as const
 
-export type Amal = (typeof AMAL)[keyof typeof AMAL]
+export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]
 
-export interface AuditYozuvi {
+export interface AuditEntry {
   userId?: string | null
-  action: Amal
+  action: AuditAction
   entity: string
   entityId?: string | null
   /// IP, nechta qator yuklandi va h.k. Bemor maʼlumoti bu yerga yozilmaydi
   meta?: Record<string, unknown>
 }
 
-export async function yozAudit(tx: KlinikaTx, y: AuditYozuvi): Promise<void> {
+export async function writeAudit(tx: ClinicTx, y: AuditEntry): Promise<void> {
   await tx.auditLog.create({
-    data: ijarachisiz({
+    data: tenantScoped({
       userId: y.userId ?? null,
       action: y.action,
       entity: y.entity,

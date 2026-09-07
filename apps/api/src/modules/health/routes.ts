@@ -1,6 +1,6 @@
-import { fmtDateTime, todayStr } from '@e-dentist/shared'
+import { formatDateTime, todayISO } from '@e-dentist/shared'
 import type { FastifyPluginAsync } from 'fastify'
-import { ok } from '../../platform/javob.js'
+import { ok } from '../../platform/response.js'
 
 export const healthRoutes: FastifyPluginAsync = async (app) => {
   // Serverning sanasi ham qaytadi: vaqt zonasi Asia/Tashkent ekanini
@@ -8,8 +8,8 @@ export const healthRoutes: FastifyPluginAsync = async (app) => {
   app.get('/health', async () =>
     ok({
       status: 'ok',
-      sana: todayStr(),
-      vaqt: fmtDateTime(new Date()),
+      date: todayISO(),
+      time: formatDateTime(new Date()),
     }),
   )
 }

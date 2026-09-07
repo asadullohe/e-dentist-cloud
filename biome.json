@@ -37,7 +37,7 @@
   },
   "overrides": [
     {
-      "includes": ["apps/cabinet/src/styles.css"],
+      "includes": ["apps/cabinet/src/app/styles/tokens.scss"],
       "formatter": {
         "enabled": false
       },

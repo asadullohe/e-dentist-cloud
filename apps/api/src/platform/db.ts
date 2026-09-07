@@ -9,6 +9,6 @@ import { PrismaClient } from '../../generated/prisma/client.js'
 
 export type Db = PrismaClient
 
-export function yaratDb(databaseUrl: string): Db {
+export function createDb(databaseUrl: string): Db {
   return new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) })
 }

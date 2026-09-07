@@ -1,31 +1,31 @@
-import { yaratCheklagich } from './platform/cheklov.js'
-import { yuklaConfig } from './platform/config.js'
-import { yaratDb } from './platform/db.js'
-import { konsolPochtasi } from './platform/pochta.js'
-import { yaratServer } from './platform/server.js'
-import { yaratSessiyaSaqlagich } from './platform/sessiya.js'
-import { tekshirVaqtZonasi } from './platform/tz.js'
+import { loadConfig } from './platform/config.js'
+import { createDb } from './platform/db.js'
+import { consoleMailer } from './platform/mailer.js'
+import { createRateLimiter } from './platform/rateLimit.js'
+import { createServer } from './platform/server.js'
+import { createSessionStore } from './platform/session.js'
+import { assertTimezone } from './platform/timezone.js'
 
-const config = yuklaConfig()
-tekshirVaqtZonasi(config.TZ)
+const config = loadConfig()
+assertTimezone(config.TZ)
 
 // Ishga tushirishda cheklangan ulanish — RLS ostida. DATABASE_URL (egasi)
 // faqat migratsiya va seed uchun
-const db = yaratDb(config.APP_DATABASE_URL)
-const sessiyalar = yaratSessiyaSaqlagich(config.REDIS_URL)
-const cheklagich = yaratCheklagich(config.REDIS_URL)
+const db = createDb(config.APP_DATABASE_URL)
+const sessions = createSessionStore(config.REDIS_URL)
+const rateLimiter = createRateLimiter(config.REDIS_URL)
 
-const app = yaratServer(config, {
+const app = createServer(config, {
   db,
-  sessiyalar,
-  cheklagich,
-  pochta: konsolPochtasi((xabar) => app.log.info(xabar)),
+  sessions,
+  rateLimiter,
+  mailer: consoleMailer((message) => app.log.info(message)),
 })
 
 // Docker konteynerni toʻxtatganda ochiq soʻrovlar tugashini kutamiz
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    Promise.allSettled([app.close(), sessiyalar.yop(), cheklagich.yop(), db.$disconnect()]).then(
+    Promise.allSettled([app.close(), sessions.close(), rateLimiter.close(), db.$disconnect()]).then(
       () => process.exit(0),
       () => process.exit(1),
     )

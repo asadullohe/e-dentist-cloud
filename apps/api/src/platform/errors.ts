@@ -1,10 +1,10 @@
 // Ish mantigʻidagi xatolar. Kod → HTTP holati moslashuvi shu yerda,
 // route'larda emas: xato kodi bir joyda belgilanadi.
 
-import type { XatoKodi } from '@e-dentist/shared'
-import { XATO_MATNI } from '@e-dentist/shared'
+import type { ErrorCode } from '@e-dentist/shared'
+import { ERROR_TEXT } from '@e-dentist/shared'
 
-const HOLAT: Record<XatoKodi, number> = {
+const STATUS_BY_CODE: Record<ErrorCode, number> = {
   bad_request: 400,
   validation: 400,
   unauthorized: 401,
@@ -16,7 +16,7 @@ const HOLAT: Record<XatoKodi, number> = {
   internal: 500,
 }
 
-interface Qoshimcha {
+interface ErrorOptions {
   // Foydalanuvchiga koʻrsatiladigan matn. Berilmasa strings.ts dagi umumiy matn
   message?: string
   // Forma tekshiruvida: maydon nomi → oʻzbekcha xato
@@ -25,30 +25,30 @@ interface Qoshimcha {
   cause?: unknown
 }
 
-export class AppXato extends Error {
-  readonly code: XatoKodi
+export class AppError extends Error {
+  readonly code: ErrorCode
   readonly status: number
   readonly fields: Record<string, string> | undefined
 
-  constructor(code: XatoKodi, qoshimcha: Qoshimcha = {}) {
-    super(qoshimcha.message ?? XATO_MATNI[code], { cause: qoshimcha.cause })
+  constructor(code: ErrorCode, qoshimcha: ErrorOptions = {}) {
+    super(qoshimcha.message ?? ERROR_TEXT[code], { cause: qoshimcha.cause })
     this.name = 'AppXato'
     this.code = code
-    this.status = HOLAT[code]
+    this.status = STATUS_BY_CODE[code]
     this.fields = qoshimcha.fields
   }
 }
 
 // Qisqa yozuv uchun. `throw xato.notFound('Bemor topilmadi')`
-export const xato = {
-  badRequest: (message?: string) => new AppXato('bad_request', { message }),
+export const errors = {
+  badRequest: (message?: string) => new AppError('bad_request', { message }),
   validation: (fields: Record<string, string>, message?: string) =>
-    new AppXato('validation', { fields, message }),
-  unauthorized: (message?: string) => new AppXato('unauthorized', { message }),
-  forbidden: (message?: string) => new AppXato('forbidden', { message }),
-  notFound: (message?: string) => new AppXato('not_found', { message }),
-  conflict: (message?: string) => new AppXato('conflict', { message }),
-  rateLimited: (message?: string) => new AppXato('rate_limited', { message }),
-  subscriptionExpired: (message?: string) => new AppXato('subscription_expired', { message }),
-  internal: (cause?: unknown) => new AppXato('internal', { cause }),
+    new AppError('validation', { fields, message }),
+  unauthorized: (message?: string) => new AppError('unauthorized', { message }),
+  forbidden: (message?: string) => new AppError('forbidden', { message }),
+  notFound: (message?: string) => new AppError('not_found', { message }),
+  conflict: (message?: string) => new AppError('conflict', { message }),
+  rateLimited: (message?: string) => new AppError('rate_limited', { message }),
+  subscriptionExpired: (message?: string) => new AppError('subscription_expired', { message }),
+  internal: (cause?: unknown) => new AppError('internal', { cause }),
 }

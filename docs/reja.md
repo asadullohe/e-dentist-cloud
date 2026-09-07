@@ -189,6 +189,20 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
       muddati banneri, «Chiqish». Brauzerda tekshirildi: rol «Texnik» ga
       almashtirilganda menyu bitta boʻlimga qisqaradi, qayta kirish shart emas
 
+> **Kod ingliz tiliga oʻtkazildi, frontend FSD boʻyicha qayta qurildi**
+>
+> Dastlab identifikatorlar oʻzbekcha yozilgan edi va frontend tuzilishi
+> oʻzboshimchalik bilan tanlangan edi. Qoidalar `CLAUDE.md` ga yozib qoʻyildi:
+>
+> · kodda hamma narsa **inglizcha** — fayl nomlari, funksiyalar, oʻzgaruvchilar,
+>   tiplar, enum qiymatlari. Oʻzbekcha faqat `strings.ts` dagi matn va izohlar
+> · frontend — **Feature-Sliced Design**: `app · pages · widgets · features ·
+>   entities · shared`
+> · har sahifa oʻz papkasida: `index.ts`, `<Name>.tsx`, `<Name>.module.scss`
+> · API bilan ishlash — **TanStack Query**, qoʻlbola `useState` + `useEffect` emas
+>
+> Tasdiqlash havolasi ham oʻzgardi: `/tasdiqlash?kalit=` → `/verify?token=`.
+
 > **Lokalda CORS kerak emas**
 >
 > Vite `/api` ni `localhost:3000` ga uzatadi. Brauzer uchun kabinet ham, API ham

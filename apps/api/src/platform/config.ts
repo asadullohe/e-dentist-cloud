@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 
-const Sxema = z.object({
+const Schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().positive().default(3000),
   // Sanalar shu zonaga tayanadi — platform/tz.ts ga qarang
@@ -20,13 +20,13 @@ const Sxema = z.object({
   CABINET_URL: z.string().min(1).default('http://localhost:5173'),
 })
 
-export type Config = z.infer<typeof Sxema>
+export type Config = z.infer<typeof Schema>
 
-export function yuklaConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const natija = Sxema.safeParse(env)
-  if (!natija.success) {
-    const satrlar = natija.error.issues.map((i) => `  ${i.path.join('.') || '?'} — ${i.message}`)
-    throw new Error(`Muhit oʻzgaruvchilari notoʻgʻri:\n${satrlar.join('\n')}`)
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  const result = Schema.safeParse(env)
+  if (!result.success) {
+    const lines = result.error.issues.map((i) => `  ${i.path.join('.') || '?'} — ${i.message}`)
+    throw new Error(`Muhit oʻzgaruvchilari notoʻgʻri:\n${lines.join('\n')}`)
   }
-  return natija.data
+  return result.data
 }
