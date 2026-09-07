@@ -3,6 +3,7 @@ import { yuklaConfig } from './config.js'
 
 const toliq = {
   DATABASE_URL: 'postgresql://edentist:x@localhost:5433/edentist',
+  APP_DATABASE_URL: 'postgresql://edentist_app:x@localhost:5433/edentist',
   REDIS_URL: 'redis://localhost:6379',
   SESSION_SECRET: 'x'.repeat(16),
 }
@@ -23,6 +24,11 @@ describe('yuklaConfig', () => {
     expect(() => yuklaConfig({ REDIS_URL: 'redis://x', SESSION_SECRET: 'x'.repeat(16) })).toThrow(
       /DATABASE_URL/,
     )
+  })
+
+  it('ishga tushirish ulanishi ham majburiy — usiz RLS himoyasi yoʻq', () => {
+    const { APP_DATABASE_URL: _, ...appsiz } = toliq
+    expect(() => yuklaConfig(appsiz)).toThrow(/APP_DATABASE_URL/)
   })
 
   it('qisqa sessiya sirini rad etadi', () => {

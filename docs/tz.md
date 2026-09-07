@@ -158,6 +158,20 @@ Uch qatlamli himoya:
 2. **Postgres RLS** — sessiya oʻzgaruvchisidagi klinikaga tegishli boʻlmagan qator umuman qaytmaydi
 3. **Integratsiya testi** — «A klinikaning tokeni bilan B ning bemorini soʻrash» har modul uchun majburiy test
 
+> **Bazada ikkita rol**
+>
+> RLS siyosatlari superuserga **umuman taʼsir qilmaydi**. Shuning uchun bitta
+> foydalanuvchi yetmaydi:
+>
+> · `edentist` — egasi. Migratsiya va seed shu bilan bajariladi, RLS undan chetlab oʻtadi
+> · `edentist_app` — API ishga tushganda shu bilan ulanadi. Superuser emas, RLS ostida
+>
+> Agar API egasi bilan ulansa, yozilgan barcha siyosatlar bezak boʻlib qoladi va
+> koʻp ijarachilik himoyasidan faqat dastur qatlami qoladi.
+>
+> Sessiya oʻzgaruvchisi tranzaksiya bilan birga tugaydi (`set_config(..., true)`),
+> shuning uchun ulanish hovuzida keyingi soʻrovga sizib oʻtmaydi.
+
 ### Asosiy jadvallar
 
 | Jadval | Muhim ustunlar | Izoh |

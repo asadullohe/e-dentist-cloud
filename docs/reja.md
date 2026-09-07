@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 1.7**
+**Hozirgi task: 1.10**
 
 ---
 
@@ -97,26 +97,44 @@ Koʻp ijarachilik qatlami `auth` dan **oldin** quriladi._
 > `patients.read` **berilmadi**: u butun kartotekani ochib yuboradi, texnikka kerak
 > boʻlgan yagona narsa — bemorning ismi — naryadning oʻzida keladi (tz.md 7-boʻlim).
 > Toʻplamlar sizga mos kelmasa ayting, bitta fayl oʻzgaradi.
-- [ ] **1.7 Repozitoriya qatlami** — Prisma kengaytmasi har soʻrovga `clinicId` ni
-      **avtomatik** qoʻshadi. Qoʻlda yozish imkoniyati yopiladi
-      → `clinicId` siz soʻrov yozib boʻlmaydi (kompilyator yoki runtime rad etadi)
-- [ ] **1.8 Postgres RLS** — har ijarachi jadvali uchun siyosat, `app.clinic_id`
-      sessiya oʻzgaruvchisiga bogʻlanadi
-      → toʻgʻridan-toʻgʻri SQL da ham begona qator qaytmaydi
-- [ ] **1.9 Koʻp ijarachilik testi** — ikkita klinika yaratiladi, A ning sessiyasi bilan
-      B ning yozuvi soʻraladi
-      → test yashil: boʻsh natija yoki `not_found`. Bu test har yangi modulda takrorlanadi
+- [x] **1.7 Repozitoriya qatlami** — `platform/tenant.ts`. `klinikaSessiyasi()`
+      tranzaksiya ochadi, `app.clinic_id` ni oʻrnatadi va Prisma kengaytmasi orqali
+      har soʻrovga `clinicId` qoʻshadi. Boshqa klinika qoʻlda yozilsa **jimgina
+      tuzatilmaydi, xato beriladi** — jim tuzatish soʻrovni boshqa klinikaga burib
+      yuborardi va xato koʻrinmay qolardi
+- [x] **1.8 Postgres RLS** — beshta jadvalga siyosat, `app_clinic_id()` funksiyasi orqali.
+      Kontekst oʻrnatilmagan boʻlsa **hech narsa koʻrinmaydi** (yopiq qolish, ochiq emas).
+      Bazada ikkita rol: `edentist` (migratsiya, RLS dan ozod) va `edentist_app`
+      (ishga tushirish, RLS ostida) — batafsil `tz.md` 5-boʻlimda
+- [x] **1.9 Koʻp ijarachilik testi** — 12 ta test, haqiqiy bazaga ulanadi.
+      Ichida **nazorat testi** ham bor: A oʻz yozuvini oʻzgartira olishi tekshiriladi —
+      busiz «begona yozuvni oʻzgartirib boʻlmaydi» testi `update` umuman ishlamagan
+      taqdirda ham oʻtib ketardi
+
+> **Identifikatorlar `TEXT` dan `uuid` ga oʻtkazildi**
+>
+> RLS siyosati `clinic_id = app_clinic_id()` deb solishtiradi, Postgres esa `text`
+> va `uuid` ni solishtira olmaydi. Prisma `String @id` ni sukut boʻyicha `TEXT`
+> qiladi — `@db.Uuid` qoʻshildi va migratsiya qoʻlda yozildi (Prisma bu oʻtishni
+> oʻzi yoza olmaydi). Yon foyda: 16 bayt, 36 emas.
 
 ### auth moduli
 
 - [ ] **1.10 Roʻyxatdan oʻtish** — `POST /api/auth/register`: klinika + egasi yaratiladi,
-      `is_trial = true`, `expires_at = +14 kun`, 5 rol shabloni nusxalanadi
+      `is_trial = true`, `expires_at = +14 kun`, 5 rol shabloni nusxalanadi.
+      **Diqqat:** klinikaning `id` si kodda yaratilishi kerak (uuid v7), soʻng oʻsha
+      id bilan sessiya ochiladi — aks holda RLS `INSERT` ni rad etadi, chunki
+      `WITH CHECK` qatorning `id` si sessiyadagi klinikaga teng boʻlishini talab qiladi
       → yangi klinika bazada, egasi `is_owner` roli bilan
 - [ ] **1.11 Pochtani tasdiqlash** — `POST /api/auth/verify`. Lokalda xat konsolga
       chiqadi (SMTP hali kerak emas)
       → tasdiqlanmagan hisob kira olmaydi
 - [ ] **1.12 Kirish, chiqish, me** — `argon2id` parol, Redis sessiya,
-      `httpOnly` + `sameSite=lax` cookie
+      `httpOnly` + `sameSite=lax` cookie.
+      **Diqqat:** kirishda foydalanuvchi pochta boʻyicha izlanadi, klinika esa hali
+      nomaʼlum — ya'ni sessiya konteksti yoʻq va RLS `users` jadvalini yopib turadi.
+      Yechim: `SECURITY DEFINER` funksiya, faqat kerakli maydonlarni qaytaradi
+      (id, clinic_id, password_hash, status). Butun jadvalni ochib qoʻyish emas
       → `GET /api/me` foydalanuvchi va ruxsatlarini qaytaradi
 - [ ] **1.13 Ruxsat tekshiruvi** — `requirePermission('patients.read')` koʻrinishidagi guard.
       Egasi `staff.manage` va `billing.manage` ni yoʻqota olmaydi

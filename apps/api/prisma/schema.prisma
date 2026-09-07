@@ -27,7 +27,7 @@ enum ClinicStatus {
 
 /// Ijarachi. Sinov ham shu qator, faqat is_trial = true
 model Clinic {
-  id        String       @id @default(uuid(7))
+  id        String       @id @default(uuid(7)) @db.Uuid
   name      String
   phone     String?
   status    ClinicStatus @default(active)
@@ -62,8 +62,8 @@ enum RoleTemplate {
 }
 
 model Role {
-  id          String       @id @default(uuid(7))
-  clinicId    String       @map("clinic_id")
+  id          String       @id @default(uuid(7)) @db.Uuid
+  clinicId    String       @map("clinic_id") @db.Uuid
   template    RoleTemplate
   name        String
   /// packages/shared dagi RUXSATLAR roʻyxatidan
@@ -93,10 +93,10 @@ enum UserStatus {
 /// Xodim hech qachon oʻchirilmaydi: ishdan boʻshasa status = disabled.
 /// Uning tashriflari va audit yozuvlari joyida qoladi
 model User {
-  id              String     @id @default(uuid(7))
+  id              String     @id @default(uuid(7)) @db.Uuid
   /// Platforma admini uchun boʻsh — u hech qaysi klinikaga tegishli emas
-  clinicId        String?    @map("clinic_id")
-  roleId          String?    @map("role_id")
+  clinicId        String?    @map("clinic_id") @db.Uuid
+  roleId          String?    @map("role_id") @db.Uuid
   email           String     @unique
   passwordHash    String     @map("password_hash")
   fullName        String?    @map("full_name")
@@ -120,9 +120,9 @@ model User {
 /// Havoladagi kalit bazada saqlanmaydi — faqat uning xeshi. Baza sizib chiqsa
 /// ham taklifnomalar bilan hisob ochib boʻlmaydi
 model Invite {
-  id         String    @id @default(uuid(7))
-  clinicId   String    @map("clinic_id")
-  roleId     String    @map("role_id")
+  id         String    @id @default(uuid(7)) @db.Uuid
+  clinicId   String    @map("clinic_id") @db.Uuid
+  roleId     String    @map("role_id") @db.Uuid
   email      String
   tokenHash  String    @unique @map("token_hash")
   expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
@@ -142,11 +142,11 @@ model Invite {
 /// Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart (tz.md 12-boʻlim):
 /// kim, qachon, qaysi bemor yozuvini koʻrgani yoki oʻzgartirgani
 model AuditLog {
-  id       String   @id @default(uuid(7))
+  id       String   @id @default(uuid(7)) @db.Uuid
   /// Platforma admini amallari uchun boʻsh
-  clinicId String?  @map("clinic_id")
+  clinicId String?  @map("clinic_id") @db.Uuid
   /// Muvaffaqiyatsiz kirish urinishida foydalanuvchi nomaʼlum boʻlishi mumkin
-  userId   String?  @map("user_id")
+  userId   String?  @map("user_id") @db.Uuid
   action   String
   entity   String
   entityId String?  @map("entity_id")

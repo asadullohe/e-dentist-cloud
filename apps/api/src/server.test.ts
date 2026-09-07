@@ -11,6 +11,7 @@ const config: Config = {
   API_PORT: 3000,
   TZ: 'Asia/Tashkent',
   DATABASE_URL: 'postgresql://x',
+  APP_DATABASE_URL: 'postgresql://x',
   REDIS_URL: 'redis://x',
   SESSION_SECRET: 'x'.repeat(16),
 }

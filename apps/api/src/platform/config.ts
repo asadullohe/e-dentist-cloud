@@ -9,7 +9,11 @@ const Sxema = z.object({
   API_PORT: z.coerce.number().int().positive().default(3000),
   // Sanalar shu zonaga tayanadi — platform/tz.ts ga qarang
   TZ: z.string().default('Asia/Tashkent'),
+  // Migratsiya va seed — egasi (superuser), RLS unga taʼsir qilmaydi
   DATABASE_URL: z.string().min(1),
+  // Ishga tushirish — cheklangan foydalanuvchi, RLS ostida.
+  // Superuser bilan ulansak siyosatlar bezak boʻlib qoladi
+  APP_DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16, 'kamida 16 belgi boʻlishi kerak'),
 })
