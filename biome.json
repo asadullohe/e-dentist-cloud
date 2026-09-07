@@ -1,0 +1,72 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": ["**", "!**/node_modules", "!**/dist", "!package-lock.json", "!**/generated"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/api/src/modules/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "../*/repo*",
+                      "../*/routes*",
+                      "../*/schema*",
+                      "**/modules/*/repo*",
+                      "**/modules/*/routes*",
+                      "**/modules/*/schema*"
+                    ],
+                    "message": "Bir modul boshqa modulning jadvaliga soʻrov yubormaydi — faqat service.ts ga murojaat qiling (tz.md, 2-boʻlim)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}

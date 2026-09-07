@@ -16,3 +16,10 @@ minio-data/
 
 .DS_Store
 *.log
+
+# TypeScript
+*.tsbuildinfo
+coverage/
+
+# Prisma yaratadigan klient
+apps/api/generated/

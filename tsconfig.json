@@ -1,0 +1,5 @@
+{
+  // Muharrir uchun. Tekshiruv har ilovada alohida: `npm run typecheck`
+  "files": [],
+  "references": [{ "path": "./apps/api" }, { "path": "./apps/cabinet" }]
+}

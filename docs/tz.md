@@ -93,13 +93,17 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Til | TypeScript | Tibbiy maʼlumot bilan ishlaganda tip xatolari qimmatga tushadi. Prisma bilan birga sxema oʻzgarsa kod darhol qizaradi |
 | Server | Node 22 + Fastify | Express'dan tez, sxema tekshiruvi ichida. Nest kabi ogʻir emas |
 | Baza | PostgreSQL 16 | Qator darajasidagi xavfsizlik (RLS) bor — koʻp ijarachi uchun ikkinchi himoya qatlami |
-| ORM | Prisma | Migratsiya, tip xavfsizligi, oʻqiladigan sxema fayli |
-| Frontend | React 18 + Vite | Mavjud ilovalar bilan bir xil — sahifalar va komponentlarni koʻchirish mumkin |
+| ORM | Prisma 7 | Migratsiya, tip xavfsizligi, oʻqiladigan sxema fayli. 7-versiyada ulanish manzili sxemada emas, `prisma.config.ts` da; klient `@prisma/adapter-pg` orqali ulanadi |
+| Frontend | React 19 + Vite | Oflayn ilovada 18 edi, lekin shadcn/ui ning barcha komponentlari `forwardRef` siz — ular React 19 ning «ref oddiy prop» xulqiga tayanadi. 18 da qolish 25 ta komponentni har yangilanishdan keyin qoʻlda tuzatishni talab qilardi. Koʻchiriladigan sahifalar oddiy funksiya komponentlari — 19 da ham ishlaydi |
+| UI komponentlari | Tailwind 4 + shadcn/ui | Tayyor, ochiq kodli komponentlar: jadval, oyna, forma, kalendar. Ranglar oflayn ilovaning indigo palitrasiga ulangan — tashqi koʻrinish oʻzgarmaydi |
+| Server holati | TanStack Query | Soʻrovlar keshi, qayta oʻqish, yuklanish holati. Qoʻlbola `useState` + `useEffect` oʻrniga |
+| Forma | react-hook-form + zod | Sxema serverdagi bilan bir xil shaklda, xato matnlari `strings.ts` dan |
 | Fayllar | MinIO (S3 mos) | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
 | Excel | SheetJS (`xlsx`) | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi |
 | Matnlar | Bitta modul, oʻzbekcha | Barcha yozuvlar `packages/shared/strings.ts` da. Rus tili keyin qoʻshilsa — bitta fayl nusxalanadi, kodga tegilmaydi |
 | Deploy | Docker Compose | Bitta `docker compose up`. Kubernetes bu hajmda ortiqcha |
+| Format va lint | Biome | Prettier va ESLint oʻrniga bitta asbob: bitta konfiguratsiya fayli, sezilarli darajada tez. Modul chegarasini `noRestrictedImports` bilan majburlab boʻladi |
 
 > **Ochiq eslatma**
 >
@@ -157,14 +161,28 @@ Uch qatlamli himoya:
 2. **Postgres RLS** — sessiya oʻzgaruvchisidagi klinikaga tegishli boʻlmagan qator umuman qaytmaydi
 3. **Integratsiya testi** — «A klinikaning tokeni bilan B ning bemorini soʻrash» har modul uchun majburiy test
 
+> **Bazada ikkita rol**
+>
+> RLS siyosatlari superuserga **umuman taʼsir qilmaydi**. Shuning uchun bitta
+> foydalanuvchi yetmaydi:
+>
+> · `edentist` — egasi. Migratsiya va seed shu bilan bajariladi, RLS undan chetlab oʻtadi
+> · `edentist_app` — API ishga tushganda shu bilan ulanadi. Superuser emas, RLS ostida
+>
+> Agar API egasi bilan ulansa, yozilgan barcha siyosatlar bezak boʻlib qoladi va
+> koʻp ijarachilik himoyasidan faqat dastur qatlami qoladi.
+>
+> Sessiya oʻzgaruvchisi tranzaksiya bilan birga tugaydi (`set_config(..., true)`),
+> shuning uchun ulanish hovuzida keyingi soʻrovga sizib oʻtmaydi.
+
 ### Asosiy jadvallar
 
 | Jadval | Muhim ustunlar | Izoh |
 |---|---|---|
 | `clinics` | name, phone, status, plan, expires_at, is_trial | Ijarachi. Sinov ham shu qator, faqat `is_trial = true` |
-| `users` | clinic_id, role_id, email, password_hash, status | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi |
-| `roles` | clinic_id, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi |
-| `invites` | clinic_id, role_id, email, token, expires_at | Xodimni taklif qilish havolasi, 7 kun amal qiladi |
+| `users` | clinic_id, role_id, email, password_hash, full_name, status, email_verified_at | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi. `email` butun tizimda yagona: 1-versiyada bitta odam ikki klinikada ishlay olmaydi |
+| `roles` | clinic_id, template, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi. `template` — qaysi shablondan kelgani: texnikning boshlangʻich sahifasi shunga qarab tanlanadi |
+| `invites` | clinic_id, role_id, email, token_hash, expires_at, accepted_at | Xodimni taklif qilish havolasi, 7 kun amal qiladi. Bazada kalitning oʻzi emas, **xeshi** saqlanadi — baza sizib chiqsa ham taklifnoma bilan hisob ochib boʻlmaydi |
 | `patients` | clinic_id, fio, phone, birth_date, note | Qidiruv uchun `fio` va `phone` ga indeks |
 | `visits` | patient_id, date, treatment, tooth, price |  |
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
@@ -175,7 +193,7 @@ Uch qatlamli himoya:
 | `expenses` | clinic_id, date, category, amount |  |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, returns | Naryad. `returns` — necha marta qaytgani |
 | `images` | patient_id, key, caption | `key` — MinIO dagi obyekt nomi |
-| `audit_log` | clinic_id, user_id, action, entity, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart |
+| `audit_log` | clinic_id, user_id, action, entity, entity_id, meta, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart. `entity_id` boʻlmasa «qaysi bemor yozuvi» degan savolga javob yoʻq (12-boʻlim talabi) |
 
 Pul **butun songda** saqlanadi (soʻm), sanalar `DATE` tipida. Bu mavjud ilovaning qoidasi — koʻchirishda mos kelishi uchun oʻzgartirilmaydi.
 
@@ -299,8 +317,8 @@ _Har modul mustaqil ishlab chiqiladi va alohida testlanadi._
 
 | Modul | Javobgarligi | Boshqalarga bogʻliqligi |
 |---|---|---|
-| `auth` | Kirish, chiqish, sessiya, parolni tiklash | — |
-| `clinics` | Klinika profili, xodimlar, rollar, ruxsatlar, taklifnomalar | auth |
+| `auth` | Kirish, chiqish, sessiya, parol. **`users` jadvaliga egalik qiladi** | clinics |
+| `clinics` | Klinika profili, rollar, ruxsatlar, taklifnomalar. **`clinics` va `roles` jadvallariga egalik qiladi** | — |
 | `patients` | Kartoteka, qidiruv, rasmlar, Excel yuklash va chiqarish | clinics |
 | `visits` | Tashriflar, muolajalar, tish xaritasi | patients, services |
 | `payments` | Toʻlovlar, qarzdorlar roʻyxati | patients, visits |

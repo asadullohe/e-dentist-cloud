@@ -34,7 +34,8 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 ## Texnologiyalar
 
 Node 22 + TypeScript + Fastify · PostgreSQL 16 + Prisma · Redis (sessiya) ·
-MinIO (fayllar) · React 18 + Vite · Docker Compose.
+MinIO (fayllar) · React 19 + Vite + Tailwind 4 + shadcn/ui · TanStack Query ·
+Docker Compose · Biome (format va lint, Prettier/ESLint emas) · Vitest.
 
 Monorepo, npm workspaces: `apps/api`, `apps/cabinet`, `apps/admin`,
 `packages/shared`, `packages/ui`, `packages/teeth`.
@@ -54,7 +55,54 @@ soʻrovni qayta koʻrib chiqishga toʻgʻri keladi.
 Modul chegarasi: **bir modul boshqa modulning jadvaliga soʻrov yubormaydi** —
 faqat oʻsha modulning `service.ts` iga murojaat qiladi.
 
-## Yozuv qoidalari (oflayn ilovadan koʻchadi)
+## Kod yozish qoidalari
+
+**Kodda hamma narsa ingliz tilida:** fayl nomlari, funksiyalar, oʻzgaruvchilar,
+tiplar, enum qiymatlari, baza ustunlari. Oʻzbekcha faqat ikki joyda:
+
+- **foydalanuvchi koʻradigan matn** — `packages/shared/src/strings.ts` da
+- **izohlar** — nima uchun shunday qilinganini tushuntiradi
+
+```ts
+// ✅ toʻgʻri
+export async function withClinic<T>(db: Db, clinicId: string, fn: …)
+export const AUTH_TEXT = { login_failed: 'Pochta yoki parol notoʻgʻri' }
+
+// ❌ notoʻgʻri
+export async function klinikaSessiyasi(...)
+```
+
+### Frontend tuzilishi — Feature-Sliced Design
+
+```
+apps/cabinet/src/
+├─ app/         providers, router, global SCSS
+├─ pages/       har sahifa oʻz papkasida
+│  └─ Login/
+│     ├─ index.ts            // export { Login } from './Login'
+│     ├─ Login.tsx
+│     └─ Login.module.scss
+├─ widgets/     Sidebar, TrialBanner
+├─ features/    auth: login, logout, register
+├─ entities/    user, clinic
+└─ shared/      api, ui, lib, config
+```
+
+Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi **yoʻq**.
+`pages` → `widgets` → `features` → `entities` → `shared`.
+
+- Stillar — **Tailwind 4**. Dizayn tokenlari `app/styles/index.css` da,
+  shadcn kutgan nomlarda (`--background`, `--primary`…) va oflayn ilovaning
+  indigo palitrasidan olingan. Alohida CSS fayl yozilmaydi
+- Komponentlar — **shadcn/ui**: `npx shadcn@latest add <nom> --cwd apps/cabinet`.
+  Ular `shared/ui/` ga tushadi va bizniki hisoblanadi — tahrirlash mumkin
+- API bilan ishlash — **TanStack Query** (`useQuery` / `useMutation`),
+  qoʻlbola `useState` + `useEffect` emas
+- Formalar — **react-hook-form + zod**, shadcn `Form` komponenti bilan.
+  Serverdan kelgan maydon xatolari `applyServerErrors` orqali formaga tushadi
+- Har papkada `index.ts` — tashqariga nima chiqishini oʻsha belgilaydi
+
+## Matn va format qoidalari (oflayn ilovadan koʻchadi)
 
 - Barcha matn oʻzbek lotinida, ʻ (U+02BB) bilan: «oʻ», «gʻ», «maʼlumot»
 - Pul — **butun son** (soʻm). Sana bazada `DATE`, ekranda **doim DD/MM/YYYY**
