@@ -179,3 +179,14 @@ export const CHART_UI = {
   bridge_title: (teeth: readonly number[], material: string) =>
     `Koʻprik ${teeth[0]}–${teeth[teeth.length - 1]} · ${material}`,
 } as const
+
+// Tashriflar va tish xaritasi
+export const VISIT_TEXT = {
+  not_found: 'Tashrif topilmadi',
+  treatment_required: 'Muolaja nomini yozing',
+  date_required: 'Sana kiritilishi shart',
+  price_negative: 'Narx manfiy boʻlishi mumkin emas',
+  tooth_invalid: 'Bunday tish raqami yoʻq',
+  status_invalid: 'Bunday tish holati yoʻq',
+  material_invalid: 'Bunday material yoʻq',
+} as const

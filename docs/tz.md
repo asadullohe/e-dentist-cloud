@@ -161,6 +161,22 @@ Uch qatlamli himoya:
 2. **Postgres RLS** — sessiya oʻzgaruvchisidagi klinikaga tegishli boʻlmagan qator umuman qaytmaydi
 3. **Integratsiya testi** — «A klinikaning tokeni bilan B ning bemorini soʻrash» har modul uchun majburiy test
 
+> **RLS ning chegarasi: tashqi kalitlar**
+>
+> Postgres tashqi kalit tekshiruvini jadval egasi huquqi bilan bajaradi va u
+> **RLS siyosatlarini chetlab oʻtadi**. Amalda bu shuni anglatadi: A klinikasi
+> B ning bemori `id` sini bilsa, oʻsha bemorga tashrif, toʻlov yoki naryad
+> bogʻlab qoʻya oladi — yozuv A ning `clinic_id` si bilan yaratiladi va
+> tashqi kalit tekshiruvidan oʻtib ketadi.
+>
+> Sinab koʻrilgan: tekshiruvsiz API `200` qaytaradi va yozuv haqiqatan
+> yaratiladi.
+>
+> Shuning uchun **boshqa modulning yozuviga havola qiladigan har bir amal**
+> oʻsha yozuv shu klinikaniki ekanini alohida tekshirishi shart:
+> `patients.existsInClinic(tx, patientId)`. Bu `payments`, `appointments`,
+> `lab_orders` va rasmlar uchun ham tegishli.
+
 > **Bazada ikkita rol**
 >
 > RLS siyosatlari superuserga **umuman taʼsir qilmaydi**. Shuning uchun bitta

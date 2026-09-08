@@ -8,6 +8,7 @@ import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
 import { healthRoutes } from '../modules/health/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
+import { visitRoutes } from '../modules/visits/routes.js'
 import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { AppError, errors } from './errors.js'
@@ -104,6 +105,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     secureCookie: config.NODE_ENV === 'production',
   })
   app.register(patientRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app
 }

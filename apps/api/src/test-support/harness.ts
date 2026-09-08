@@ -16,8 +16,14 @@ const OWNER_URL = process.env.DATABASE_URL
 const APP_URL = process.env.APP_DATABASE_URL
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379'
 
+const rnd = () => Math.floor(Math.random() * 250) + 1
+
 export interface Harness {
   app: FastifyInstance
+  /// Shu nusxaning mijoz IP si. Test fayllari parallel ishlaydi va
+  /// roʻyxatdan oʻtish chegarasi IP boʻyicha sanaladi — bir xil IP dan
+  /// kirishsa, biri ikkinchisining hisobini yeb qoʻyadi
+  clientIp: string
   /// Superuser ulanishi — sinov maʼlumotini tayyorlash va tekshirish uchun.
   /// RLS unga taʼsir qilmaydi
   ownerDb: Db
@@ -51,10 +57,11 @@ export async function startHarness(): Promise<Harness> {
   const mailer = memoryMailer()
 
   const email = `harness-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`
+  const clientIp = `10.${rnd()}.${rnd()}.${rnd()}`
 
   // Hisoblagichlar Redis da qoladi — oldingi ishga tushirishdan qolgani
   // testni yiqitmasin
-  for (const key of ['register:ip:127.0.0.1', 'login:ip:127.0.0.1', `login:account:${email}`]) {
+  for (const key of [`register:ip:${clientIp}`, `login:ip:${clientIp}`, `login:account:${email}`]) {
     await rateLimiter.reset(key)
   }
 
@@ -64,6 +71,7 @@ export async function startHarness(): Promise<Harness> {
   const registered = await app.inject({
     method: 'POST',
     url: '/api/auth/register',
+    remoteAddress: clientIp,
     payload: {
       clinicName: `Sinov klinikasi ${Date.now()}`,
       fullName: 'Sinov Egasi',
@@ -79,6 +87,7 @@ export async function startHarness(): Promise<Harness> {
   const loggedIn = await app.inject({
     method: 'POST',
     url: '/api/auth/login',
+    remoteAddress: clientIp,
     payload: { email, password: 'juda-yaxshi-parol' },
   })
   const cookie = `ed_session=${loggedIn.cookies.find((c) => c.name === 'ed_session')?.value}`
@@ -87,6 +96,7 @@ export async function startHarness(): Promise<Harness> {
 
   return {
     app,
+    clientIp,
     ownerDb,
     cookie,
     clinicId,

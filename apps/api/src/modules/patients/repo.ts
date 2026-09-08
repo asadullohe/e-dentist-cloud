@@ -50,6 +50,10 @@ export async function list(tx: ClinicTx, input: { q?: string; page: number; page
   return { items, total }
 }
 
+export async function exists(tx: ClinicTx, id: string): Promise<boolean> {
+  return (await tx.patient.count({ where: { id } })) > 0
+}
+
 export function findById(tx: ClinicTx, id: string) {
   return tx.patient.findUnique({ where: { id }, select: SELECT })
 }

@@ -5,7 +5,7 @@ import { normalizePhone, PATIENT_TEXT } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
-import { withClinic } from '../../platform/tenant.js'
+import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as repo from './repo.js'
 import type { PatientCreateInput, PatientListInput, PatientUpdateInput } from './schema.js'
@@ -42,6 +42,14 @@ function hasRelatedRecords(error: unknown): boolean {
   return (
     typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2003'
   )
+}
+
+/// Boshqa modullar uchun: bemor shu klinikaniki ekanini tekshirish.
+///
+/// Tashqi kalit tekshiruvi RLS ni chetlab oʻtadi — usiz begona klinikaning
+/// bemoriga tashrif yoki toʻlov bogʻlab qoʻyish mumkin boʻlardi
+export function existsInClinic(tx: ClinicTx, patientId: string): Promise<boolean> {
+  return repo.exists(tx, patientId)
 }
 
 export function list(deps: PatientDeps, clinicId: string, input: PatientListInput) {

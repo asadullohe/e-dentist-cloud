@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.6** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.7** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -309,8 +309,19 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > esa `bridgeSpan` bilan hisoblanardi. Bizning sxemada `teeth: Int[]` — toʻliq
 > roʻyxat saqlanadi. Shuning uchun komponent oraliqni hisoblamaydi, tayyor
 > roʻyxatni chizadi.
-- [ ] **2.6 `visits` moduli** — tashriflar, muolajalar, tish xaritasi API
-      (`GET/PUT /api/patients/:id/teeth`)
+- [x] **2.6 `visits` moduli** — tashriflar CRUD, tish xaritasi (`GET/PUT`).
+      16 ta test
+
+> **RLS tashqi kalitlarni himoya qilmaydi**
+>
+> Postgres tashqi kalit tekshiruvini RLS siyosatlarini chetlab oʻtib bajaradi.
+> Tekshirib koʻrildi: `assertPatient` olib tashlansa, API begona klinikaning
+> bemoriga tashrif yozishga **ruxsat beradi** va `200` qaytaradi.
+>
+> Endi boshqa modulning yozuviga havola qiladigan har bir amal
+> `patients.existsInClinic` orqali tekshiradi. `payments` (2.10),
+> `appointments` (2.16) va naryadlarda (3.5) ham shunday boʻlishi shart.
+> Sabab `tz.md` 5-boʻlimiga yozildi.
 - [ ] **2.7 Bemor kartochkasi** — Tashriflar va Tish xaritasi boʻlimlari
 - [ ] **2.8 MinIO fayl qatlami** — yuklash, imzolangan vaqtinchalik havola
       (ochiq URL emas)

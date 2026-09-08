@@ -29,6 +29,9 @@ const config: Config = {
 
 const EMAIL = `sinov-${Date.now()}@example.com`
 const CLINIC = `Sinov klinikasi ${Date.now()}`
+// Test fayllari parallel ishlaydi — IP chegarasi boshqalarniki bilan
+// aralashmasligi uchun shu faylning oʻz manzili
+const CLIENT_IP = '10.255.0.1'
 const LIMIT_EMAIL = `cheklov-${Date.now()}@example.com`
 
 let app: FastifyInstance
@@ -53,8 +56,8 @@ beforeAll(async () => {
   // Hisoblagichlar Redis da qoladi — oldingi ishga tushirishdan
   // qolgani testni yiqitmasin
   for (const k of [
-    'register:ip:127.0.0.1',
-    'login:ip:127.0.0.1',
+    `register:ip:${CLIENT_IP}`,
+    `login:ip:${CLIENT_IP}`,
     `login:account:${EMAIL}`,
     `login:account:${LIMIT_EMAIL}`,
   ]) {
@@ -87,6 +90,7 @@ afterAll(async () => {
 describe('roʻyxatdan oʻtish', () => {
   it('klinika, beshta rol va egasi yaratiladi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/register',
       payload: {
@@ -139,6 +143,7 @@ describe('roʻyxatdan oʻtish', () => {
 
   it('bir xil pochta bilan ikkinchi marta oʻtib boʻlmaydi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/register',
       payload: {
@@ -154,6 +159,7 @@ describe('roʻyxatdan oʻtish', () => {
 
   it('notoʻgʻri maʼlumot maydon boʻyicha rad etiladi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/register',
       payload: { clinicName: 'X', fullName: 'Ab', email: 'pochta-emas', password: '123' },
@@ -169,6 +175,7 @@ describe('roʻyxatdan oʻtish', () => {
 describe('pochtani tasdiqlash', () => {
   it('tasdiqlanmaguncha kirib boʻlmaydi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
@@ -179,6 +186,7 @@ describe('pochtani tasdiqlash', () => {
 
   it('yaroqsiz kalit rad etiladi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/verify',
       payload: { token: 'bunday-kalit-yoq-albatta' },
@@ -189,6 +197,7 @@ describe('pochtani tasdiqlash', () => {
 
   it('toʻgʻri kalit bilan tasdiqlanadi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/verify',
       payload: { token: lastToken() },
@@ -204,6 +213,7 @@ describe('pochtani tasdiqlash', () => {
   // Ikkinchi murojaat xato bermasligi kerak
   it('havola ikki marta ochilsa ham xato bermaydi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/verify',
       payload: { token: lastToken() },
@@ -214,7 +224,12 @@ describe('pochtani tasdiqlash', () => {
   it('tasdiqlangan vaqt birinchi martadagicha qoladi', async () => {
     const owner = await ownerDb.user.findFirst({ where: { clinicId } })
     const first = owner?.emailVerifiedAt
-    await app.inject({ method: 'POST', url: '/api/auth/verify', payload: { token: lastToken() } })
+    await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'POST',
+      url: '/api/auth/verify',
+      payload: { token: lastToken() },
+    })
     const after = await ownerDb.user.findFirst({ where: { clinicId } })
     expect(after?.emailVerifiedAt?.getTime()).toBe(first?.getTime())
   })
@@ -225,6 +240,7 @@ describe('kirish va sessiya', () => {
 
   it('toʻgʻri parol bilan kiriladi va cookie beriladi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
@@ -240,11 +256,13 @@ describe('kirish va sessiya', () => {
 
   it('notoʻgʻri parol va mavjud boʻlmagan pochta — bir xil xato', async () => {
     const wrong = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: EMAIL, password: 'boshqa-parol' },
     })
     const yoq = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: 'umuman-yoq@example.com', password: 'boshqa-parol' },
@@ -257,7 +275,12 @@ describe('kirish va sessiya', () => {
   })
 
   it('/api/me foydalanuvchi, klinika va ruxsatlarni qaytaradi', async () => {
-    const r = await app.inject({ method: 'GET', url: '/api/me', headers: { cookie } })
+    const r = await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'GET',
+      url: '/api/me',
+      headers: { cookie },
+    })
     expect(r.statusCode).toBe(200)
     const d = r.json().data
     expect(d.user.email).toBe(EMAIL)
@@ -268,20 +291,26 @@ describe('kirish va sessiya', () => {
   })
 
   it('cookie siz /api/me yopiq', async () => {
-    const r = await app.inject({ method: 'GET', url: '/api/me' })
+    const r = await app.inject({ remoteAddress: CLIENT_IP, method: 'GET', url: '/api/me' })
     expect(r.statusCode).toBe(401)
     expect(r.json().error.message).toBe('Avval tizimga kiring')
   })
 
   it('chiqqandan keyin sessiya darhol ishlamaydi', async () => {
     const logout = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/logout',
       headers: { cookie },
     })
     expect(logout.statusCode).toBe(200)
 
-    const after = await app.inject({ method: 'GET', url: '/api/me', headers: { cookie } })
+    const after = await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'GET',
+      url: '/api/me',
+      headers: { cookie },
+    })
     expect(after.statusCode).toBe(401)
   })
 })
@@ -291,6 +320,7 @@ describe('ruxsat tekshiruvi', () => {
 
   beforeAll(async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
@@ -299,12 +329,17 @@ describe('ruxsat tekshiruvi', () => {
   })
 
   it('egasida patients.read bor — oʻtadi', async () => {
-    const r = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
+    const r = await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'GET',
+      url: '/sinov/bemorlar',
+      headers: { cookie },
+    })
     expect(r.statusCode).toBe(200)
   })
 
   it('kirmagan foydalanuvchi 401 oladi, 403 emas', async () => {
-    const r = await app.inject({ method: 'GET', url: '/sinov/bemorlar' })
+    const r = await app.inject({ remoteAddress: CLIENT_IP, method: 'GET', url: '/sinov/bemorlar' })
     expect(r.statusCode).toBe(401)
   })
 
@@ -316,12 +351,22 @@ describe('ruxsat tekshiruvi', () => {
     const user = await ownerDb.user.findFirst({ where: { clinicId } })
 
     await ownerDb.user.update({ where: { id: user?.id }, data: { roleId: techRole?.id } })
-    const blocked = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
+    const blocked = await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'GET',
+      url: '/sinov/bemorlar',
+      headers: { cookie },
+    })
     expect(blocked.statusCode).toBe(403)
     expect(blocked.json().error.message).toBe('Bu amal uchun ruxsatingiz yoʻq')
 
     await ownerDb.user.update({ where: { id: user?.id }, data: { roleId: owner?.id } })
-    const again = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
+    const again = await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'GET',
+      url: '/sinov/bemorlar',
+      headers: { cookie },
+    })
     expect(again.statusCode).toBe(200)
   })
 
@@ -331,7 +376,12 @@ describe('ruxsat tekshiruvi', () => {
     const user = await ownerDb.user.findFirst({ where: { clinicId } })
     await ownerDb.user.update({ where: { id: user?.id }, data: { status: 'disabled' } })
 
-    const r = await app.inject({ method: 'GET', url: '/sinov/bemorlar', headers: { cookie } })
+    const r = await app.inject({
+      remoteAddress: CLIENT_IP,
+      method: 'GET',
+      url: '/sinov/bemorlar',
+      headers: { cookie },
+    })
     expect(r.statusCode).toBe(403)
     expect(r.json().error.message).toMatch(/faolsizlantirilgan/)
 
@@ -342,6 +392,7 @@ describe('ruxsat tekshiruvi', () => {
 describe('urinishlar cheklovi', () => {
   it('bir martalik pochta rad etiladi', async () => {
     const r = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/register',
       payload: {
@@ -358,6 +409,7 @@ describe('urinishlar cheklovi', () => {
   it('5 ta notoʻgʻri urinishdan keyin hisob vaqtincha toʻsiladi', async () => {
     const hit = () =>
       app.inject({
+        remoteAddress: CLIENT_IP,
         method: 'POST',
         url: '/api/auth/login',
         payload: { email: LIMIT_EMAIL, password: 'notogri' },
@@ -375,12 +427,14 @@ describe('urinishlar cheklovi', () => {
   it('muvaffaqiyatli kirish hisoblagichni tozalaydi', async () => {
     for (let i = 0; i < 3; i++) {
       await app.inject({
+        remoteAddress: CLIENT_IP,
         method: 'POST',
         url: '/api/auth/login',
         payload: { email: EMAIL, password: 'notogri' },
       })
     }
     const loggedIn = await app.inject({
+      remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: EMAIL, password: 'juda-yaxshi-parol' },
@@ -390,6 +444,7 @@ describe('urinishlar cheklovi', () => {
     // Tozalangan boʻlsa, yana besh urinishga joy bor
     for (let i = 0; i < 3; i++) {
       const r = await app.inject({
+        remoteAddress: CLIENT_IP,
         method: 'POST',
         url: '/api/auth/login',
         payload: { email: EMAIL, password: 'notogri' },

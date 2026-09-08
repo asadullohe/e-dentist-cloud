@@ -21,6 +21,10 @@ export const AUDIT_ACTION = {
   /// Faqat kartochka ochilganda — roʻyxat soʻrovlari yozilmaydi, aks holda
   /// audit jadvali foydasiz shovqinga toʻlib ketadi
   patient_viewed: 'patient_viewed',
+  visit_created: 'visit_created',
+  visit_updated: 'visit_updated',
+  visit_deleted: 'visit_deleted',
+  tooth_updated: 'tooth_updated',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]
