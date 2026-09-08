@@ -207,7 +207,7 @@ Uch qatlamli himoya:
 | `appointments` | clinic_id, patient_id, at, status |  |
 | `services` | clinic_id, name, price | Narxnoma |
 | `expenses` | clinic_id, date, category, amount |  |
-| `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, returns | Naryad. `returns` — necha marta qaytgani |
+| `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
 | `images` | patient_id, key, caption | `key` — MinIO dagi obyekt nomi |
 | `audit_log` | clinic_id, user_id, action, entity, entity_id, meta, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart. `entity_id` boʻlmasa «qaysi bemor yozuvi» degan savolga javob yoʻq (12-boʻlim talabi) |
 

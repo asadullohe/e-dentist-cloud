@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.4** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.5** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -487,7 +487,7 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > boʻlmaydi · egasi roli `staff.manage` va `billing.manage` ni yoʻqotmaydi.
 > Nazorat testi: oxirgi qulf olib tashlanganda egasi faolsizlantirildi va
 > keyingi testlar 403 ga uchradi — yaʼni test haqiqatan ushlaydi.
-- [ ] **3.4 Prisma: `lab_orders`** + RLS
+- [x] **3.4 Prisma: `lab_orders`** + RLS
 - [ ] **3.5 `lab` moduli** — naryad CRUD, holatlar (berildi → tayyor → topshirildi),
       «qaytarildi» amali va sababi
 - [ ] **3.6 Lab bogʻlanishlari** — «topshirildi» da tish xaritasi yangilanadi,

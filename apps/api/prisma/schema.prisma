@@ -53,6 +53,7 @@ model Clinic {
   services     Service[]
   images       PatientImage[]
   expenses     Expense[]
+  labOrders    LabOrder[]
 
   @@index([status])
   @@map("clinics")
@@ -201,6 +202,7 @@ model Patient {
   payments     Payment[]
   appointments Appointment[]
   images       PatientImage[]
+  labOrders    LabOrder[]
 
   @@index([clinicId, fioSearch])
   @@index([clinicId, phone])
@@ -346,6 +348,85 @@ model Service {
 
   @@unique([clinicId, name])
   @@map("services")
+}
+
+// ─────────────────────────────  Texnik ishlari  ─────────────────────────────
+
+enum LabWorkType {
+  crown
+  bridge
+  denture
+  clasp_denture
+  veneer
+  inlay
+  mouthguard
+  ortho_plate
+}
+
+enum LabMaterial {
+  metal_ceramic
+  zirconia
+  press_ceramic
+  acrylic
+  cast_metal
+  nylon
+}
+
+/// Berildi → tayyor → topshirildi. Bosqich qoʻshilmaydi: «qaytarildi» —
+/// holat emas, amal (tz.md 7-boʻlim). U naryadni `ready` dan `issued` ga
+/// qaytaradi va `returns` ni oshiradi
+enum LabStatus {
+  issued
+  ready
+  delivered
+}
+
+enum LabReturnReason {
+  fit
+  shade
+  broken
+  other
+}
+
+model LabOrder {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  clinicId  String  @map("clinic_id") @db.Uuid
+  patientId String  @map("patient_id") @db.Uuid
+  /// Naryadni yozgan shifokor
+  doctorId  String  @map("doctor_id") @db.Uuid
+  /// Biriktirilgan texnik. Hali tanlanmagan boʻlishi mumkin
+  techId    String? @map("tech_id") @db.Uuid
+
+  /// FDI raqamlari
+  teeth     Int[]
+  workType  LabWorkType @map("work_type")
+  material  LabMaterial
+  /// VITA Classical: A1–A4, B1–B4, C1–C4, D2–D4
+  shade     String?
+  dueDate   DateTime    @map("due_date") @db.Date
+  /// Klinika texnikka toʻlaydigan summa, soʻm. `lab.cost` ruxsati boʻlmasa
+  /// javobga qoʻshilmaydi
+  techPrice Int         @default(0) @map("tech_price")
+  status    LabStatus   @default(issued)
+  note      String?
+
+  /// Necha marta qaytgani va oxirgi qaytishning sababi. Sabab texnikka
+  /// koʻrinishi kerak — auditda qolsa u nimani tuzatishni bilmaydi
+  returns          Int              @default(0)
+  returnReason     LabReturnReason? @map("return_reason")
+  returnNote       String?          @map("return_note")
+
+  deliveredAt DateTime? @map("delivered_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, status, dueDate])
+  @@index([clinicId, techId, status])
+  @@index([clinicId, patientId])
+  @@map("lab_orders")
 }
 
 // ───────────────────────────────  Xarajatlar  ───────────────────────────────
