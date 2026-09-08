@@ -76,16 +76,15 @@ export async function klinikaSessiyasi(...)
 
 ```
 apps/cabinet/src/
-├─ app/         providers, router, global SCSS
+├─ app/         providers, router, layouts, styles/index.css
 ├─ pages/       har sahifa oʻz papkasida
 │  └─ Login/
 │     ├─ index.ts            // export { Login } from './Login'
-│     ├─ Login.tsx
-│     └─ Login.module.scss
+│     └─ Login.tsx
 ├─ widgets/     Sidebar, TrialBanner
 ├─ features/    auth: login, logout, register
-├─ entities/    user, clinic
-└─ shared/      api, ui, lib, config
+├─ entities/    session, patient, tooth
+└─ shared/      api, ui (shadcn), lib, config
 ```
 
 Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi **yoʻq**.

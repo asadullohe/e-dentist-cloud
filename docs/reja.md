@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.1** — bosqich 1 tugadi
+**Hozirgi task: 2.6** — bosqich 1 tugadi, `master` da
 
 ---
 
