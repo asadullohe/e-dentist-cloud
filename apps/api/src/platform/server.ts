@@ -17,6 +17,7 @@ import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { AppError, errors } from './errors.js'
 import { permissionGuard, sessionHook } from './guards.js'
+import type { ImportStore } from './importStore.js'
 import type { Mailer } from './mailer.js'
 import type { RateLimiter } from './rateLimit.js'
 import { errorResponse } from './response.js'
@@ -26,6 +27,7 @@ import type { Storage } from './storage.js'
 export interface ServerDeps {
   db: Db
   storage: Storage
+  imports: ImportStore
   sessions: SessionStore
   rateLimiter: RateLimiter
   mailer: Mailer
@@ -118,7 +120,10 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     },
     secureCookie: config.NODE_ENV === 'production',
   })
-  app.register(patientRoutes, { prefix: '/api', deps: { db: deps.db, storage: deps.storage } })
+  app.register(patientRoutes, {
+    prefix: '/api',
+    deps: { db: deps.db, storage: deps.storage, imports: deps.imports },
+  })
   app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(serviceRoutes, { prefix: '/api', deps: { db: deps.db } })

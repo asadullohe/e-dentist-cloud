@@ -7,7 +7,7 @@ import { errors } from './platform/errors.js'
 import { memoryMailer } from './platform/mailer.js'
 import { createServer, type ServerDeps } from './platform/server.js'
 import type { SessionStore } from './platform/session.js'
-import { fakeStorage, testConfig } from './test-support/config.js'
+import { fakeImports, fakeStorage, testConfig } from './test-support/config.js'
 
 // Bu fayl faqat javob shaklini tekshiradi — bazaga ham, Redis ga ham
 // murojaat qilmaydi
@@ -25,6 +25,7 @@ const fakeDeps: ServerDeps = {
     close: async () => {},
   },
   storage: fakeStorage,
+  imports: fakeImports,
   mailer: memoryMailer(),
 }
 

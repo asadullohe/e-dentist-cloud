@@ -1,20 +1,35 @@
 // Kartoteka mantigʻi. Boshqa modullar patients ga faqat shu fayl orqali
 // murojaat qiladi.
 
-import { IMAGE_TEXT, normalizePhone, PATIENT_TEXT } from '@e-dentist/shared'
+import {
+  IMAGE_TEXT,
+  IMPORT_TEXT,
+  normalizePhone,
+  PATIENT_EXCEL_COLUMNS,
+  PATIENT_TEXT,
+} from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import type { ImportStore } from '../../platform/importStore.js'
 import { imageKey, type Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
-import { buildExport, buildTemplate } from './excel.js'
+import { buildErrorReport, buildExport, buildTemplate } from './excel.js'
+import {
+  type CellValue,
+  detectColumns,
+  type ParsedRow,
+  parseCsv,
+  parseRow,
+} from './import-parse.js'
 import * as repo from './repo.js'
 import type { PatientCreateInput, PatientListInput, PatientUpdateInput } from './schema.js'
 
 export interface PatientDeps {
   db: Db
   storage: Storage
+  imports: ImportStore
 }
 
 /// `YYYY-MM-DD` → DATE ustuni uchun UTC yarim tuni.
@@ -254,4 +269,203 @@ export function exportPatients(deps: PatientDeps, clinicId: string, userId: stri
     })
     return buildExport(rows)
   })
+}
+
+// --- Excel dan yuklash ---
+
+const MAX_IMPORT_BYTES = 5 * 1024 * 1024
+const MAX_IMPORT_ROWS = 5000
+const PREVIEW_ROWS = 20
+
+export type DuplicateMode = 'skip' | 'update' | 'add'
+
+export interface ImportRow extends ParsedRow {
+  /// Telefon yoki ID boʻyicha topilgan mavjud bemor
+  duplicateOf: string | null
+}
+
+interface ImportSession {
+  rows: ImportRow[]
+}
+
+export interface ImportPreview {
+  token: string
+  totalRows: number
+  validCount: number
+  errorCount: number
+  duplicateCount: number
+  /// Faqat birinchi 20 tasi — jadval ekranga sigʻsin
+  rows: ImportRow[]
+}
+
+/// Faylni oʻqish: .xlsx uchun read-excel-file, .csv uchun oʻz tahlilchimiz
+async function readTable(buffer: Buffer, filename: string): Promise<CellValue[][]> {
+  if (/\.csv$/i.test(filename)) {
+    return parseCsv(buffer.toString('utf8'))
+  }
+
+  const { Readable } = await import('node:stream')
+  const readXlsxFile = (await import('read-excel-file/node')).default
+  // Oqimdan oʻqilganda kutubxona barcha varaqlarni qaytaradi —
+  // bizga birinchisi kerak
+  const sheets = (await readXlsxFile(Readable.from(buffer))) as unknown as {
+    data: CellValue[][]
+  }[]
+  return sheets[0]?.data ?? []
+}
+
+export async function importPreview(
+  deps: PatientDeps,
+  clinicId: string,
+  file: { buffer: Buffer; filename: string },
+  hasHeader: boolean,
+): Promise<ImportPreview> {
+  if (file.buffer.length === 0) throw errors.badRequest(IMPORT_TEXT.no_file)
+  if (file.buffer.length > MAX_IMPORT_BYTES) throw errors.badRequest(IMPORT_TEXT.too_large)
+  if (!/\.(xlsx|csv)$/i.test(file.filename)) throw errors.badRequest(IMPORT_TEXT.wrong_type)
+
+  const table = await readTable(file.buffer, file.filename)
+  if (table.length === 0) throw errors.badRequest(IMPORT_TEXT.empty)
+  if (table.length > MAX_IMPORT_ROWS + 1) {
+    throw errors.badRequest(IMPORT_TEXT.too_many_rows(MAX_IMPORT_ROWS))
+  }
+
+  // Birinchi qator sarlavhami — foydalanuvchi belgilaydi, taxmin qilinmaydi
+  const header = hasHeader ? (table[0] ?? []) : defaultHeader()
+  const { columns, missing } = detectColumns(header)
+  if (missing) throw errors.badRequest(IMPORT_TEXT.column_missing(missing))
+
+  const body = hasHeader ? table.slice(1) : table
+  const parsed = body.map((row, index) => parseRow(row, columns, index + (hasHeader ? 2 : 1)))
+
+  const rows = await withClinic(deps.db, clinicId, async (tx) => {
+    const phones = await repo.phoneIndex(tx)
+    const ids = await repo.existingIds(
+      tx,
+      parsed.map((row) => row.values.id).filter((id): id is string => Boolean(id)),
+    )
+
+    return parsed.map((row): ImportRow => {
+      const errorsForRow = { ...row.errors }
+      let duplicateOf: string | null = null
+
+      if (row.values.id) {
+        // ID faqat chiqarilgan faylda boʻladi — notoʻgʻrisi xato
+        if (ids.has(row.values.id)) duplicateOf = row.values.id
+        else errorsForRow.id = IMPORT_TEXT.id_unknown
+      } else if (row.values.phone) {
+        duplicateOf = phones.get(row.values.phone) ?? null
+      }
+
+      return { ...row, errors: errorsForRow, duplicateOf }
+    })
+  })
+
+  const token = await deps.imports.save(clinicId, { rows } satisfies ImportSession)
+
+  return {
+    token,
+    totalRows: rows.length,
+    validCount: rows.filter((row) => Object.keys(row.errors).length === 0).length,
+    errorCount: rows.filter((row) => Object.keys(row.errors).length > 0).length,
+    duplicateCount: rows.filter((row) => row.duplicateOf !== null).length,
+    rows: rows.slice(0, PREVIEW_ROWS),
+  }
+}
+
+/// Sarlavhasiz faylda ustunlar shablon tartibida deb qabul qilinadi
+function defaultHeader(): string[] {
+  return [
+    PATIENT_EXCEL_COLUMNS.id,
+    PATIENT_EXCEL_COLUMNS.fio,
+    PATIENT_EXCEL_COLUMNS.phone,
+    PATIENT_EXCEL_COLUMNS.birthDate,
+    PATIENT_EXCEL_COLUMNS.address,
+    PATIENT_EXCEL_COLUMNS.note,
+  ]
+}
+
+export interface ImportResult {
+  added: number
+  updated: number
+  skipped: number
+  errorCount: number
+  /// Xatoli qatorlar boʻlsa — ularni Excel faylga chiqarish uchun token
+  errorsToken: string | null
+}
+
+export async function importCommit(
+  deps: PatientDeps,
+  clinicId: string,
+  userId: string,
+  token: string,
+  mode: DuplicateMode,
+): Promise<ImportResult> {
+  const session = await deps.imports.read<ImportSession>(clinicId, token)
+  if (!session) throw errors.badRequest(IMPORT_TEXT.session_expired)
+
+  const failed = session.rows.filter((row) => Object.keys(row.errors).length > 0)
+  const usable = session.rows.filter((row) => Object.keys(row.errors).length === 0)
+
+  let added = 0
+  let updated = 0
+  let skipped = failed.length
+
+  await withClinic(deps.db, clinicId, async (tx) => {
+    for (const row of usable) {
+      const data = {
+        fio: row.values.fio,
+        phone: row.values.phone,
+        birthDate: row.values.birthDate ? toDate(row.values.birthDate) : null,
+        address: row.values.address,
+        note: row.values.note,
+      }
+
+      // ID berilgan qator har doim yangilanadi — u chiqarilgan fayldan
+      // qaytgan, ya'ni mijoz aynan shu bemorni tuzatgan
+      if (row.values.id) {
+        await repo.update(tx, row.values.id, data)
+        updated++
+        continue
+      }
+
+      if (row.duplicateOf) {
+        if (mode === 'skip') {
+          skipped++
+          continue
+        }
+        if (mode === 'update') {
+          await repo.update(tx, row.duplicateOf, data)
+          updated++
+          continue
+        }
+      }
+
+      await repo.create(tx, uuidV7(), data)
+      added++
+    }
+
+    // Butun yuklash audit'ga bitta yozuv sifatida tushadi (tz.md 8-boʻlim)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.patients_imported,
+      entity: 'patient',
+      meta: { added, updated, skipped, mode },
+    })
+  })
+
+  const errorsToken = failed.length > 0 ? await deps.imports.save(clinicId, { rows: failed }) : null
+
+  return { added, updated, skipped, errorCount: failed.length, errorsToken }
+}
+
+/// Xatoli qatorlar alohida Excel faylda — mijoz tuzatib qayta yuklaydi
+export async function importErrors(
+  deps: PatientDeps,
+  clinicId: string,
+  token: string,
+): Promise<Buffer> {
+  const session = await deps.imports.read<ImportSession>(clinicId, token)
+  if (!session) throw errors.badRequest(IMPORT_TEXT.session_expired)
+  return buildErrorReport(session.rows)
 }

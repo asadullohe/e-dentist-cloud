@@ -9,7 +9,7 @@ import { memoryMailer } from '../../platform/mailer.js'
 import { createRateLimiter } from '../../platform/rateLimit.js'
 import { createServer } from '../../platform/server.js'
 import { createSessionStore } from '../../platform/session.js'
-import { fakeStorage, testConfig } from '../../test-support/config.js'
+import { fakeImports, fakeStorage, testConfig } from '../../test-support/config.js'
 
 const ownerUrl = process.env.DATABASE_URL
 const appUrl = process.env.APP_DATABASE_URL
@@ -55,7 +55,14 @@ beforeAll(async () => {
     await rateLimiter.reset(k)
   }
 
-  app = createServer(config, { db, storage: fakeStorage, sessions, rateLimiter, mailer })
+  app = createServer(config, {
+    db,
+    storage: fakeStorage,
+    imports: fakeImports,
+    sessions,
+    rateLimiter,
+    mailer,
+  })
 
   // Ruxsat tekshiruvini sinash uchun himoyalangan marshrut
   app.get('/sinov/bemorlar', { preHandler: app.requirePermission('patients.read') }, async () => ({

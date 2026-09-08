@@ -55,6 +55,25 @@ export async function exists(tx: ClinicTx, id: string): Promise<boolean> {
 }
 
 /// Excel ga chiqarish uchun — sahifalashsiz, toʻliq roʻyxat
+/// Takrorlarni aniqlash uchun: telefon → bemor id. Telefon takrorlanishi
+/// mumkin, birinchisi olinadi
+export async function phoneIndex(tx: ClinicTx): Promise<Map<string, string>> {
+  const rows = await tx.patient.findMany({
+    where: { phone: { not: null } },
+    select: { id: true, phone: true },
+  })
+  const index = new Map<string, string>()
+  for (const row of rows) {
+    if (row.phone && !index.has(row.phone)) index.set(row.phone, row.id)
+  }
+  return index
+}
+
+export async function existingIds(tx: ClinicTx, ids: string[]): Promise<Set<string>> {
+  const rows = await tx.patient.findMany({ where: { id: { in: ids } }, select: { id: true } })
+  return new Set(rows.map((row) => row.id))
+}
+
 export function listAll(tx: ClinicTx) {
   return tx.patient.findMany({
     select: { id: true, fio: true, phone: true, birthDate: true, address: true, note: true },

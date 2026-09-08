@@ -1,4 +1,4 @@
-import { EXCEL_TEXT, IMAGE_TEXT, todayISO } from '@e-dentist/shared'
+import { EXCEL_TEXT, IMAGE_TEXT, IMPORT_TEXT, IMPORT_UI, todayISO } from '@e-dentist/shared'
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
@@ -12,7 +12,12 @@ import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { patientCreateSchema, patientListSchema, patientUpdateSchema } from './schema.js'
+import {
+  importCommitSchema,
+  patientCreateSchema,
+  patientListSchema,
+  patientUpdateSchema,
+} from './schema.js'
 import * as service from './service.js'
 
 export interface PatientRouteOpts {
@@ -43,6 +48,45 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
     return reply
       .header('content-type', XLSX_TYPE)
       .header('content-disposition', attachment(EXCEL_TEXT.template_file))
+      .send(file)
+  })
+
+  app.post('/patients/import/preview', write, async (req) => {
+    const { clinicId } = clinicOf(req)
+
+    const file = await req.file()
+    if (!file) throw errors.badRequest(IMPORT_TEXT.no_file)
+
+    // Birinchi qator sarlavhami — foydalanuvchi belgilaydi, taxmin qilinmaydi
+    const field = file.fields.hasHeader
+    const hasHeader =
+      typeof field === 'object' && field !== null
+        ? String((field as { value?: unknown }).value ?? 'true') !== 'false'
+        : true
+
+    return ok(
+      await service.importPreview(
+        opts.deps,
+        clinicId,
+        { buffer: await file.toBuffer(), filename: file.filename },
+        hasHeader,
+      ),
+    )
+  })
+
+  app.post('/patients/import/commit', write, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const input = validateInput(importCommitSchema, req.body)
+    return ok(await service.importCommit(opts.deps, clinicId, userId, input.token, input.mode))
+  })
+
+  app.get('/patients/import/errors/:token', write, async (req, reply) => {
+    const { clinicId } = clinicOf(req)
+    const { token } = req.params as { token: string }
+    const file = await service.importErrors(opts.deps, clinicId, token)
+    return reply
+      .header('content-type', XLSX_TYPE)
+      .header('content-disposition', attachment(IMPORT_UI.errors_file))
       .send(file)
   })
 

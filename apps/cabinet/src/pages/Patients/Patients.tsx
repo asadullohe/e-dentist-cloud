@@ -1,9 +1,18 @@
-import { age, EXCEL_UI, formatDate, formatUzPhone, PATIENT_UI, UI_TEXT } from '@e-dentist/shared'
-import { FileDownIcon, PencilIcon, PlusIcon, SheetIcon, Trash2Icon } from 'lucide-react'
+import {
+  age,
+  EXCEL_UI,
+  formatDate,
+  formatUzPhone,
+  IMPORT_UI,
+  PATIENT_UI,
+  UI_TEXT,
+} from '@e-dentist/shared'
+import { FileDownIcon, PencilIcon, PlusIcon, SheetIcon, Trash2Icon, UploadIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Patient, usePatients } from '@/entities/patient'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
+import { PatientImportDialog } from '@/features/patient-import'
 import { ApiError, downloadFile } from '@/shared/api'
 import { useDebounced } from '@/shared/lib'
 import {
@@ -34,6 +43,7 @@ type Download = 'template' | 'export' | null
 
 export function Patients() {
   const [busy, setBusy] = useState<Download>(null)
+  const [importOpen, setImportOpen] = useState(false)
   const [downloadError, setDownloadError] = useState('')
 
   async function download(what: Exclude<Download, null>) {
@@ -88,6 +98,10 @@ export function Patients() {
           >
             <FileDownIcon />
             {busy === 'template' ? EXCEL_UI.downloading : EXCEL_UI.template}
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+            <UploadIcon />
+            {IMPORT_UI.title}
           </Button>
           <Button
             size="sm"
@@ -218,6 +232,8 @@ export function Patients() {
           </Button>
         </div>
       )}
+
+      <PatientImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       <PatientFormDialog open={formOpen} onOpenChange={setFormOpen} patient={editing} />
 

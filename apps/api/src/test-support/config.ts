@@ -28,3 +28,10 @@ export const fakeStorage = {
   signedUrl: async () => 'http://sinov/imzolangan-havola',
   remove: async () => {},
 }
+
+/// Redis ga tegmaydigan testlar uchun
+export const fakeImports = {
+  save: async () => 'sinov-token',
+  read: async () => null,
+  close: async () => {},
+}

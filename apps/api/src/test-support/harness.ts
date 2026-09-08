@@ -6,6 +6,7 @@
 
 import type { FastifyInstance } from 'fastify'
 import { createDb, type Db } from '../platform/db.js'
+import { createImportStore } from '../platform/importStore.js'
 import { memoryMailer } from '../platform/mailer.js'
 import { createRateLimiter, type RateLimiter } from '../platform/rateLimit.js'
 import { createServer } from '../platform/server.js'
@@ -65,7 +66,9 @@ export async function startHarness(): Promise<Harness> {
   })
   await storage.ensureBucket()
 
-  const app = createServer(config, { db, storage, sessions, rateLimiter, mailer })
+  const imports = createImportStore(REDIS_URL)
+
+  const app = createServer(config, { db, storage, imports, sessions, rateLimiter, mailer })
   await app.ready()
 
   const registered = await app.inject({
@@ -107,6 +110,7 @@ export async function startHarness(): Promise<Harness> {
       await app.close()
       await sessions.close()
       await rateLimiter.close()
+      await imports.close()
       await ownerDb.$disconnect()
       await db.$disconnect()
     },

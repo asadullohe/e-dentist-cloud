@@ -13,6 +13,19 @@ async function get(url: string) {
   return await h.app.inject({ method: 'GET', url, headers: { cookie: h.cookie } })
 }
 
+/// Oqimdan oʻqilganda read-excel-file barcha varaqlarni
+/// [{sheet, data}] koʻrinishida qaytaradi va `sheet` sozlamasini
+/// eʼtiborsiz qoldiradi — kerakli varaqni oʻzimiz tanlaymiz
+async function sheetRows(body: Buffer, index = 1) {
+  const { Readable } = await import('node:stream')
+  const readXlsxFile = (await import('read-excel-file/node')).default
+  const sheets = (await readXlsxFile(Readable.from(body))) as unknown as {
+    sheet: string
+    data: unknown[][]
+  }[]
+  return sheets[index - 1]?.data ?? []
+}
+
 beforeAll(async () => {
   h = await startHarness()
 
@@ -297,19 +310,6 @@ describe('bemor rasmlari', () => {
 })
 
 describe('Excel', () => {
-  /// Oqimdan oʻqilganda read-excel-file barcha varaqlarni
-  /// [{sheet, data}] koʻrinishida qaytaradi va `sheet` sozlamasini
-  /// eʼtiborsiz qoldiradi — kerakli varaqni oʻzimiz tanlaymiz
-  async function sheetRows(body: Buffer, index = 1) {
-    const { Readable } = await import('node:stream')
-    const readXlsxFile = (await import('read-excel-file/node')).default
-    const sheets = (await readXlsxFile(Readable.from(body))) as unknown as {
-      sheet: string
-      data: unknown[][]
-    }[]
-    return sheets[index - 1]?.data ?? []
-  }
-
   it('shablon toʻgʻri ustunlar va ikkita namuna qator bilan keladi', async () => {
     const r = await h.app.inject({
       method: 'GET',
@@ -378,5 +378,171 @@ describe('Excel', () => {
   it('faylni yuklab olish uchun ruxsat kerak', async () => {
     const r = await h.app.inject({ method: 'GET', url: '/api/patients/export' })
     expect(r.statusCode).toBe(401)
+  })
+})
+
+describe('Excel dan yuklash', () => {
+  function upload(csv: string, hasHeader = true, filename = 'bemorlar.csv') {
+    const boundary = '----edentist'
+    const parts = [
+      `--${boundary}\r\nContent-Disposition: form-data; name="hasHeader"\r\n\r\n${hasHeader}\r\n`,
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\n` +
+        `Content-Type: text/csv\r\n\r\n${csv}\r\n`,
+      `--${boundary}--\r\n`,
+    ]
+    return h.app.inject({
+      method: 'POST',
+      url: '/api/patients/import/preview',
+      headers: { cookie: h.cookie, 'content-type': `multipart/form-data; boundary=${boundary}` },
+      payload: Buffer.from(parts.join('')),
+    })
+  }
+
+  const commit = (token: string, mode: string) =>
+    h.app.inject({
+      method: 'POST',
+      url: '/api/patients/import/commit',
+      payload: { token, mode },
+      headers: { cookie: h.cookie },
+    })
+
+  it('toʻgʻri faylni oʻqiydi va sanoqni qaytaradi', async () => {
+    const r = await upload(
+      'F.I.O.;Telefon;Tugʻilgan sana\nImport Birinchi;901110001;12/05/1990\nImport Ikkinchi;901110002;',
+    )
+    expect(r.statusCode).toBe(200)
+    const data = r.json().data
+    expect(data.totalRows).toBe(2)
+    expect(data.validCount).toBe(2)
+    expect(data.errorCount).toBe(0)
+    expect(data.rows[0].values).toMatchObject({
+      fio: 'Import Birinchi',
+      phone: '+998901110001',
+      birthDate: '1990-05-12',
+    })
+  })
+
+  it('F.I.O. ustuni yoʻq boʻlsa aniq yoʻriqnoma beradi', async () => {
+    const r = await upload('Telefon;Manzil\n901110003;Toshkent')
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.message).toMatch(/Shablonni yuklab olib/)
+  })
+
+  it('xatoli qatorni belgilaydi, qolganini toʻgʻri deb hisoblaydi', async () => {
+    const r = await upload('F.I.O.;Tugʻilgan sana\nYaxshi Bemor;01/01/2000\nAb;kecha')
+    const data = r.json().data
+    expect(data.validCount).toBe(1)
+    expect(data.errorCount).toBe(1)
+    expect(data.rows[1].errors).toMatchObject({
+      fio: expect.any(String),
+      birthDate: expect.any(String),
+    })
+    // Qator raqami Excel dagidek: sarlavha 1-qator
+    expect(data.rows[1].row).toBe(3)
+  })
+
+  it('qatorlar yoziladi', async () => {
+    const preview = await upload('F.I.O.;Telefon\nYangi Import;901110010')
+    const r = await commit(preview.json().data.token, 'skip')
+    expect(r.json().data).toMatchObject({ added: 1, updated: 0, skipped: 0 })
+
+    const list = await get('/api/patients?q=Yangi Import')
+    expect(list.json().data.items[0].phone).toBe('+998901110010')
+  })
+
+  describe('takrorlar', () => {
+    beforeAll(async () => {
+      await post('/api/patients', { fio: 'Takror Bemor', phone: '901119999' })
+    })
+
+    it('telefon boʻyicha takror aniqlanadi', async () => {
+      const r = await upload('F.I.O.;Telefon\nBoshqa Ism;901119999')
+      expect(r.json().data.duplicateCount).toBe(1)
+      expect(r.json().data.rows[0].duplicateOf).toBeTruthy()
+    })
+
+    it('«oʻtkazib yuborish» — yozilmaydi', async () => {
+      const preview = await upload('F.I.O.;Telefon\nBoshqa Ism;901119999')
+      const r = await commit(preview.json().data.token, 'skip')
+      expect(r.json().data).toMatchObject({ added: 0, skipped: 1 })
+    })
+
+    it('«mavjudini yangilash» — eski yozuv oʻzgaradi', async () => {
+      const preview = await upload('F.I.O.;Telefon\nYangilangan Ism;901119999')
+      const r = await commit(preview.json().data.token, 'update')
+      expect(r.json().data).toMatchObject({ added: 0, updated: 1 })
+
+      const list = await get('/api/patients?q=901119999')
+      expect(list.json().data.items[0].fio).toBe('Yangilangan Ism')
+    })
+
+    it('«baribir qoʻshish» — ikkinchi yozuv paydo boʻladi', async () => {
+      const preview = await upload('F.I.O.;Telefon\nUchinchi Ism;901119999')
+      const r = await commit(preview.json().data.token, 'add')
+      expect(r.json().data).toMatchObject({ added: 1 })
+
+      const list = await get('/api/patients?q=901119999')
+      expect(list.json().data.total).toBe(2)
+    })
+  })
+
+  it('xatoli qatorlar alohida faylga chiqadi', async () => {
+    const preview = await upload('F.I.O.;Tugʻilgan sana\nAb;kecha')
+    const result = await commit(preview.json().data.token, 'skip')
+    const token = result.json().data.errorsToken
+    expect(token).toBeTruthy()
+
+    const file = await h.app.inject({
+      method: 'GET',
+      url: `/api/patients/import/errors/${token}`,
+      headers: { cookie: h.cookie },
+    })
+    expect(file.statusCode).toBe(200)
+
+    const rows = await sheetRows(file.rawPayload)
+    expect(rows[0]?.slice(0, 2)).toEqual(['Qator', 'Xato'])
+    expect(String(rows[1]?.[1])).toMatch(/kamida 3/)
+  })
+
+  it('eskirgan yoki begona token rad etiladi', async () => {
+    const r = await commit('bunday-token-yoq', 'skip')
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.message).toMatch(/seansi eskirdi/)
+  })
+
+  // TZ ning asosiy vaʼdasi: chiqarilgan faylni tahrirlab qaytadan yuklash
+  // mumkin — bu koʻp yozuvni birdaniga tuzatishning eng oson yoʻli
+  it('chiqarilgan faylni qaytadan yuklab boʻladi va id boʻyicha yangilanadi', async () => {
+    const created = await post('/api/patients', { fio: 'Aylanma Bemor', phone: '901112222' })
+    const id = created.json().data.id
+
+    const exported = await h.app.inject({
+      method: 'GET',
+      url: '/api/patients/export',
+      headers: { cookie: h.cookie },
+    })
+    const rows = await sheetRows(exported.rawPayload)
+    const header = rows[0] as string[]
+    const mine = rows.find((line) => line[1] === 'Aylanma Bemor') as string[]
+    expect(mine[0]).toBe(id)
+
+    // Excelda tahrirlangandek: ismni oʻzgartiramiz
+    const edited = [
+      header.join(';'),
+      [id, 'Aylanma Tuzatilgan', mine[2], mine[3], '', ''].join(';'),
+    ]
+    const preview = await upload(edited.join('\n'))
+    expect(preview.json().data.errorCount).toBe(0)
+
+    const result = await commit(preview.json().data.token, 'skip')
+    expect(result.json().data).toMatchObject({ added: 0, updated: 1 })
+
+    const check = await get(`/api/patients/${id}`)
+    expect(check.json().data.fio).toBe('Aylanma Tuzatilgan')
+  })
+
+  it('notoʻgʻri ID li qator xato beradi', async () => {
+    const r = await upload('ID;F.I.O.\n00000000-0000-7000-8000-00000000dead;Yoʻq Bemor')
+    expect(r.json().data.rows[0].errors.id).toBe('Bunday ID li bemor topilmadi')
   })
 })

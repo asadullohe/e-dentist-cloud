@@ -1,5 +1,6 @@
 import { loadConfig } from './platform/config.js'
 import { createDb } from './platform/db.js'
+import { createImportStore } from './platform/importStore.js'
 import { consoleMailer } from './platform/mailer.js'
 import { createRateLimiter } from './platform/rateLimit.js'
 import { createServer } from './platform/server.js'
@@ -26,9 +27,12 @@ const storage = createStorage({
 // sozlash kerak boʻlmasin
 await storage.ensureBucket()
 
+const imports = createImportStore(config.REDIS_URL)
+
 const app = createServer(config, {
   db,
   storage,
+  imports,
   sessions,
   rateLimiter,
   mailer: consoleMailer((message) => app.log.info(message)),
@@ -37,7 +41,13 @@ const app = createServer(config, {
 // Docker konteynerni toʻxtatganda ochiq soʻrovlar tugashini kutamiz
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, () => {
-    Promise.allSettled([app.close(), sessions.close(), rateLimiter.close(), db.$disconnect()]).then(
+    Promise.allSettled([
+      app.close(),
+      sessions.close(),
+      rateLimiter.close(),
+      imports.close(),
+      db.$disconnect(),
+    ]).then(
       () => process.exit(0),
       () => process.exit(1),
     )

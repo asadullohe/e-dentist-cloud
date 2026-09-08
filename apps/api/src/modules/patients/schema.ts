@@ -36,3 +36,11 @@ export const patientListSchema = z.object({
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>
 export type PatientUpdateInput = z.infer<typeof patientUpdateSchema>
 export type PatientListInput = z.infer<typeof patientListSchema>
+
+export const importCommitSchema = z.object({
+  token: z.string().min(1),
+  /// Takrorlangan bemor bilan nima qilinsin
+  mode: z.enum(['skip', 'update', 'add']).default('skip'),
+})
+
+export type ImportCommitInput = z.infer<typeof importCommitSchema>

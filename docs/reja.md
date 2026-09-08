@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.14** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.16** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -397,10 +397,27 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > Tanlandi: `write-excel-file` + `read-excel-file` — ogohlantirish yoʻq,
 > bogʻliqligi bitta, faol qoʻllab-quvvatlanadi. Sabab `tz.md` 3-boʻlimiga
 > yozildi.
-- [ ] **2.14 Excel: import preview** — sarlavha nomi boʻyicha ustun tanish, sana tuzoqlari,
-      telefon normallashtirish, takrorlarni topish, birinchi 20 qator jadvalda
-- [ ] **2.15 Excel: import commit** — yozish, hisobot (qoʻshildi / yangilandi / oʻtkazildi),
-      xatolar alohida faylga, `audit_log` ga bitta yozuv
+- [x] **2.14 Excel: import preview** — ustunlar sarlavha nomi boʻyicha tanaladi
+      (tartib oʻzgarsa ham, ortiqcha ustun boʻlsa ham), sana uch koʻrinishda
+      oʻqiladi, telefondagi yoʻqolgan nol tiklanadi, takrorlar telefon va ID
+      boʻyicha topiladi. 25 ta tahlil testi + oqim testlari
+
+> **TZ dagi bitta raqam notoʻgʻri edi**
+>
+> «Excel seriya raqami `32915` = 12/05/1990» deyilgan edi. Test buni ushladi:
+> `32915` aslida **1990-02-11**, 12-may esa **33005**. Boshlangʻich nuqta
+> 1899-12-30 (Excel 1900-yilni kabisa deb hisoblaydi). Nazorat nuqtasi bilan
+> tasdiqlandi: `25569` → 1970-01-01. `tz.md` toʻgʻrilandi.
+- [x] **2.15 Excel: import commit** — yozish, hisobot, xatolar alohida Excel
+      faylga, audit'ga bitta yozuv. Takror bilan uch tanlov: oʻtkazib yuborish ·
+      mavjudini yangilash · baribir qoʻshish.
+      Brauzerda tekshirildi: 3 qatorli fayldan 1 ta qoʻshildi, 2 ta oʻtkazildi
+
+> **Fayl bir marta yuklanadi**
+>
+> Tahlil natijasi Redis da yarim soat saqlanadi va «Yuklash» bosilganda
+> token boʻyicha oʻqiladi — fayl ikkinchi marta yuborilmaydi. Kalitga
+> `clinicId` kiradi, shuning uchun boshqa klinikaning tokeni ishlamaydi.
 - [ ] **2.16 `schedule` moduli va Qabul jadvali sahifasi** — oylik kalendar, kunlik roʻyxat
 - [ ] **2.17 Mobil koʻrinish** — yon menyuni yigʻiladigan qilish (shadcn `Sheet`),
       jadvallarni tor ekranga moslash

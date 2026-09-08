@@ -380,7 +380,7 @@ Klinikaning bemorlari koʻpincha Excelda yoki daftarda boʻladi. Qoʻlda 800 ta 
 >
 > Bular ishni koʻpaytiradigan, lekin oʻtkazib boʻlmaydigan joylar:
 >
-> **Sana raqam boʻlib keladi.** Excel sanani seriya raqami sifatida saqlaydi (`32915` = 12/05/1990). Katak turini tekshirib, ikkala koʻrinishni ham oʻqish kerak.
+> **Sana raqam boʻlib keladi.** Excel sanani seriya raqami sifatida saqlaydi (`33005` = 12/05/1990; boshlangʻich nuqta 1899-12-30, chunki Excel 1900-yilni kabisa deb hisoblaydi). Katak turini tekshirib, uchala koʻrinishni ham oʻqish kerak: `Date` obyekti, seriya raqami va matn.
 >
 > **Kun/oy chalkashligi.** `05/12/1990` — 5-dekabrmi yoki 12-maymi? Bizda hamma joyda kun/oy/yil, shuning uchun matn sanalar shu tartibda oʻqiladi va oldindan koʻrishda toʻliq koʻrsatiladi — foydalanuvchi xatoni oʻsha yerda koʻradi.
 >

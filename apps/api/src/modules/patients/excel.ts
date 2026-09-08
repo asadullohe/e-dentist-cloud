@@ -4,7 +4,13 @@
 // kerak. Ya'ni uni tahrirlab qaytadan yuklash mumkin — bu koʻp yozuvni
 // birdaniga tuzatishning eng oson yoʻli.
 
-import { EXCEL_TEXT, formatDate, formatUzPhone, PATIENT_EXCEL_COLUMNS } from '@e-dentist/shared'
+import {
+  EXCEL_TEXT,
+  formatDate,
+  formatUzPhone,
+  IMPORT_UI,
+  PATIENT_EXCEL_COLUMNS,
+} from '@e-dentist/shared'
 import writeXlsxFile, { type SheetData } from 'write-excel-file/node'
 
 export interface PatientRow {
@@ -105,5 +111,45 @@ export function buildExport(patients: PatientRow[]): Promise<Buffer> {
       columns: COLUMN_WIDTHS,
     },
     { data: guideSheet(), sheet: EXCEL_TEXT.sheet_guide, columns: GUIDE_WIDTHS },
+  ]).toBuffer()
+}
+
+export interface ErrorRow {
+  row: number
+  values: {
+    fio: string
+    phone: string | null
+    birthDate: string | null
+    address: string | null
+    note: string | null
+  }
+  errors: Record<string, string>
+}
+
+/// Xatoli qatorlar fayli. Ustunlar shablon bilan bir xil, ustiga qator
+/// raqami va xato izohi — mijoz tuzatib qaytadan yuklaydi (tz.md 8-boʻlim)
+export function buildErrorReport(rows: ErrorRow[]): Promise<Buffer> {
+  const header = [
+    { value: IMPORT_UI.row_column, fontWeight: 'bold' as const },
+    { value: IMPORT_UI.error_column, fontWeight: 'bold' as const },
+    ...HEADERS.slice(1).map((value) => ({ value, fontWeight: 'bold' as const })),
+  ]
+
+  const body: SheetData = rows.map((row) => [
+    { value: row.row },
+    { value: Object.values(row.errors).join('; ') },
+    { value: row.values.fio },
+    { value: row.values.phone ?? '' },
+    { value: row.values.birthDate ? formatDate(row.values.birthDate) : '' },
+    { value: row.values.address ?? '' },
+    { value: row.values.note ?? '' },
+  ])
+
+  return writeXlsxFile([
+    {
+      data: [header, ...body],
+      sheet: EXCEL_TEXT.sheet_patients,
+      columns: [{ width: 8 }, { width: 44 }, ...COLUMN_WIDTHS.slice(1)],
+    },
   ]).toBuffer()
 }

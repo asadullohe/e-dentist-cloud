@@ -352,3 +352,52 @@ export const EXCEL_TEXT = {
     'Bu faylni toʻldirib, kabinetdagi «Excel dan yuklash» orqali qaytaring.',
   ],
 } as const
+
+// Excel dan yuklash
+export const IMPORT_TEXT = {
+  no_file: 'Fayl tanlanmagan',
+  wrong_type: 'Faqat .xlsx yoki .csv fayl yuklash mumkin',
+  too_large: 'Fayl juda katta — eng koʻpi 5 MB',
+  too_many_rows: (max: number) => `Faylda ${max} qatordan koʻp — kichikroq boʻlaklarga boʻling`,
+  empty: 'Faylda maʼlumot yoʻq',
+  column_missing: (name: string) =>
+    `«${name}» ustuni topilmadi. Shablonni yuklab olib, sarlavhalarni solishtiring.`,
+  session_expired: 'Yuklash seansi eskirdi — faylni qaytadan tanlang',
+  // Qator xatolari
+  fio_required: 'F.I.O. boʻsh',
+  fio_short: 'F.I.O. kamida 3 belgi boʻlishi kerak',
+  phone_invalid: 'Telefon raqamini oʻqib boʻlmadi',
+  date_invalid: 'Sanani oʻqib boʻlmadi — kun/oy/yil koʻrinishida yozing',
+  date_future: 'Sana kelajakda',
+  date_old: 'Sana juda qadimgi',
+  id_unknown: 'Bunday ID li bemor topilmadi',
+} as const
+
+export const IMPORT_UI = {
+  title: 'Excel dan yuklash',
+  pick_file: 'Fayl tanlash',
+  reading: 'Fayl oʻqilmoqda…',
+  has_header: 'Birinchi qator — sarlavha',
+  total: (n: number) => `${n} qator`,
+  valid: (n: number) => `${n} ta toʻgʻri`,
+  errors: (n: number) => `${n} tasida xato`,
+  duplicates: (n: number) => `${n} ta takror`,
+  preview_note: 'Birinchi 20 qator koʻrsatilyapti',
+  duplicate_mode: 'Takrorlangan bemorlar bilan nima qilinsin?',
+  mode_skip: 'Oʻtkazib yuborish',
+  mode_update: 'Mavjudini yangilash',
+  mode_add: 'Baribir qoʻshish',
+  commit: 'Yuklash',
+  committing: 'Yuklanmoqda…',
+  done: 'Yuklash tugadi',
+  added: (n: number) => `${n} ta qoʻshildi`,
+  updated: (n: number) => `${n} ta yangilandi`,
+  skipped: (n: number) => `${n} ta oʻtkazib yuborildi`,
+  download_errors: 'Xatoli qatorlarni yuklab olish',
+  errors_file: 'yuklashdagi-xatolar.xlsx',
+  error_column: 'Xato',
+  row_column: 'Qator',
+  duplicate_label: 'takror',
+  cancel: 'Bekor qilish',
+  close: 'Yopish',
+} as const
