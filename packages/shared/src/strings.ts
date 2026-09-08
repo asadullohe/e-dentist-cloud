@@ -291,3 +291,24 @@ export const DEBTORS_UI = {
   patient: 'Bemor',
   phone: 'Telefon',
 } as const
+
+// Narxnoma
+export const SERVICE_TEXT = {
+  not_found: 'Xizmat topilmadi',
+  name_required: 'Xizmat nomini yozing',
+  name_taken: 'Bunday nomli xizmat allaqachon bor',
+  price_negative: 'Narx manfiy boʻlishi mumkin emas',
+} as const
+
+export const SERVICE_UI = {
+  title: 'Narxnoma',
+  add: 'Xizmat qoʻshish',
+  edit: 'Xizmatni tahrirlash',
+  empty: 'Narxnoma hozircha boʻsh',
+  name: 'Xizmat',
+  price: 'Narx',
+  pick: 'Narxnomadan tanlash',
+  pick_placeholder: 'Xizmatni tanlang',
+  delete_title: 'Xizmat oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+} as const

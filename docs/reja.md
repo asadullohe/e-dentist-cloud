@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.12** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.13** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -366,7 +366,20 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
       sahifasi jami qarz bilan. Brauzerda tekshirildi: 100 000 toʻlov qabul
       qilindi, qarz 250 000 dan 150 000 ga tushdi va qarzdorlar roʻyxatida ham
       oʻsha koʻrindi
-- [ ] **2.12 `services` moduli** — narxnoma (tashrifga narx tanlash uchun kerak)
+- [x] **2.12 `services` moduli va Narxnoma sahifasi** — CRUD, klinika ichida
+      nom takrorlanmaydi. Tashrif formasida «Narxnomadan tanlash» — muolaja
+      nomi va narxni oʻzi toʻldiradi, keyin qoʻlda oʻzgartirsa ham boʻladi.
+      10 ta test
+
+> **Narxnomani oʻqish uchun alohida ruxsat yoʻq**
+>
+> Yozish `services.manage` talab qiladi, oʻqish esa faqat klinikaga kirgan
+> boʻlishni. Sabab: shifokor tashrif yozayotganda narxni tanlashi kerak,
+> lekin unga `services.manage` berilmagan. Bu bemor maʼlumoti emas —
+> klinikaning oʻz sozlamasi.
+>
+> Xizmat oʻchirilsa tashriflardagi nom va narx **saqlanib qoladi**
+> (`serviceId` `null` boʻladi) — narxnoma oʻzgarsa tarix buzilmasin.
 - [ ] **2.13 Excel: shablon va chiqarish** — `GET /api/patients/import/template`,
       `GET /api/patients/export`. Chiqarilgan fayl = shablon, `id` ustuni bilan
 - [ ] **2.14 Excel: import preview** — sarlavha nomi boʻyicha ustun tanish, sana tuzoqlari,

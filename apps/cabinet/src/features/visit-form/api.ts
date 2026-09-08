@@ -6,6 +6,7 @@ export interface VisitPayload {
   date: string
   treatment: string
   tooth: number | null
+  serviceId?: string | null
   price: number
   note: string | null
 }

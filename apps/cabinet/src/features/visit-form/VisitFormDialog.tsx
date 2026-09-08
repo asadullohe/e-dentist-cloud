@@ -2,14 +2,17 @@ import {
   CARD_UI,
   formatDate,
   formatMoney,
+  formatSom,
   maskDisplayDate,
   moneyDigits,
   parseDisplayDate,
+  SERVICE_UI,
   UI_TEXT,
 } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useServices } from '@/entities/service'
 import type { Visit } from '@/entities/visit'
 import { applyServerErrors } from '@/shared/lib'
 import {
@@ -26,6 +29,12 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
 } from '@/shared/ui'
 import { useSaveVisit } from './hooks'
@@ -52,7 +61,9 @@ function toValues(visit: Visit | undefined): VisitValues {
 
 export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitFormDialogProps) {
   const { mutateAsync, isPending } = useSaveVisit(visit?.id ?? null)
+  const { data: services } = useServices()
   const [formError, setFormError] = useState('')
+  const [serviceId, setServiceId] = useState<string | null>(null)
 
   const form = useForm<VisitValues>({
     resolver: zodResolver(visitSchema),
@@ -64,6 +75,7 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
     if (open) {
       form.reset(toValues(visit))
       setFormError('')
+      setServiceId(visit?.serviceId ?? null)
     }
   }, [open, visit, form])
 
@@ -75,6 +87,7 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
         date: parseDisplayDate(values.date) as string,
         treatment: values.treatment,
         tooth: values.tooth ? Number(values.tooth) : null,
+        serviceId,
         price: Number(moneyDigits(values.price) || 0),
         note: values.note || null,
       })
@@ -126,6 +139,37 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
                 )}
               />
             </div>
+
+            {services && services.length > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="visit-service">{SERVICE_UI.pick}</Label>
+                <Select
+                  value={serviceId ?? ''}
+                  onValueChange={(id) => {
+                    // Narxnomadan tanlash — muolaja nomi va narxni toʻldiradi.
+                    // Ikkalasi ham keyin qoʻlda oʻzgartirilishi mumkin:
+                    // tashrifda ular matn va son sifatida saqlanadi
+                    setServiceId(id)
+                    const picked = services.find((item) => item.id === id)
+                    if (picked) {
+                      form.setValue('treatment', picked.name)
+                      form.setValue('price', formatMoney(String(picked.price)))
+                    }
+                  }}
+                >
+                  <SelectTrigger id="visit-service" className="w-full">
+                    <SelectValue placeholder={SERVICE_UI.pick_placeholder} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {services.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name} · {formatSom(item.price)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <FormField
               control={form.control}

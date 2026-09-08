@@ -8,6 +8,7 @@ import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Placeholder } from '@/pages/Placeholder'
 import { Register } from '@/pages/Register'
+import { Services } from '@/pages/Services'
 import { VerifyEmail } from '@/pages/VerifyEmail'
 import { NAV_SECTIONS } from '@/shared/config'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -42,16 +43,17 @@ export function Router() {
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientCard />} />
           <Route path="debtors" element={<Debtors />} />
+          <Route path="services" element={<Services />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
-          {NAV_SECTIONS.filter((section) => !['/patients', '/debtors'].includes(section.path)).map(
-            (section) => (
-              <Route
-                key={section.path}
-                path={section.path.slice(1)}
-                element={<Placeholder title={section.label} icon={section.icon} />}
-              />
-            ),
-          )}
+          {NAV_SECTIONS.filter(
+            (section) => !['/patients', '/debtors', '/services'].includes(section.path),
+          ).map((section) => (
+            <Route
+              key={section.path}
+              path={section.path.slice(1)}
+              element={<Placeholder title={section.label} icon={section.icon} />}
+            />
+          ))}
         </Route>
       </Route>
 
