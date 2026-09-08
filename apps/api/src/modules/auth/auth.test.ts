@@ -4,6 +4,7 @@
 import { addDays } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { memoryBus } from '../../platform/bus.js'
 import { createDb, type Db } from '../../platform/db.js'
 import { memoryMailer } from '../../platform/mailer.js'
 import { createRateLimiter } from '../../platform/rateLimit.js'
@@ -62,6 +63,7 @@ beforeAll(async () => {
     sessions,
     rateLimiter,
     mailer,
+    bus: memoryBus(),
   })
 
   // Ruxsat tekshiruvini sinash uchun himoyalangan marshrut

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.3** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.4** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -592,12 +592,31 @@ _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 >
 > Kutish vaqti oxirgi 20 ta yakunlangan navbatning oʻrtacha oraligʻidan
 > hisoblanadi; namuna kam boʻlsa 15 daqiqa deb olinadi.
-- [ ] **4.3 SSE jonli yangilanish** — bir tomonlama oqim, proxy orqali oʻtadi
+- [x] **4.3 SSE jonli yangilanish** — bir tomonlama oqim, proxy orqali oʻtadi
+
+> **Oqimda maʼlumot yurmaydi**
+>
+> Server faqat «shu klinikada navbat oʻzgardi» degan boʻsh hodisa yuboradi,
+> sahifa esa kerakli soʻrovni oʻzi qaytadan yuboradi. Shu sababli maxfiylik
+> filtrlari bitta joyda — marshrutlarda qoladi va oqimga bemor maʼlumoti
+> tushib ketishi mumkin emas.
+>
+> Xabar **Redis pub/sub** orqali tarqaladi, jarayon ichidagi emitter bilan
+> emas: SSE ulanishi bitta jarayonga bogʻlanadi, server ikkinchi nusxada
+> koʻtarilsa mijozlarning yarmi yangilanishni jimgina olmay qolardi.
+>
+> Marshrut avval obuna boʻladi, keyin sarlavha yozadi. Boshida teskari edi —
+> test notoʻgʻri kod bilan ulanish javobsiz osilib qolishini koʻrsatdi
+> («Cannot write headers after they are sent»).
+>
+> Har 25 soniyada izohli qator (`: ping`) yuboriladi: jim turgan oqimni
+> proxy uzib yuboradi.
 - [ ] **4.4 Kutish xonasi ekrani `/n/<kod>/ekran`** — katta shrift, faqat raqamlar, ismsiz
 - [ ] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,
       `queue.manage` ruxsati
 - [ ] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,
-      «tasdiqlanmagan» holat, klinika navbatni butunlay oʻchira oladi
+      «tasdiqlanmagan» holat, klinika navbatni butunlay oʻchira oladi.
+      Bir IP dan ochiladigan SSE ulanishlari soniga ham chegara qoʻyiladi
 
 ---
 

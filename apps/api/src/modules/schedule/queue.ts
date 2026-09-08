@@ -7,6 +7,7 @@
 
 import { QUEUE_TEXT } from '@e-dentist/shared'
 import type { QueueStatus } from '../../../generated/prisma/client.js'
+import { type Bus, queueChannel } from '../../platform/bus.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import type { RateLimiter } from '../../platform/rateLimit.js'
@@ -20,6 +21,7 @@ import * as repo from './repo.js'
 export interface QueueDeps {
   db: Db
   rateLimiter: RateLimiter
+  bus: Bus
 }
 
 /// Bitta IP dan soatiga nechta yozuv. Qurilma boʻyicha cheklov 4.6 da
@@ -163,6 +165,9 @@ export async function join(
     const entries = await repo.queueOfDay(tx, from, to, input.doctorId)
     const finished = await repo.recentlyFinished(tx, SAMPLE_SIZE)
 
+    // Ochiq sahifalar va kutish xonasi ekrani darhol yangilansin
+    await deps.bus.publish(queueChannel(clinic.id))
+
     return toTicket(
       created,
       entries,
@@ -172,7 +177,18 @@ export async function join(
   })
 }
 
-/// Bemor oʻz raqamini kuzatadi. Sahifa yangilanib turadi (SSE — 4.3)
+/// Ochiq sahifa shu oqimga ulanadi. Xabar boʻsh: «navbat oʻzgardi»,
+/// mijoz kerakli soʻrovni oʻzi qaytadan yuboradi
+export async function watch(
+  deps: QueueDeps,
+  code: string,
+  onChange: () => void,
+): Promise<() => void> {
+  const clinic = await findClinic(deps, code)
+  return deps.bus.subscribe(queueChannel(clinic.id), onChange)
+}
+
+/// Bemor oʻz raqamini kuzatadi
 export function ticket(deps: QueueDeps, code: string, id: string): Promise<Ticket> {
   return findClinic(deps, code).then((clinic) =>
     withClinic(deps.db, clinic.id, async (tx) => {

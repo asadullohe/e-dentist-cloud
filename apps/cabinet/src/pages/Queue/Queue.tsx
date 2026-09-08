@@ -2,7 +2,13 @@ import { formatUzPhone, phoneDigits, QUEUE_UI, UI_TEXT, VALIDATION_TEXT } from '
 import { cn } from 'cn'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { type QueueDoctor, useJoinQueue, useQueueBoard, useQueueTicket } from '@/entities/queue'
+import {
+  type QueueDoctor,
+  useJoinQueue,
+  useQueueBoard,
+  useQueueStream,
+  useQueueTicket,
+} from '@/entities/queue'
 import { ApiError } from '@/shared/api'
 import { Button, Card, Input, Label, Skeleton } from '@/shared/ui'
 import { Ticket } from './Ticket'
@@ -23,6 +29,9 @@ function readTicketId(code: string): string | null {
 export function Queue() {
   const { code = '' } = useParams()
   const [ticketId, setTicketId] = useState<string | null>(() => readTicketId(code))
+
+  // Navbat oʻzgarishi darhol koʻrinsin
+  useQueueStream(code)
 
   const board = useQueueBoard(code)
   const ticket = useQueueTicket(code, ticketId)

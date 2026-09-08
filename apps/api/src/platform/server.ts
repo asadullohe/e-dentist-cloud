@@ -20,6 +20,7 @@ import { queueRoutes } from '../modules/schedule/queueRoutes.js'
 import { scheduleRoutes } from '../modules/schedule/routes.js'
 import { serviceRoutes } from '../modules/services/routes.js'
 import { visitRoutes } from '../modules/visits/routes.js'
+import type { Bus } from './bus.js'
 import type { Config } from './config.js'
 import type { Db } from './db.js'
 import { AppError, errors } from './errors.js'
@@ -38,6 +39,8 @@ export interface ServerDeps {
   sessions: SessionStore
   rateLimiter: RateLimiter
   mailer: Mailer
+  /// Navbat oʻzgarganda ochiq sahifalarga xabar beradi (SSE)
+  bus: Bus
 }
 
 // Har qanday xatoni AppXato ga keltiradi. Foydalanuvchi hech qachon
@@ -138,7 +141,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   // Navbat marshrutlari ochiq: /api/n/<kod>
   app.register(queueRoutes, {
     prefix: '/api',
-    deps: { db: deps.db, rateLimiter: deps.rateLimiter },
+    deps: { db: deps.db, rateLimiter: deps.rateLimiter, bus: deps.bus },
   })
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(reportRoutes, { prefix: '/api', deps: { db: deps.db } })

@@ -6,6 +6,7 @@
 
 import type { FastifyInstance } from 'fastify'
 import { generateQueueCode } from '../modules/clinics/queueCode.js'
+import { memoryBus } from '../platform/bus.js'
 import { createDb, type Db } from '../platform/db.js'
 import { createImportStore } from '../platform/importStore.js'
 import { type Mail, memoryMailer } from '../platform/mailer.js'
@@ -32,6 +33,8 @@ export interface Harness {
   ownerDb: Db
   /// Yuborilgan xatlar — havoladagi kalitni shu yerdan olamiz
   sentMail: Mail[]
+  /// Navbat hodisalari shinasi (SSE)
+  bus: ReturnType<typeof memoryBus>
   cookie: string
   clinicId: string
   userId: string
@@ -71,7 +74,16 @@ export async function startHarness(): Promise<Harness> {
 
   const imports = createImportStore(REDIS_URL)
 
-  const app = createServer(config, { db, storage, imports, sessions, rateLimiter, mailer })
+  const bus = memoryBus()
+  const app = createServer(config, {
+    db,
+    storage,
+    imports,
+    sessions,
+    rateLimiter,
+    mailer,
+    bus,
+  })
   await app.ready()
 
   const registered = await app.inject({
@@ -105,6 +117,7 @@ export async function startHarness(): Promise<Harness> {
     clientIp,
     ownerDb,
     sentMail: mailer.sent,
+    bus,
     cookie,
     clinicId,
     userId: owner?.id ?? '',

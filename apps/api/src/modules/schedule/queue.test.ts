@@ -229,3 +229,63 @@ describe('navbat sanogʻi', () => {
     expect(after).toBe(before)
   })
 })
+
+describe('jonli oqim', () => {
+  // SSE javobi tugamaydi, shuning uchun inject ishlamaydi — haqiqiy
+  // ulanish ochamiz
+  let origin = ''
+
+  beforeAll(async () => {
+    await h.app.listen({ port: 0, host: '127.0.0.1' })
+    const address = h.app.server.address()
+    origin = typeof address === 'object' && address ? `http://127.0.0.1:${address.port}` : ''
+  })
+
+  it('SSE sarlavhalari bilan ochiladi va boshlangʻich hodisa yuboradi', async () => {
+    const controller = new AbortController()
+    const response = await fetch(`${origin}/api/n/${code}/stream`, { signal: controller.signal })
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('content-type')).toMatch(/text\/event-stream/)
+    expect(response.headers.get('cache-control')).toMatch(/no-cache/)
+    // Proxy oqimni buferlab qoʻymasin
+    expect(response.headers.get('x-accel-buffering')).toBe('no')
+
+    const reader = (response.body as ReadableStream<Uint8Array>).getReader()
+    const first = await reader.read()
+    expect(new TextDecoder().decode(first.value)).toContain('event: ready')
+
+    controller.abort()
+  })
+
+  it('yozilish oqimga «update» hodisasini yuboradi', async () => {
+    const controller = new AbortController()
+    const response = await fetch(`${origin}/api/n/${code}/stream`, { signal: controller.signal })
+    const reader = (response.body as ReadableStream<Uint8Array>).getReader()
+    await reader.read() // ready
+
+    await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Oqim Bemori' })
+
+    const next = await reader.read()
+    expect(new TextDecoder().decode(next.value)).toContain('event: update')
+    controller.abort()
+  })
+
+  it('notoʻgʻri kod bilan oqim ochilmaydi', async () => {
+    const response = await fetch(`${origin}/api/n/yoqbunday/stream`)
+    expect(response.status).toBe(404)
+  })
+
+  // Ulanish uzilganda obuna ham tozalanishi kerak — aks holda har ochilgan
+  // sahifa xotirada qolib ketadi
+  it('ulanish yopilganda obuna tozalanadi', async () => {
+    const controller = new AbortController()
+    const response = await fetch(`${origin}/api/n/${code}/stream`, { signal: controller.signal })
+    const reader = (response.body as ReadableStream<Uint8Array>).getReader()
+    await reader.read()
+    controller.abort()
+
+    await new Promise((resolve) => setTimeout(resolve, 150))
+    expect(h.bus.subscriberCount(`queue:${h.clinicId}`)).toBe(0)
+  })
+})
