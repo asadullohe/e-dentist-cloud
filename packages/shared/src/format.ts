@@ -29,6 +29,22 @@ export const MONTHS = [
   'dekabr',
 ] as const
 
+/// Grafik oʻqi uchun qisqartma
+export const MONTHS_SHORT = [
+  'yan',
+  'fev',
+  'mar',
+  'apr',
+  'may',
+  'iyn',
+  'iyl',
+  'avg',
+  'sen',
+  'okt',
+  'noy',
+  'dek',
+] as const
+
 export const WEEKDAYS = ['Du', 'Se', 'Chor', 'Pay', 'Ju', 'Shan', 'Yak'] as const
 
 const pad2 = (n: number): string => String(n).padStart(2, '0')

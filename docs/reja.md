@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.2** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.3** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -453,7 +453,20 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > Turkumlar oflayn ilovadan koʻchdi, ustiga `lab` qoʻshildi: naryad
 > topshirilganda texnik narxi shu turkumda xarajatga tushadi (3.6).
 > `lab` moduli `expenses` jadvaliga tegmaydi — `expenses.addTx` ni chaqiradi.
-- [ ] **3.2 `reports` moduli** — oylik tushum, sof foyda, 12 oylik grafik
+- [x] **3.2 `reports` moduli** — oylik tushum, sof foyda, 12 oylik grafik
+
+> **Hisobotning oʻz jadvali yoʻq**
+>
+> `reports` uchta modulning xizmat qatlamidan kunlik jamlanma soʻraydi
+> (`visits.dailyTotalsTx`, `payments.dailyTotalsTx`, `expenses.dailyTotalsTx`)
+> va oyga oʻzi yigʻadi. Prisma `groupBy` oy kesimini bilmaydi, xom SQL esa
+> ijarachi kengaytmasini chetlab oʻtardi — kunlik guruhlashda bir yilga
+> koʻpi bilan 366 qator qaytadi.
+>
+> **Sof foyda = tushum − xarajat**, qilingan ish narxi emas: hali toʻlanmagan
+> ish foyda emas. Oy chegarasi `created_at` uchun klinika vaqtida olinadi
+> (jarayon TZ si Asia/Tashkent) — UTC da olinsa 1-may soat 01:00 da qoʻshilgan
+> bemor aprelga tushib qolardi. Buni test ushlab turadi.
 - [ ] **3.3 Xodimlar va rollar** — taklifnoma oqimi (7 kun), ruxsat matritsasi UI,
       qulflanib qolishdan himoya
 - [ ] **3.4 Prisma: `lab_orders`** + RLS

@@ -75,6 +75,11 @@ export function findByIds(tx: ClinicTx, ids: string[]) {
   return repo.findByIds(tx, ids)
 }
 
+/// Boshqa modullar uchun (reports): oraliqda qoʻshilgan bemorlar soni
+export function countCreatedTx(tx: ClinicTx, from: Date, to: Date): Promise<number> {
+  return repo.countCreatedBetween(tx, from, to)
+}
+
 export function list(deps: PatientDeps, clinicId: string, input: PatientListInput) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const { items, total } = await repo.list(tx, input)

@@ -358,6 +358,28 @@ export const EXPENSE_UI = {
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
 } as const
 
+// Hisobotlar sahifasi
+export const REPORT_UI = {
+  title: 'Hisobotlar',
+  subtitle: 'Oy boʻyicha daromad va tashriflar tahlili',
+  visits: 'Tashriflar',
+  charges: 'Qilingan ish narxi',
+  payments: 'Tushum (toʻlovlar)',
+  expenses: 'Xarajatlar',
+  profit: 'Sof foyda',
+  new_patients: 'Yangi bemorlar',
+  last_months: 'Oxirgi 12 oy',
+  chart_hint: 'Ustunni bosing — oʻsha oyga oʻtadi',
+  treatments_title: 'Muolajalar',
+  expenses_title: 'Xarajatlar',
+  treatment: 'Muolaja',
+  category: 'Turkumi',
+  count: 'Soni',
+  total: 'Jami',
+  empty_visits: 'Bu oyda tashrif boʻlmagan',
+  empty_expenses: 'Bu oyda xarajat yozilmagan',
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {

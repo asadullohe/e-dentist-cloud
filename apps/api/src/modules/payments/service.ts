@@ -42,6 +42,16 @@ export function list(deps: PaymentDeps, clinicId: string, patientId: string) {
   })
 }
 
+/// Boshqa modullar uchun (reports): kun boʻyicha tushum
+export async function dailyTotalsTx(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+): Promise<{ date: Date; total: number }[]> {
+  const rows = await repo.dailyTotals(tx, from, to)
+  return rows.map((row) => ({ date: row.date, total: row._sum.amount ?? 0 }))
+}
+
 /// Bemorning hisobi. Qarz manfiy boʻlsa — oldindan toʻlangan
 export function balance(deps: PaymentDeps, clinicId: string, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {

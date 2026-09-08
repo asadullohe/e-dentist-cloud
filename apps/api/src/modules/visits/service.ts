@@ -49,6 +49,35 @@ export function chargeTotalOf(tx: ClinicTx, patientId: string) {
   return repo.chargeTotalOf(tx, patientId)
 }
 
+/// Boshqa modullar uchun (reports): kun boʻyicha tashrif soni va summasi
+export async function dailyTotalsTx(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+): Promise<{ date: Date; total: number; count: number }[]> {
+  const rows = await repo.dailyTotals(tx, from, to)
+  return rows.map((row) => ({
+    date: row.date,
+    total: row._sum.price ?? 0,
+    count: row._count._all,
+  }))
+}
+
+/// Boshqa modullar uchun (reports): oraliqdagi eng qimmat muolajalar
+export async function topTreatmentsTx(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+  take: number,
+): Promise<{ treatment: string; count: number; total: number }[]> {
+  const rows = await repo.topTreatments(tx, from, to, take)
+  return rows.map((row) => ({
+    treatment: row.treatment,
+    count: row._count._all,
+    total: row._sum.price ?? 0,
+  }))
+}
+
 export function listVisits(deps: VisitDeps, clinicId: string, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, patientId)

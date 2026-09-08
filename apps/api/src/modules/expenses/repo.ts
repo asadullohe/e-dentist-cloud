@@ -37,3 +37,23 @@ export function update(tx: ClinicTx, id: string, data: Prisma.ExpenseUpdateInput
 export function remove(tx: ClinicTx, id: string) {
   return tx.expense.delete({ where: { id } })
 }
+
+/// Kun boʻyicha xarajat. Oyga yigʻish xizmat qatlamida
+export function dailyTotals(tx: ClinicTx, from: Date, to: Date) {
+  return tx.expense.groupBy({
+    by: ['date'],
+    where: { date: { gte: from, lte: to } },
+    _sum: { amount: true },
+  })
+}
+
+export function categoryTotals(tx: ClinicTx, from: Date, to: Date, take: number) {
+  return tx.expense.groupBy({
+    by: ['category'],
+    where: { date: { gte: from, lte: to } },
+    _sum: { amount: true },
+    _count: { _all: true },
+    orderBy: { _sum: { amount: 'desc' } },
+    take,
+  })
+}

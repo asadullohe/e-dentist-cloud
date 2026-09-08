@@ -103,6 +103,31 @@ export function addTx(
   return repo.create(tx, uuidV7(), data).then(toApi)
 }
 
+/// Boshqa modullar uchun (reports): kun boʻyicha xarajat
+export async function dailyTotalsTx(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+): Promise<{ date: Date; total: number }[]> {
+  const rows = await repo.dailyTotals(tx, from, to)
+  return rows.map((row) => ({ date: row.date, total: row._sum.amount ?? 0 }))
+}
+
+/// Boshqa modullar uchun (reports): turkum boʻyicha jamlanma
+export async function categoryTotalsTx(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+  take: number,
+): Promise<{ category: ExpenseCategory; count: number; total: number }[]> {
+  const rows = await repo.categoryTotals(tx, from, to, take)
+  return rows.map((row) => ({
+    category: row.category,
+    count: row._count._all,
+    total: row._sum.amount ?? 0,
+  }))
+}
+
 export function create(
   deps: ExpenseDeps,
   clinicId: string,

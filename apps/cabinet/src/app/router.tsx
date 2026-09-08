@@ -9,6 +9,7 @@ import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Placeholder } from '@/pages/Placeholder'
 import { Register } from '@/pages/Register'
+import { Reports } from '@/pages/Reports'
 import { Schedule } from '@/pages/Schedule'
 import { Services } from '@/pages/Services'
 import { VerifyEmail } from '@/pages/VerifyEmail'
@@ -48,12 +49,18 @@ export function Router() {
           <Route path="services" element={<Services />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="expenses" element={<Expenses />} />
+          <Route path="reports" element={<Reports />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
           {NAV_SECTIONS.filter(
             (section) =>
-              !['/patients', '/debtors', '/services', '/schedule', '/expenses'].includes(
-                section.path,
-              ),
+              ![
+                '/patients',
+                '/debtors',
+                '/services',
+                '/schedule',
+                '/expenses',
+                '/reports',
+              ].includes(section.path),
           ).map((section) => (
             <Route
               key={section.path}
