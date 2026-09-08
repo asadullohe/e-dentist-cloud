@@ -1,7 +1,7 @@
 // Kirish maʼlumotlarini tekshirish. Xato matnlari oʻzbekcha va
 // packages/shared/strings.ts dan keladi.
 
-import { AUTH_TEXT, phoneDigits } from '@e-dentist/shared'
+import { AUTH_TEXT, phoneDigits, STAFF_TEXT } from '@e-dentist/shared'
 import { z } from 'zod'
 
 const email = z
@@ -39,6 +39,26 @@ export const loginSchema = z.object({
   // mumkin, va «parol qisqa» degan xabar kirish oynasida maʼnosiz
   password: z.string().min(1),
 })
+
+export const inviteSchema = z.object({
+  email,
+  roleId: z.string().uuid(STAFF_TEXT.role_required),
+})
+
+export const staffUpdateSchema = z.object({
+  roleId: z.string().uuid(STAFF_TEXT.role_not_found).optional(),
+  status: z.enum(['active', 'disabled']).optional(),
+})
+
+export const inviteAcceptSchema = z.object({
+  token: z.string().min(10),
+  fullName: z.string().trim().min(3, STAFF_TEXT.name_required).max(120),
+  password,
+})
+
+export type InviteInput = z.infer<typeof inviteSchema>
+export type StaffUpdateInput = z.infer<typeof staffUpdateSchema>
+export type InviteAcceptInput = z.infer<typeof inviteAcceptSchema>
 
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>

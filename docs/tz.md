@@ -438,11 +438,15 @@ POST   /api/payments
 GET    /api/debtors
 GET    /api/reports/monthly?ym=2026-09
 
-GET    /api/staff
+GET    /api/staff                # xodimlar + kutilayotgan taklifnomalar
 POST   /api/staff/invite
+DELETE /api/staff/invites/:id    # taklifnomani bekor qilish
 PATCH  /api/staff/:id            # rol, status
 GET    /api/roles
 PATCH  /api/roles/:id            # ruxsatlar roʻyxati
+
+GET    /api/invites/:token       # ochiq: havoladagi klinika va rol
+POST   /api/invites/accept       # ochiq: parol qoʻyiladi, sessiya ochiladi
 
 POST   /api/auth/register        # klinika + egasi, sinov boshlanadi
 POST   /api/auth/verify          # pochtani tasdiqlash

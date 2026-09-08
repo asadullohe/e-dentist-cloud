@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.3** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.4** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -467,8 +467,26 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > ish foyda emas. Oy chegarasi `created_at` uchun klinika vaqtida olinadi
 > (jarayon TZ si Asia/Tashkent) — UTC da olinsa 1-may soat 01:00 da qoʻshilgan
 > bemor aprelga tushib qolardi. Buni test ushlab turadi.
-- [ ] **3.3 Xodimlar va rollar** — taklifnoma oqimi (7 kun), ruxsat matritsasi UI,
+- [x] **3.3 Xodimlar va rollar** — taklifnoma oqimi (7 kun), ruxsat matritsasi UI,
       qulflanib qolishdan himoya
+
+> **Xodim marshrutlari `auth` da, taklifnoma yozuvi `clinics` da**
+>
+> `users` jadvali `auth` niki, `invites` va `roles` — `clinics` niki. Agar
+> `/api/staff` marshrutlari `clinics` ga qoʻyilsa, u `auth` ni import qilardi
+> va ikki modul bir-birini chaqirib halqa hosil qilardi. Shuning uchun
+> yoʻnalish bitta: `auth` → `clinics`. Rol marshrutlari (`/api/roles`)
+> esa `clinics` da.
+>
+> Havoladagi kalit bazada saqlanmaydi — faqat sha256 xeshi. Kalitni sessiyasiz
+> topish uchun `invite_find` SECURITY DEFINER funksiyasi (auth_find_user bilan
+> bir xil uslub): RLS `invites` ni yopib turadi, funksiya esa faqat kerakli
+> maydonlarni qaytaradi.
+>
+> **Uch qulf:** oʻzini oʻzgartira olmaydi · oxirgi faol egani tushirib
+> boʻlmaydi · egasi roli `staff.manage` va `billing.manage` ni yoʻqotmaydi.
+> Nazorat testi: oxirgi qulf olib tashlanganda egasi faolsizlantirildi va
+> keyingi testlar 403 ga uchradi — yaʼni test haqiqatan ushlaydi.
 - [ ] **3.4 Prisma: `lab_orders`** + RLS
 - [ ] **3.5 `lab` moduli** — naryad CRUD, holatlar (berildi → tayyor → topshirildi),
       «qaytarildi» amali va sababi

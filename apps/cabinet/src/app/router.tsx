@@ -1,6 +1,7 @@
 import { UI_TEXT } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useSession } from '@/entities/session'
+import { AcceptInvite } from '@/pages/AcceptInvite'
 import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
 import { Expenses } from '@/pages/Expenses'
@@ -12,6 +13,7 @@ import { Register } from '@/pages/Register'
 import { Reports } from '@/pages/Reports'
 import { Schedule } from '@/pages/Schedule'
 import { Services } from '@/pages/Services'
+import { Settings } from '@/pages/Settings'
 import { VerifyEmail } from '@/pages/VerifyEmail'
 import { NAV_SECTIONS } from '@/shared/config'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -39,6 +41,7 @@ export function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<VerifyEmail />} />
+      <Route path="/invite" element={<AcceptInvite />} />
 
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
@@ -50,6 +53,7 @@ export function Router() {
           <Route path="schedule" element={<Schedule />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="settings" element={<Settings />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
           {NAV_SECTIONS.filter(
             (section) =>
@@ -60,6 +64,7 @@ export function Router() {
                 '/schedule',
                 '/expenses',
                 '/reports',
+                '/settings',
               ].includes(section.path),
           ).map((section) => (
             <Route

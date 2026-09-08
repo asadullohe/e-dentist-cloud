@@ -380,6 +380,78 @@ export const REPORT_UI = {
   empty_expenses: 'Bu oyda xarajat yozilmagan',
 } as const
 
+// Xodimlar va rollar
+export const STAFF_TEXT = {
+  not_found: 'Xodim topilmadi',
+  invite_not_found: 'Taklifnoma topilmadi',
+  invite_expired: 'Taklifnoma muddati tugagan yoki allaqachon ishlatilgan',
+  email_taken: 'Bu pochta bilan hisob allaqachon bor',
+  invite_exists: 'Bu pochtaga taklifnoma yuborilgan — avval uni bekor qiling',
+  role_not_found: 'Rol topilmadi',
+  self_change: 'Oʻz rolingizni yoki holatingizni oʻzgartira olmaysiz',
+  last_owner: 'Klinikada kamida bitta faol egasi qolishi shart',
+  role_required: 'Rolni tanlang',
+  name_required: 'Ism-familiyani yozing',
+  invite_subject: 'E-Dentist — sizni klinikaga taklif qilishdi',
+} as const
+
+// Sozlamalar → Xodimlar va Rollar
+export const STAFF_UI = {
+  title: 'Sozlamalar',
+  staff_tab: 'Xodimlar',
+  roles_tab: 'Rollar',
+  invite: 'Taklif qilish',
+  invite_title: 'Xodimni taklif qilish',
+  invite_sent: 'Taklifnoma yuborildi',
+  pending: 'Kutilmoqda',
+  pending_title: 'Yuborilgan taklifnomalar',
+  expires: 'Muddati',
+  revoke: 'Bekor qilish',
+  revoke_title: 'Taklifnoma bekor qilinsinmi?',
+  revoke_text: 'Havola ishlamay qoladi. Kerak boʻlsa qaytadan yuborasiz.',
+  name: 'Xodim',
+  email: 'Pochta',
+  role: 'Rol',
+  status: 'Holat',
+  last_login: 'Oxirgi kirish',
+  never: 'hech qachon',
+  active: 'Faol',
+  disabled: 'Faolsizlantirilgan',
+  disable: 'Faolsizlantirish',
+  enable: 'Faollashtirish',
+  you: 'siz',
+  permissions: 'Ruxsatlar',
+  save_role: 'Saqlash',
+  role_saved: 'Rol yangilandi',
+  owner_locked: 'Egasi bu ruxsatlarni yoʻqota olmaydi',
+  accept_title: 'Klinikaga qoʻshilish',
+  accept_hint: (clinic: string, role: string) =>
+    `${clinic} sizni «${role}» roli bilan taklif qildi`,
+  accept_button: 'Hisobni ochish',
+  accept_invalid: 'Havola ishlamaydi yoki muddati tugagan',
+} as const
+
+/// Ruxsat nomlari — matritsada shu matn koʻrinadi
+export const PERMISSION_LABELS = {
+  'patients.read': 'Bemorlarni koʻrish',
+  'patients.write': 'Bemorlarni oʻzgartirish',
+  'visits.write': 'Tashrif yozish',
+  'teeth.write': 'Tish xaritasi',
+  'payments.read': 'Toʻlovlar va qarzdorlik',
+  'payments.write': 'Toʻlov qabul qilish',
+  'schedule.write': 'Qabul jadvali',
+  'services.manage': 'Narxnoma',
+  'expenses.read': 'Xarajatlar',
+  'reports.read': 'Hisobotlar',
+  'lab.own': 'Oʻz naryadlari',
+  'lab.write': 'Naryad yozish',
+  'lab.cost': 'Texnik narxlari',
+  'queue.manage': 'Navbat',
+  'staff.manage': 'Xodimlar va rollar',
+  'billing.manage': 'Obuna va toʻlov',
+  'data.export': 'Maʼlumotni yuklab olish',
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {

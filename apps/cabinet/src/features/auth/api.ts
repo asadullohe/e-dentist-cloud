@@ -14,12 +14,12 @@ export interface RegisterInput {
 }
 
 export const login = (input: LoginInput) =>
-  apiRequest<{ kirildi: true }>('/auth/login', { method: 'POST', body: input })
+  apiRequest<{ loggedIn: true }>('/auth/login', { method: 'POST', body: input })
 
-export const logout = () => apiRequest<{ chiqildi: true }>('/auth/logout', { method: 'POST' })
+export const logout = () => apiRequest<{ loggedOut: true }>('/auth/logout', { method: 'POST' })
 
 export const register = (input: RegisterInput) =>
   apiRequest<{ clinicId: string }>('/auth/register', { method: 'POST', body: input })
 
 export const verifyEmail = (token: string) =>
-  apiRequest<{ tasdiqlandi: true }>('/auth/verify', { method: 'POST', body: { token } })
+  apiRequest<{ verified: true }>('/auth/verify', { method: 'POST', body: { token } })

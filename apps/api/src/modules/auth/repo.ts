@@ -64,3 +64,61 @@ export async function findUser(tx: ClinicTx, userId: string) {
     select: { id: true, email: true, fullName: true, roleId: true, status: true },
   })
 }
+
+// ─────────────────────────────  Xodimlar  ─────────────────────────────
+
+const STAFF_SELECT = {
+  id: true,
+  email: true,
+  fullName: true,
+  roleId: true,
+  status: true,
+  lastLoginAt: true,
+  createdAt: true,
+}
+
+export function listStaff(tx: ClinicTx) {
+  return tx.user.findMany({ select: STAFF_SELECT, orderBy: { createdAt: 'asc' } })
+}
+
+export function findStaff(tx: ClinicTx, userId: string) {
+  return tx.user.findUnique({ where: { id: userId }, select: STAFF_SELECT })
+}
+
+export function updateStaff(
+  tx: ClinicTx,
+  userId: string,
+  data: { roleId?: string; status?: 'active' | 'disabled' },
+) {
+  return tx.user.update({ where: { id: userId }, data, select: STAFF_SELECT })
+}
+
+/// Faol egalar soni. Oxirgisini faolsizlantirib boʻlmaydi — klinika oʻz
+/// kabinetidan qulflanib qoladi (tz.md 6-boʻlim)
+export function countActiveByRoles(tx: ClinicTx, roleIds: string[]) {
+  return tx.user.count({ where: { roleId: { in: roleIds }, status: 'active' } })
+}
+
+export interface InvitedUser {
+  userId: string
+  roleId: string
+  email: string
+  passwordHash: string
+  fullName: string
+}
+
+/// Taklifnoma bilan ochilgan hisob darhol faol: havolaning oʻzi pochta
+/// egaligini isbotlaydi, shuning uchun qayta tasdiqlash soʻralmaydi
+export function createInvited(tx: ClinicTx, m: InvitedUser) {
+  return tx.user.create({
+    data: tenantScoped({
+      id: m.userId,
+      roleId: m.roleId,
+      email: m.email,
+      passwordHash: m.passwordHash,
+      fullName: m.fullName,
+      emailVerifiedAt: new Date(),
+    }),
+    select: STAFF_SELECT,
+  })
+}
