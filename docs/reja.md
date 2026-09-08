@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.1** — bosqich 3 tugadi — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.2** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -554,8 +554,23 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 
 _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 
-- [ ] **4.1 Sxema** — `appointments` ga `queue_number`, `queue_status`;
+- [x] **4.1 Sxema** — `appointments` ga `queue_number`, `queue_status`;
       klinikaga 8 belgili tasodifiy kod
+
+> **Ikki oʻq — ikki ustun**
+>
+> `queue_status` (tasdiqlanmagan → kutmoqda → chaqirildi → tugadi) bemor
+> navbatning qayerida ekanini aytadi, `status` esa qabul nima bilan
+> tugaganini (keldi/kelmadi/yakunlandi). Ikkalasini bitta ustunga tiqish
+> «chaqirildi, lekin kelmadi» kabi holatlarni yoʻqotardi.
+>
+> `patient_id` endi boʻsh boʻla oladi: ochiq sahifadan yozilgan odam
+> kartotekada boʻlmasligi mumkin, ism va telefoni `guest_name`/`guest_phone`
+> da turadi va qabulxona tasdiqlaganda kartotekaga bogʻlanadi.
+>
+> Kod `crypto.randomInt` bilan, chalkashmaydigan alifbodan (0/O, 1/l/I yoʻq)
+> — u ochiq sahifaning yagona himoyasi. Mavjud klinikalarga migratsiya
+> ichida tarqatildi.
 - [ ] **4.2 Ochiq sahifa `/n/<kod>`** — shifokorlar, navbatdagilar soni, taxminiy vaqt,
       yozilish formasi. Loginsiz
 - [ ] **4.3 SSE jonli yangilanish** — bir tomonlama oqim, proxy orqali oʻtadi

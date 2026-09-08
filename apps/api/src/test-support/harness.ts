@@ -5,6 +5,7 @@
 // boʻlmaydi.
 
 import type { FastifyInstance } from 'fastify'
+import { generateQueueCode } from '../modules/clinics/queueCode.js'
 import { createDb, type Db } from '../platform/db.js'
 import { createImportStore } from '../platform/importStore.js'
 import { type Mail, memoryMailer } from '../platform/mailer.js'
@@ -118,6 +119,14 @@ export async function startHarness(): Promise<Harness> {
       await db.$disconnect()
     },
   }
+}
+
+/// «B klinikasi» — koʻp ijarachilik testlari uchun. Har jadval uchun
+/// takrorlanmasin deb shu yerda
+export function createOtherClinic(ownerDb: Db, name = 'B klinikasi') {
+  return ownerDb.clinic.create({
+    data: { name, expiresAt: new Date('2030-01-01'), queueCode: generateQueueCode() },
+  })
 }
 
 /// Tashqi kalitlar tartibida: avval bogʻliqlar, keyin bemor va klinika

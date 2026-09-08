@@ -204,7 +204,7 @@ Uch qatlamli himoya:
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
 | `bridges` | patient_id, teeth[], material | Koʻprik: tayanch va oraliq tishlar |
 | `payments` | patient_id, date, amount | Qarz = tashriflar summasi − toʻlovlar |
-| `appointments` | clinic_id, patient_id, at, status |  |
+| `appointments` | clinic_id, patient_id, doctor_id, at, status, queue_number, queue_status, guest_name, guest_phone | Navbat ham shu jadvalda: «bugungi, vaqti belgilanmagan qabul». Ochiq sahifadan yozilganda `patient_id` boʻsh — qabulxona tasdiqlaganda bogʻlanadi, shu sababli ism va telefon `guest_*` da |
 | `services` | clinic_id, name, price | Narxnoma |
 | `expenses` | clinic_id, date, category, amount |  |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |

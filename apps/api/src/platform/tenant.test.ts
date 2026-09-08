@@ -8,6 +8,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { generateQueueCode } from '../modules/clinics/queueCode.js'
 import { createDb, type Db } from './db.js'
 import { TENANT_MODELS, tenantScoped, withClinic } from './tenant.js'
 
@@ -39,7 +40,9 @@ beforeAll(async () => {
     [A, 'A klinikasi'],
     [B, 'B klinikasi'],
   ] as const) {
-    await ownerDb.clinic.create({ data: { id, name: label, expiresAt: testDate() } })
+    await ownerDb.clinic.create({
+      data: { id, name: label, expiresAt: testDate(), queueCode: generateQueueCode() },
+    })
   }
 
   const a = await ownerDb.role.create({

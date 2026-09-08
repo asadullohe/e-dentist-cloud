@@ -40,10 +40,12 @@ async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
 
 export interface Appointment {
   id: string
-  patientId: string
+  /// Navbatga ochiq sahifadan yozilgan odam kartotekada boʻlmasligi mumkin
+  patientId: string | null
   at: Date
   status: string
   note: string | null
+  /// Kartotekadagi ism, boʻlmasa oʻzi yozgan ism
   fio: string
   phone: string | null
 }
@@ -52,16 +54,32 @@ export interface Appointment {
 /// uchun uning servisidan soʻraladi
 async function withPatients(
   tx: ClinicTx,
-  rows: { id: string; patientId: string; at: Date; status: string; note: string | null }[],
+  rows: {
+    id: string
+    patientId: string | null
+    at: Date
+    status: string
+    note: string | null
+    guestName: string | null
+    guestPhone: string | null
+  }[],
 ): Promise<Appointment[]> {
-  const people = await patients.findByIds(tx, [...new Set(rows.map((row) => row.patientId))])
+  const ids = rows.map((row) => row.patientId).filter((id): id is string => id !== null)
+  const people = await patients.findByIds(tx, [...new Set(ids)])
   const byId = new Map(people.map((person) => [person.id, person]))
 
-  return rows.map((row) => ({
-    ...row,
-    fio: byId.get(row.patientId)?.fio ?? '',
-    phone: byId.get(row.patientId)?.phone ?? null,
-  }))
+  return rows.map((row) => {
+    const person = row.patientId ? byId.get(row.patientId) : undefined
+    return {
+      id: row.id,
+      patientId: row.patientId,
+      at: row.at,
+      status: row.status,
+      note: row.note,
+      fio: person?.fio ?? row.guestName ?? '',
+      phone: person?.phone ?? row.guestPhone ?? null,
+    }
+  })
 }
 
 export function list(deps: ScheduleDeps, clinicId: string, input: AppointmentListInput) {

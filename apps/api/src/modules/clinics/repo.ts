@@ -10,6 +10,7 @@ export interface NewClinic {
   name: string
   phone: string | null
   expiresAt: Date
+  queueCode: string
 }
 
 export async function create(tx: ClinicTx, m: NewClinic): Promise<void> {
@@ -20,6 +21,7 @@ export async function create(tx: ClinicTx, m: NewClinic): Promise<void> {
       phone: m.phone,
       isTrial: true,
       expiresAt: m.expiresAt,
+      queueCode: m.queueCode,
     },
   })
 }
@@ -59,7 +61,15 @@ export async function findRole(tx: ClinicTx, roleId: string): Promise<RoleInfo |
 export async function findClinic(tx: ClinicTx, clinicId: string) {
   return tx.clinic.findUnique({
     where: { id: clinicId },
-    select: { id: true, name: true, isTrial: true, expiresAt: true, status: true },
+    select: {
+      id: true,
+      name: true,
+      isTrial: true,
+      expiresAt: true,
+      status: true,
+      queueCode: true,
+      queueEnabled: true,
+    },
   })
 }
 

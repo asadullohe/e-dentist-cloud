@@ -135,14 +135,21 @@ export function paymentsSheet(
 }
 
 export function appointmentsSheet(
-  rows: { patientId: string; at: Date; status: string; note: string | null }[],
+  rows: {
+    patientId: string | null
+    at: Date
+    status: string
+    note: string | null
+    guestName: string | null
+  }[],
   people: Map<string, string>,
 ): SheetData {
   return sheet(
     [EXPORT_COLUMNS.date, EXPORT_COLUMNS.patient, EXPORT_COLUMNS.status, EXPORT_COLUMNS.note],
     rows.map((row) => [
       formatDateTime(row.at),
-      nameOf(people, row.patientId),
+      // Navbatga oʻzi yozilgan odam kartotekada boʻlmasligi mumkin
+      row.patientId ? nameOf(people, row.patientId) : (row.guestName ?? ''),
       APPOINTMENT_STATUS_LABELS[row.status as keyof typeof APPOINTMENT_STATUS_LABELS] ?? row.status,
       row.note,
     ]),

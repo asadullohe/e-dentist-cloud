@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { type Harness, removeClinic, startHarness } from '../../test-support/harness.js'
+import {
+  createOtherClinic,
+  type Harness,
+  removeClinic,
+  startHarness,
+} from '../../test-support/harness.js'
 
 let h: Harness
 let patientId = ''
@@ -62,9 +67,7 @@ beforeAll(async () => {
   techCookie = `ed_session=${accepted.cookies.find((c) => c.name === 'ed_session')?.value}`
   techId = (await h.ownerDb.user.findFirst({ where: { email: 'texnik@example.com' } }))?.id ?? ''
 
-  const other = await h.ownerDb.clinic.create({
-    data: { name: 'B klinikasi', expiresAt: new Date('2030-01-01') },
-  })
+  const other = await createOtherClinic(h.ownerDb, 'B klinikasi')
   otherClinicId = other.id
 }, 30_000)
 

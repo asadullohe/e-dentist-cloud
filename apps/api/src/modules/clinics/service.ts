@@ -11,6 +11,7 @@ import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
+import { generateQueueCode } from './queueCode.js'
 import * as repo from './repo.js'
 
 export type { NewClinic, RoleInfo } from './repo.js'
@@ -19,9 +20,9 @@ export type { NewClinic, RoleInfo } from './repo.js'
 /// Egasi rolining id si qaytadi
 export async function createClinicWithRoles(
   tx: ClinicTx,
-  m: repo.NewClinic,
+  m: Omit<repo.NewClinic, 'queueCode'>,
 ): Promise<{ ownerRoleId: string }> {
-  await repo.create(tx, m)
+  await repo.create(tx, { ...m, queueCode: generateQueueCode() })
   return { ownerRoleId: await repo.createRoleTemplates(tx) }
 }
 

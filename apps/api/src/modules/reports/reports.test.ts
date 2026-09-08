@@ -1,5 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { type Harness, removeClinic, startHarness } from '../../test-support/harness.js'
+import {
+  createOtherClinic,
+  type Harness,
+  removeClinic,
+  startHarness,
+} from '../../test-support/harness.js'
 
 let h: Harness
 let patientId = ''
@@ -63,9 +68,7 @@ beforeAll(async () => {
     price: 900_000,
   })
 
-  const other = await h.ownerDb.clinic.create({
-    data: { name: 'B klinikasi', expiresAt: new Date('2030-01-01') },
-  })
+  const other = await createOtherClinic(h.ownerDb, 'B klinikasi')
   otherClinicId = other.id
 }, 30_000)
 

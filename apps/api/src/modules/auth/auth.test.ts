@@ -170,6 +170,15 @@ describe('roʻyxatdan oʻtish', () => {
   })
 })
 
+describe('navbat kodi', () => {
+  // Kod roʻyxatdan oʻtishda beriladi: klinika uni eshikdagi QR ga chiqaradi
+  it('har klinikaga oʻz kodi beriladi va navbat yoqilgan boʻladi', async () => {
+    const clinic = await ownerDb.clinic.findUnique({ where: { id: clinicId } })
+    expect(clinic?.queueCode).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{8}$/)
+    expect(clinic?.queueEnabled).toBe(true)
+  })
+})
+
 describe('pochtani tasdiqlash', () => {
   it('tasdiqlanmaguncha kirib boʻlmaydi', async () => {
     const r = await app.inject({

@@ -12,6 +12,9 @@ const SELECT = {
   at: true,
   status: true,
   note: true,
+  /// Navbatga ochiq sahifadan yozilgan, kartotekada hali yoʻq odam
+  guestName: true,
+  guestPhone: true,
 } satisfies Prisma.AppointmentSelect
 
 export function list(tx: ClinicTx, from: Date, to: Date) {
