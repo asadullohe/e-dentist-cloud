@@ -6,3 +6,9 @@ export const rolePermissionsSchema = z.object({
 })
 
 export type RolePermissionsInput = z.infer<typeof rolePermissionsSchema>
+
+export const queueSettingsSchema = z.object({
+  enabled: z.boolean(),
+})
+
+export type QueueSettingsInput = z.infer<typeof queueSettingsSchema>

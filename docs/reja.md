@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.1** — bosqich 3 tugadi — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.1** — bosqich 4 tugadi — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -554,16 +554,106 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 
 _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 
-- [ ] **4.1 Sxema** — `appointments` ga `queue_number`, `queue_status`;
+- [x] **4.1 Sxema** — `appointments` ga `queue_number`, `queue_status`;
       klinikaga 8 belgili tasodifiy kod
-- [ ] **4.2 Ochiq sahifa `/n/<kod>`** — shifokorlar, navbatdagilar soni, taxminiy vaqt,
+
+> **Ikki oʻq — ikki ustun**
+>
+> `queue_status` (tasdiqlanmagan → kutmoqda → chaqirildi → tugadi) bemor
+> navbatning qayerida ekanini aytadi, `status` esa qabul nima bilan
+> tugaganini (keldi/kelmadi/yakunlandi). Ikkalasini bitta ustunga tiqish
+> «chaqirildi, lekin kelmadi» kabi holatlarni yoʻqotardi.
+>
+> `patient_id` endi boʻsh boʻla oladi: ochiq sahifadan yozilgan odam
+> kartotekada boʻlmasligi mumkin, ism va telefoni `guest_name`/`guest_phone`
+> da turadi va qabulxona tasdiqlaganda kartotekaga bogʻlanadi.
+>
+> Kod `crypto.randomInt` bilan, chalkashmaydigan alifbodan (0/O, 1/l/I yoʻq)
+> — u ochiq sahifaning yagona himoyasi. Mavjud klinikalarga migratsiya
+> ichida tarqatildi.
+- [x] **4.2 Ochiq sahifa `/n/<kod>`** — shifokorlar, navbatdagilar soni, taxminiy vaqt,
       yozilish formasi. Loginsiz
-- [ ] **4.3 SSE jonli yangilanish** — bir tomonlama oqim, proxy orqali oʻtadi
-- [ ] **4.4 Kutish xonasi ekrani `/n/<kod>/ekran`** — katta shrift, faqat raqamlar, ismsiz
-- [ ] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,
+
+> **Navbat alohida modul emas**
+>
+> Navbat — «bugungi, vaqti belgilanmagan qabul», yaʼni ayni `appointments`
+> jadvali. Shuning uchun mantiq jadval egasi — `schedule` modulida, faqat
+> alohida fayllarda (`queue.ts`, `queueRoutes.ts`). Alohida modul qilinsa
+> u boshqa modulning jadvaliga tegishga majbur boʻlardi.
+>
+> **Ochiq sahifa kartotekaga tegmaydi.** Yozilgan odam `guest_name` bilan
+> saqlanadi, `patient_id` boʻsh qoladi — bogʻlash qabulxonada (4.5). Shu
+> sababli ochiq marshrut orqali bemorlar jadvalini ochib ham, tekshirib
+> ham boʻlmaydi.
+>
+> **Raqam berish qulf ostida:** `pg_advisory_xact_lock` bilan. Nazorat
+> testi — qulfsiz bir vaqtda kelgan 6 ta soʻrovdan atigi 2 xil raqam
+> chiqdi, qulf bilan hammasi har xil.
+>
+> Kutish vaqti oxirgi 20 ta yakunlangan navbatning oʻrtacha oraligʻidan
+> hisoblanadi; namuna kam boʻlsa 15 daqiqa deb olinadi.
+- [x] **4.3 SSE jonli yangilanish** — bir tomonlama oqim, proxy orqali oʻtadi
+
+> **Oqimda maʼlumot yurmaydi**
+>
+> Server faqat «shu klinikada navbat oʻzgardi» degan boʻsh hodisa yuboradi,
+> sahifa esa kerakli soʻrovni oʻzi qaytadan yuboradi. Shu sababli maxfiylik
+> filtrlari bitta joyda — marshrutlarda qoladi va oqimga bemor maʼlumoti
+> tushib ketishi mumkin emas.
+>
+> Xabar **Redis pub/sub** orqali tarqaladi, jarayon ichidagi emitter bilan
+> emas: SSE ulanishi bitta jarayonga bogʻlanadi, server ikkinchi nusxada
+> koʻtarilsa mijozlarning yarmi yangilanishni jimgina olmay qolardi.
+>
+> Marshrut avval obuna boʻladi, keyin sarlavha yozadi. Boshida teskari edi —
+> test notoʻgʻri kod bilan ulanish javobsiz osilib qolishini koʻrsatdi
+> («Cannot write headers after they are sent»).
+>
+> Har 25 soniyada izohli qator (`: ping`) yuboriladi: jim turgan oqimni
+> proxy uzib yuboradi.
+- [x] **4.4 Kutish xonasi ekrani `/n/<kod>/ekran`** — katta shrift, faqat raqamlar, ismsiz
+
+> **Ekran javobida ism umuman yoʻq**
+>
+> Marshrut chaqirilgan raqamlar (shifokor nomi bilan) va keyingi uchtasini
+> qaytaradi — bemor ismi, telefoni va id si javobga kirmaydi. Test buni
+> tekshiradi: javob matnida bemor ismi ham, `guestName`/`patientId`
+> maydonlari ham topilmasligi kerak.
+>
+> Oʻlchamlar `vh` da: ekran televizorga chiqariladi va uzoqdan oʻqilishi
+> kerak. Yangilanish oʻsha SSE oqimidan.
+- [x] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,
       `queue.manage` ruxsati
-- [ ] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,
-      «tasdiqlanmagan» holat, klinika navbatni butunlay oʻchira oladi
+
+> **Tasdiqlash kartoteka bilan bogʻlaydi**
+>
+> Qabulxona «Tasdiqlash» ni bosganda telefon boʻyicha kartotekadan
+> qidiriladi: topilsa yozuv oʻsha bemorga bogʻlanadi, topilmasa yangi
+> bemor ochiladi (tz.md 14-boʻlim). Telefon `normalizePhone` bilan
+> saqlanadi — boshida ochiq sahifa xom matnni yozar edi va test
+> kartotekadagi `+998…` bilan mos kelmasligini koʻrsatdi.
+>
+> Amallar oqimi serverda: `unconfirmed → waiting → called → finished`,
+> natija esa `status` da (keldi / kelmadi / yakunlandi). Bosqichni sakrab
+> boʻlmaydi.
+- [x] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,
+      «tasdiqlanmagan» holat, klinika navbatni butunlay oʻchira oladi.
+      Bir IP dan ochiladigan SSE ulanishlari soniga ham chegara qoʻyiladi
+
+> **Toʻrt qatlam, hech biri yolgʻiz yetarli emas**
+>
+> Kod taxmin qilib boʻlmaydi · IP dan soatiga 5 ta va qurilmadan kuniga
+> 2 ta yozuv · yozuv «tasdiqlanmagan» holatda tushadi va navbat sanogʻiga
+> kirmaydi · klinika navbatni butunlay yopa oladi.
+>
+> Qurilma `ed_device` cookie si bilan belgilanadi — u login emas, faqat
+> hisob uchun. Cookie tozalansa aylanib oʻtiladi, shuning uchun bu yagona
+> toʻsiq emas.
+>
+> Ochiq SSE marshrutida bitta IP dan 3 tadan koʻp oqim ochilmaydi.
+> Test bir xatoni ushladi: hisob obunadan **oldin** oshirilar edi, kod
+> notoʻgʻri boʻlganda esa yopilish hodisasi kelmay, oʻsha IP uchun joy
+> abadiy band boʻlib qolardi.
 
 ---
 

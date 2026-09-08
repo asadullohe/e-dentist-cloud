@@ -6,6 +6,7 @@
 // uchun «umumiy shablon qatori» degan tushuncha kerak emas.
 
 import { addDays, ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
+import { generateQueueCode } from '../src/modules/clinics/queueCode.js'
 import { createDb } from '../src/platform/db.js'
 
 const DEMO_CLINIC_ID = '00000000-0000-7000-8000-000000000001'
@@ -28,6 +29,7 @@ async function main(): Promise<void> {
       name: 'Namuna stomatologiya',
       phone: '+998901234567',
       isTrial: true,
+      queueCode: generateQueueCode(),
       expiresAt: addDays(TRIAL_DAYS),
     },
     update: {},

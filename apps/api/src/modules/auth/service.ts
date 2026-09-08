@@ -296,6 +296,22 @@ export async function existsInClinic(tx: ClinicTx, userId: string): Promise<bool
   return (await repo.findStaff(tx, userId)) !== null
 }
 
+/// Qabul qiluvchi shifokorlar: roli `visits.write` ni beradigan faol
+/// xodimlar. Rol nomiga qaramaymiz — klinika shablonni oʻzgartirgan
+/// boʻlishi mumkin. Ochiq navbat sahifasi shu roʻyxatni koʻrsatadi
+export async function listDoctorsTx(tx: ClinicTx): Promise<{ id: string; fullName: string }[]> {
+  const roles = await clinics.listRolesTx(tx)
+  const treating = new Set(
+    roles.filter((role) => role.permissions.includes('visits.write')).map((role) => role.id),
+  )
+  if (treating.size === 0) return []
+
+  const people = await repo.listStaff(tx)
+  return people
+    .filter((person) => person.status === 'active' && person.roleId && treating.has(person.roleId))
+    .map((person) => ({ id: person.id, fullName: person.fullName ?? '' }))
+}
+
 /// Faqat ism va id. Naryadga texnik tayinlash uchun `lab.write` boriga
 /// ochiq — toʻliq roʻyxatda pochta, holat va oxirgi kirish bor, ular
 /// `staff.manage` ishi

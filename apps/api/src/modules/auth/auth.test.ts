@@ -4,6 +4,7 @@
 import { addDays } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { memoryBus } from '../../platform/bus.js'
 import { createDb, type Db } from '../../platform/db.js'
 import { memoryMailer } from '../../platform/mailer.js'
 import { createRateLimiter } from '../../platform/rateLimit.js'
@@ -62,6 +63,7 @@ beforeAll(async () => {
     sessions,
     rateLimiter,
     mailer,
+    bus: memoryBus(),
   })
 
   // Ruxsat tekshiruvini sinash uchun himoyalangan marshrut
@@ -167,6 +169,15 @@ describe('roʻyxatdan oʻtish', () => {
     expect(f.clinicName).toBe('Klinika nomi kamida 2 belgi boʻlsin')
     expect(f.email).toBe('Pochta manzili notoʻgʻri yozilgan')
     expect(f.password).toBe('Parol kamida 8 belgidan iborat boʻlsin')
+  })
+})
+
+describe('navbat kodi', () => {
+  // Kod roʻyxatdan oʻtishda beriladi: klinika uni eshikdagi QR ga chiqaradi
+  it('har klinikaga oʻz kodi beriladi va navbat yoqilgan boʻladi', async () => {
+    const clinic = await ownerDb.clinic.findUnique({ where: { id: clinicId } })
+    expect(clinic?.queueCode).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{8}$/)
+    expect(clinic?.queueEnabled).toBe(true)
   })
 })
 

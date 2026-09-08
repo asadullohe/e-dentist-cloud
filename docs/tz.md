@@ -204,7 +204,7 @@ Uch qatlamli himoya:
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
 | `bridges` | patient_id, teeth[], material | Koʻprik: tayanch va oraliq tishlar |
 | `payments` | patient_id, date, amount | Qarz = tashriflar summasi − toʻlovlar |
-| `appointments` | clinic_id, patient_id, at, status |  |
+| `appointments` | clinic_id, patient_id, doctor_id, at, status, queue_number, queue_status, guest_name, guest_phone | Navbat ham shu jadvalda: «bugungi, vaqti belgilanmagan qabul». Ochiq sahifadan yozilganda `patient_id` boʻsh — qabulxona tasdiqlaganda bogʻlanadi, shu sababli ism va telefon `guest_*` da |
 | `services` | clinic_id, name, price | Narxnoma |
 | `expenses` | clinic_id, date, category, amount |  |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
@@ -448,6 +448,14 @@ PATCH  /api/roles/:id            # ruxsatlar roʻyxati
 
 GET    /api/invites/:token       # ochiq: havoladagi klinika va rol
 POST   /api/invites/accept       # ochiq: parol qoʻyiladi, sessiya ochiladi
+
+GET    /api/n/:code               # ochiq: klinika, shifokorlar, navbat soni
+POST   /api/n/:code/join          # ochiq: navbatga yozilish
+GET    /api/n/:code/ticket/:id    # ochiq: oʻz raqami
+GET    /api/n/:code/screen        # ochiq: kutish xonasi ekrani, ismsiz
+GET    /api/n/:code/stream        # ochiq: SSE, «navbat oʻzgardi»
+GET    /api/queue                 # kabinet: toʻliq roʻyxat, ismlari bilan
+PATCH  /api/queue/:id             # tasdiqlash · chaqirish · keldi · kelmadi · yakunlandi
 
 POST   /api/auth/register        # klinika + egasi, sinov boshlanadi
 POST   /api/auth/verify          # pochtani tasdiqlash

@@ -2,6 +2,7 @@
 // texnik tafsilot foydalanuvchiga hech qachon chiqmasligi.
 
 import { describe, expect, it } from 'vitest'
+import { memoryBus } from './platform/bus.js'
 import type { Db } from './platform/db.js'
 import { errors } from './platform/errors.js'
 import { memoryMailer } from './platform/mailer.js'
@@ -27,6 +28,7 @@ const fakeDeps: ServerDeps = {
   storage: fakeStorage,
   imports: fakeImports,
   mailer: memoryMailer(),
+  bus: memoryBus(),
 }
 
 const config = testConfig()

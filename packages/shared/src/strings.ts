@@ -103,6 +103,7 @@ export const SECTION_LABELS = {
   services: 'Narxnoma',
   expenses: 'Xarajatlar',
   reports: 'Hisobotlar',
+  queue: 'Navbat',
   settings: 'Sozlamalar',
 } as const
 
@@ -609,6 +610,75 @@ export const EXPORT_UI = {
       'Arxivdagi fayllar Excel (.xlsx) koʻrinishida.',
       'Bemorlar fayli import shabloni bilan bir xil — uni tahrirlab qaytadan yuklash mumkin.',
     ].join('\n'),
+} as const
+
+// Navbat (ochiq sahifa va kabinet)
+export const QUEUE_TEXT = {
+  clinic_not_found: 'Bunday sahifa yoʻq',
+  queue_off: 'Bu klinikada navbat yozuvi vaqtincha yopilgan',
+  doctor_required: 'Shifokorni tanlang',
+  doctor_not_found: 'Shifokor topilmadi',
+  name_required: 'Ism-familiyangizni yozing',
+  ticket_not_found: 'Navbat yozuvi topilmadi',
+  too_many: 'Bu qurilmadan bugun juda koʻp yozuv boʻldi',
+  not_in_queue: 'Bu yozuv navbatda emas',
+  status_flow: 'Navbat holatini bu bosqichdan oʻzgartirib boʻlmaydi',
+} as const
+
+// Ochiq navbat sahifasi
+export const QUEUE_UI = {
+  title: 'Navbatga yozilish',
+  pick_doctor: 'Shifokorni tanlang',
+  waiting: (n: number) => `Navbatda ${n} kishi`,
+  wait_minutes: (n: number) => `taxminan ${n} daqiqa`,
+  no_doctors: 'Hozircha qabul qiluvchi shifokor yoʻq',
+  full_name: 'Ism-familiya',
+  phone: 'Telefon',
+  join: 'Navbatga yozilish',
+  your_number: 'Sizning raqamingiz',
+  ahead: (n: number) => (n === 0 ? 'Siz birinchisiz' : `Oldingizda ${n} kishi`),
+  called: 'Sizni chaqirishmoqda',
+  unconfirmed_hint: 'Qabulxona yozuvingizni tasdiqlaguncha kuting',
+  finished: 'Navbatingiz yakunlandi',
+  screen_now: 'Hozir',
+  screen_next: 'Keyingi',
+  closed: 'Navbat yopiq',
+} as const
+
+// Kabinetdagi navbat
+export const QUEUE_CABINET_UI = {
+  title: 'Navbat',
+  empty: 'Bugun navbat boʻsh',
+  number: 'Raqam',
+  patient: 'Bemor',
+  doctor: 'Shifokor',
+  status: 'Holat',
+  joined_at: 'Yozilgan',
+  confirm: 'Tasdiqlash',
+  call: 'Chaqirish',
+  arrived: 'Keldi',
+  no_show: 'Kelmadi',
+  done: 'Yakunlandi',
+  new_patient: 'Kartotekada yoʻq',
+  link: 'Kartochka',
+  screen_link: 'Kutish xonasi ekrani',
+  page_link: 'Bemor sahifasi',
+  code_hint: 'Eshikdagi QR shu manzilga olib boradi',
+  settings_tab: 'Navbat',
+  enabled: 'Navbat yozuvi ochiq',
+  enabled_hint:
+    'Oʻchirilsa ochiq sahifa ham, kutish xonasi ekrani ham yopiladi. Kabinetdagi roʻyxat joyida qoladi.',
+  address: 'Sahifa manzili',
+  copy: 'Nusxalash',
+  copied: 'Nusxalandi',
+} as const
+
+/// Navbat holatlari — kabinetda koʻrinadigan nomlar
+export const QUEUE_STATUS_LABELS = {
+  unconfirmed: 'Tasdiqlanmagan',
+  waiting: 'Kutmoqda',
+  called: 'Chaqirildi',
+  finished: 'Yakunlandi',
 } as const
 
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —

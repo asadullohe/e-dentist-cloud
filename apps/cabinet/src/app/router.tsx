@@ -10,6 +10,9 @@ import { Login } from '@/pages/Login'
 import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Placeholder } from '@/pages/Placeholder'
+import { Queue } from '@/pages/Queue'
+import { QueueBoard } from '@/pages/QueueBoard'
+import { QueueScreen } from '@/pages/QueueScreen'
 import { Register } from '@/pages/Register'
 import { Reports } from '@/pages/Reports'
 import { Schedule } from '@/pages/Schedule'
@@ -54,6 +57,9 @@ export function Router() {
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<VerifyEmail />} />
       <Route path="/invite" element={<AcceptInvite />} />
+      {/* Navbat — yagona loginsiz sahifa (tz.md 14-boʻlim) */}
+      <Route path="/n/:code" element={<Queue />} />
+      <Route path="/n/:code/ekran" element={<QueueScreen />} />
 
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
@@ -67,6 +73,7 @@ export function Router() {
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
           <Route path="lab" element={<Lab />} />
+          <Route path="queue" element={<QueueBoard />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
           {NAV_SECTIONS.filter(
             (section) =>
@@ -79,6 +86,7 @@ export function Router() {
                 '/reports',
                 '/settings',
                 '/lab',
+                '/queue',
               ].includes(section.path),
           ).map((section) => (
             <Route

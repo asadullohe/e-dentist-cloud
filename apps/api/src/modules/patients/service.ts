@@ -483,3 +483,27 @@ export function exportRowsTx(tx: ClinicTx) {
 export function buildPatientsSheet(rows: Awaited<ReturnType<typeof repo.listAll>>) {
   return buildExport(rows)
 }
+
+/// Boshqa modullar uchun (navbat): telefon boʻyicha kartotekadan qidirish
+export function findByPhoneTx(tx: ClinicTx, phone: string) {
+  return repo.findByPhone(tx, phone)
+}
+
+/// Boshqa modullar uchun (navbat): qabulxona navbat yozuvini tasdiqlaganda
+/// kartotekada bemor boʻlmasa yangisi ochiladi (tz.md 14-boʻlim)
+export async function createFromQueueTx(
+  tx: ClinicTx,
+  userId: string,
+  data: { fio: string; phone: string | null },
+): Promise<{ id: string; fio: string; phone: string | null }> {
+  const id = uuidV7()
+  const created = await repo.create(tx, id, { fio: data.fio, phone: data.phone })
+  await writeAudit(tx, {
+    userId,
+    action: AUDIT_ACTION.patient_created,
+    entity: 'patient',
+    entityId: id,
+    meta: { source: 'queue' },
+  })
+  return { id: created.id, fio: created.fio, phone: created.phone }
+}

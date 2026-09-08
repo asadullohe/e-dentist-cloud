@@ -12,6 +12,7 @@ export interface NavSection {
 export const NAV_SECTIONS: readonly NavSection[] = [
   { path: '/patients', label: SECTION_LABELS.patients, icon: '👥', permission: 'patients.read' },
   { path: '/schedule', label: SECTION_LABELS.schedule, icon: '📅', permission: 'schedule.write' },
+  { path: '/queue', label: SECTION_LABELS.queue, icon: '🔔', permission: 'queue.manage' },
   { path: '/lab', label: SECTION_LABELS.lab, icon: '🦷', permission: 'lab.own' },
   { path: '/debtors', label: SECTION_LABELS.debtors, icon: '💳', permission: 'payments.read' },
   { path: '/services', label: SECTION_LABELS.services, icon: '🏷', permission: 'services.manage' },

@@ -1,3 +1,4 @@
+import { createBus } from './platform/bus.js'
 import { loadConfig } from './platform/config.js'
 import { createDb } from './platform/db.js'
 import { createImportStore } from './platform/importStore.js'
@@ -28,6 +29,7 @@ const storage = createStorage({
 await storage.ensureBucket()
 
 const imports = createImportStore(config.REDIS_URL)
+const bus = createBus(config.REDIS_URL)
 
 const app = createServer(config, {
   db,
@@ -36,6 +38,7 @@ const app = createServer(config, {
   sessions,
   rateLimiter,
   mailer: consoleMailer((message) => app.log.info(message)),
+  bus,
 })
 
 // Docker konteynerni toʻxtatganda ochiq soʻrovlar tugashini kutamiz
@@ -46,6 +49,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
       sessions.close(),
       rateLimiter.close(),
       imports.close(),
+      bus.close(),
       db.$disconnect(),
     ]).then(
       () => process.exit(0),

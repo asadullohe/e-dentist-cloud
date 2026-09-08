@@ -154,3 +154,8 @@ export function removeImage(tx: ClinicTx, id: string) {
 export function countCreatedBetween(tx: ClinicTx, from: Date, to: Date) {
   return tx.patient.count({ where: { createdAt: { gte: from, lt: to } } })
 }
+
+/// Telefon boʻyicha bitta bemor. Navbatni kartoteka bilan bogʻlashda
+export function findByPhone(tx: ClinicTx, phone: string) {
+  return tx.patient.findFirst({ where: { phone }, select: { id: true, fio: true, phone: true } })
+}

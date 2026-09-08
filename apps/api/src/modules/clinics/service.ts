@@ -11,6 +11,7 @@ import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
+import { generateQueueCode } from './queueCode.js'
 import * as repo from './repo.js'
 
 export type { NewClinic, RoleInfo } from './repo.js'
@@ -19,9 +20,9 @@ export type { NewClinic, RoleInfo } from './repo.js'
 /// Egasi rolining id si qaytadi
 export async function createClinicWithRoles(
   tx: ClinicTx,
-  m: repo.NewClinic,
+  m: Omit<repo.NewClinic, 'queueCode'>,
 ): Promise<{ ownerRoleId: string }> {
-  await repo.create(tx, m)
+  await repo.create(tx, { ...m, queueCode: generateQueueCode() })
   return { ownerRoleId: await repo.createRoleTemplates(tx) }
 }
 
@@ -136,4 +137,17 @@ export function listRolesTx(tx: ClinicTx) {
 
 export function findRoleByIdTx(tx: ClinicTx, roleId: string) {
   return repo.findRoleById(tx, roleId)
+}
+
+/// Navbat kodi boʻyicha klinika. Sessiyasiz — ochiq sahifa uchun
+export function findByQueueCode(db: Db, code: string) {
+  return repo.findByQueueCode(db, code)
+}
+
+/// Navbatni yoqish/oʻchirish (tz.md 14-boʻlim: klinika navbatni butunlay
+/// yopa oladi)
+export function setQueueEnabled(deps: ClinicDeps, clinicId: string, enabled: boolean) {
+  return withClinic(deps.db, clinicId, (tx) =>
+    tx.clinic.update({ where: { id: clinicId }, data: { queueEnabled: enabled } }),
+  )
 }
