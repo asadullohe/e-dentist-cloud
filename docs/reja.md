@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.17** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.1** — bosqich 2 tugadi — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -427,8 +427,16 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > ochiq — texnik jadvalni koʻrmaydi. Yozish uchun `schedule.write`.
 > Bemor ismlari `patients.findByIds` orqali olinadi: `schedule` repozitoriyasi
 > boshqa modul jadvaliga soʻrov yubormaydi.
-- [ ] **2.17 Mobil koʻrinish** — yon menyuni yigʻiladigan qilish (shadcn `Sheet`),
+- [x] **2.17 Mobil koʻrinish** — yon menyuni yigʻiladigan qilish (shadcn `Sheet`),
       jadvallarni tor ekranga moslash
+
+> **Tor ekranda ustun yashiriladi, jadval siljitilmaydi**
+>
+> Yon menyu `md` dan pastda `Sheet` ichiga kiradi, oʻrnida menyu tugmasi
+> chiqadi. Jadvallarda ikkinchi darajali ustunlar (`yosh`, `manzil`,
+> `hisoblandi`, `toʻlandi`) yashiriladi, telefon esa ism ostiga tushadi —
+> foydalanuvchi yon tomonga siljitmaydi. Dialog balandligi `100dvh` bilan
+> cheklandi: past ekranda ichi aylanadi.
 
 ---
 

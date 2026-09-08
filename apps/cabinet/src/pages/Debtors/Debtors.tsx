@@ -48,9 +48,13 @@ export function Debtors() {
             <TableHeader>
               <TableRow>
                 <TableHead>{DEBTORS_UI.patient}</TableHead>
-                <TableHead className="w-44">{DEBTORS_UI.phone}</TableHead>
-                <TableHead className="w-36 text-right">{PAYMENT_UI.charges}</TableHead>
-                <TableHead className="w-36 text-right">{PAYMENT_UI.paid}</TableHead>
+                <TableHead className="hidden w-44 sm:table-cell">{DEBTORS_UI.phone}</TableHead>
+                <TableHead className="hidden w-36 text-right lg:table-cell">
+                  {PAYMENT_UI.charges}
+                </TableHead>
+                <TableHead className="hidden w-36 text-right lg:table-cell">
+                  {PAYMENT_UI.paid}
+                </TableHead>
                 <TableHead className="w-36 text-right">{PAYMENT_UI.debt}</TableHead>
               </TableRow>
             </TableHeader>
@@ -64,14 +68,19 @@ export function Debtors() {
                     >
                       {debtor.fio}
                     </Link>
+                    {debtor.phone && (
+                      <span className="text-muted-foreground block text-xs sm:hidden">
+                        {formatUzPhone(debtor.phone)}
+                      </span>
+                    )}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-muted-foreground hidden sm:table-cell">
                     {debtor.phone ? formatUzPhone(debtor.phone) : '—'}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">
                     {formatSom(debtor.charges)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">
                     {formatSom(debtor.paid)}
                   </TableCell>
                   <TableCell className="text-destructive text-right font-semibold tabular-nums">

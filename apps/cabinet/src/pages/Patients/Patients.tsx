@@ -89,7 +89,7 @@ export function Patients() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold tracking-tight">{PATIENT_UI.title}</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
             variant="outline"
@@ -149,9 +149,9 @@ export function Patients() {
             <TableHeader>
               <TableRow>
                 <TableHead>{PATIENT_UI.col_fio}</TableHead>
-                <TableHead>{PATIENT_UI.col_phone}</TableHead>
-                <TableHead>{PATIENT_UI.col_age}</TableHead>
-                <TableHead>{PATIENT_UI.col_address}</TableHead>
+                <TableHead className="hidden sm:table-cell">{PATIENT_UI.col_phone}</TableHead>
+                <TableHead className="hidden md:table-cell">{PATIENT_UI.col_age}</TableHead>
+                <TableHead className="hidden lg:table-cell">{PATIENT_UI.col_address}</TableHead>
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
@@ -167,9 +167,16 @@ export function Patients() {
                       >
                         {patient.fio}
                       </Link>
+                      {patient.phone && (
+                        <span className="text-muted-foreground block text-xs sm:hidden">
+                          {formatUzPhone(patient.phone)}
+                        </span>
+                      )}
                     </TableCell>
-                    <TableCell>{patient.phone ? formatUzPhone(patient.phone) : '—'}</TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      {patient.phone ? formatUzPhone(patient.phone) : '—'}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {years === null ? '—' : PATIENT_UI.years(years)}
                       {patient.birthDate && (
                         <span className="text-muted-foreground ml-2 text-xs">
@@ -177,7 +184,7 @@ export function Patients() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden lg:table-cell">
                       {patient.address ?? '—'}
                     </TableCell>
                     <TableCell className="text-right">

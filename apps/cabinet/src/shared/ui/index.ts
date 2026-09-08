@@ -56,6 +56,7 @@ export {
   SelectValue,
 } from './select'
 export { Separator } from './separator'
+export { Sheet, SheetContent, SheetTitle, SheetTrigger } from './sheet'
 export { Skeleton } from './skeleton'
 export { Toaster } from './sonner'
 export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table'

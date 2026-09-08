@@ -87,6 +87,8 @@ export const UI_TEXT = {
   trial_left: (days: number) => `Sinov muddati: ${days} kun qoldi`,
   trial_over: 'Sinov muddati tugadi — faqat oʻqish rejimi',
   section_soon: 'Bu boʻlim keyingi bosqichda qoʻshiladi',
+  menu: 'Menyu',
+  close: 'Yopish',
   welcome: 'Xush kelibsiz',
   dashboard_hint:
     'Kabinet tayyor. Bemorlar, tashriflar va tish xaritasi keyingi bosqichda qoʻshiladi.',
