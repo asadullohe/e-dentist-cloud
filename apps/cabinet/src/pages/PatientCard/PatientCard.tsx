@@ -6,6 +6,7 @@ import {
   formatSom,
   formatUzPhone,
   IMAGE_UI,
+  PAYMENT_UI,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
 import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
@@ -43,6 +44,7 @@ import {
   TabsTrigger,
 } from '@/shared/ui'
 import { ImagesTab } from './ImagesTab'
+import { PaymentsTab } from './PaymentsTab'
 
 function VisitsTab({ patientId }: { patientId: string }) {
   const { data: visits, isPending } = useVisits(patientId)
@@ -286,6 +288,7 @@ export function PatientCard() {
         <TabsList>
           <TabsTrigger value="visits">{CARD_UI.tab_visits}</TabsTrigger>
           <TabsTrigger value="chart">{CARD_UI.tab_chart}</TabsTrigger>
+          <TabsTrigger value="payments">{PAYMENT_UI.tab}</TabsTrigger>
           <TabsTrigger value="images">{IMAGE_UI.tab}</TabsTrigger>
         </TabsList>
         <TabsContent value="visits" className="mt-3">
@@ -293,6 +296,9 @@ export function PatientCard() {
         </TabsContent>
         <TabsContent value="chart" className="mt-3">
           <ChartTab patientId={id} />
+        </TabsContent>
+        <TabsContent value="payments" className="mt-3">
+          <PaymentsTab patientId={id} />
         </TabsContent>
         <TabsContent value="images" className="mt-3">
           <ImagesTab patientId={id} />

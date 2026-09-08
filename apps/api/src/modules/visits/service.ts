@@ -39,6 +39,16 @@ async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
   }
 }
 
+/// Boshqa modullar uchun (payments): tashriflar summasi.
+/// Ochiq tranzaksiya ichida ishlaydi — chaqiruvchi sessiyani oʻzi ochadi
+export function chargeTotals(tx: ClinicTx) {
+  return repo.chargeTotals(tx)
+}
+
+export function chargeTotalOf(tx: ClinicTx, patientId: string) {
+  return repo.chargeTotalOf(tx, patientId)
+}
+
 export function listVisits(deps: VisitDeps, clinicId: string, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, patientId)

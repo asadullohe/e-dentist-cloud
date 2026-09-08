@@ -10,6 +10,7 @@ import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
 import { healthRoutes } from '../modules/health/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
+import { paymentRoutes } from '../modules/payments/routes.js'
 import { visitRoutes } from '../modules/visits/routes.js'
 import type { Config } from './config.js'
 import type { Db } from './db.js'
@@ -118,6 +119,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   })
   app.register(patientRoutes, { prefix: '/api', deps: { db: deps.db, storage: deps.storage } })
   app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app
 }

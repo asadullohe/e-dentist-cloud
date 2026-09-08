@@ -257,3 +257,37 @@ export const IMAGE_UI = {
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
   caption_placeholder: 'Izoh (ixtiyoriy)',
 } as const
+
+// Toʻlovlar va qarzdorlik
+export const PAYMENT_TEXT = {
+  not_found: 'Toʻlov topilmadi',
+  amount_positive: 'Summa noldan katta boʻlishi kerak',
+  date_required: 'Sana kiritilishi shart',
+} as const
+
+export const PAYMENT_UI = {
+  tab: 'Toʻlovlar',
+  add: 'Toʻlov qabul qilish',
+  edit: 'Toʻlovni tahrirlash',
+  empty: 'Hozircha toʻlov qilinmagan',
+  date: 'Sana',
+  amount: 'Summa',
+  note: 'Izoh',
+  charges: 'Tashriflar',
+  paid: 'Toʻlangan',
+  debt: 'Qarz',
+  /// Qarz manfiy boʻlsa bemor oldindan toʻlagan
+  prepaid: 'Oldindan toʻlangan',
+  no_debt: 'Qarz yoʻq',
+  delete_title: 'Toʻlov oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+} as const
+
+export const DEBTORS_UI = {
+  title: 'Qarzdorlar',
+  empty: 'Qarzdor bemorlar yoʻq',
+  total: 'Jami qarz',
+  count: (n: number) => `${n} ta bemor`,
+  patient: 'Bemor',
+  phone: 'Telefon',
+} as const

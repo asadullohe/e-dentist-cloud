@@ -54,6 +54,11 @@ export function existsInClinic(tx: ClinicTx, patientId: string): Promise<boolean
   return repo.exists(tx, patientId)
 }
 
+/// Boshqa modullar uchun: identifikatorlar boʻyicha bemor nomlari
+export function findByIds(tx: ClinicTx, ids: string[]) {
+  return repo.findByIds(tx, ids)
+}
+
 export function list(deps: PatientDeps, clinicId: string, input: PatientListInput) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const { items, total } = await repo.list(tx, input)

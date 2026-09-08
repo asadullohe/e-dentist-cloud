@@ -29,6 +29,9 @@ export const AUDIT_ACTION = {
   bridge_deleted: 'bridge_deleted',
   image_uploaded: 'image_uploaded',
   image_deleted: 'image_deleted',
+  payment_created: 'payment_created',
+  payment_updated: 'payment_updated',
+  payment_deleted: 'payment_deleted',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

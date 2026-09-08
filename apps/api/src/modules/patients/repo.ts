@@ -54,6 +54,13 @@ export async function exists(tx: ClinicTx, id: string): Promise<boolean> {
   return (await tx.patient.count({ where: { id } })) > 0
 }
 
+export function findByIds(tx: ClinicTx, ids: string[]) {
+  return tx.patient.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, fio: true, phone: true },
+  })
+}
+
 export function findById(tx: ClinicTx, id: string) {
   return tx.patient.findUnique({ where: { id }, select: SELECT })
 }

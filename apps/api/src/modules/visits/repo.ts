@@ -37,6 +37,18 @@ export function listVisits(tx: ClinicTx, patientId: string) {
   })
 }
 
+/// Bemor boʻyicha tashriflar summasi. payments moduli qarzni shundan
+/// hisoblaydi — u `visits` jadvaliga oʻzi murojaat qilmaydi
+export async function chargeTotals(tx: ClinicTx): Promise<Map<string, number>> {
+  const rows = await tx.visit.groupBy({ by: ['patientId'], _sum: { price: true } })
+  return new Map(rows.map((row) => [row.patientId, row._sum.price ?? 0]))
+}
+
+export async function chargeTotalOf(tx: ClinicTx, patientId: string): Promise<number> {
+  const row = await tx.visit.aggregate({ where: { patientId }, _sum: { price: true } })
+  return row._sum.price ?? 0
+}
+
 export function createVisit(
   tx: ClinicTx,
   id: string,

@@ -2,6 +2,7 @@ import { UI_TEXT } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
+import { Debtors } from '@/pages/Debtors'
 import { Login } from '@/pages/Login'
 import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
@@ -40,14 +41,17 @@ export function Router() {
           <Route index element={<Dashboard />} />
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientCard />} />
+          <Route path="debtors" element={<Debtors />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
-          {NAV_SECTIONS.filter((section) => section.path !== '/patients').map((section) => (
-            <Route
-              key={section.path}
-              path={section.path.slice(1)}
-              element={<Placeholder title={section.label} icon={section.icon} />}
-            />
-          ))}
+          {NAV_SECTIONS.filter((section) => !['/patients', '/debtors'].includes(section.path)).map(
+            (section) => (
+              <Route
+                key={section.path}
+                path={section.path.slice(1)}
+                element={<Placeholder title={section.label} icon={section.icon} />}
+              />
+            ),
+          )}
         </Route>
       </Route>
 

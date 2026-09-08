@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.10** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.12** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -348,8 +348,24 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
       kattalashtirib koʻrish, oʻchirish. 5 ta test. Rasmlar `patients`
       modulida (tz.md 8-boʻlim). Brauzerda tekshirildi: rasm yuklandi,
       imzolangan havola bilan koʻrindi, oʻchirilganda saqlagichdan ham ketdi
-- [ ] **2.10 `payments` moduli** — toʻlov qabul qilish, qarz hisobi, qarzdorlar roʻyxati
-- [ ] **2.11 Toʻlovlar boʻlimi va Qarzdorlar sahifasi**
+- [x] **2.10 `payments` moduli** — toʻlov CRUD, hisob (`/balance`), qarzdorlar
+      roʻyxati. 13 ta test
+
+> **Qarzdorlar uch modulning maʼlumotidan yigʻiladi**
+>
+> Qarz = tashriflar − toʻlovlar, bemor nomi esa uchinchi modulda. Bitta SQL
+> bilan qilish tezroq boʻlardi, lekin modul chegarasini buzardi. Shuning uchun
+> har biri oʻz servisidan soʻraladi (`visits.chargeTotals`,
+> `patients.findByIds`) va birlashtirish `payments` da boʻladi.
+>
+> Klinikada bemorlar soni mingdan oshmaydi — bu hajmda farq sezilmaydi.
+> Sekinlashsa, chegarani buzmasdan tezlashtirish yoʻli bor: `reports`
+> moduliga koʻchirish yoki koʻrinish (view) yasash.
+- [x] **2.11 Toʻlovlar boʻlimi va Qarzdorlar sahifasi** — kartochkada hisob
+      (tashriflar / toʻlangan / qarz) va toʻlovlar jadvali; alohida Qarzdorlar
+      sahifasi jami qarz bilan. Brauzerda tekshirildi: 100 000 toʻlov qabul
+      qilindi, qarz 250 000 dan 150 000 ga tushdi va qarzdorlar roʻyxatida ham
+      oʻsha koʻrindi
 - [ ] **2.12 `services` moduli** — narxnoma (tashrifga narx tanlash uchun kerak)
 - [ ] **2.13 Excel: shablon va chiqarish** — `GET /api/patients/import/template`,
       `GET /api/patients/export`. Chiqarilgan fayl = shablon, `id` ustuni bilan
