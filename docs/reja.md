@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.6** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.7** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -501,8 +501,21 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 >
 > Texnik **oʻz** naryadining narxini koʻradi (tz.md 7-boʻlim), boshqalarniki
 > uchun `lab.cost` kerak; yozish esa faqat `lab.cost` bilan.
-- [ ] **3.6 Lab bogʻlanishlari** — «topshirildi» da tish xaritasi yangilanadi,
+- [x] **3.6 Lab bogʻlanishlari** — «topshirildi» da tish xaritasi yangilanadi,
       texnik narxi xarajatga tushadi
+
+> **Ikkala bogʻlanish ham bitta tranzaksiyada**
+>
+> Naryad «topshirildi» boʻlganda `visits.setToothTx` tishlarni koronka
+> (koʻprikda «quyma tish») holatiga oʻtkazadi va materialini yozadi,
+> `expenses.addTx` esa texnik narxini `lab` turkumiga qoʻshadi. Ikkalasi
+> ham `setStatus` ning oʻz tranzaksiyasida: «topshirildi» yozilib, xarajat
+> yozilmay qolishi mumkin emas.
+>
+> Olinadigan protez, kappa va ortodontik plastinka tish xaritasiga
+> tegmaydi — ular tishga oʻrnatilmaydi. Narx 0 boʻlsa xarajat yozilmaydi.
+> Naryadni ikki marta topshirib boʻlmagani uchun xarajat ham takrorlanmaydi
+> (test buni tekshiradi).
 - [ ] **3.7 «Texnik ishlari» sahifasi** — filtrlar, muddati oʻtganlari tepada.
       Texnik kirganda boshlangʻich sahifasi shu
 - [ ] **3.8 Toʻliq eksport** — «Barcha maʼlumotni yuklab olish», zip formatida

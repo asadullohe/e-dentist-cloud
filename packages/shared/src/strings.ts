@@ -465,6 +465,8 @@ export const LAB_TEXT = {
   status_flow: 'Naryad bu holatga bu bosqichdan oʻta olmaydi',
   not_your_order: 'Bu naryad sizga biriktirilmagan',
   return_from_ready: 'Faqat «Tayyor» naryadni qaytarish mumkin',
+  /// Naryad topshirilganda xarajatlarga shu izoh bilan tushadi
+  expense_note: (work: string, fio: string) => `${work} — ${fio}`,
 } as const
 
 export const LAB_WORK_TYPE_LABELS = {

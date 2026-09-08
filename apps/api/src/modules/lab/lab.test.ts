@@ -309,3 +309,80 @@ describe('ruxsat', () => {
     expect((await call('DELETE', `/api/lab-orders/${id}`)).statusCode).toBe(404)
   })
 })
+
+describe('topshirilgandagi bogʻlanishlar', () => {
+  it('tish xaritasi yangilanadi va materiali yoziladi', async () => {
+    const id = (await newOrder({ teeth: [24, 25], material: 'zirconia' })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+
+    const chart = (await call('GET', `/api/patients/${patientId}/teeth`)).json().data
+    const teeth: { tooth: number; status: string; material: string | null }[] = chart.teeth
+    for (const tooth of [24, 25]) {
+      expect(teeth.find((row) => row.tooth === tooth)).toMatchObject({
+        status: 'koronka',
+        material: 'sirkoniy',
+      })
+    }
+  })
+
+  it('koʻprik ishi «quyma tish» holatini beradi', async () => {
+    const id = (await newOrder({ teeth: [34, 35], workType: 'bridge' })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+
+    const teeth = (await call('GET', `/api/patients/${patientId}/teeth`)).json().data.teeth
+    expect(teeth.find((row: { tooth: number }) => row.tooth === 34).status).toBe('koprik')
+  })
+
+  // Olinadigan protez tishga oʻrnatilmaydi — xarita tegilmaydi
+  it('olinadigan protez tish holatini oʻzgartirmaydi', async () => {
+    const id = (await newOrder({ teeth: [37], workType: 'denture' })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+
+    const teeth = (await call('GET', `/api/patients/${patientId}/teeth`)).json().data.teeth
+    expect(teeth.find((row: { tooth: number }) => row.tooth === 37)).toBeUndefined()
+  })
+
+  it('texnik narxi «Texnik ishlari» turkumida xarajatga tushadi', async () => {
+    const month = new Date().toISOString().slice(0, 7)
+    const before = (await call('GET', `/api/expenses?month=${month}`)).json().data.total
+
+    const id = (await newOrder({ teeth: [46], techPrice: 650_000 })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+
+    const after = (await call('GET', `/api/expenses?month=${month}`)).json().data
+    expect(after.total - before).toBe(650_000)
+    const row = after.items.find((item: { amount: number }) => item.amount === 650_000)
+    expect(row.category).toBe('lab')
+    expect(row.description).toContain('Naryad Bemori')
+  })
+
+  // Ikki marta topshirib boʻlmagani uchun xarajat ham ikki marta yozilmaydi
+  it('topshirilgan naryadni qayta topshirib boʻlmaydi', async () => {
+    const month = new Date().toISOString().slice(0, 7)
+    const id = (await newOrder({ teeth: [15], techPrice: 120_000 })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+
+    const again = await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+    expect(again.statusCode).toBe(400)
+
+    const items = (await call('GET', `/api/expenses?month=${month}`)).json().data.items
+    expect(items.filter((item: { amount: number }) => item.amount === 120_000)).toHaveLength(1)
+  })
+
+  it('narxsiz naryad xarajat yozmaydi', async () => {
+    const month = new Date().toISOString().slice(0, 7)
+    const before = (await call('GET', `/api/expenses?month=${month}`)).json().data.items.length
+
+    const id = (await newOrder({ teeth: [47], techPrice: 0 })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    await call('PATCH', `/api/lab-orders/${id}/status`, { status: 'delivered' })
+
+    const after = (await call('GET', `/api/expenses?month=${month}`)).json().data.items.length
+    expect(after).toBe(before)
+  })
+})

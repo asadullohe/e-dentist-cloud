@@ -3,7 +3,13 @@
 // Bemor ismi va xodim ismlari boshqa modullarning jadvallarida — ular
 // `patients` va `auth` ning xizmat qatlamidan olinadi, jadvalga tegilmaydi.
 
-import { LAB_TEXT, PATIENT_TEXT, type Permission, todayISO } from '@e-dentist/shared'
+import {
+  LAB_TEXT,
+  LAB_WORK_TYPE_LABELS,
+  PATIENT_TEXT,
+  type Permission,
+  todayISO,
+} from '@e-dentist/shared'
 import type { LabStatus } from '../../../generated/prisma/client.js'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
@@ -11,7 +17,9 @@ import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
+import * as expenses from '../expenses/service.js'
 import * as patients from '../patients/service.js'
+import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
 import type { LabCreateInput, LabListInput, LabReturnInput, LabUpdateInput } from './schema.js'
 
@@ -41,6 +49,26 @@ export interface LabOrderView {
   overdue: boolean
   /// `lab.cost` boʻlmasa yoki naryad oʻzinikimas boʻlsa — javobda yoʻq
   techPrice?: number
+}
+
+/// Naryad materiali → tish xaritasidagi material (packages/teeth).
+/// Neylon protez uchun — tishga yozadigan material yoʻq
+const TOOTH_MATERIAL: Record<string, string> = {
+  metal_ceramic: 'metall-keramika',
+  zirconia: 'sirkoniy',
+  press_ceramic: 'keramika',
+  acrylic: 'plastmassa',
+  cast_metal: 'metall',
+  nylon: '',
+}
+
+/// Qaysi ish turi tishning holatini oʻzgartiradi. Olinadigan protez, kappa
+/// va plastinka tishga oʻrnatilmaydi — ular xaritaga tegmaydi
+const TOOTH_STATUS_BY_WORK: Record<string, string | undefined> = {
+  crown: 'koronka',
+  bridge: 'koprik',
+  veneer: 'koronka',
+  inlay: 'koronka',
 }
 
 function toDate(value: string): Date {
@@ -256,6 +284,9 @@ export function setStatus(
       status,
       ...(status === 'delivered' ? { deliveredAt: new Date() } : {}),
     })
+
+    if (status === 'delivered') await onDelivered(tx, updated, userId)
+
     await writeAudit(tx, {
       userId,
       action: AUDIT_ACTION.lab_status_changed,
@@ -297,6 +328,42 @@ export function markReturned(
     })
     const [view] = await toView(tx, [updated], userId, permissions)
     return view as LabOrderView
+  })
+}
+
+/// Naryad topshirilgandagi ikki bogʻlanish (tz.md 7-boʻlim):
+///
+///   1. tish xaritasi — shifokor qoʻlda ikkinchi marta kiritmaydi
+///   2. texnik narxi xarajatga tushadi — busiz hisobotdagi sof foyda yolgʻon
+///
+/// Ikkalasi ham shu tranzaksiya ichida: naryad topshirildi deb yozilib,
+/// xarajat yozilmay qolishi mumkin emas
+async function onDelivered(tx: ClinicTx, row: repo.LabRow, userId: string): Promise<void> {
+  const toothStatus = TOOTH_STATUS_BY_WORK[row.workType]
+  if (toothStatus) {
+    const material = TOOTH_MATERIAL[row.material] ?? ''
+    for (const tooth of row.teeth) {
+      await visits.setToothTx(tx, row.patientId, tooth, { status: toothStatus, material })
+    }
+  }
+
+  // Narx yozilmagan boʻlsa xarajat ham yoʻq
+  if (row.techPrice <= 0) return
+
+  const [person] = await patients.findByIds(tx, [row.patientId])
+  const work = LAB_WORK_TYPE_LABELS[row.workType as keyof typeof LAB_WORK_TYPE_LABELS]
+  const expense = await expenses.addTx(tx, {
+    date: toDate(todayISO()),
+    category: 'lab',
+    description: LAB_TEXT.expense_note(work, person?.fio ?? ''),
+    amount: row.techPrice,
+  })
+  await writeAudit(tx, {
+    userId,
+    action: AUDIT_ACTION.expense_changed,
+    entity: 'expense',
+    entityId: expense.id,
+    meta: { labOrderId: row.id },
   })
 }
 

@@ -170,6 +170,20 @@ export function chart(deps: VisitDeps, clinicId: string, patientId: string) {
 }
 
 /// Butun xaritani qaytaradi: mijoz bitta tishni emas, tayyor holatni oladi
+/// Boshqa modullar uchun (lab): naryad topshirilganda tish holatini yozadi.
+/// Ochiq tranzaksiya ichida — chaqiruvchi sessiyani oʻzi ochgan
+export async function setToothTx(
+  tx: ClinicTx,
+  patientId: string,
+  tooth: number,
+  data: { status: string; material?: string | null },
+): Promise<void> {
+  await repo.setTooth(tx, uuidV7(), patientId, tooth, {
+    status: data.status,
+    material: data.material ?? '',
+  })
+}
+
 export function setTooth(
   deps: VisitDeps,
   clinicId: string,
