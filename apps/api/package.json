@@ -12,7 +12,8 @@
     "db:reset": "prisma migrate reset --force",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:migrate:create": "prisma migrate dev --create-only"
+    "db:migrate:create": "prisma migrate dev --create-only",
+    "admin:create": "tsx --env-file=../../.env src/scripts/create-admin.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",

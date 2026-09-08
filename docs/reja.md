@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.2** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.3** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -680,8 +680,23 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > Muddat har soʻrovda bazadan oʻqiladi: boshqaruv panelidan uzaytirilsa
 > darhol kuchga kiradi — test buni tekshiradi. `expires_at` «shu kungacha»:
 > oxirgi kunning oʻzida yozish hali ochiq.
-- [ ] **5.2 `apps/admin` skeleti** — kirish, platforma admini roli
+- [x] **5.2 `apps/admin` skeleti** — kirish, platforma admini roli
       (`clinic_id` boʻsh, `patients` moduli umuman ochilmaydi)
+
+> **Admin qatori ilovaga koʻrinmaydi — bu xususiyat, xato emas**
+>
+> Adminda `clinic_id` boʻsh, RLS siyosati esa `clinic_id = app_clinic_id()`
+> ni talab qiladi va boʻsh ustun hech qachon mos kelmaydi. «`clinic_id IS
+> NULL` boʻlsa ochiq» degan siyosat yozib boʻlmaydi: u holda admin qatorlari
+> **har qanday** klinika soʻroviga koʻrinardi. Shuning uchun boshqa
+> joylardagidek tor `admin_find` SECURITY DEFINER funksiyasi.
+>
+> Klinika marshrutlari adminga oʻzidan-oʻzi yopiq: ular ruxsat talab
+> qiladi, ruxsat roldan keladi, rol esa klinikaniki. Test buni tekshiradi —
+> bemorlar, navbat, hisobot va eksport hammasi 403.
+>
+> Admin qoʻlda yaratiladi: `npm run admin:create -w @e-dentist/api --
+> pochta parol "Ism"`. Parol kamida 12 belgi.
 - [ ] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix
 - [ ] **5.4 Statistika va hodisalar**
 - [ ] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar

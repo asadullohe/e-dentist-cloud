@@ -690,6 +690,18 @@ export const BILLING_TEXT = {
   blocked: 'Klinika bloklangan. Batafsil maʼlumot uchun bogʻlaning',
 } as const
 
+// Boshqaruv paneli (apps/admin)
+export const ADMIN_UI = {
+  brand: 'E-Dentist — boshqaruv',
+  login_title: 'Boshqaruv paneli',
+  login_hint: 'Faqat platforma admini uchun',
+  clinics: 'Klinikalar',
+  stats: 'Statistika',
+  events: 'Hodisalar',
+  soon: 'Bu boʻlim keyingi taskda toʻldiriladi',
+  not_admin: 'Bu hisob boshqaruv paneliga kira olmaydi',
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {

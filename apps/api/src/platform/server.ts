@@ -6,6 +6,7 @@ import { IMAGE_TEXT } from '@e-dentist/shared'
 import cookie from '@fastify/cookie'
 import multipart from '@fastify/multipart'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
+import { adminRoutes } from '../modules/admin/routes.js'
 import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
 import * as billing from '../modules/billing/service.js'
@@ -163,6 +164,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(reportRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(clinicRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(adminRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(labRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(exportRoutes, { prefix: '/api', deps: { db: deps.db } })
 

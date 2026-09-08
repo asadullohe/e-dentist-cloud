@@ -463,7 +463,8 @@ POST   /api/auth/login
 POST   /api/auth/logout
 GET    /api/me
 
-# faqat platforma admini
+# faqat platforma admini (clinic_id boʻsh)
+GET    /api/admin/me
 GET    /api/admin/clinics
 POST   /api/admin/clinics/:id/extend
 ```
