@@ -40,10 +40,18 @@ model Clinic {
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  users    User[]
-  roles    Role[]
-  invites  Invite[]
-  auditLog AuditLog[]
+  users        User[]
+  roles        Role[]
+  invites      Invite[]
+  auditLog     AuditLog[]
+  patients     Patient[]
+  visits       Visit[]
+  teeth        Tooth[]
+  bridges      Bridge[]
+  payments     Payment[]
+  appointments Appointment[]
+  services     Service[]
+  images       PatientImage[]
 
   @@index([status])
   @@map("clinics")
@@ -162,4 +170,198 @@ model AuditLog {
   @@index([clinicId, at])
   @@index([entity, entityId])
   @@map("audit_log")
+}
+
+// ─────────────────────────────  Bemorlar  ─────────────────────────────
+
+/// Kartoteka. Telefon takrorlanishi mumkin: bitta oiladagi bir necha bemor
+/// bitta raqamdan foydalanishi odatiy hol (tz.md 8-boʻlim, Excel dan yuklash)
+model Patient {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  clinicId  String    @map("clinic_id") @db.Uuid
+  fio       String
+  /// Qidiruv uchun normallashtirilgan nusxa: kichik harf, apostrof
+  /// variantlari bir xillashtirilgan. Oʻzbekcha ismlarda «Gʻayrat»,
+  /// «G'ayrat» va «G’ayrat» bir xil topilishi kerak (shared normalizeName)
+  fioSearch String    @map("fio_search")
+  /// Bir xil koʻrinishda: +998901234567
+  phone     String?
+  birthDate DateTime? @map("birth_date") @db.Date
+  address   String?
+  /// Allergiya, surunkali kasalliklar
+  note      String?
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic       Clinic         @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  visits       Visit[]
+  teeth        Tooth[]
+  bridges      Bridge[]
+  payments     Payment[]
+  appointments Appointment[]
+  images       PatientImage[]
+
+  @@index([clinicId, fioSearch])
+  @@index([clinicId, phone])
+  @@map("patients")
+}
+
+// ────────────────────────  Tashriflar va muolajalar  ────────────────────────
+
+model Visit {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  patientId String   @map("patient_id") @db.Uuid
+  date      DateTime @db.Date
+  /// Muolaja nomi. Narxnomadan tanlansa ham matn saqlanadi — narxnoma
+  /// keyin oʻzgarsa tarix buzilmasin
+  treatment String
+  /// FDI raqami. Bir nechta tish boʻlsa har biriga alohida yozuv
+  tooth     Int?
+  serviceId String?  @map("service_id") @db.Uuid
+  /// Soʻm, butun son
+  price     Int      @default(0)
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic   @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  service Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+
+  @@index([clinicId, patientId, date])
+  @@index([clinicId, date])
+  @@map("visits")
+}
+
+// ──────────────────────────────  Tish xaritasi  ──────────────────────────────
+
+/// Bemorning bitta tishi. FDI raqamlash: 11–48 doimiy, 51–85 sut tishlari.
+/// `status` va `material` enum emas — roʻyxat vaqt oʻtib kengayishi mumkin,
+/// har safar migratsiya yozib oʻtirmaslik uchun. Qiymatlar packages/teeth da
+model Tooth {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  patientId String   @map("patient_id") @db.Uuid
+  tooth     Int
+  status    String
+  material  String?
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  /// Bitta bemorda bitta tish raqami bir marta
+  @@unique([patientId, tooth])
+  @@index([clinicId])
+  @@map("teeth")
+}
+
+/// Koʻprik. Tayanch va oraliq tishlar `teeth` massividagi tartib boʻyicha
+/// aniqlanadi — hisoblash packages/teeth dagi bridgeSpan da
+model Bridge {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  patientId String   @map("patient_id") @db.Uuid
+  teeth     Int[]
+  material  String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, patientId])
+  @@map("bridges")
+}
+
+// ───────────────────────────────  Toʻlovlar  ───────────────────────────────
+
+/// Qarz = tashriflar summasi − toʻlovlar. Alohida ustunda saqlanmaydi:
+/// ikki joyda turgan son ertami-kechmi bir-biridan ajralib qoladi
+model Payment {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  patientId String   @map("patient_id") @db.Uuid
+  date      DateTime @db.Date
+  /// Soʻm, butun son
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, patientId])
+  @@index([clinicId, date])
+  @@map("payments")
+}
+
+// ─────────────────────────────  Qabul jadvali  ─────────────────────────────
+
+enum AppointmentStatus {
+  scheduled
+  arrived
+  no_show
+  done
+  cancelled
+}
+
+model Appointment {
+  id        String            @id @default(uuid(7)) @db.Uuid
+  clinicId  String            @map("clinic_id") @db.Uuid
+  patientId String            @map("patient_id") @db.Uuid
+  /// Qabul vaqti. Navbat (bosqich 4) uchun qoʻshimcha ustunlar keyin qoʻshiladi
+  at        DateTime          @db.Timestamptz(3)
+  status    AppointmentStatus @default(scheduled)
+  note      String?
+  createdAt DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, at])
+  @@index([clinicId, patientId])
+  @@map("appointments")
+}
+
+// ────────────────────────────────  Narxnoma  ────────────────────────────────
+
+model Service {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  name      String
+  /// Soʻm, butun son
+  price     Int
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  visits Visit[]
+
+  @@unique([clinicId, name])
+  @@map("services")
+}
+
+// ────────────────────────────  Bemor rasmlari  ────────────────────────────
+
+model PatientImage {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  patientId String   @map("patient_id") @db.Uuid
+  /// MinIO dagi obyekt nomi. Ochiq URL emas — rasm imzolangan vaqtinchalik
+  /// havola orqali beriladi (tz.md 12-boʻlim)
+  key       String   @unique
+  caption   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, patientId])
+  @@map("images")
 }

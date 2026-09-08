@@ -89,6 +89,27 @@ export function age(birthDate: string | null | undefined): number | null {
   return a
 }
 
+// Ekrandagi KK/OO/YYYY dan API kutadigan YYYY-MM-DD ga.
+// Sana notoʻgʻri boʻlsa null — chaqiruvchi xato koʻrsatadi
+export function parseDisplayDate(value: string): string | null {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim())
+  if (!m) return null
+  const [, day, month, year] = m
+  const iso = `${year}-${month}-${day}`
+  const d = new Date(`${iso}T00:00:00Z`)
+  if (Number.isNaN(d.getTime())) return null
+  // 31/02/2020 kabi mavjud boʻlmagan sanani Date oʻzi surib yuboradi —
+  // teskari tekshiruv bilan ushlaymiz
+  return d.toISOString().slice(0, 10) === iso ? iso : null
+}
+
+// Kiritish paytida oʻzi chiziqcha qoʻyadi: 12052026 → 12/05/2026
+export function maskDisplayDate(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8)
+  const parts = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4, 8)].filter(Boolean)
+  return parts.join('/')
+}
+
 // Postgres DATE ustuniga yoziladigan sana.
 //
 // Tuzoq: `new Date()` ga setHours(0,0,0,0) qoʻysak mahalliy yarim tun chiqadi.

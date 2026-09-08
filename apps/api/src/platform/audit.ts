@@ -14,6 +14,28 @@ export const AUDIT_ACTION = {
   logged_out: 'logged_out',
   role_changed: 'role_changed',
   staff_changed: 'staff_changed',
+  patient_created: 'patient_created',
+  patient_updated: 'patient_updated',
+  patient_deleted: 'patient_deleted',
+  /// Tibbiy maʼlumot uchun koʻrish ham yoziladi (tz.md 12-boʻlim).
+  /// Faqat kartochka ochilganda — roʻyxat soʻrovlari yozilmaydi, aks holda
+  /// audit jadvali foydasiz shovqinga toʻlib ketadi
+  patient_viewed: 'patient_viewed',
+  visit_created: 'visit_created',
+  visit_updated: 'visit_updated',
+  visit_deleted: 'visit_deleted',
+  tooth_updated: 'tooth_updated',
+  bridge_created: 'bridge_created',
+  bridge_deleted: 'bridge_deleted',
+  image_uploaded: 'image_uploaded',
+  image_deleted: 'image_deleted',
+  payment_created: 'payment_created',
+  payment_updated: 'payment_updated',
+  payment_deleted: 'payment_deleted',
+  service_changed: 'service_changed',
+  patients_exported: 'patients_exported',
+  patients_imported: 'patients_imported',
+  appointment_changed: 'appointment_changed',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

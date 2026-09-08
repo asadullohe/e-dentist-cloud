@@ -2,9 +2,14 @@ import { UI_TEXT } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
+import { Debtors } from '@/pages/Debtors'
 import { Login } from '@/pages/Login'
+import { PatientCard } from '@/pages/PatientCard'
+import { Patients } from '@/pages/Patients'
 import { Placeholder } from '@/pages/Placeholder'
 import { Register } from '@/pages/Register'
+import { Schedule } from '@/pages/Schedule'
+import { Services } from '@/pages/Services'
 import { VerifyEmail } from '@/pages/VerifyEmail'
 import { NAV_SECTIONS } from '@/shared/config'
 import { AuthLayout } from './layouts/AuthLayout'
@@ -36,7 +41,16 @@ export function Router() {
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Dashboard />} />
-          {NAV_SECTIONS.map((section) => (
+          <Route path="patients" element={<Patients />} />
+          <Route path="patients/:id" element={<PatientCard />} />
+          <Route path="debtors" element={<Debtors />} />
+          <Route path="services" element={<Services />} />
+          <Route path="schedule" element={<Schedule />} />
+          {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
+          {NAV_SECTIONS.filter(
+            (section) =>
+              !['/patients', '/debtors', '/services', '/schedule'].includes(section.path),
+          ).map((section) => (
             <Route
               key={section.path}
               path={section.path.slice(1)}

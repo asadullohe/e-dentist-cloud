@@ -2,12 +2,12 @@
 // texnik tafsilot foydalanuvchiga hech qachon chiqmasligi.
 
 import { describe, expect, it } from 'vitest'
-import type { Config } from './platform/config.js'
 import type { Db } from './platform/db.js'
 import { errors } from './platform/errors.js'
 import { memoryMailer } from './platform/mailer.js'
 import { createServer, type ServerDeps } from './platform/server.js'
 import type { SessionStore } from './platform/session.js'
+import { fakeImports, fakeStorage, testConfig } from './test-support/config.js'
 
 // Bu fayl faqat javob shaklini tekshiradi — bazaga ham, Redis ga ham
 // murojaat qilmaydi
@@ -24,19 +24,12 @@ const fakeDeps: ServerDeps = {
     reset: async () => {},
     close: async () => {},
   },
+  storage: fakeStorage,
+  imports: fakeImports,
   mailer: memoryMailer(),
 }
 
-const config: Config = {
-  NODE_ENV: 'test',
-  API_PORT: 3000,
-  TZ: 'Asia/Tashkent',
-  CABINET_URL: 'http://localhost:5173',
-  DATABASE_URL: 'postgresql://x',
-  APP_DATABASE_URL: 'postgresql://x',
-  REDIS_URL: 'redis://x',
-  SESSION_SECRET: 'x'.repeat(16),
-}
+const config = testConfig()
 
 describe('GET /api/health', () => {
   it('ok shaklida javob beradi', async () => {

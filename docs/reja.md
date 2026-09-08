@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.1** — bosqich 1 tugadi
+**Hozirgi task: 3.1** — bosqich 2 tugadi — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -252,31 +252,191 @@ Koʻp ijarachilik testi yashil.
 
 _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 
-- [ ] **2.1 Prisma sxema, 2-qism** — `patients`, `visits`, `teeth`, `bridges`,
-      `payments`, `appointments`, `services`, `images`. RLS siyosatlari ham darhol
-- [ ] **2.2 `patients` moduli** — CRUD, qidiruv (F.I.O. va telefon boʻyicha), sahifalash,
-      + koʻp ijarachilik testi
-- [ ] **2.3 Bemorlar sahifasi** — roʻyxat, qidiruv, ustun filtrlari, yangi bemor formasi
-- [ ] **2.4 `packages/teeth`** — `lib/teeth.js` TypeScript ga oʻtkaziladi
-      (FDI, sut tishlari, `archLayout`, `bridgeSpan`, materiallar)
-- [ ] **2.5 `ToothChart` komponenti** — oflayn loyihadan koʻchiriladi,
-      maʼlumot manbai HTTP ga almashtiriladi
-- [ ] **2.6 `visits` moduli** — tashriflar, muolajalar, tish xaritasi API
-      (`GET/PUT /api/patients/:id/teeth`)
-- [ ] **2.7 Bemor kartochkasi** — Tashriflar va Tish xaritasi boʻlimlari
-- [ ] **2.8 MinIO fayl qatlami** — yuklash, imzolangan vaqtinchalik havola
-      (ochiq URL emas)
-- [ ] **2.9 Bemor rasmlari** — kartochkadagi Rasmlar boʻlimi
-- [ ] **2.10 `payments` moduli** — toʻlov qabul qilish, qarz hisobi, qarzdorlar roʻyxati
-- [ ] **2.11 Toʻlovlar boʻlimi va Qarzdorlar sahifasi**
-- [ ] **2.12 `services` moduli** — narxnoma (tashrifga narx tanlash uchun kerak)
-- [ ] **2.13 Excel: shablon va chiqarish** — `GET /api/patients/import/template`,
-      `GET /api/patients/export`. Chiqarilgan fayl = shablon, `id` ustuni bilan
-- [ ] **2.14 Excel: import preview** — sarlavha nomi boʻyicha ustun tanish, sana tuzoqlari,
-      telefon normallashtirish, takrorlarni topish, birinchi 20 qator jadvalda
-- [ ] **2.15 Excel: import commit** — yozish, hisobot (qoʻshildi / yangilandi / oʻtkazildi),
-      xatolar alohida faylga, `audit_log` ga bitta yozuv
-- [ ] **2.16 `schedule` moduli va Qabul jadvali sahifasi** — oylik kalendar, kunlik roʻyxat
+- [x] **2.1 Prisma sxema, 2-qism** — `patients`, `visits`, `teeth`, `bridges`,
+      `payments`, `appointments`, `services`, `images` + RLS siyosatlari.
+      `TENANT_MODELS` ham yangilandi
+
+> **Qamrovni qorovullaydigan test qoʻshildi**
+>
+> Yangi jadval qoʻshilganda ikki joyni yangilash kerak: RLS siyosati va
+> `TENANT_MODELS`. Bittasi unutilsa **hech qanday xato koʻrinmaydi**, faqat
+> himoya bir qatlamga tushadi.
+>
+> `tenant.test.ts` endi ikkalasini ham tekshiradi: `clinic_id` ustuni bor har
+> bir jadvalda siyosat borligini, va `TENANT_MODELS` soni bazadagi ijarachi
+> jadvallari soniga tengligini. Nazorat qilib koʻrildi — modelni ataylab
+> olib tashlaganda test qizaradi.
+- [x] **2.2 `patients` moduli** — CRUD, qidiruv, sahifalash. 18 ta test, shundan
+      4 tasi koʻp ijarachilikka. Sinov muhiti `test-support/harness.ts` ga chiqarildi —
+      keyingi modullar ham shundan foydalanadi
+
+> **Qidiruv apostrofsiz ham topadi**
+>
+> Oʻzbekcha ismlarda apostrof uch xil yoziladi (`Gʻ`, `G'`, `G’`), ustiga odam
+> uni umuman yozmasligi ham mumkin — klaviaturada topish qiyin. Shuning uchun
+> bemorda `fio_search` ustuni bor: `searchKey()` apostrofni butunlay olib
+> tashlaydi. `normalizeName` esa oʻzgarmadi — u takrorlarni aniqlashda
+> ishlatiladi va u yerda apostrof farqi saqlangani maʼqul.
+- [x] **2.3 Bemorlar sahifasi** — roʻyxat, qidiruv (kechiktirilgan), sahifalash,
+      qoʻshish/tahrirlash oynasi, oʻchirishni tasdiqlash. shadcn `Table`, `Dialog`,
+      `AlertDialog` bilan. Sana KK/OO/YYYY koʻrinishida kiritiladi va koʻrsatiladi
+      (`maskDisplayDate` / `parseDisplayDate`)
+
+> **Ustun filtrlari keyinroq**
+>
+> TZ da «ustun filtrlari» ham bor. Hozircha bitta umumiy qidiruv qilindi —
+> F.I.O. va telefon boʻyicha. Ustun boʻyicha alohida filtrlar qarzdorlik va
+> tashrif sanasi qoʻshilgandan keyin (2.10) maʼnoli boʻladi.
+
+> **Yon menyu mobil ekranda hali yigʻilmaydi**
+>
+> Jadval va sarlavha tor ekranga moslashdi, lekin yon menyu 224px joy egallab
+> turaveradi. Telefonda kabinetni ochish uchun uni yigʻiladigan qilish kerak —
+> alohida task sifatida bosqich 2 oxirida.
+- [x] **2.4 `packages/teeth`** — FDI raqamlash, tish turlari, ravoq geometriyasi,
+      holat va material ranglari. 14 ta test. Oʻzbekcha nomlar bu paketda emas,
+      `shared/strings.ts` da (`TOOTH_STATUS_LABELS`, `CROWN_MATERIAL_LABELS`) —
+      qoidaga koʻra barcha matn bir joyda
+- [x] **2.5 `ToothChart` komponenti** — `entities/tooth/ui/`. Faqat chizadi:
+      maʼlumotni props orqali oladi, bosilganini `onPick` bilan xabar qiladi.
+      Tahrirlash oynasi 2.7 da (`features/tooth-edit`).
+      Brauzerda tekshirildi: doimiy xaritada 32 tish, sut xaritasida 20 tish,
+      koʻprik yoʻlagi va 8 bandli izoh
+
+> **Koʻprik modeli oflayndan farq qiladi**
+>
+> Oflayn ilovada koʻprik `from_tooth` va `to_tooth` bilan saqlanardi, oraliq
+> esa `bridgeSpan` bilan hisoblanardi. Bizning sxemada `teeth: Int[]` — toʻliq
+> roʻyxat saqlanadi. Shuning uchun komponent oraliqni hisoblamaydi, tayyor
+> roʻyxatni chizadi.
+- [x] **2.6 `visits` moduli** — tashriflar CRUD, tish xaritasi (`GET/PUT`).
+      16 ta test
+
+> **RLS tashqi kalitlarni himoya qilmaydi**
+>
+> Postgres tashqi kalit tekshiruvini RLS siyosatlarini chetlab oʻtib bajaradi.
+> Tekshirib koʻrildi: `assertPatient` olib tashlansa, API begona klinikaning
+> bemoriga tashrif yozishga **ruxsat beradi** va `200` qaytaradi.
+>
+> Endi boshqa modulning yozuviga havola qiladigan har bir amal
+> `patients.existsInClinic` orqali tekshiradi. `payments` (2.10),
+> `appointments` (2.16) va naryadlarda (3.5) ham shunday boʻlishi shart.
+> Sabab `tz.md` 5-boʻlimiga yozildi.
+- [x] **2.7 Bemor kartochkasi** — `/patients/:id`. Ikki boʻlim: Tashriflar
+      (jadval, jami summa, qoʻshish/tahrirlash/oʻchirish) va Tish xaritasi
+      (odontogramma, tishni bosib holat va material belgilash).
+      Brauzerda tekshirildi: tashrif yozildi, 16-tishga sirkoniy koronka
+      qoʻyildi va xaritada darhol koʻrindi
+
+> **Koʻprik tahrirlash hali yoʻq**
+>
+> Xarita koʻpriklarni **chizadi**, lekin ularni yaratish/oʻchirish oynasi
+> qurilmagan. Oflayn ilovada bu bor edi. Reja roʻyxatida alohida task yoʻq
+> edi — 2.7a sifatida qoʻshildi.
+
+- [x] **2.7a Koʻprik tahrirlash** — yaratish va oʻchirish. Oraliqdagi har tishga
+      rol tanlanadi: tayanch **koronka** yoki **quyma tish**. Sukut rol tishning
+      holatiga qarab: tishi yoʻq joyga quyma tish. Oʻchirilganda holatlar
+      qaytariladi — quyma tish oʻrni «olib tashlangan», tayanchlar «sogʻlom».
+      6 ta test. Brauzerda tekshirildi: 45–42 koʻprigi qoʻyildi (43 quyma),
+      keyin oʻchirildi va holatlar toʻgʻri qaytdi
+- [x] **2.8 Fayl qatlami** — `platform/storage.ts`. MinIO S3 mos, shuning uchun
+      standart S3 mijozi ishlatiladi — provayder almashsa faqat endpoint
+      oʻzgaradi. Havolalar 5 daqiqalik imzolangan; ochiq URL bilan kirib
+      boʻlmaydi (test buni tekshiradi: imzosiz murojaat 403). 6 ta test
+- [x] **2.9 Bemor rasmlari** — kartochkada Rasmlar boʻlimi: yuklash, izoh,
+      kattalashtirib koʻrish, oʻchirish. 5 ta test. Rasmlar `patients`
+      modulida (tz.md 8-boʻlim). Brauzerda tekshirildi: rasm yuklandi,
+      imzolangan havola bilan koʻrindi, oʻchirilganda saqlagichdan ham ketdi
+- [x] **2.10 `payments` moduli** — toʻlov CRUD, hisob (`/balance`), qarzdorlar
+      roʻyxati. 13 ta test
+
+> **Qarzdorlar uch modulning maʼlumotidan yigʻiladi**
+>
+> Qarz = tashriflar − toʻlovlar, bemor nomi esa uchinchi modulda. Bitta SQL
+> bilan qilish tezroq boʻlardi, lekin modul chegarasini buzardi. Shuning uchun
+> har biri oʻz servisidan soʻraladi (`visits.chargeTotals`,
+> `patients.findByIds`) va birlashtirish `payments` da boʻladi.
+>
+> Klinikada bemorlar soni mingdan oshmaydi — bu hajmda farq sezilmaydi.
+> Sekinlashsa, chegarani buzmasdan tezlashtirish yoʻli bor: `reports`
+> moduliga koʻchirish yoki koʻrinish (view) yasash.
+- [x] **2.11 Toʻlovlar boʻlimi va Qarzdorlar sahifasi** — kartochkada hisob
+      (tashriflar / toʻlangan / qarz) va toʻlovlar jadvali; alohida Qarzdorlar
+      sahifasi jami qarz bilan. Brauzerda tekshirildi: 100 000 toʻlov qabul
+      qilindi, qarz 250 000 dan 150 000 ga tushdi va qarzdorlar roʻyxatida ham
+      oʻsha koʻrindi
+- [x] **2.12 `services` moduli va Narxnoma sahifasi** — CRUD, klinika ichida
+      nom takrorlanmaydi. Tashrif formasida «Narxnomadan tanlash» — muolaja
+      nomi va narxni oʻzi toʻldiradi, keyin qoʻlda oʻzgartirsa ham boʻladi.
+      10 ta test
+
+> **Narxnomani oʻqish uchun alohida ruxsat yoʻq**
+>
+> Yozish `services.manage` talab qiladi, oʻqish esa faqat klinikaga kirgan
+> boʻlishni. Sabab: shifokor tashrif yozayotganda narxni tanlashi kerak,
+> lekin unga `services.manage` berilmagan. Bu bemor maʼlumoti emas —
+> klinikaning oʻz sozlamasi.
+>
+> Xizmat oʻchirilsa tashriflardagi nom va narx **saqlanib qoladi**
+> (`serviceId` `null` boʻladi) — narxnoma oʻzgarsa tarix buzilmasin.
+- [x] **2.13 Excel: shablon va chiqarish** — shablonda toʻgʻri ustunlar, ikkita
+      namuna qator va ikkinchi varaqda qoʻllanma. Chiqarilgan fayl aynan
+      shablon — uni tahrirlab qaytadan yuklash mumkin. 6 ta test
+
+> **SheetJS oʻrniga boshqa kutubxona**
+>
+> TZ da SheetJS (`xlsx`) aytilgan edi, lekin uning npm dagi nusxasi
+> (`0.18.5`) tashlab qoʻyilgan: ikkita **yuqori** darajali zaiflik —
+> prototype pollution va ReDoS, **tuzatish yoʻq**. SheetJS oʻz CDN siga
+> koʻchgan.
+>
+> Bu import bosqichida (2.14) muhim: biz **foydalanuvchi yuklagan faylni**
+> tahlil qilamiz — tahlilchidagi zaiflik aynan oʻsha yerda ishlaydi.
+>
+> Tanlandi: `write-excel-file` + `read-excel-file` — ogohlantirish yoʻq,
+> bogʻliqligi bitta, faol qoʻllab-quvvatlanadi. Sabab `tz.md` 3-boʻlimiga
+> yozildi.
+- [x] **2.14 Excel: import preview** — ustunlar sarlavha nomi boʻyicha tanaladi
+      (tartib oʻzgarsa ham, ortiqcha ustun boʻlsa ham), sana uch koʻrinishda
+      oʻqiladi, telefondagi yoʻqolgan nol tiklanadi, takrorlar telefon va ID
+      boʻyicha topiladi. 25 ta tahlil testi + oqim testlari
+
+> **TZ dagi bitta raqam notoʻgʻri edi**
+>
+> «Excel seriya raqami `32915` = 12/05/1990» deyilgan edi. Test buni ushladi:
+> `32915` aslida **1990-02-11**, 12-may esa **33005**. Boshlangʻich nuqta
+> 1899-12-30 (Excel 1900-yilni kabisa deb hisoblaydi). Nazorat nuqtasi bilan
+> tasdiqlandi: `25569` → 1970-01-01. `tz.md` toʻgʻrilandi.
+- [x] **2.15 Excel: import commit** — yozish, hisobot, xatolar alohida Excel
+      faylga, audit'ga bitta yozuv. Takror bilan uch tanlov: oʻtkazib yuborish ·
+      mavjudini yangilash · baribir qoʻshish.
+      Brauzerda tekshirildi: 3 qatorli fayldan 1 ta qoʻshildi, 2 ta oʻtkazildi
+
+> **Fayl bir marta yuklanadi**
+>
+> Tahlil natijasi Redis da yarim soat saqlanadi va «Yuklash» bosilganda
+> token boʻyicha oʻqiladi — fayl ikkinchi marta yuborilmaydi. Kalitga
+> `clinicId` kiradi, shuning uchun boshqa klinikaning tokeni ishlamaydi.
+- [x] **2.16 `schedule` moduli va Qabul jadvali sahifasi** — oylik kalendar, kunlik roʻyxat
+
+> **Jadvalni oʻqish `patients.read` talab qiladi**
+>
+> Qabul roʻyxatida bemor ismi va telefoni koʻrinadi, shuning uchun `GET
+> /api/appointments` shunchaki kirganlarga emas, `patients.read` boriga
+> ochiq — texnik jadvalni koʻrmaydi. Yozish uchun `schedule.write`.
+> Bemor ismlari `patients.findByIds` orqali olinadi: `schedule` repozitoriyasi
+> boshqa modul jadvaliga soʻrov yubormaydi.
+- [x] **2.17 Mobil koʻrinish** — yon menyuni yigʻiladigan qilish (shadcn `Sheet`),
+      jadvallarni tor ekranga moslash
+
+> **Tor ekranda ustun yashiriladi, jadval siljitilmaydi**
+>
+> Yon menyu `md` dan pastda `Sheet` ichiga kiradi, oʻrnida menyu tugmasi
+> chiqadi. Jadvallarda ikkinchi darajali ustunlar (`yosh`, `manzil`,
+> `hisoblandi`, `toʻlandi`) yashiriladi, telefon esa ism ostiga tushadi —
+> foydalanuvchi yon tomonga siljitmaydi. Dialog balandligi `100dvh` bilan
+> cheklandi: past ekranda ichi aylanadi.
 
 ---
 

@@ -1,1 +1,1 @@
-export { ApiError, apiRequest, fieldErrors, formError } from './client'
+export { ApiError, apiRequest, downloadFile, fieldErrors, formError } from './client'

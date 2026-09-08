@@ -100,7 +100,7 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Forma | react-hook-form + zod | Sxema serverdagi bilan bir xil shaklda, xato matnlari `strings.ts` dan |
 | Fayllar | MinIO (S3 mos) | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
-| Excel | SheetJS (`xlsx`) | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi |
+| Excel | `write-excel-file` + `read-excel-file` | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi. **SheetJS oʻrniga:** uning npm dagi nusxasi (`xlsx@0.18.5`) tashlab qoʻyilgan va ikkita yuqori darajali zaifligi bor — prototype pollution va ReDoS, tuzatishsiz. Biz foydalanuvchi yuklagan faylni tahlil qilamiz, bu esa aynan oʻsha zaifliklar xavfli boʻlgan joy. Tanlangan kutubxonada ogohlantirish yoʻq va bogʻliqligi bitta |
 | Matnlar | Bitta modul, oʻzbekcha | Barcha yozuvlar `packages/shared/strings.ts` da. Rus tili keyin qoʻshilsa — bitta fayl nusxalanadi, kodga tegilmaydi |
 | Deploy | Docker Compose | Bitta `docker compose up`. Kubernetes bu hajmda ortiqcha |
 | Format va lint | Biome | Prettier va ESLint oʻrniga bitta asbob: bitta konfiguratsiya fayli, sezilarli darajada tez. Modul chegarasini `noRestrictedImports` bilan majburlab boʻladi |
@@ -160,6 +160,22 @@ Uch qatlamli himoya:
 1. **Repozitoriya qatlami** — har soʻrovga `clinicId` avtomatik qoʻshiladi. Qoʻlda yozilmaydi
 2. **Postgres RLS** — sessiya oʻzgaruvchisidagi klinikaga tegishli boʻlmagan qator umuman qaytmaydi
 3. **Integratsiya testi** — «A klinikaning tokeni bilan B ning bemorini soʻrash» har modul uchun majburiy test
+
+> **RLS ning chegarasi: tashqi kalitlar**
+>
+> Postgres tashqi kalit tekshiruvini jadval egasi huquqi bilan bajaradi va u
+> **RLS siyosatlarini chetlab oʻtadi**. Amalda bu shuni anglatadi: A klinikasi
+> B ning bemori `id` sini bilsa, oʻsha bemorga tashrif, toʻlov yoki naryad
+> bogʻlab qoʻya oladi — yozuv A ning `clinic_id` si bilan yaratiladi va
+> tashqi kalit tekshiruvidan oʻtib ketadi.
+>
+> Sinab koʻrilgan: tekshiruvsiz API `200` qaytaradi va yozuv haqiqatan
+> yaratiladi.
+>
+> Shuning uchun **boshqa modulning yozuviga havola qiladigan har bir amal**
+> oʻsha yozuv shu klinikaniki ekanini alohida tekshirishi shart:
+> `patients.existsInClinic(tx, patientId)`. Bu `payments`, `appointments`,
+> `lab_orders` va rasmlar uchun ham tegishli.
 
 > **Bazada ikkita rol**
 >
@@ -364,7 +380,7 @@ Klinikaning bemorlari koʻpincha Excelda yoki daftarda boʻladi. Qoʻlda 800 ta 
 >
 > Bular ishni koʻpaytiradigan, lekin oʻtkazib boʻlmaydigan joylar:
 >
-> **Sana raqam boʻlib keladi.** Excel sanani seriya raqami sifatida saqlaydi (`32915` = 12/05/1990). Katak turini tekshirib, ikkala koʻrinishni ham oʻqish kerak.
+> **Sana raqam boʻlib keladi.** Excel sanani seriya raqami sifatida saqlaydi (`33005` = 12/05/1990; boshlangʻich nuqta 1899-12-30, chunki Excel 1900-yilni kabisa deb hisoblaydi). Katak turini tekshirib, uchala koʻrinishni ham oʻqish kerak: `Date` obyekti, seriya raqami va matn.
 >
 > **Kun/oy chalkashligi.** `05/12/1990` — 5-dekabrmi yoki 12-maymi? Bizda hamma joyda kun/oy/yil, shuning uchun matn sanalar shu tartibda oʻqiladi va oldindan koʻrishda toʻliq koʻrsatiladi — foydalanuvchi xatoni oʻsha yerda koʻradi.
 >

@@ -6,9 +6,13 @@ const full = {
   APP_DATABASE_URL: 'postgresql://edentist_app:x@localhost:5433/edentist',
   REDIS_URL: 'redis://localhost:6379',
   SESSION_SECRET: 'x'.repeat(16),
+  S3_ENDPOINT: 'http://localhost:9000',
+  S3_ACCESS_KEY: 'edentist',
+  S3_SECRET_KEY: 'parol',
+  S3_BUCKET: 'edentist-files',
 }
 
-describe('yuklaConfig', () => {
+describe('loadConfig', () => {
   it('sukut qiymatlarni oʻzi qoʻyadi', () => {
     const c = loadConfig(full)
     expect(c.NODE_ENV).toBe('development')

@@ -5,6 +5,7 @@ import {
   normalizeName,
   normalizePhone,
   phoneDigits,
+  searchKey,
   validatePatient,
 } from './validation.js'
 
@@ -108,5 +109,19 @@ describe('validatePatient', () => {
     expect(validatePatient({ fio: 'Karimov Aziz', birth_date: '1899-12-31' }).birth_date).toBe(
       'Sana juda qadimgi',
     )
+  })
+})
+
+describe('searchKey', () => {
+  it('apostrofning barcha koʻrinishlarini bir xil qiladi', () => {
+    const expected = searchKey('Gʻayratov')
+    for (const variant of ["G'ayratov", 'G’ayratov', 'G`ayratov', 'Gayratov']) {
+      expect(searchKey(variant)).toBe(expected)
+    }
+  })
+
+  it('normalizeName dan farqi: u apostrofni saqlaydi', () => {
+    expect(normalizeName('Gʻayrat')).toContain("'")
+    expect(searchKey('Gʻayrat')).not.toContain("'")
   })
 })

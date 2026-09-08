@@ -9,7 +9,7 @@
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createDb, type Db } from './db.js'
-import { tenantScoped, withClinic } from './tenant.js'
+import { TENANT_MODELS, tenantScoped, withClinic } from './tenant.js'
 
 const ownerUrl = process.env.DATABASE_URL
 const appUrl = process.env.APP_DATABASE_URL
@@ -151,5 +151,47 @@ describe('Postgres RLS — xom SQL ham himoyalangan', () => {
   it('egasi (migratsiya ulanishi) RLS dan ozod — seed va migratsiya ishlashi uchun', async () => {
     const everything = await ownerDb.role.findMany({ where: { clinicId: { in: [A, B] } } })
     expect(everything).toHaveLength(2)
+  })
+})
+
+// Bu ikki test qatlamlardan biri unutilib qolishidan saqlaydi. Yangi jadval
+// qoʻshilganda RLS siyosati ham, TENANT_MODELS ham yangilanishi kerak —
+// bittasi unutilsa hech qanday xato koʻrinmaydi, faqat himoya kamayadi
+describe('koʻp ijarachilik qamrovi', () => {
+  it('clinic_id ustuni bor har bir jadvalda RLS yoqilgan va siyosati bor', async () => {
+    const rows = await ownerDb.$queryRaw<{ table_name: string; has_policy: boolean }[]>`
+      SELECT c.relname AS table_name,
+             c.relrowsecurity AND EXISTS (
+               SELECT 1 FROM pg_policy p WHERE p.polrelid = c.oid
+             ) AS has_policy
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public'
+        AND c.relkind = 'r'
+        AND EXISTS (
+          SELECT 1 FROM pg_attribute a
+          WHERE a.attrelid = c.oid AND a.attname = 'clinic_id' AND NOT a.attisdropped
+        )
+      ORDER BY c.relname`
+
+    const unprotected = rows.filter((r) => !r.has_policy).map((r) => r.table_name)
+    expect(unprotected).toEqual([])
+    // Jadvallar qoʻshilgani sayin bu son oʻsadi — nolga tushib qolmasin
+    expect(rows.length).toBeGreaterThanOrEqual(12)
+  })
+
+  it('TENANT_MODELS bazadagi ijarachi jadvallari bilan bir xil sonda', async () => {
+    const rows = await ownerDb.$queryRaw<{ n: bigint }[]>`
+      SELECT count(*) AS n
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relkind = 'r'
+        AND EXISTS (
+          SELECT 1 FROM pg_attribute a
+          WHERE a.attrelid = c.oid AND a.attname = 'clinic_id' AND NOT a.attisdropped
+        )`
+    // clinics jadvalining oʻzida clinic_id yoʻq (u `id` orqali bogʻlanadi),
+    // shuning uchun TENANT_MODELS dan bitta kam chiqadi
+    expect(Number(rows[0]?.n)).toBe(TENANT_MODELS.size)
   })
 })

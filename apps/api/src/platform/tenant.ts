@@ -11,9 +11,26 @@
 
 import type { Db } from './db.js'
 
-/// clinic_id ustuni orqali bogʻlangan modellar. Yangi modul qoʻshilganda
-/// bu roʻyxatga ham qoʻshilishi shart
-const TENANT_MODELS = new Set(['User', 'Role', 'Invite', 'AuditLog'])
+/// clinic_id ustuni orqali bogʻlangan modellar.
+///
+/// Yangi jadval qoʻshilganda IKKI joyni yangilash shart: shu roʻyxat va
+/// migratsiyadagi RLS siyosati. Bittasi unutilsa himoya bir qatlamga tushadi,
+/// lekin hech qanday xato koʻrinmaydi — shuning uchun tenant.test.ts da
+/// ikkalasini ham tekshiradigan test bor
+export const TENANT_MODELS = new Set([
+  'User',
+  'Role',
+  'Invite',
+  'AuditLog',
+  'Patient',
+  'Visit',
+  'Tooth',
+  'Bridge',
+  'Payment',
+  'Appointment',
+  'Service',
+  'PatientImage',
+])
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 

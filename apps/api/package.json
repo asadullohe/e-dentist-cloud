@@ -15,13 +15,19 @@
     "db:migrate:create": "prisma migrate dev --create-only"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/s3-request-presigner": "^3.1127.0",
     "@e-dentist/shared": "*",
+    "@e-dentist/teeth": "^0.0.0",
     "@fastify/cookie": "^11.1.2",
+    "@fastify/multipart": "^10.1.1",
     "@node-rs/argon2": "^2.2.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "fastify": "^5.12.3",
     "ioredis": "^6.0.0",
+    "read-excel-file": "^9.3.10",
+    "write-excel-file": "^4.1.1",
     "zod": "^4.5.4"
   },
   "devDependencies": {

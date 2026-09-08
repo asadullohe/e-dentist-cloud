@@ -51,6 +51,16 @@ export function normalizeName(s: string | null | undefined): string {
     .toLowerCase()
 }
 
+/// Qidiruv kaliti: normalizeName ustiga apostrof butunlay olib tashlanadi.
+///
+/// Sabab: «Gʻayratov» ni odam koʻpincha «Gayratov» deb yozadi — apostrofni
+/// klaviaturada topish qiyin. Qidiruvda bu ikkisi bir xil topilishi kerak.
+/// normalizeName oʻzgarmaydi: u takrorlarni aniqlashda ishlatiladi va
+/// u yerda apostrof farqi saqlangani maʼqul
+export function searchKey(s: string | null | undefined): string {
+  return normalizeName(s).replace(/'/g, '')
+}
+
 const NAME_RE = /^[a-zA-ZʻʼʹЀ-ӿ' .-]+$/
 
 export interface BemorFormasi {
