@@ -1,6 +1,7 @@
 // Tashriflar va tish xaritasi mantigʻi.
 
 import { PATIENT_TEXT, VISIT_TEXT } from '@e-dentist/shared'
+import { bridgeSpan } from '@e-dentist/teeth'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
@@ -8,7 +9,12 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as patients from '../patients/service.js'
 import * as repo from './repo.js'
-import type { ToothUpdateInput, VisitCreateInput, VisitUpdateInput } from './schema.js'
+import type {
+  BridgeCreateInput,
+  ToothUpdateInput,
+  VisitCreateInput,
+  VisitUpdateInput,
+} from './schema.js'
 
 export interface VisitDeps {
   db: Db
@@ -153,5 +159,89 @@ export function setTooth(
       meta: { status: input.status },
     })
     return repo.chart(tx, patientId)
+  })
+}
+
+/// Koʻprikdagi tishning sukut roli: tishi yoʻq joyga quyma tish,
+/// qolganiga tayanch koronka
+function defaultRole(status: string | undefined): 'koronka' | 'koprik' {
+  return status === 'olingan' || status === 'koprik' ? 'koprik' : 'koronka'
+}
+
+export function createBridge(
+  deps: VisitDeps,
+  clinicId: string,
+  userId: string,
+  patientId: string,
+  input: BridgeCreateInput,
+) {
+  const id = uuidV7()
+  return withClinic(deps.db, clinicId, async (tx) => {
+    await assertPatient(tx, patientId)
+
+    // Ikkala tish bitta jagʻda boʻlishi shart — boʻlmasa oraliq boʻsh qaytadi
+    const span = bridgeSpan(input.from, input.to)
+    if (span.length < 2) throw errors.badRequest(VISIT_TEXT.bridge_same_arch)
+
+    const { teeth } = await repo.chart(tx, patientId)
+    const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))
+
+    await repo.createBridge(tx, id, patientId, span, input.material)
+
+    // Koʻprikdagi har tish oʻz roliga mos holatga oʻtadi va koʻprik
+    // materialini oladi — xarita shuni chizadi
+    for (const tooth of span) {
+      const role = input.roles[String(tooth)] ?? defaultRole(statusOf.get(tooth))
+      await repo.setTooth(tx, uuidV7(), patientId, tooth, {
+        status: role,
+        material: input.material,
+        note: null,
+      })
+    }
+
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.bridge_created,
+      entity: 'bridge',
+      entityId: id,
+      meta: { patientId, teeth: span },
+    })
+    return repo.chart(tx, patientId)
+  })
+}
+
+/// Oʻchirilganda tishlar holati qaytariladi: quyma tish oʻrnida tish yoʻq
+/// edi — «olib tashlangan» boʻladi; tayanch tish esa «sogʻlom» ga qaytadi
+export function removeBridge(deps: VisitDeps, clinicId: string, userId: string, id: string) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const bridge = await repo.findBridge(tx, id)
+    if (!bridge) throw errors.notFound(VISIT_TEXT.bridge_not_found)
+
+    const { teeth } = await repo.chart(tx, bridge.patientId)
+    const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))
+
+    for (const tooth of bridge.teeth) {
+      const status = statusOf.get(tooth)
+      if (status === 'koprik') {
+        await repo.setTooth(tx, uuidV7(), bridge.patientId, tooth, {
+          status: 'olingan',
+          material: '',
+          note: null,
+        })
+      } else if (status === 'koronka') {
+        // «Sogʻlom» sukut holat — qator saqlanmaydi
+        await repo.clearTooth(tx, bridge.patientId, tooth)
+      }
+    }
+
+    await repo.removeBridge(tx, id)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.bridge_deleted,
+      entity: 'bridge',
+      entityId: id,
+      meta: { patientId: bridge.patientId },
+    })
+    return repo.chart(tx, bridge.patientId)
   })
 }

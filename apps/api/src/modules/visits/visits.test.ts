@@ -212,3 +212,82 @@ describe('ruxsat', () => {
     await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: owner?.id } })
   })
 })
+
+describe('koʻprik', () => {
+  it('turli jagʻdagi tishlar rad etiladi', async () => {
+    const r = await call('POST', `/api/patients/${patientId}/bridges`, { from: 14, to: 44 })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.message).toBe('Ikkala tish ham bitta jagʻda boʻlishi kerak')
+  })
+
+  // Tishi yoʻq joyga quyma tish, qolganiga tayanch koronka
+  it('sukut rollar tishning holatiga qarab tanlanadi', async () => {
+    await call('PUT', `/api/patients/${patientId}/teeth/45`, { status: 'olingan' })
+
+    const r = await call('POST', `/api/patients/${patientId}/bridges`, {
+      from: 46,
+      to: 44,
+      material: 'metall-keramika',
+    })
+    expect(r.statusCode).toBe(200)
+
+    const byTooth = new Map(
+      r.json().data.teeth.map((t: { tooth: number; status: string }) => [t.tooth, t.status]),
+    )
+    expect(byTooth.get(45)).toBe('koprik')
+    expect(byTooth.get(46)).toBe('koronka')
+    expect(byTooth.get(44)).toBe('koronka')
+    expect(r.json().data.bridges[0].teeth).toEqual([46, 45, 44])
+  })
+
+  it('rol qoʻlda berilsa oʻsha ishlatiladi', async () => {
+    const r = await call('POST', `/api/patients/${patientId}/bridges`, {
+      from: 24,
+      to: 26,
+      roles: { '25': 'koprik' },
+    })
+    const byTooth = new Map(
+      r.json().data.teeth.map((t: { tooth: number; status: string }) => [t.tooth, t.status]),
+    )
+    expect(byTooth.get(25)).toBe('koprik')
+    expect(byTooth.get(24)).toBe('koronka')
+  })
+
+  it('oʻchirilganda tishlar holati qaytariladi', async () => {
+    const chart = await call('GET', `/api/patients/${patientId}/teeth`)
+    const bridge = chart.json().data.bridges.find((b: { teeth: number[] }) => b.teeth.includes(45))
+
+    const r = await call('DELETE', `/api/bridges/${bridge.id}`)
+    expect(r.statusCode).toBe(200)
+
+    const byTooth = new Map(
+      r.json().data.teeth.map((t: { tooth: number; status: string }) => [t.tooth, t.status]),
+    )
+    // Quyma tish oʻrnida tish yoʻq edi
+    expect(byTooth.get(45)).toBe('olingan')
+    // Tayanch tishlar sogʻlomga qaytadi — sukut holat, qator saqlanmaydi
+    expect(byTooth.has(46)).toBe(false)
+    expect(byTooth.has(44)).toBe(false)
+    expect(r.json().data.bridges.some((b: { id: string }) => b.id === bridge.id)).toBe(false)
+  })
+
+  it('begona klinikaning bemoriga koʻprik qoʻyib boʻlmaydi', async () => {
+    const r = await call('POST', `/api/patients/${otherPatientId}/bridges`, { from: 14, to: 16 })
+    expect(r.statusCode).toBe(404)
+    expect(await h.ownerDb.bridge.count({ where: { patientId: otherPatientId } })).toBe(0)
+  })
+
+  it('begona klinikaning koʻprigini oʻchirib boʻlmaydi', async () => {
+    const foreign = await h.ownerDb.bridge.create({
+      data: {
+        clinicId: otherClinicId,
+        patientId: otherPatientId,
+        teeth: [14, 15, 16],
+        material: 'sirkoniy',
+      },
+    })
+    const r = await call('DELETE', `/api/bridges/${foreign.id}`)
+    expect(r.statusCode).toBe(404)
+    expect(await h.ownerDb.bridge.findUnique({ where: { id: foreign.id } })).not.toBeNull()
+  })
+})

@@ -25,6 +25,8 @@ export const AUDIT_ACTION = {
   visit_updated: 'visit_updated',
   visit_deleted: 'visit_deleted',
   tooth_updated: 'tooth_updated',
+  bridge_created: 'bridge_created',
+  bridge_deleted: 'bridge_deleted',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

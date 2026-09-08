@@ -50,3 +50,22 @@ export const toothUpdateSchema = z.object({
 export type VisitCreateInput = z.infer<typeof visitCreateSchema>
 export type VisitUpdateInput = z.infer<typeof visitUpdateSchema>
 export type ToothUpdateInput = z.infer<typeof toothUpdateSchema>
+
+/// Koʻprikdagi tishning roli tishning holatiga aylanadi: tayanch tish
+/// «koronka», tishi yoʻq joy «koprik» (quyma tish) boʻladi
+export const BRIDGE_ROLES = ['koronka', 'koprik'] as const
+
+export const bridgeCreateSchema = z.object({
+  from: toothNumber,
+  to: toothNumber,
+  material: z
+    .string()
+    .refine((value) => CROWN_MATERIALS.includes(value as never), {
+      message: VISIT_TEXT.material_invalid,
+    })
+    .default(''),
+  /// Tish raqami → rol. Berilmagan tishga sukut rol qoʻyiladi
+  roles: z.record(z.string(), z.enum(BRIDGE_ROLES)).default({}),
+})
+
+export type BridgeCreateInput = z.infer<typeof bridgeCreateSchema>

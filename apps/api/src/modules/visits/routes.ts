@@ -3,7 +3,12 @@ import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { toothUpdateSchema, visitCreateSchema, visitUpdateSchema } from './schema.js'
+import {
+  bridgeCreateSchema,
+  toothUpdateSchema,
+  visitCreateSchema,
+  visitUpdateSchema,
+} from './schema.js'
 import * as service from './service.js'
 
 export interface VisitRouteOpts {
@@ -54,6 +59,19 @@ export const visitRoutes: FastifyPluginAsync<VisitRouteOpts> = async (app, opts)
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
     return ok(await service.chart(opts.deps, clinicId, id))
+  })
+
+  app.post('/patients/:id/bridges', writeTeeth, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(bridgeCreateSchema, req.body)
+    return ok(await service.createBridge(opts.deps, clinicId, userId, id, input))
+  })
+
+  app.delete('/bridges/:id', writeTeeth, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    return ok(await service.removeBridge(opts.deps, clinicId, userId, id))
   })
 
   app.put('/patients/:id/teeth/:tooth', writeTeeth, async (req) => {

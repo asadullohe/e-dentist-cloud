@@ -1,10 +1,12 @@
-import { age, CARD_UI, formatDate, formatSom, formatUzPhone } from '@e-dentist/shared'
+import { age, BRIDGE_UI, CARD_UI, formatDate, formatSom, formatUzPhone } from '@e-dentist/shared'
+import { crownMaterialLabel } from '@e-dentist/teeth'
 import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { usePatient } from '@/entities/patient'
-import { ToothChart, useToothChart } from '@/entities/tooth'
+import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
 import { useVisits, type Visit } from '@/entities/visit'
+import { BridgeFormDialog, useDeleteBridge } from '@/features/bridge-form'
 import { PatientFormDialog } from '@/features/patient-form'
 import { ToothEditDialog } from '@/features/tooth-edit'
 import { useDeleteVisit, VisitFormDialog } from '@/features/visit-form'
@@ -146,15 +148,51 @@ function VisitsTab({ patientId }: { patientId: string }) {
 
 function ChartTab({ patientId }: { patientId: string }) {
   const { data: chart, isPending } = useToothChart(patientId)
+  const { mutateAsync: removeBridge } = useDeleteBridge(patientId)
   const [picked, setPicked] = useState<number | null>(null)
+  const [bridgeOpen, setBridgeOpen] = useState(false)
+  const [deletingBridge, setDeletingBridge] = useState<BridgeInfo | null>(null)
 
   if (isPending) return <Skeleton className="h-72 w-full" />
 
+  const bridges = chart?.bridges ?? []
+
   return (
     <>
+      <div className="mb-3 flex justify-end">
+        <Button size="sm" variant="outline" onClick={() => setBridgeOpen(true)}>
+          <PlusIcon />
+          {BRIDGE_UI.add}
+        </Button>
+      </div>
+
       <Card className="p-4">
-        <ToothChart teeth={chart?.teeth ?? []} bridges={chart?.bridges ?? []} onPick={setPicked} />
+        <ToothChart teeth={chart?.teeth ?? []} bridges={bridges} onPick={setPicked} />
       </Card>
+
+      {bridges.length > 0 && (
+        <div className="mt-3">
+          <div className="text-muted-foreground mb-1.5 text-sm">{BRIDGE_UI.existing}</div>
+          <div className="flex flex-wrap gap-2">
+            {bridges.map((bridge) => (
+              <div
+                key={bridge.id}
+                className="flex items-center gap-2 rounded-md border py-1 pr-1 pl-2.5 text-sm"
+              >
+                <span className="tabular-nums">
+                  {bridge.teeth[0]}–{bridge.teeth[bridge.teeth.length - 1]}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {crownMaterialLabel(bridge.material)}
+                </span>
+                <Button variant="ghost" size="icon" onClick={() => setDeletingBridge(bridge)}>
+                  <Trash2Icon />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ToothEditDialog
         patientId={patientId}
@@ -162,6 +200,36 @@ function ChartTab({ patientId }: { patientId: string }) {
         current={chart?.teeth.find((t) => t.tooth === picked)}
         onClose={() => setPicked(null)}
       />
+
+      <BridgeFormDialog
+        open={bridgeOpen}
+        onOpenChange={setBridgeOpen}
+        patientId={patientId}
+        teeth={chart?.teeth ?? []}
+      />
+
+      <AlertDialog
+        open={deletingBridge !== null}
+        onOpenChange={(open) => !open && setDeletingBridge(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{BRIDGE_UI.delete_title}</AlertDialogTitle>
+            <AlertDialogDescription>{BRIDGE_UI.delete_text}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deletingBridge) await removeBridge(deletingBridge.id)
+                setDeletingBridge(null)
+              }}
+            >
+              {CARD_UI.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

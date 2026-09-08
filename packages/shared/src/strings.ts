@@ -189,6 +189,27 @@ export const VISIT_TEXT = {
   tooth_invalid: 'Bunday tish raqami yoʻq',
   status_invalid: 'Bunday tish holati yoʻq',
   material_invalid: 'Bunday material yoʻq',
+  bridge_not_found: 'Koʻprik topilmadi',
+  bridge_same_arch: 'Ikkala tish ham bitta jagʻda boʻlishi kerak',
+  bridge_role_invalid: 'Tish roli notoʻgʻri',
+} as const
+
+// Koʻprik (quyma tish) oynasi
+export const BRIDGE_UI = {
+  title_new: 'Yangi koʻprik (quyma tish)',
+  add: 'Koʻprik qoʻshish',
+  first_tooth: 'Birinchi tish',
+  last_tooth: 'Oxirgi tish',
+  upper_jaw: 'Yuqori jagʻ',
+  lower_jaw: 'Pastki jagʻ',
+  span: (count: number) => `Oraliqdagi tishlar (${count} ta)`,
+  span_same_arch: 'Ikkala tish ham bitta jagʻda boʻlishi kerak',
+  role_crown: 'Koronka',
+  role_pontic: 'Quyma tish',
+  hint: 'Tishi bor joyga koronka, tishi yoʻq joyga quyma tish tanlang.',
+  existing: 'Koʻpriklar',
+  delete_title: 'Koʻprik oʻchirilsinmi?',
+  delete_text: 'Quyma tishlar «olib tashlangan», koronkalar «sogʻlom» holatiga qaytadi.',
 } as const
 
 // Bemor kartochkasi

@@ -334,9 +334,12 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > qurilmagan. Oflayn ilovada bu bor edi. Reja roʻyxatida alohida task yoʻq
 > edi — 2.7a sifatida qoʻshildi.
 
-- [ ] **2.7a Koʻprik tahrirlash** — koʻprik yaratish va oʻchirish oynasi.
-      Tayanch va oraliq tishlarni ajratish, oʻchirilganda tishlar holatini
-      qaytarish (oflayn ilovadagi kabi)
+- [x] **2.7a Koʻprik tahrirlash** — yaratish va oʻchirish. Oraliqdagi har tishga
+      rol tanlanadi: tayanch **koronka** yoki **quyma tish**. Sukut rol tishning
+      holatiga qarab: tishi yoʻq joyga quyma tish. Oʻchirilganda holatlar
+      qaytariladi — quyma tish oʻrni «olib tashlangan», tayanchlar «sogʻlom».
+      6 ta test. Brauzerda tekshirildi: 45–42 koʻprigi qoʻyildi (43 quyma),
+      keyin oʻchirildi va holatlar toʻgʻri qaytdi
 - [ ] **2.8 MinIO fayl qatlami** — yuklash, imzolangan vaqtinchalik havola
       (ochiq URL emas)
 - [ ] **2.9 Bemor rasmlari** — kartochkadagi Rasmlar boʻlimi

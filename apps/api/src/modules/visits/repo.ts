@@ -92,3 +92,21 @@ export function setTooth(
 export function clearTooth(tx: ClinicTx, patientId: string, tooth: number) {
   return tx.tooth.deleteMany({ where: { patientId, tooth } })
 }
+
+export function findBridge(tx: ClinicTx, id: string) {
+  return tx.bridge.findUnique({ where: { id }, select: { ...BRIDGE_SELECT, patientId: true } })
+}
+
+export function createBridge(
+  tx: ClinicTx,
+  id: string,
+  patientId: string,
+  teeth: number[],
+  material: string,
+) {
+  return tx.bridge.create({ data: tenantScoped({ id, patientId, teeth, material }) })
+}
+
+export function removeBridge(tx: ClinicTx, id: string) {
+  return tx.bridge.delete({ where: { id } })
+}
