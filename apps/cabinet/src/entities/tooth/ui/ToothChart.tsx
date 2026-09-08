@@ -65,7 +65,7 @@ function Defs() {
   )
 }
 
-/// Toj ustidagi qopqoq: silueт tojgacha qirqiladi va material rangi bilan boʻyaladi
+/// Toj ustidagi qopqoq: siluet tojgacha qirqiladi va material rangi bilan boʻyaladi
 function CrownCap({
   type,
   material,

@@ -222,3 +222,76 @@ describe('ruxsat', () => {
     expect((await get('/api/patients')).statusCode).toBe(200)
   })
 })
+
+describe('bemor rasmlari', () => {
+  /// 1×1 shaffof PNG — haqiqiy fayl, soxta bayt emas
+  const PNG = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'base64',
+  )
+
+  function upload(id: string, body: Buffer, type: string, filename = 'rasm.png') {
+    const boundary = '----edentist'
+    const head = Buffer.from(
+      `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${filename}"\r\n` +
+        `Content-Type: ${type}\r\n\r\n`,
+    )
+    const tail = Buffer.from(`\r\n--${boundary}--\r\n`)
+    return h.app.inject({
+      method: 'POST',
+      url: `/api/patients/${id}/images`,
+      headers: { cookie: h.cookie, 'content-type': `multipart/form-data; boundary=${boundary}` },
+      payload: Buffer.concat([head, body, tail]),
+    })
+  }
+
+  let patientId = ''
+
+  beforeAll(async () => {
+    const created = await post('/api/patients', { fio: 'Rasmli Bemor' })
+    patientId = created.json().data.id
+  })
+
+  it('rasm yuklanadi va imzolangan havola qaytadi', async () => {
+    const r = await upload(patientId, PNG, 'image/png')
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.url).toContain('X-Amz-Signature')
+  })
+
+  it('roʻyxatda koʻrinadi', async () => {
+    const r = await get(`/api/patients/${patientId}/images`)
+    expect(r.json().data).toHaveLength(1)
+    expect(r.json().data[0].url).toContain('X-Amz-Signature')
+  })
+
+  it('rasm boʻlmagan fayl rad etiladi', async () => {
+    const r = await upload(patientId, Buffer.from('men rasm emasman'), 'text/plain', 'x.txt')
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.message).toMatch(/Faqat rasm/)
+  })
+
+  it('oʻchirilganda saqlagichdan ham ketadi', async () => {
+    const list = await get(`/api/patients/${patientId}/images`)
+    const image = list.json().data[0]
+
+    const before = await fetch(image.url)
+    expect(before.status).toBe(200)
+
+    const r = await h.app.inject({
+      method: 'DELETE',
+      url: `/api/images/${image.id}`,
+      headers: { cookie: h.cookie },
+    })
+    expect(r.statusCode).toBe(200)
+
+    const after = await fetch(image.url)
+    expect(after.status).toBe(404)
+    expect((await get(`/api/patients/${patientId}/images`)).json().data).toHaveLength(0)
+  })
+
+  it('begona klinikaning bemoriga rasm yuklab boʻlmaydi', async () => {
+    const r = await upload(otherPatientId, PNG, 'image/png')
+    expect(r.statusCode).toBe(404)
+    expect(await h.ownerDb.patientImage.count({ where: { patientId: otherPatientId } })).toBe(0)
+  })
+})

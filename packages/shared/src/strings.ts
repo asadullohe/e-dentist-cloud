@@ -238,3 +238,22 @@ export const CARD_UI = {
   age_years: (years: number) => `${years} yosh`,
   no_phone: 'Telefon koʻrsatilmagan',
 } as const
+
+// Bemor rasmlari
+export const IMAGE_TEXT = {
+  not_found: 'Rasm topilmadi',
+  no_file: 'Fayl tanlanmagan',
+  too_large: 'Fayl juda katta — eng koʻpi 10 MB',
+  wrong_type: 'Faqat rasm yuklash mumkin: JPEG, PNG yoki WebP',
+  caption_long: 'Izoh juda uzun',
+} as const
+
+export const IMAGE_UI = {
+  tab: 'Rasmlar',
+  upload: 'Rasm yuklash',
+  uploading: 'Yuklanmoqda…',
+  empty: 'Hozircha rasm yuklanmagan',
+  delete_title: 'Rasm oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  caption_placeholder: 'Izoh (ixtiyoriy)',
+} as const

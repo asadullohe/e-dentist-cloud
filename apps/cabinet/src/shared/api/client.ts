@@ -29,13 +29,17 @@ interface RequestOptions {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body } = options
 
+  // FormData oʻz chegarasini oʻzi qoʻyadi — content-type ni qoʻlda
+  // belgilash uni buzadi
+  const isForm = body instanceof FormData
+
   let response: Response
   try {
     response = await fetch(`/api${path}`, {
       method,
       credentials: 'same-origin',
-      headers: body ? { 'content-type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
+      headers: body && !isForm ? { 'content-type': 'application/json' } : undefined,
+      body: isForm ? body : body ? JSON.stringify(body) : undefined,
     })
   } catch {
     throw new ApiError('network', UI_TEXT.offline)

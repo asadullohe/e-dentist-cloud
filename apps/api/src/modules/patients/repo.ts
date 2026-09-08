@@ -79,3 +79,39 @@ export function update(tx: ClinicTx, id: string, fields: PatientFields) {
 export function remove(tx: ClinicTx, id: string) {
   return tx.patient.delete({ where: { id } })
 }
+
+const IMAGE_SELECT = {
+  id: true,
+  key: true,
+  caption: true,
+  createdAt: true,
+} satisfies Prisma.PatientImageSelect
+
+export function listImages(tx: ClinicTx, patientId: string) {
+  return tx.patientImage.findMany({
+    where: { patientId },
+    select: IMAGE_SELECT,
+    orderBy: { id: 'desc' },
+  })
+}
+
+export function createImage(
+  tx: ClinicTx,
+  id: string,
+  patientId: string,
+  key: string,
+  caption: string | null,
+) {
+  return tx.patientImage.create({
+    data: tenantScoped({ id, patientId, key, caption }),
+    select: IMAGE_SELECT,
+  })
+}
+
+export function findImage(tx: ClinicTx, id: string) {
+  return tx.patientImage.findUnique({ where: { id }, select: IMAGE_SELECT })
+}
+
+export function removeImage(tx: ClinicTx, id: string) {
+  return tx.patientImage.delete({ where: { id } })
+}

@@ -16,6 +16,12 @@ const Schema = z.object({
   APP_DATABASE_URL: z.string().min(1),
   REDIS_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(16, 'kamida 16 belgi boʻlishi kerak'),
+
+  // Fayl saqlagich
+  S3_ENDPOINT: z.string().min(1),
+  S3_ACCESS_KEY: z.string().min(1),
+  S3_SECRET_KEY: z.string().min(1),
+  S3_BUCKET: z.string().min(1),
   // Tasdiqlash havolasi shu manzilga qurilaadi
   CABINET_URL: z.string().min(1).default('http://localhost:5173'),
 })

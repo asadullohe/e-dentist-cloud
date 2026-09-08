@@ -1,10 +1,11 @@
 // Kartoteka mantigʻi. Boshqa modullar patients ga faqat shu fayl orqali
 // murojaat qiladi.
 
-import { normalizePhone, PATIENT_TEXT } from '@e-dentist/shared'
+import { IMAGE_TEXT, normalizePhone, PATIENT_TEXT } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import { imageKey, type Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as repo from './repo.js'
@@ -12,6 +13,7 @@ import type { PatientCreateInput, PatientListInput, PatientUpdateInput } from '.
 
 export interface PatientDeps {
   db: Db
+  storage: Storage
 }
 
 /// `YYYY-MM-DD` → DATE ustuni uchun UTC yarim tuni.
@@ -137,4 +139,93 @@ export function remove(deps: PatientDeps, clinicId: string, userId: string, id: 
       entityId: id,
     })
   })
+}
+
+// --- Bemor rasmlari ---
+
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024
+const IMAGE_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+}
+
+export interface UploadedFile {
+  buffer: Buffer
+  mimetype: string
+  caption: string | null
+}
+
+export function listImages(deps: PatientDeps, clinicId: string, patientId: string) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const rows = await repo.listImages(tx, patientId)
+    // Ochiq URL berilmaydi — har rasm uchun qisqa muddatli imzolangan havola
+    return Promise.all(
+      rows.map(async (row) => ({
+        id: row.id,
+        caption: row.caption,
+        url: await deps.storage.signedUrl(row.key),
+      })),
+    )
+  })
+}
+
+export async function uploadImage(
+  deps: PatientDeps,
+  clinicId: string,
+  userId: string,
+  patientId: string,
+  file: UploadedFile,
+) {
+  const ext = IMAGE_TYPES[file.mimetype]
+  if (!ext) throw errors.badRequest(IMAGE_TEXT.wrong_type)
+  if (file.buffer.length === 0) throw errors.badRequest(IMAGE_TEXT.no_file)
+  if (file.buffer.length > MAX_IMAGE_BYTES) throw errors.badRequest(IMAGE_TEXT.too_large)
+
+  const id = uuidV7()
+  const key = imageKey(clinicId, patientId, id, ext)
+
+  await withClinic(deps.db, clinicId, (tx) => assertPatientExists(tx, patientId))
+
+  // Avval fayl, keyin yozuv: aks holda bazadagi qator yoʻq faylga
+  // koʻrsatib turishi mumkin edi
+  await deps.storage.put(key, file.buffer, file.mimetype)
+
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const image = await repo.createImage(tx, id, patientId, key, file.caption)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.image_uploaded,
+      entity: 'image',
+      entityId: id,
+      meta: { patientId },
+    })
+    return { id: image.id, caption: image.caption, url: await deps.storage.signedUrl(key) }
+  })
+}
+
+export async function removeImage(deps: PatientDeps, clinicId: string, userId: string, id: string) {
+  const key = await withClinic(deps.db, clinicId, async (tx) => {
+    const image = await repo.findImage(tx, id)
+    if (!image) throw errors.notFound(IMAGE_TEXT.not_found)
+
+    await repo.removeImage(tx, id)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.image_deleted,
+      entity: 'image',
+      entityId: id,
+    })
+    return image.key
+  })
+
+  // Yozuv oʻchgach fayl ham. Bu yerda xato boʻlsa saqlagichda yetim fayl
+  // qoladi — bu bazadagi qator yoʻq faylga koʻrsatishidan yaxshiroq
+  await deps.storage.remove(key)
+}
+
+/// Bemor shu klinikaniki ekanini tekshiradi (yuqoridagi assertPatient bilan
+/// bir xil, lekin bu modulning oʻzida — patients oʻz jadvalini biladi)
+async function assertPatientExists(tx: ClinicTx, patientId: string): Promise<void> {
+  if (!(await repo.exists(tx, patientId))) throw errors.notFound(PATIENT_TEXT.not_found)
 }

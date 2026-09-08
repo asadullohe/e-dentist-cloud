@@ -5,12 +5,13 @@
 // boʻlmaydi.
 
 import type { FastifyInstance } from 'fastify'
-import type { Config } from '../platform/config.js'
 import { createDb, type Db } from '../platform/db.js'
 import { memoryMailer } from '../platform/mailer.js'
 import { createRateLimiter, type RateLimiter } from '../platform/rateLimit.js'
 import { createServer } from '../platform/server.js'
 import { createSessionStore, type SessionStore } from '../platform/session.js'
+import { createStorage } from '../platform/storage.js'
+import { testConfig } from './config.js'
 
 const OWNER_URL = process.env.DATABASE_URL
 const APP_URL = process.env.APP_DATABASE_URL
@@ -39,16 +40,7 @@ export async function startHarness(): Promise<Harness> {
     throw new Error('DATABASE_URL va APP_DATABASE_URL kerak — «npm run up» bilan bazani koʻtaring')
   }
 
-  const config: Config = {
-    NODE_ENV: 'test',
-    API_PORT: 3000,
-    TZ: 'Asia/Tashkent',
-    CABINET_URL: 'http://localhost:5173',
-    DATABASE_URL: OWNER_URL,
-    APP_DATABASE_URL: APP_URL,
-    REDIS_URL,
-    SESSION_SECRET: 'x'.repeat(16),
-  }
+  const config = testConfig({ DATABASE_URL: OWNER_URL, APP_DATABASE_URL: APP_URL })
 
   const ownerDb = createDb(OWNER_URL)
   const db = createDb(APP_URL)
@@ -65,7 +57,15 @@ export async function startHarness(): Promise<Harness> {
     await rateLimiter.reset(key)
   }
 
-  const app = createServer(config, { db, sessions, rateLimiter, mailer })
+  const storage = createStorage({
+    endpoint: config.S3_ENDPOINT,
+    accessKey: config.S3_ACCESS_KEY,
+    secretKey: config.S3_SECRET_KEY,
+    bucket: config.S3_BUCKET,
+  })
+  await storage.ensureBucket()
+
+  const app = createServer(config, { db, storage, sessions, rateLimiter, mailer })
   await app.ready()
 
   const registered = await app.inject({

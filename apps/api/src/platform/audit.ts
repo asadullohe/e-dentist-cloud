@@ -27,6 +27,8 @@ export const AUDIT_ACTION = {
   tooth_updated: 'tooth_updated',
   bridge_created: 'bridge_created',
   bridge_deleted: 'bridge_deleted',
+  image_uploaded: 'image_uploaded',
+  image_deleted: 'image_deleted',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

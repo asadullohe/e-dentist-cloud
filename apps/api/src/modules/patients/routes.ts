@@ -1,3 +1,4 @@
+import { IMAGE_TEXT } from '@e-dentist/shared'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
@@ -44,6 +45,41 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
     const { id } = req.params as { id: string }
     const input = validateInput(patientUpdateSchema, req.body)
     return ok(await service.update(opts.deps, clinicId, userId, id, input))
+  })
+
+  app.get('/patients/:id/images', read, async (req) => {
+    const { clinicId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    return ok(await service.listImages(opts.deps, clinicId, id))
+  })
+
+  app.post('/patients/:id/images', write, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+
+    const file = await req.file()
+    if (!file) throw errors.badRequest(IMAGE_TEXT.no_file)
+
+    // Izoh fayl bilan bir formada keladi
+    const caption =
+      typeof file.fields.caption === 'object' && file.fields.caption !== null
+        ? String((file.fields.caption as { value?: unknown }).value ?? '').trim()
+        : ''
+
+    return ok(
+      await service.uploadImage(opts.deps, clinicId, userId, id, {
+        buffer: await file.toBuffer(),
+        mimetype: file.mimetype,
+        caption: caption || null,
+      }),
+    )
+  })
+
+  app.delete('/images/:id', write, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    await service.removeImage(opts.deps, clinicId, userId, id)
+    return ok({ deleted: true })
   })
 
   app.delete('/patients/:id', write, async (req) => {

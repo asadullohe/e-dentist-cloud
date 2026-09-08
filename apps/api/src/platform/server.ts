@@ -2,7 +2,9 @@
 // serverni portga bogʻlamasdan, app.inject() bilan tekshira oladi.
 
 import { randomUUID } from 'node:crypto'
+import { IMAGE_TEXT } from '@e-dentist/shared'
 import cookie from '@fastify/cookie'
+import multipart from '@fastify/multipart'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
 import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
@@ -17,9 +19,11 @@ import type { Mailer } from './mailer.js'
 import type { RateLimiter } from './rateLimit.js'
 import { errorResponse } from './response.js'
 import type { SessionStore } from './session.js'
+import type { Storage } from './storage.js'
 
 export interface ServerDeps {
   db: Db
+  storage: Storage
   sessions: SessionStore
   rateLimiter: RateLimiter
   mailer: Mailer
@@ -27,6 +31,9 @@ export interface ServerDeps {
 
 // Har qanday xatoni AppXato ga keltiradi. Foydalanuvchi hech qachon
 // texnik tafsilotni koʻrmaydi — u faqat logga tushadi.
+/// Bemor rasmlari uchun eng katta hajm. Xizmat qatlamida ham tekshiriladi
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+
 function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err
   // Error boʻlmagan narsa ham otilishi mumkin (`throw 'matn'`)
@@ -39,6 +46,8 @@ function toAppError(err: unknown): AppError {
   if (f.validation) return errors.validation({})
 
   if (f.statusCode === 429) return errors.rateLimited()
+  // @fastify/multipart chegaradan oshgan faylni shu kod bilan rad etadi
+  if (f.statusCode === 413) return errors.badRequest(IMAGE_TEXT.too_large)
   if (f.statusCode && f.statusCode >= 400 && f.statusCode < 500) return errors.badRequest()
 
   return errors.internal(err)
@@ -80,6 +89,9 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   })
 
   app.register(cookie)
+  // Bemor rasmlari uchun. Chegara shu yerda ham qoʻyiladi: katta fayl
+  // butunlay oʻqilguncha kutib oʻtirilmaydi
+  app.register(multipart, { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } })
   app.addHook('onRequest', sessionHook(deps.sessions))
 
   app.register(healthRoutes, { prefix: '/api' })
@@ -104,7 +116,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     },
     secureCookie: config.NODE_ENV === 'production',
   })
-  app.register(patientRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(patientRoutes, { prefix: '/api', deps: { db: deps.db, storage: deps.storage } })
   app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app

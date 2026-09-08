@@ -4,28 +4,19 @@
 import { addDays } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import type { Config } from '../../platform/config.js'
 import { createDb, type Db } from '../../platform/db.js'
 import { memoryMailer } from '../../platform/mailer.js'
 import { createRateLimiter } from '../../platform/rateLimit.js'
 import { createServer } from '../../platform/server.js'
 import { createSessionStore } from '../../platform/session.js'
+import { fakeStorage, testConfig } from '../../test-support/config.js'
 
 const ownerUrl = process.env.DATABASE_URL
 const appUrl = process.env.APP_DATABASE_URL
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379'
 if (!ownerUrl || !appUrl) throw new Error('DATABASE_URL va APP_DATABASE_URL kerak')
 
-const config: Config = {
-  NODE_ENV: 'test',
-  API_PORT: 3000,
-  TZ: 'Asia/Tashkent',
-  CABINET_URL: 'http://localhost:5173',
-  DATABASE_URL: ownerUrl,
-  APP_DATABASE_URL: appUrl,
-  REDIS_URL: redisUrl,
-  SESSION_SECRET: 'x'.repeat(16),
-}
+const config = testConfig()
 
 const EMAIL = `sinov-${Date.now()}@example.com`
 const CLINIC = `Sinov klinikasi ${Date.now()}`
@@ -64,7 +55,7 @@ beforeAll(async () => {
     await rateLimiter.reset(k)
   }
 
-  app = createServer(config, { db, sessions, rateLimiter, mailer })
+  app = createServer(config, { db, storage: fakeStorage, sessions, rateLimiter, mailer })
 
   // Ruxsat tekshiruvini sinash uchun himoyalangan marshrut
   app.get('/sinov/bemorlar', { preHandler: app.requirePermission('patients.read') }, async () => ({

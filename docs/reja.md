@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.8** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.10** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -340,9 +340,14 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
       qaytariladi — quyma tish oʻrni «olib tashlangan», tayanchlar «sogʻlom».
       6 ta test. Brauzerda tekshirildi: 45–42 koʻprigi qoʻyildi (43 quyma),
       keyin oʻchirildi va holatlar toʻgʻri qaytdi
-- [ ] **2.8 MinIO fayl qatlami** — yuklash, imzolangan vaqtinchalik havola
-      (ochiq URL emas)
-- [ ] **2.9 Bemor rasmlari** — kartochkadagi Rasmlar boʻlimi
+- [x] **2.8 Fayl qatlami** — `platform/storage.ts`. MinIO S3 mos, shuning uchun
+      standart S3 mijozi ishlatiladi — provayder almashsa faqat endpoint
+      oʻzgaradi. Havolalar 5 daqiqalik imzolangan; ochiq URL bilan kirib
+      boʻlmaydi (test buni tekshiradi: imzosiz murojaat 403). 6 ta test
+- [x] **2.9 Bemor rasmlari** — kartochkada Rasmlar boʻlimi: yuklash, izoh,
+      kattalashtirib koʻrish, oʻchirish. 5 ta test. Rasmlar `patients`
+      modulida (tz.md 8-boʻlim). Brauzerda tekshirildi: rasm yuklandi,
+      imzolangan havola bilan koʻrindi, oʻchirilganda saqlagichdan ham ketdi
 - [ ] **2.10 `payments` moduli** — toʻlov qabul qilish, qarz hisobi, qarzdorlar roʻyxati
 - [ ] **2.11 Toʻlovlar boʻlimi va Qarzdorlar sahifasi**
 - [ ] **2.12 `services` moduli** — narxnoma (tashrifga narx tanlash uchun kerak)
