@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.6** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.1** — bosqich 4 tugadi — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -636,9 +636,24 @@ _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 > Amallar oqimi serverda: `unconfirmed → waiting → called → finished`,
 > natija esa `status` da (keldi / kelmadi / yakunlandi). Bosqichni sakrab
 > boʻlmaydi.
-- [ ] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,
+- [x] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,
       «tasdiqlanmagan» holat, klinika navbatni butunlay oʻchira oladi.
       Bir IP dan ochiladigan SSE ulanishlari soniga ham chegara qoʻyiladi
+
+> **Toʻrt qatlam, hech biri yolgʻiz yetarli emas**
+>
+> Kod taxmin qilib boʻlmaydi · IP dan soatiga 5 ta va qurilmadan kuniga
+> 2 ta yozuv · yozuv «tasdiqlanmagan» holatda tushadi va navbat sanogʻiga
+> kirmaydi · klinika navbatni butunlay yopa oladi.
+>
+> Qurilma `ed_device` cookie si bilan belgilanadi — u login emas, faqat
+> hisob uchun. Cookie tozalansa aylanib oʻtiladi, shuning uchun bu yagona
+> toʻsiq emas.
+>
+> Ochiq SSE marshrutida bitta IP dan 3 tadan koʻp oqim ochilmaydi.
+> Test bir xatoni ushladi: hisob obunadan **oldin** oshirilar edi, kod
+> notoʻgʻri boʻlganda esa yopilish hodisasi kelmay, oʻsha IP uchun joy
+> abadiy band boʻlib qolardi.
 
 ---
 

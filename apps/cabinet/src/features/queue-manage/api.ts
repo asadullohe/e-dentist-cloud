@@ -7,3 +7,9 @@ export const fetchQueue = () => apiRequest<QueueEntry[]>('/queue')
 
 export const actOnQueue = (id: string, action: QueueAction) =>
   apiRequest<QueueEntry[]>(`/queue/${id}`, { method: 'PATCH', body: { action } })
+
+export const setQueueEnabled = (enabled: boolean) =>
+  apiRequest<{ queueEnabled: boolean; queueCode: string }>('/clinic/queue', {
+    method: 'PATCH',
+    body: { enabled },
+  })

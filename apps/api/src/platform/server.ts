@@ -142,6 +142,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(queueRoutes, {
     prefix: '/api',
     deps: { db: deps.db, rateLimiter: deps.rateLimiter, bus: deps.bus },
+    secureCookie: config.NODE_ENV === 'production',
   })
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(reportRoutes, { prefix: '/api', deps: { db: deps.db } })

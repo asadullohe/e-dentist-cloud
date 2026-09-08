@@ -1,2 +1,2 @@
 export type { QueueAction } from './api'
-export { useQueue, useQueueAction } from './hooks'
+export { useQueue, useQueueAction, useSetQueueEnabled } from './hooks'

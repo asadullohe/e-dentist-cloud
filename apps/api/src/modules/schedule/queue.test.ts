@@ -334,6 +334,28 @@ describe('jonli oqim', () => {
     expect(response.status).toBe(404)
   })
 
+  // Ochiq marshrut: bitta IP dan cheksiz oqim ushlab turishga yoʻl yoʻq
+  it('bitta IP dan uchtadan koʻp oqim ochilmaydi', async () => {
+    const controllers = [new AbortController(), new AbortController(), new AbortController()]
+    const opened = await Promise.all(
+      controllers.map((controller) =>
+        fetch(`${origin}/api/n/${code}/stream`, { signal: controller.signal }),
+      ),
+    )
+    expect(opened.map((response) => response.status)).toEqual([200, 200, 200])
+
+    const fourth = await fetch(`${origin}/api/n/${code}/stream`)
+    expect(fourth.status).toBe(429)
+
+    for (const controller of controllers) controller.abort()
+    // Ulanishlar yopilgach yana ochish mumkin
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    const again = new AbortController()
+    const response = await fetch(`${origin}/api/n/${code}/stream`, { signal: again.signal })
+    expect(response.status).toBe(200)
+    again.abort()
+  })
+
   // Ulanish uzilganda obuna ham tozalanishi kerak — aks holda har ochilgan
   // sahifa xotirada qolib ketadi
   it('ulanish yopilganda obuna tozalanadi', async () => {
@@ -482,5 +504,74 @@ describe('kabinetdagi navbat', () => {
     ).json().data
     const r = await open('PATCH' as 'POST', `/api/queue/${joined.id}`, { action: 'confirm' })
     expect(r.statusCode).toBe(401)
+  })
+})
+
+describe('suiisteʼmoldan himoya', () => {
+  // Bitta brauzerdan kuniga ikkitadan koʻp yozib boʻlmaydi (tz.md 14-boʻlim)
+  it('bitta qurilmadan kuniga ikkita yozuv', async () => {
+    // Har soʻrovda boshqa IP, lekin bitta qurilma cookie si
+    const first = await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Qurilma Bir' })
+    const device = first.cookies.find((c) => c.name === 'ed_device')?.value
+    expect(device).toBeTruthy()
+
+    const withDevice = (name: string) =>
+      h.app.inject({
+        method: 'POST',
+        url: `/api/n/${code}/join`,
+        payload: { doctorId, fullName: name },
+        remoteAddress: randomIp(),
+        cookies: { ed_device: device as string },
+      })
+
+    expect((await withDevice('Qurilma Ikki')).statusCode).toBe(200)
+    const third = await withDevice('Qurilma Uch')
+    expect(third.statusCode).toBe(429)
+    expect(third.json().error.message).toMatch(/juda koʻp/)
+  })
+
+  it('qurilma belgisi cookie da faqat bir marta beriladi', async () => {
+    const first = await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Cookie Bir' })
+    const device = first.cookies.find((c) => c.name === 'ed_device')?.value
+
+    const second = await h.app.inject({
+      method: 'POST',
+      url: `/api/n/${code}/join`,
+      payload: { doctorId, fullName: 'Cookie Ikki' },
+      remoteAddress: randomIp(),
+      cookies: { ed_device: device as string },
+    })
+    // Belgisi bor boʻlsa yangisi berilmaydi
+    expect(second.cookies.find((c) => c.name === 'ed_device')).toBeUndefined()
+  })
+
+  it('navbatni oʻchirib qoʻyish mumkin va sahifa yopiladi', async () => {
+    const off = await call('PATCH', '/api/clinic/queue', { enabled: false })
+    expect(off.statusCode).toBe(200)
+    expect(off.json().data.queueEnabled).toBe(false)
+
+    expect((await open('GET', `/api/n/${code}`)).statusCode).toBe(403)
+    expect(
+      (await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Yopiq Navbat' }))
+        .statusCode,
+    ).toBe(403)
+
+    const on = await call('PATCH', '/api/clinic/queue', { enabled: true })
+    expect(on.json().data.queueEnabled).toBe(true)
+    expect((await open('GET', `/api/n/${code}`)).statusCode).toBe(200)
+  })
+
+  it('navbatni faqat sozlamalar ruxsati boriga oʻchirish mumkin', async () => {
+    const reception = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'qabulxona' },
+    })
+    const owner = await h.ownerDb.role.findFirst({ where: { clinicId: h.clinicId, isOwner: true } })
+
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: reception?.id } })
+    // Qabulxonada `queue.manage` bor, lekin sozlamalarga tegmaydi
+    expect((await call('GET', '/api/queue')).statusCode).toBe(200)
+    expect((await call('PATCH', '/api/clinic/queue', { enabled: false })).statusCode).toBe(403)
+
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: owner?.id } })
   })
 })

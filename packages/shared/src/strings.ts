@@ -664,6 +664,13 @@ export const QUEUE_CABINET_UI = {
   screen_link: 'Kutish xonasi ekrani',
   page_link: 'Bemor sahifasi',
   code_hint: 'Eshikdagi QR shu manzilga olib boradi',
+  settings_tab: 'Navbat',
+  enabled: 'Navbat yozuvi ochiq',
+  enabled_hint:
+    'Oʻchirilsa ochiq sahifa ham, kutish xonasi ekrani ham yopiladi. Kabinetdagi roʻyxat joyida qoladi.',
+  address: 'Sahifa manzili',
+  copy: 'Nusxalash',
+  copied: 'Nusxalandi',
 } as const
 
 /// Navbat holatlari — kabinetda koʻrinadigan nomlar

@@ -4,7 +4,9 @@
 // ataylab tor: klinika nomi, shifokorlar va raqamlar. Bemor ismlari
 // qaytmaydi (tz.md 14-boʻlim, maxfiylik chegarasi).
 
-import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
+import { randomUUID } from 'node:crypto'
+import { QUEUE_TEXT } from '@e-dentist/shared'
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
@@ -21,8 +23,36 @@ function clinicOf(req: FastifyRequest): { clinicId: string; userId: string } {
 /// Proxy oqimni jim deb uzib yubormasligi uchun
 const HEARTBEAT_MS = 25_000
 
+/// Qurilmani belgilaydigan cookie. Login emas — faqat «shu brauzerdan
+/// bugun nechta yozuv boʻldi» degan hisob uchun
+const DEVICE_COOKIE = 'ed_device'
+const DEVICE_TTL = 60 * 60 * 24 * 365
+
+/// Bitta IP dan bir vaqtda nechta oqim ochilishi mumkin. Ochiq marshrut
+/// boʻlgani uchun ulanishlarni cheksiz ushlab turishga yoʻl qoʻymaymiz
+const STREAM_PER_IP = 3
+const streams = new Map<string, number>()
+
+/// Qurilma belgisi: boʻlmasa yaratiladi va cookie ga yoziladi
+function deviceId(req: FastifyRequest, reply: FastifyReply, secure: boolean): string {
+  const existing = req.cookies[DEVICE_COOKIE]
+  if (existing) return existing
+
+  const fresh = randomUUID()
+  reply.setCookie(DEVICE_COOKIE, fresh, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure,
+    path: '/',
+    maxAge: DEVICE_TTL,
+  })
+  return fresh
+}
+
 export interface QueueRouteOpts {
   deps: queue.QueueDeps
+  /// Prod da cookie faqat HTTPS orqali yuboriladi
+  secureCookie: boolean
 }
 
 export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts) => {
@@ -31,10 +61,11 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
     return ok(await queue.board(opts.deps, code))
   })
 
-  app.post('/n/:code/join', async (req) => {
+  app.post('/n/:code/join', async (req, reply) => {
     const { code } = req.params as { code: string }
     const input = validateInput(queueJoinSchema, req.body)
-    return ok(await queue.join(opts.deps, code, input, req.ip))
+    const device = deviceId(req, reply, opts.secureCookie)
+    return ok(await queue.join(opts.deps, code, input, { ip: req.ip, deviceId: device }))
   })
 
   // Kutish xonasi ekrani. Javobda bemor ismlari yoʻq
@@ -51,9 +82,18 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
     // Avval obuna, keyin sarlavhalar: kod notoʻgʻri boʻlsa xato oddiy
     // JSON javob boʻlib chiqsin. Aks holda sarlavhalar allaqachon
     // yozilgan boʻladi va mijoz javobsiz osilib qoladi
+    if ((streams.get(req.ip) ?? 0) >= STREAM_PER_IP) {
+      throw errors.rateLimited(QUEUE_TEXT.too_many)
+    }
+
     const unsubscribe = await queue.watch(opts.deps, code, () => {
       reply.raw.write('event: update\ndata: 1\n\n')
     })
+
+    // Hisob obunadan keyin oshiriladi: kod notoʻgʻri boʻlsa yuqoridagi
+    // qator xato tashlaydi va yopilish hodisasi hech qachon kelmaydi —
+    // hisob esa oʻsha IP uchun abadiy band boʻlib qolardi
+    streams.set(req.ip, (streams.get(req.ip) ?? 0) + 1)
 
     // Bundan keyin javobni Fastify emas, oʻzimiz boshqaramiz
     reply.hijack()
@@ -72,6 +112,9 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
     req.raw.on('close', () => {
       clearInterval(heartbeat)
       unsubscribe()
+      const left = (streams.get(req.ip) ?? 1) - 1
+      if (left > 0) streams.set(req.ip, left)
+      else streams.delete(req.ip)
     })
 
     reply.raw.write('event: ready\ndata: 1\n\n')

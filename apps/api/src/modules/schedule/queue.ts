@@ -26,9 +26,14 @@ export interface QueueDeps {
   bus: Bus
 }
 
-/// Bitta IP dan soatiga nechta yozuv. Qurilma boʻyicha cheklov 4.6 da
+// Suiisteʼmoldan himoya (tz.md 14-boʻlim). Uch qatlam: kod topib
+// boʻlmaydi, yozuv cheklangan, tasdiqlash esa qabulxonada
 const JOIN_IP_LIMIT = 5
 const JOIN_WINDOW = 60 * 60
+/// Bitta qurilmadan kuniga nechta yozuv. Cookie tozalansa aylanib
+/// oʻtiladi — shuning uchun bu yagona toʻsiq emas, faqat bittasi
+const JOIN_DEVICE_LIMIT = 2
+const DEVICE_WINDOW = 24 * 60 * 60
 
 /// Kutish vaqti hisobi uchun oxirgi nechta qabul olinadi
 const SAMPLE_SIZE = 20
@@ -170,12 +175,19 @@ export async function join(
   deps: QueueDeps,
   code: string,
   input: QueueJoinInput,
-  ip: string,
+  who: { ip: string; deviceId: string },
 ): Promise<Ticket> {
   const clinic = await findClinic(deps, code)
 
-  const check = await deps.rateLimiter.hit(`queue:ip:${ip}`, JOIN_IP_LIMIT, JOIN_WINDOW)
-  if (!check.allowed) throw errors.rateLimited(QUEUE_TEXT.too_many)
+  const byIp = await deps.rateLimiter.hit(`queue:ip:${who.ip}`, JOIN_IP_LIMIT, JOIN_WINDOW)
+  if (!byIp.allowed) throw errors.rateLimited(QUEUE_TEXT.too_many)
+
+  const byDevice = await deps.rateLimiter.hit(
+    `queue:device:${who.deviceId}`,
+    JOIN_DEVICE_LIMIT,
+    DEVICE_WINDOW,
+  )
+  if (!byDevice.allowed) throw errors.rateLimited(QUEUE_TEXT.too_many)
 
   return withClinic(deps.db, clinic.id, async (tx) => {
     const doctors = await auth.listDoctorsTx(tx)
