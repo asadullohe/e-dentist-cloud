@@ -41,3 +41,8 @@ export function update(tx: ClinicTx, id: string, data: Prisma.AppointmentUpdateI
 export function remove(tx: ClinicTx, id: string) {
   return tx.appointment.delete({ where: { id } })
 }
+
+/// Toʻliq eksport uchun
+export function allAppointments(tx: ClinicTx) {
+  return tx.appointment.findMany({ select: SELECT, orderBy: [{ at: 'asc' }, { id: 'asc' }] })
+}

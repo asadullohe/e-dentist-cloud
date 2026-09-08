@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.8** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.1** — bosqich 3 tugadi — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -533,7 +533,20 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > Frontendda qatlam qoidasi endi biome bilan tekshiriladi: `features`
 > yonidagi featureni, `entities` esa featureni import qila olmaydi
 > (`PatientPicker` shu sabab `entities/patient` ga koʻchdi).
-- [ ] **3.8 Toʻliq eksport** — «Barcha maʼlumotni yuklab olish», zip formatida
+- [x] **3.8 Toʻliq eksport** — «Barcha maʼlumotni yuklab olish», zip formatida
+
+> **Arxivda maʼlumot bor, rasm yoʻq**
+>
+> Har boʻlim alohida `.xlsx` fayl: bemorlar (import shabloni bilan bir xil),
+> tashriflar, tish xaritasi, koʻpriklar, toʻlovlar, qabullar, xarajatlar,
+> naryadlar, narxnoma va `malumot.txt`. Modul oʻz jadvaliga ega emas —
+> hammasi boshqa modullarning `export*Tx` funksiyalari orqali oʻqiladi.
+>
+> Rasmlar qoʻshilmadi: ular MinIO da va arxivni oʻn barobar kattalashtiradi.
+> Kartochkadan alohida yuklab olinadi. Kerak boʻlsa keyin qoʻshiladi.
+>
+> `adm-zip` 0.6.0 ishlatildi (0.5.x da yuqori darajali zaiflik bor edi).
+> Biz faqat arxiv yaratamiz, begona arxivni ochmaymiz.
 
 ---
 

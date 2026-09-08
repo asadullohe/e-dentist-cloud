@@ -1,9 +1,13 @@
-import { STAFF_UI } from '@e-dentist/shared'
+import { EXPORT_UI, STAFF_UI } from '@e-dentist/shared'
+import { useHasPermission } from '@/entities/session'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui'
+import { DataTab } from './DataTab'
 import { RolesTab } from './RolesTab'
 import { StaffTab } from './StaffTab'
 
 export function Settings() {
+  const hasPermission = useHasPermission()
+
   return (
     <>
       <h1 className="font-display mb-4 text-2xl font-bold tracking-tight">{STAFF_UI.title}</h1>
@@ -12,6 +16,7 @@ export function Settings() {
         <TabsList>
           <TabsTrigger value="staff">{STAFF_UI.staff_tab}</TabsTrigger>
           <TabsTrigger value="roles">{STAFF_UI.roles_tab}</TabsTrigger>
+          {hasPermission('data.export') && <TabsTrigger value="data">{EXPORT_UI.tab}</TabsTrigger>}
         </TabsList>
         <TabsContent value="staff" className="mt-3">
           <StaffTab />
@@ -19,6 +24,11 @@ export function Settings() {
         <TabsContent value="roles" className="mt-3">
           <RolesTab />
         </TabsContent>
+        {hasPermission('data.export') && (
+          <TabsContent value="data" className="mt-3">
+            <DataTab />
+          </TabsContent>
+        )}
       </Tabs>
     </>
   )

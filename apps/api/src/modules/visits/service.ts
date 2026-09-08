@@ -298,3 +298,16 @@ export function removeBridge(deps: VisitDeps, clinicId: string, userId: string, 
     return repo.chart(tx, bridge.patientId)
   })
 }
+
+/// Toʻliq eksport uchun (export moduli). Ochiq tranzaksiya ichida
+export function exportVisitsTx(tx: ClinicTx) {
+  return repo.allVisits(tx)
+}
+
+export function exportTeethTx(tx: ClinicTx) {
+  return repo.allTeeth(tx)
+}
+
+export function exportBridgesTx(tx: ClinicTx) {
+  return repo.allBridges(tx)
+}

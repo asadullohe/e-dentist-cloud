@@ -181,3 +181,8 @@ export function debtors(deps: PaymentDeps, clinicId: string, input: DebtorsInput
     return { items, total: all.length, totalDebt, page: input.page, pageSize: input.pageSize }
   })
 }
+
+/// Toʻliq eksport uchun (export moduli)
+export function exportPaymentsTx(tx: ClinicTx) {
+  return repo.allPayments(tx)
+}

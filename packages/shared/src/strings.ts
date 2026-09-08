@@ -558,6 +558,59 @@ export const LAB_UI = {
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
 } as const
 
+// Toʻliq eksport: fayl nomlari va ustun sarlavhalari
+export const EXPORT_FILES = {
+  archive: (stamp: string) => `e-dentist-malumot-${stamp}.zip`,
+  patients: 'bemorlar.xlsx',
+  visits: 'tashriflar.xlsx',
+  teeth: 'tish-xaritasi.xlsx',
+  payments: 'tolovlar.xlsx',
+  appointments: 'qabullar.xlsx',
+  expenses: 'xarajatlar.xlsx',
+  lab: 'naryadlar.xlsx',
+  services: 'narxnoma.xlsx',
+  readme: 'malumot.txt',
+} as const
+
+export const EXPORT_COLUMNS = {
+  patient: 'Bemor',
+  date: 'Sana',
+  time: 'Vaqt',
+  treatment: 'Muolaja',
+  tooth: 'Tish',
+  price: 'Narx',
+  note: 'Izoh',
+  status: 'Holat',
+  material: 'Material',
+  teeth: 'Tishlar',
+  amount: 'Summa',
+  category: 'Turkumi',
+  service: 'Xizmat',
+  work_type: 'Ish turi',
+  shade: 'Rang',
+  due: 'Muddat',
+  tech: 'Texnik',
+  tech_price: 'Texnik narxi',
+  returns: 'Qaytishlar',
+  bridge: 'Koʻprik',
+} as const
+
+export const EXPORT_UI = {
+  title: 'Maʼlumot',
+  tab: 'Maʼlumot',
+  hint: 'Klinikaning barcha maʼlumoti Excel fayllari koʻrinishida bitta arxivda yuklab olinadi. Rasmlar bemor kartochkasidan alohida yuklab olinadi.',
+  download: 'Barcha maʼlumotni yuklab olish',
+  preparing: 'Tayyorlanmoqda…',
+  readme: (clinic: string, date: string) =>
+    [
+      `Klinika: ${clinic}`,
+      `Yuklab olingan sana: ${date}`,
+      '',
+      'Arxivdagi fayllar Excel (.xlsx) koʻrinishida.',
+      'Bemorlar fayli import shabloni bilan bir xil — uni tahrirlab qaytadan yuklash mumkin.',
+    ].join('\n'),
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {

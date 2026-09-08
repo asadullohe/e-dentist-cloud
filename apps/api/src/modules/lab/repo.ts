@@ -75,3 +75,8 @@ export function update(tx: ClinicTx, id: string, data: Prisma.LabOrderUpdateInpu
 export function remove(tx: ClinicTx, id: string) {
   return tx.labOrder.delete({ where: { id } })
 }
+
+/// Toʻliq eksport uchun
+export function allOrders(tx: ClinicTx) {
+  return tx.labOrder.findMany({ select: SELECT, orderBy: [{ dueDate: 'asc' }, { id: 'asc' }] })
+}

@@ -53,3 +53,8 @@ export function dailyTotals(tx: ClinicTx, from: Date, to: Date) {
     _sum: { amount: true },
   })
 }
+
+/// Toʻliq eksport uchun
+export function allPayments(tx: ClinicTx) {
+  return tx.payment.findMany({ select: SELECT, orderBy: [{ date: 'asc' }, { id: 'asc' }] })
+}

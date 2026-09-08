@@ -201,3 +201,8 @@ export function remove(
     })
   })
 }
+
+/// Toʻliq eksport uchun (export moduli)
+export function exportExpensesTx(tx: ClinicTx) {
+  return repo.allExpenses(tx)
+}

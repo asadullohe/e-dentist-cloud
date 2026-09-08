@@ -379,3 +379,9 @@ export function remove(deps: LabDeps, clinicId: string, userId: string, id: stri
     })
   })
 }
+
+/// Toʻliq eksport uchun (export moduli). Narx ham qoʻshiladi: eksportni
+/// faqat `data.export` boriga ochamiz, u esa egasida
+export function exportOrdersTx(tx: ClinicTx) {
+  return repo.allOrders(tx)
+}

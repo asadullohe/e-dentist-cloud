@@ -474,3 +474,12 @@ export async function importErrors(
   if (!session) throw errors.badRequest(IMPORT_TEXT.session_expired)
   return buildErrorReport(session.rows)
 }
+
+/// Toʻliq eksport uchun (export moduli): barcha bemorlar va tayyor .xlsx
+export function exportRowsTx(tx: ClinicTx) {
+  return repo.listAll(tx)
+}
+
+export function buildPatientsSheet(rows: Awaited<ReturnType<typeof repo.listAll>>) {
+  return buildExport(rows)
+}

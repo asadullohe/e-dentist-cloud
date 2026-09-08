@@ -57,3 +57,8 @@ export function categoryTotals(tx: ClinicTx, from: Date, to: Date, take: number)
     take,
   })
 }
+
+/// Toʻliq eksport uchun
+export function allExpenses(tx: ClinicTx) {
+  return tx.expense.findMany({ select: SELECT, orderBy: [{ date: 'asc' }, { id: 'asc' }] })
+}

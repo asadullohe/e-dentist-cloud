@@ -436,7 +436,8 @@ PATCH  /api/lab-orders/:id/status     # tayyor | topshirildi | qaytarildi
 GET    /api/appointments?from=2026-09-01&to=2026-09-30
 POST   /api/payments
 GET    /api/debtors
-GET    /api/reports/monthly?ym=2026-09
+GET    /api/reports?month=2026-09
+GET    /api/export                # barcha maʼlumot, zip
 
 GET    /api/staff                # xodimlar + kutilayotgan taklifnomalar
 POST   /api/staff/invite

@@ -146,3 +146,25 @@ export function topTreatments(tx: ClinicTx, from: Date, to: Date, take: number) 
     take,
   })
 }
+
+/// Toʻliq eksport uchun: klinikaning barcha tashriflari, tishlari, koʻpriklari
+export function allVisits(tx: ClinicTx) {
+  return tx.visit.findMany({
+    select: { ...VISIT_SELECT, createdAt: true },
+    orderBy: [{ date: 'asc' }, { id: 'asc' }],
+  })
+}
+
+export function allTeeth(tx: ClinicTx) {
+  return tx.tooth.findMany({
+    select: { patientId: true, ...TOOTH_SELECT },
+    orderBy: [{ patientId: 'asc' }, { tooth: 'asc' }],
+  })
+}
+
+export function allBridges(tx: ClinicTx) {
+  return tx.bridge.findMany({
+    select: { patientId: true, ...BRIDGE_SELECT },
+    orderBy: { patientId: 'asc' },
+  })
+}
