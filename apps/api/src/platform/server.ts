@@ -16,6 +16,7 @@ import { labRoutes } from '../modules/lab/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
 import { paymentRoutes } from '../modules/payments/routes.js'
 import { reportRoutes } from '../modules/reports/routes.js'
+import { queueRoutes } from '../modules/schedule/queueRoutes.js'
 import { scheduleRoutes } from '../modules/schedule/routes.js'
 import { serviceRoutes } from '../modules/services/routes.js'
 import { visitRoutes } from '../modules/visits/routes.js'
@@ -134,6 +135,11 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(serviceRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(scheduleRoutes, { prefix: '/api', deps: { db: deps.db } })
+  // Navbat marshrutlari ochiq: /api/n/<kod>
+  app.register(queueRoutes, {
+    prefix: '/api',
+    deps: { db: deps.db, rateLimiter: deps.rateLimiter },
+  })
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(reportRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(clinicRoutes, { prefix: '/api', deps: { db: deps.db } })

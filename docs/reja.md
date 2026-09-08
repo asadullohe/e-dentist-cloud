@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.2** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.3** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -571,8 +571,27 @@ _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 > Kod `crypto.randomInt` bilan, chalkashmaydigan alifbodan (0/O, 1/l/I yoʻq)
 > — u ochiq sahifaning yagona himoyasi. Mavjud klinikalarga migratsiya
 > ichida tarqatildi.
-- [ ] **4.2 Ochiq sahifa `/n/<kod>`** — shifokorlar, navbatdagilar soni, taxminiy vaqt,
+- [x] **4.2 Ochiq sahifa `/n/<kod>`** — shifokorlar, navbatdagilar soni, taxminiy vaqt,
       yozilish formasi. Loginsiz
+
+> **Navbat alohida modul emas**
+>
+> Navbat — «bugungi, vaqti belgilanmagan qabul», yaʼni ayni `appointments`
+> jadvali. Shuning uchun mantiq jadval egasi — `schedule` modulida, faqat
+> alohida fayllarda (`queue.ts`, `queueRoutes.ts`). Alohida modul qilinsa
+> u boshqa modulning jadvaliga tegishga majbur boʻlardi.
+>
+> **Ochiq sahifa kartotekaga tegmaydi.** Yozilgan odam `guest_name` bilan
+> saqlanadi, `patient_id` boʻsh qoladi — bogʻlash qabulxonada (4.5). Shu
+> sababli ochiq marshrut orqali bemorlar jadvalini ochib ham, tekshirib
+> ham boʻlmaydi.
+>
+> **Raqam berish qulf ostida:** `pg_advisory_xact_lock` bilan. Nazorat
+> testi — qulfsiz bir vaqtda kelgan 6 ta soʻrovdan atigi 2 xil raqam
+> chiqdi, qulf bilan hammasi har xil.
+>
+> Kutish vaqti oxirgi 20 ta yakunlangan navbatning oʻrtacha oraligʻidan
+> hisoblanadi; namuna kam boʻlsa 15 daqiqa deb olinadi.
 - [ ] **4.3 SSE jonli yangilanish** — bir tomonlama oqim, proxy orqali oʻtadi
 - [ ] **4.4 Kutish xonasi ekrani `/n/<kod>/ekran`** — katta shrift, faqat raqamlar, ismsiz
 - [ ] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,

@@ -160,3 +160,16 @@ export async function findInviteByTokenHash(db: Db, tokenHash: string): Promise<
   const rows = await db.$queryRaw<InviteRow[]>`SELECT * FROM invite_find(${tokenHash})`
   return rows[0] ?? null
 }
+
+/// clinic_by_queue_code funksiyasi qaytaradigan qator (SECURITY DEFINER):
+/// navbat sahifasi loginsiz ochiladi, RLS esa `clinics` ni yopib turadi
+export interface QueueClinicRow {
+  id: string
+  name: string
+  queue_enabled: boolean
+}
+
+export async function findByQueueCode(db: Db, code: string): Promise<QueueClinicRow | null> {
+  const rows = await db.$queryRaw<QueueClinicRow[]>`SELECT * FROM clinic_by_queue_code(${code})`
+  return rows[0] ?? null
+}

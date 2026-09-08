@@ -611,6 +611,39 @@ export const EXPORT_UI = {
     ].join('\n'),
 } as const
 
+// Navbat (ochiq sahifa va kabinet)
+export const QUEUE_TEXT = {
+  clinic_not_found: 'Bunday sahifa yoʻq',
+  queue_off: 'Bu klinikada navbat yozuvi vaqtincha yopilgan',
+  doctor_required: 'Shifokorni tanlang',
+  doctor_not_found: 'Shifokor topilmadi',
+  name_required: 'Ism-familiyangizni yozing',
+  ticket_not_found: 'Navbat yozuvi topilmadi',
+  too_many: 'Bu qurilmadan bugun juda koʻp yozuv boʻldi',
+  not_in_queue: 'Bu yozuv navbatda emas',
+  status_flow: 'Navbat holatini bu bosqichdan oʻzgartirib boʻlmaydi',
+} as const
+
+// Ochiq navbat sahifasi
+export const QUEUE_UI = {
+  title: 'Navbatga yozilish',
+  pick_doctor: 'Shifokorni tanlang',
+  waiting: (n: number) => `Navbatda ${n} kishi`,
+  wait_minutes: (n: number) => `taxminan ${n} daqiqa`,
+  no_doctors: 'Hozircha qabul qiluvchi shifokor yoʻq',
+  full_name: 'Ism-familiya',
+  phone: 'Telefon',
+  join: 'Navbatga yozilish',
+  your_number: 'Sizning raqamingiz',
+  ahead: (n: number) => (n === 0 ? 'Siz birinchisiz' : `Oldingizda ${n} kishi`),
+  called: 'Sizni chaqirishmoqda',
+  unconfirmed_hint: 'Qabulxona yozuvingizni tasdiqlaguncha kuting',
+  finished: 'Navbatingiz yakunlandi',
+  screen_now: 'Hozir',
+  screen_next: 'Keyingi',
+  closed: 'Navbat yopiq',
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {
