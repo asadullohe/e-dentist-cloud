@@ -449,6 +449,14 @@ PATCH  /api/roles/:id            # ruxsatlar roʻyxati
 GET    /api/invites/:token       # ochiq: havoladagi klinika va rol
 POST   /api/invites/accept       # ochiq: parol qoʻyiladi, sessiya ochiladi
 
+GET    /api/n/:code               # ochiq: klinika, shifokorlar, navbat soni
+POST   /api/n/:code/join          # ochiq: navbatga yozilish
+GET    /api/n/:code/ticket/:id    # ochiq: oʻz raqami
+GET    /api/n/:code/screen        # ochiq: kutish xonasi ekrani, ismsiz
+GET    /api/n/:code/stream        # ochiq: SSE, «navbat oʻzgardi»
+GET    /api/queue                 # kabinet: toʻliq roʻyxat, ismlari bilan
+PATCH  /api/queue/:id             # tasdiqlash · chaqirish · keldi · kelmadi · yakunlandi
+
 POST   /api/auth/register        # klinika + egasi, sinov boshlanadi
 POST   /api/auth/verify          # pochtani tasdiqlash
 POST   /api/auth/login

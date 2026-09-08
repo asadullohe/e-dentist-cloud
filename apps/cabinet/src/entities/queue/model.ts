@@ -28,3 +28,17 @@ export interface QueueScreen {
   called: { number: number; doctorName: string }[]
   next: number[]
 }
+
+/// Kabinetdagi navbat qatori — bu yerda ismlar koʻrinadi
+export interface QueueEntry {
+  id: string
+  number: number
+  status: QueueStatus
+  fio: string
+  phone: string | null
+  patientId: string | null
+  doctorId: string | null
+  doctorName: string
+  /// Yozilgan lahza
+  at: string
+}

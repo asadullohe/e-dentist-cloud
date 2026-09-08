@@ -43,6 +43,7 @@ export const AUDIT_ACTION = {
   lab_status_changed: 'lab_status_changed',
   lab_returned: 'lab_returned',
   data_exported: 'data_exported',
+  queue_changed: 'queue_changed',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

@@ -5,6 +5,7 @@ import { fetchBoard, fetchScreen, fetchTicket, type JoinPayload, joinQueue } fro
 export const QUEUE_KEYS = {
   board: (code: string) => ['queue', code] as const,
   screen: (code: string) => ['queue', code, 'screen'] as const,
+  cabinet: ['queue', 'cabinet'] as const,
   ticket: (code: string, id: string) => ['queue', code, 'ticket', id] as const,
 }
 
@@ -50,8 +51,10 @@ export function useQueueStream(code: string): void {
     if (!code) return
     const source = new EventSource(`/api/n/${code}/stream`)
 
+    // Butun «queue» tarmogʻi: ochiq sahifa, kutish xonasi ekrani va
+    // kabinetdagi roʻyxat bitta oqimdan yangilanadi
     const refresh = () => {
-      queryClient.invalidateQueries({ queryKey: ['queue', code] })
+      queryClient.invalidateQueries({ queryKey: ['queue'] })
     }
     source.addEventListener('update', refresh)
 

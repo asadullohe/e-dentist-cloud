@@ -103,6 +103,7 @@ export const SECTION_LABELS = {
   services: 'Narxnoma',
   expenses: 'Xarajatlar',
   reports: 'Hisobotlar',
+  queue: 'Navbat',
   settings: 'Sozlamalar',
 } as const
 
@@ -642,6 +643,35 @@ export const QUEUE_UI = {
   screen_now: 'Hozir',
   screen_next: 'Keyingi',
   closed: 'Navbat yopiq',
+} as const
+
+// Kabinetdagi navbat
+export const QUEUE_CABINET_UI = {
+  title: 'Navbat',
+  empty: 'Bugun navbat boʻsh',
+  number: 'Raqam',
+  patient: 'Bemor',
+  doctor: 'Shifokor',
+  status: 'Holat',
+  joined_at: 'Yozilgan',
+  confirm: 'Tasdiqlash',
+  call: 'Chaqirish',
+  arrived: 'Keldi',
+  no_show: 'Kelmadi',
+  done: 'Yakunlandi',
+  new_patient: 'Kartotekada yoʻq',
+  link: 'Kartochka',
+  screen_link: 'Kutish xonasi ekrani',
+  page_link: 'Bemor sahifasi',
+  code_hint: 'Eshikdagi QR shu manzilga olib boradi',
+} as const
+
+/// Navbat holatlari — kabinetda koʻrinadigan nomlar
+export const QUEUE_STATUS_LABELS = {
+  unconfirmed: 'Tasdiqlanmagan',
+  waiting: 'Kutmoqda',
+  called: 'Chaqirildi',
+  finished: 'Yakunlandi',
 } as const
 
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —

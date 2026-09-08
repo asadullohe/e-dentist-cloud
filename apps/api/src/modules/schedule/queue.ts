@@ -5,17 +5,19 @@
 // parallel tizim qurilmaydi, shuning uchun mantiq jadval egasi — `schedule`
 // modulida, faqat alohida faylda turadi.
 
-import { QUEUE_TEXT } from '@e-dentist/shared'
+import { normalizePhone, QUEUE_TEXT } from '@e-dentist/shared'
 import type { QueueStatus } from '../../../generated/prisma/client.js'
+import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import { type Bus, queueChannel } from '../../platform/bus.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import type { RateLimiter } from '../../platform/rateLimit.js'
-import { withClinic } from '../../platform/tenant.js'
+import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as clinics from '../clinics/service.js'
-import type { QueueJoinInput } from './queueSchema.js'
+import * as patients from '../patients/service.js'
+import type { QueueJoinInput, QueueStatusInput } from './queueSchema.js'
 import * as repo from './repo.js'
 
 export interface QueueDeps {
@@ -194,7 +196,9 @@ export async function join(
       // buzmaydi (tz.md 14-boʻlim)
       queueStatus: 'unconfirmed',
       guestName: input.fullName,
-      guestPhone: input.phone ? input.phone : null,
+      // Kartotekadagi bilan bir xil koʻrinishda saqlaymiz — tasdiqlashda
+      // telefon boʻyicha topish shunga bogʻliq
+      guestPhone: normalizePhone(input.phone),
       // Kartoteka bilan bogʻlash qabulxona tasdiqlaganda boʻladi: ochiq
       // sahifa bemorlar jadvaliga umuman tegmaydi
       patientId: null,
@@ -273,4 +277,119 @@ function toTicket(
     doctorName,
     waitMinutes: ahead * minutes,
   }
+}
+
+// ────────────────────────  Kabinetdagi navbat  ────────────────────────
+//
+// Bu yerda, ochiq sahifadan farqli oʻlaroq, ismlar koʻrinadi: roʻyxatni
+// faqat klinika xodimi ochadi (`queue.manage`).
+
+export interface QueueEntry {
+  id: string
+  number: number
+  status: QueueStatus
+  /// Kartotekadagi ism, boʻlmasa oʻzi yozgani
+  fio: string
+  phone: string | null
+  patientId: string | null
+  doctorId: string | null
+  doctorName: string
+  at: Date
+}
+
+async function entries(tx: ClinicTx): Promise<QueueEntry[]> {
+  const { from, to } = today()
+  const [rows, doctors] = await Promise.all([repo.queueOfDay(tx, from, to), auth.listDoctorsTx(tx)])
+  const doctorName = new Map(doctors.map((doctor) => [doctor.id, doctor.fullName]))
+
+  const ids = rows.map((row) => row.patientId).filter((id): id is string => id !== null)
+  const people = await patients.findByIds(tx, [...new Set(ids)])
+  const byId = new Map(people.map((person) => [person.id, person]))
+
+  return rows.map((row) => {
+    const person = row.patientId ? byId.get(row.patientId) : undefined
+    return {
+      id: row.id,
+      number: row.queueNumber ?? 0,
+      status: row.queueStatus as QueueStatus,
+      fio: person?.fio ?? row.guestName ?? '',
+      phone: person?.phone ?? row.guestPhone ?? null,
+      patientId: row.patientId,
+      doctorId: row.doctorId,
+      doctorName: row.doctorId ? (doctorName.get(row.doctorId) ?? '') : '',
+      at: row.at,
+    }
+  })
+}
+
+export function list(deps: QueueDeps, clinicId: string): Promise<QueueEntry[]> {
+  return withClinic(deps.db, clinicId, (tx) => entries(tx))
+}
+
+/// Amal → yangi navbat holati va qabul natijasi.
+///
+/// `queue_status` navbatdagi oʻrinni, `status` esa qabul natijasini
+/// saqlaydi (tz.md 14-boʻlim, 4.1 dagi qaror)
+const FLOW: Record<
+  QueueStatusInput['action'],
+  { from: QueueStatus[]; queueStatus: QueueStatus; status?: 'arrived' | 'no_show' | 'done' }
+> = {
+  confirm: { from: ['unconfirmed'], queueStatus: 'waiting' },
+  call: { from: ['waiting'], queueStatus: 'called' },
+  arrived: { from: ['called'], queueStatus: 'finished', status: 'arrived' },
+  no_show: { from: ['waiting', 'called'], queueStatus: 'finished', status: 'no_show' },
+  done: { from: ['called'], queueStatus: 'finished', status: 'done' },
+}
+
+export function act(
+  deps: QueueDeps,
+  clinicId: string,
+  userId: string,
+  id: string,
+  input: QueueStatusInput,
+): Promise<QueueEntry[]> {
+  const step = FLOW[input.action]
+
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const entry = await repo.findQueueEntry(tx, id)
+    if (!entry || entry.queueStatus === null) throw errors.notFound(QUEUE_TEXT.ticket_not_found)
+    if (!step.from.includes(entry.queueStatus)) throw errors.badRequest(QUEUE_TEXT.status_flow)
+
+    // Tasdiqlashda kartoteka bilan bogʻlanadi: telefon boʻyicha topiladi,
+    // topilmasa yangi bemor ochiladi (tz.md 14-boʻlim)
+    let patientId = entry.patientId
+    if (input.action === 'confirm' && !patientId) {
+      const phone = normalizePhone(entry.guestPhone)
+      const existing = phone ? await patients.findByPhoneTx(tx, phone) : null
+      patientId = existing
+        ? existing.id
+        : (
+            await patients.createFromQueueTx(tx, userId, {
+              fio: entry.guestName ?? '',
+              phone,
+            })
+          ).id
+    }
+
+    await repo.updateQueueEntry(tx, id, {
+      queueStatus: step.queueStatus,
+      ...(step.status ? { status: step.status } : {}),
+      ...(patientId !== entry.patientId
+        ? { patient: { connect: { id: patientId as string } } }
+        : {}),
+    })
+
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.queue_changed,
+      entity: 'appointment',
+      entityId: id,
+      meta: { action: input.action },
+    })
+
+    // Ochiq sahifa va kutish xonasi ekrani darhol yangilansin
+    await deps.bus.publish(queueChannel(clinicId))
+
+    return entries(tx)
+  })
 }

@@ -4,11 +4,19 @@
 // ataylab tor: klinika nomi, shifokorlar va raqamlar. Bemor ismlari
 // qaytmaydi (tz.md 14-boʻlim, maxfiylik chegarasi).
 
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
+import { errors } from '../../platform/errors.js'
+import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import * as queue from './queue.js'
-import { queueJoinSchema } from './queueSchema.js'
+import { queueJoinSchema, queueStatusSchema } from './queueSchema.js'
+
+function clinicOf(req: FastifyRequest): { clinicId: string; userId: string } {
+  const session = requireAuth(req)
+  if (!session.clinicId) throw errors.forbidden()
+  return { clinicId: session.clinicId, userId: session.userId }
+}
 
 /// Proxy oqimni jim deb uzib yubormasligi uchun
 const HEARTBEAT_MS = 25_000
@@ -72,5 +80,22 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
   app.get('/n/:code/ticket/:id', async (req) => {
     const { code, id } = req.params as { code: string; id: string }
     return ok(await queue.ticket(opts.deps, code, id))
+  })
+
+  // ─────────────────────  Kabinetdagi navbat  ─────────────────────
+  // Bu yerda ismlar koʻrinadi, shuning uchun ruxsat talab qilinadi
+
+  const manage = { preHandler: app.requirePermission('queue.manage') }
+
+  app.get('/queue', manage, async (req) => {
+    const { clinicId } = clinicOf(req)
+    return ok(await queue.list(opts.deps, clinicId))
+  })
+
+  app.patch('/queue/:id', manage, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(queueStatusSchema, req.body)
+    return ok(await queue.act(opts.deps, clinicId, userId, id, input))
   })
 }

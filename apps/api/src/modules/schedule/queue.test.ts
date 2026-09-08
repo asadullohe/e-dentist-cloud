@@ -347,3 +347,140 @@ describe('jonli oqim', () => {
     expect(h.bus.subscriberCount(`queue:${h.clinicId}`)).toBe(0)
   })
 })
+
+describe('kabinetdagi navbat', () => {
+  it('roʻyxatda ismlar koʻrinadi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, {
+        doctorId,
+        fullName: 'Kabinet Bemori',
+        phone: '907778899',
+      })
+    ).json().data
+
+    const rows = (await call('GET', '/api/queue')).json().data
+    const mine = rows.find((row: { id: string }) => row.id === joined.id)
+    expect(mine).toMatchObject({ fio: 'Kabinet Bemori', status: 'unconfirmed' })
+    // Telefon kartotekadagi bilan bir xil koʻrinishda saqlanadi
+    expect(mine.phone).toBe('+998907778899')
+  })
+
+  // Tasdiqlashda kartoteka bilan bogʻlanadi (tz.md 14-boʻlim)
+  it('tasdiqlanganda yangi bemor ochiladi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, {
+        doctorId,
+        fullName: 'Yangi Kartoteka',
+        phone: '905554433',
+      })
+    ).json().data
+
+    const before = await h.ownerDb.patient.count({ where: { clinicId: h.clinicId } })
+    const rows = (await call('PATCH', `/api/queue/${joined.id}`, { action: 'confirm' })).json().data
+    const after = await h.ownerDb.patient.count({ where: { clinicId: h.clinicId } })
+
+    expect(after).toBe(before + 1)
+    const mine = rows.find((row: { id: string }) => row.id === joined.id)
+    expect(mine.status).toBe('waiting')
+    expect(mine.patientId).not.toBeNull()
+  })
+
+  it('telefon kartotekada boʻlsa yangi bemor ochilmaydi', async () => {
+    const patient = (
+      await call('POST', '/api/patients', { fio: 'Eski Bemor', phone: '901010101' })
+    ).json().data
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, {
+        doctorId,
+        fullName: 'Boshqacha Yozilgan',
+        phone: '901010101',
+      })
+    ).json().data
+
+    const before = await h.ownerDb.patient.count({ where: { clinicId: h.clinicId } })
+    const rows = (await call('PATCH', `/api/queue/${joined.id}`, { action: 'confirm' })).json().data
+    const after = await h.ownerDb.patient.count({ where: { clinicId: h.clinicId } })
+
+    expect(after).toBe(before)
+    const mine = rows.find((row: { id: string }) => row.id === joined.id)
+    expect(mine.patientId).toBe(patient.id)
+    // Kartotekadagi ism ustun turadi
+    expect(mine.fio).toBe('Eski Bemor')
+  })
+
+  it('bosqichlar: tasdiqlash → chaqirish → yakunlandi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Bosqich Bemori' })
+    ).json().data
+    const statusOf = (rows: { id: string; status: string }[]) =>
+      rows.find((row) => row.id === joined.id)?.status
+
+    expect(
+      statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'confirm' })).json().data),
+    ).toBe('waiting')
+    expect(
+      statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'call' })).json().data),
+    ).toBe('called')
+    expect(
+      statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'done' })).json().data),
+    ).toBe('finished')
+
+    const appointment = await h.ownerDb.appointment.findUnique({ where: { id: joined.id } })
+    expect(appointment?.status).toBe('done')
+  })
+
+  it('bosqichni sakrab boʻlmaydi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Sakrash Bemori' })
+    ).json().data
+    const r = await call('PATCH', `/api/queue/${joined.id}`, { action: 'done' })
+    expect(r.statusCode).toBe(400)
+  })
+
+  it('kelmadi holati navbatdan chiqaradi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Kelmagan Bemor' })
+    ).json().data
+    await call('PATCH', `/api/queue/${joined.id}`, { action: 'confirm' })
+    const rows = (await call('PATCH', `/api/queue/${joined.id}`, { action: 'no_show' })).json().data
+
+    expect(rows.find((row: { id: string }) => row.id === joined.id).status).toBe('finished')
+    const appointment = await h.ownerDb.appointment.findUnique({ where: { id: joined.id } })
+    expect(appointment?.status).toBe('no_show')
+  })
+
+  it('amal ochiq sahifalarga hodisa yuboradi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Hodisa Bemori' })
+    ).json().data
+
+    let events = 0
+    const stop = h.bus.subscribe(`queue:${h.clinicId}`, () => {
+      events += 1
+    })
+    await call('PATCH', `/api/queue/${joined.id}`, { action: 'confirm' })
+    stop()
+
+    expect(events).toBe(1)
+  })
+
+  it('`queue.manage` yoʻq boʻlsa roʻyxat yopiq', async () => {
+    const watcher = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'kuzatuvchi' },
+    })
+    const owner = await h.ownerDb.role.findFirst({ where: { clinicId: h.clinicId, isOwner: true } })
+
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: watcher?.id } })
+    expect((await call('GET', '/api/queue')).statusCode).toBe(403)
+
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: owner?.id } })
+  })
+
+  it('ochiq marshrut orqali navbat holatini oʻzgartirib boʻlmaydi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Ruxsatsiz Bemor' })
+    ).json().data
+    const r = await open('PATCH' as 'POST', `/api/queue/${joined.id}`, { action: 'confirm' })
+    expect(r.statusCode).toBe(401)
+  })
+})

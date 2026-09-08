@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.5** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.6** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -622,8 +622,20 @@ _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 >
 > Oʻlchamlar `vh` da: ekran televizorga chiqariladi va uzoqdan oʻqilishi
 > kerak. Yangilanish oʻsha SSE oqimidan.
-- [ ] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,
+- [x] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,
       `queue.manage` ruxsati
+
+> **Tasdiqlash kartoteka bilan bogʻlaydi**
+>
+> Qabulxona «Tasdiqlash» ni bosganda telefon boʻyicha kartotekadan
+> qidiriladi: topilsa yozuv oʻsha bemorga bogʻlanadi, topilmasa yangi
+> bemor ochiladi (tz.md 14-boʻlim). Telefon `normalizePhone` bilan
+> saqlanadi — boshida ochiq sahifa xom matnni yozar edi va test
+> kartotekadagi `+998…` bilan mos kelmasligini koʻrsatdi.
+>
+> Amallar oqimi serverda: `unconfirmed → waiting → called → finished`,
+> natija esa `status` da (keldi / kelmadi / yakunlandi). Bosqichni sakrab
+> boʻlmaydi.
 - [ ] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,
       «tasdiqlanmagan» holat, klinika navbatni butunlay oʻchira oladi.
       Bir IP dan ochiladigan SSE ulanishlari soniga ham chegara qoʻyiladi

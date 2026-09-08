@@ -7,4 +7,11 @@ export {
   useQueueStream,
   useQueueTicket,
 } from './hooks'
-export type { QueueBoard, QueueDoctor, QueueScreen, QueueStatus, QueueTicket } from './model'
+export type {
+  QueueBoard,
+  QueueDoctor,
+  QueueEntry,
+  QueueScreen,
+  QueueStatus,
+  QueueTicket,
+} from './model'
