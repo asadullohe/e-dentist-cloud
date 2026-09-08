@@ -190,3 +190,30 @@ export const VISIT_TEXT = {
   status_invalid: 'Bunday tish holati yoʻq',
   material_invalid: 'Bunday material yoʻq',
 } as const
+
+// Bemor kartochkasi
+export const CARD_UI = {
+  back: 'Bemorlar',
+  tab_visits: 'Tashriflar',
+  tab_chart: 'Tish xaritasi',
+  add_visit: 'Tashrif qoʻshish',
+  edit_visit: 'Tashrifni tahrirlash',
+  no_visits: 'Hozircha tashrif yozilmagan',
+  date: 'Sana',
+  treatment: 'Muolaja',
+  tooth: 'Tish',
+  price: 'Narx',
+  note: 'Izoh',
+  total: 'Jami',
+  delete_visit_title: 'Tashrif oʻchirilsinmi?',
+  delete_visit_text: 'Bu amalni qaytarib boʻlmaydi.',
+  tooth_title: (tooth: number) => `${tooth}-tish`,
+  status: 'Holat',
+  material: 'Material',
+  save: 'Saqlash',
+  cancel: 'Bekor qilish',
+  delete: 'Oʻchirish',
+  edit: 'Tahrirlash',
+  age_years: (years: number) => `${years} yosh`,
+  no_phone: 'Telefon koʻrsatilmagan',
+} as const

@@ -22,7 +22,7 @@ type ApiEnvelope<T> =
   | { ok: false; error: { code: string; message: string; fields?: Record<string, string> } }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   body?: unknown
 }
 

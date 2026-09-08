@@ -1,6 +1,7 @@
 import { age, formatDate, formatUzPhone, PATIENT_UI } from '@e-dentist/shared'
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { type Patient, usePatients } from '@/entities/patient'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { useDebounced } from '@/shared/lib'
@@ -104,7 +105,14 @@ export function Patients() {
                 const years = patient.birthDate ? age(patient.birthDate.slice(0, 10)) : null
                 return (
                   <TableRow key={patient.id}>
-                    <TableCell className="font-medium">{patient.fio}</TableCell>
+                    <TableCell className="font-medium">
+                      <Link
+                        to={`/patients/${patient.id}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {patient.fio}
+                      </Link>
+                    </TableCell>
                     <TableCell>{patient.phone ? formatUzPhone(patient.phone) : '—'}</TableCell>
                     <TableCell>
                       {years === null ? '—' : PATIENT_UI.years(years)}

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.7** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.8** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -322,7 +322,21 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > `patients.existsInClinic` orqali tekshiradi. `payments` (2.10),
 > `appointments` (2.16) va naryadlarda (3.5) ham shunday boʻlishi shart.
 > Sabab `tz.md` 5-boʻlimiga yozildi.
-- [ ] **2.7 Bemor kartochkasi** — Tashriflar va Tish xaritasi boʻlimlari
+- [x] **2.7 Bemor kartochkasi** — `/patients/:id`. Ikki boʻlim: Tashriflar
+      (jadval, jami summa, qoʻshish/tahrirlash/oʻchirish) va Tish xaritasi
+      (odontogramma, tishni bosib holat va material belgilash).
+      Brauzerda tekshirildi: tashrif yozildi, 16-tishga sirkoniy koronka
+      qoʻyildi va xaritada darhol koʻrindi
+
+> **Koʻprik tahrirlash hali yoʻq**
+>
+> Xarita koʻpriklarni **chizadi**, lekin ularni yaratish/oʻchirish oynasi
+> qurilmagan. Oflayn ilovada bu bor edi. Reja roʻyxatida alohida task yoʻq
+> edi — 2.7a sifatida qoʻshildi.
+
+- [ ] **2.7a Koʻprik tahrirlash** — koʻprik yaratish va oʻchirish oynasi.
+      Tayanch va oraliq tishlarni ajratish, oʻchirilganda tishlar holatini
+      qaytarish (oflayn ilovadagi kabi)
 - [ ] **2.8 MinIO fayl qatlami** — yuklash, imzolangan vaqtinchalik havola
       (ochiq URL emas)
 - [ ] **2.9 Bemor rasmlari** — kartochkadagi Rasmlar boʻlimi
