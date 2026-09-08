@@ -9,6 +9,7 @@ import {
 } from '@e-dentist/shared'
 import { useEffect, useState } from 'react'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
+import { PatientPicker } from '@/entities/patient'
 import { ApiError } from '@/shared/api'
 import {
   Button,
@@ -27,7 +28,6 @@ import {
   Textarea,
 } from '@/shared/ui'
 import { useSaveAppointment } from './hooks'
-import { PatientPicker } from './PatientPicker'
 
 interface AppointmentFormDialogProps {
   open: boolean

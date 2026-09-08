@@ -296,6 +296,18 @@ export async function existsInClinic(tx: ClinicTx, userId: string): Promise<bool
   return (await repo.findStaff(tx, userId)) !== null
 }
 
+/// Faqat ism va id. Naryadga texnik tayinlash uchun `lab.write` boriga
+/// ochiq — toʻliq roʻyxatda pochta, holat va oxirgi kirish bor, ular
+/// `staff.manage` ishi
+export function listStaffNames(deps: AuthDeps, clinicId: string) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const people = await repo.listStaff(tx)
+    return people
+      .filter((person) => person.status === 'active')
+      .map((person) => ({ id: person.id, fullName: person.fullName }))
+  })
+}
+
 export function listStaff(deps: AuthDeps, clinicId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const [people, roles, invites] = await Promise.all([

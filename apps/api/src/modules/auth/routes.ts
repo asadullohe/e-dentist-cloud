@@ -89,6 +89,15 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
     return { clinicId: session.clinicId, userId: session.userId }
   }
 
+  app.get(
+    '/staff/names',
+    { preHandler: app.requireAnyPermission('staff.manage', 'lab.write') },
+    async (req) => {
+      const { clinicId } = clinicOf(req)
+      return ok(await service.listStaffNames(opts.deps, clinicId))
+    },
+  )
+
   app.get('/staff', manage, async (req) => {
     const { clinicId } = clinicOf(req)
     return ok(await service.listStaff(opts.deps, clinicId))

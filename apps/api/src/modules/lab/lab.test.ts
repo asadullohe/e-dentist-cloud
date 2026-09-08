@@ -303,6 +303,28 @@ describe('ruxsat', () => {
     await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: owner?.id } })
   })
 
+  // Naryadga texnik tayinlash uchun shifokorga xodim ismlari kerak, lekin
+  // toʻliq roʻyxat (pochta, holat) `staff.manage` ishi
+  it('ismlar roʻyxati `lab.write` ga ochiq, toʻliq roʻyxat esa yopiq', async () => {
+    const doctorRole = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const owner = await h.ownerDb.role.findFirst({ where: { clinicId: h.clinicId, isOwner: true } })
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: doctorRole?.id } })
+
+    const names = await call('GET', '/api/staff/names')
+    expect(names.statusCode).toBe(200)
+    expect(names.json().data[0]).toHaveProperty('fullName')
+    expect(names.json().data[0]).not.toHaveProperty('email')
+    expect((await call('GET', '/api/staff')).statusCode).toBe(403)
+
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: owner?.id } })
+  })
+
+  it('texnik ismlar roʻyxatini soʻray olmaydi', async () => {
+    expect((await asTech('GET', '/api/staff/names')).statusCode).toBe(403)
+  })
+
   it('naryad oʻchiriladi', async () => {
     const id = (await newOrder()).json().data.id
     expect((await call('DELETE', `/api/lab-orders/${id}`)).statusCode).toBe(200)

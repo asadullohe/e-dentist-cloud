@@ -528,6 +528,8 @@ export const LAB_UI = {
   add: 'Yangi naryad',
   edit: 'Naryadni tahrirlash',
   empty: 'Naryadlar yoʻq',
+  tab: 'Texnik ishlari',
+  empty_patient: 'Bu bemorga naryad yozilmagan',
   patient: 'Bemor',
   doctor: 'Shifokor',
   tech: 'Texnik',

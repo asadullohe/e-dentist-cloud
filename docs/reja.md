@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.7** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.8** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -516,8 +516,23 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > tegmaydi — ular tishga oʻrnatilmaydi. Narx 0 boʻlsa xarajat yozilmaydi.
 > Naryadni ikki marta topshirib boʻlmagani uchun xarajat ham takrorlanmaydi
 > (test buni tekshiradi).
-- [ ] **3.7 «Texnik ishlari» sahifasi** — filtrlar, muddati oʻtganlari tepada.
+- [x] **3.7 «Texnik ishlari» sahifasi** — filtrlar, muddati oʻtganlari tepada.
       Texnik kirganda boshlangʻich sahifasi shu
+
+> **Ismlar uchun alohida marshrut**
+>
+> Shifokor naryadga texnik tayinlaydi, lekin unda `staff.manage` yoʻq —
+> toʻliq xodimlar roʻyxatida esa pochta, holat va oxirgi kirish bor.
+> Shuning uchun `GET /api/staff/names` qoʻshildi: faqat id va ism,
+> `staff.manage` **yoki** `lab.write` bilan ochiladi.
+>
+> Boshlangʻich sahifa rol nomiga emas, ruxsatga qarab tanlanadi:
+> `patients.read` yoʻq, `lab.own` bor boʻlsa — «Texnik ishlari».
+> Klinika rol shablonini oʻzgartirsa ham toʻgʻri ishlaydi.
+>
+> Frontendda qatlam qoidasi endi biome bilan tekshiriladi: `features`
+> yonidagi featureni, `entities` esa featureni import qila olmaydi
+> (`PatientPicker` shu sabab `entities/patient` ga koʻchdi).
 - [ ] **3.8 Toʻliq eksport** — «Barcha maʼlumotni yuklab olish», zip formatida
 
 ---

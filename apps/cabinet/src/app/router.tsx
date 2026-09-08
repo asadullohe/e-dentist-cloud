@@ -1,10 +1,11 @@
 import { UI_TEXT } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
-import { useSession } from '@/entities/session'
+import { useHasPermission, useSession } from '@/entities/session'
 import { AcceptInvite } from '@/pages/AcceptInvite'
 import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
 import { Expenses } from '@/pages/Expenses'
+import { Lab } from '@/pages/Lab'
 import { Login } from '@/pages/Login'
 import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
@@ -35,6 +36,17 @@ function RequireAuth() {
   return <Outlet />
 }
 
+/// Texnik kirganda boshlangʻich sahifasi — naryadlar, bemorlar roʻyxati emas
+/// (tz.md 7-boʻlim). Rol nomiga emas, ruxsatga qaraymiz: klinika rolni
+/// oʻzgartirgan boʻlishi mumkin
+function Home() {
+  const hasPermission = useHasPermission()
+  if (!hasPermission('patients.read') && hasPermission('lab.own')) {
+    return <Navigate to="/lab" replace />
+  }
+  return <Dashboard />
+}
+
 export function Router() {
   return (
     <Routes>
@@ -45,7 +57,7 @@ export function Router() {
 
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<Home />} />
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientCard />} />
           <Route path="debtors" element={<Debtors />} />
@@ -54,6 +66,7 @@ export function Router() {
           <Route path="expenses" element={<Expenses />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="lab" element={<Lab />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
           {NAV_SECTIONS.filter(
             (section) =>
@@ -65,6 +78,7 @@ export function Router() {
                 '/expenses',
                 '/reports',
                 '/settings',
+                '/lab',
               ].includes(section.path),
           ).map((section) => (
             <Route

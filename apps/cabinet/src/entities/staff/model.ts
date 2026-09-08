@@ -12,6 +12,11 @@ export interface StaffMember {
   lastLoginAt: string | null
 }
 
+export interface StaffName {
+  id: string
+  fullName: string | null
+}
+
 export interface PendingInvite {
   id: string
   email: string
