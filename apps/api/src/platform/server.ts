@@ -11,6 +11,7 @@ import * as auth from '../modules/auth/service.js'
 import { healthRoutes } from '../modules/health/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
 import { paymentRoutes } from '../modules/payments/routes.js'
+import { scheduleRoutes } from '../modules/schedule/routes.js'
 import { serviceRoutes } from '../modules/services/routes.js'
 import { visitRoutes } from '../modules/visits/routes.js'
 import type { Config } from './config.js'
@@ -127,6 +128,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(serviceRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(scheduleRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app
 }

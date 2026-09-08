@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.16** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.17** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -418,7 +418,15 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > Tahlil natijasi Redis da yarim soat saqlanadi va «Yuklash» bosilganda
 > token boʻyicha oʻqiladi — fayl ikkinchi marta yuborilmaydi. Kalitga
 > `clinicId` kiradi, shuning uchun boshqa klinikaning tokeni ishlamaydi.
-- [ ] **2.16 `schedule` moduli va Qabul jadvali sahifasi** — oylik kalendar, kunlik roʻyxat
+- [x] **2.16 `schedule` moduli va Qabul jadvali sahifasi** — oylik kalendar, kunlik roʻyxat
+
+> **Jadvalni oʻqish `patients.read` talab qiladi**
+>
+> Qabul roʻyxatida bemor ismi va telefoni koʻrinadi, shuning uchun `GET
+> /api/appointments` shunchaki kirganlarga emas, `patients.read` boriga
+> ochiq — texnik jadvalni koʻrmaydi. Yozish uchun `schedule.write`.
+> Bemor ismlari `patients.findByIds` orqali olinadi: `schedule` repozitoriyasi
+> boshqa modul jadvaliga soʻrov yubormaydi.
 - [ ] **2.17 Mobil koʻrinish** — yon menyuni yigʻiladigan qilish (shadcn `Sheet`),
       jadvallarni tor ekranga moslash
 

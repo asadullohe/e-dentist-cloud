@@ -18,6 +18,14 @@ export { Calendar } from './calendar'
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card'
 export { Checkbox } from './checkbox'
 export {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from './command'
+export {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -37,6 +45,7 @@ export {
 } from './form'
 export { Input } from './input'
 export { Label } from './label'
+export { Popover, PopoverContent, PopoverTrigger } from './popover'
 export {
   Select,
   SelectContent,

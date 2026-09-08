@@ -401,3 +401,39 @@ export const IMPORT_UI = {
   cancel: 'Bekor qilish',
   close: 'Yopish',
 } as const
+
+// Qabul jadvali
+export const APPOINTMENT_TEXT = {
+  not_found: 'Qabul topilmadi',
+  patient_required: 'Bemorni tanlang',
+  time_required: 'Vaqt kiritilishi shart',
+  time_invalid: 'Vaqtni oʻqib boʻlmadi — soat:daqiqa koʻrinishida yozing',
+} as const
+
+/// Holat kalitlari bazada saqlanadi, shuning uchun oʻzgarmaydi
+export const APPOINTMENT_STATUS_LABELS = {
+  scheduled: 'Rejalashtirilgan',
+  arrived: 'Keldi',
+  no_show: 'Kelmadi',
+  done: 'Yakunlandi',
+  cancelled: 'Bekor qilindi',
+} as const
+
+export const SCHEDULE_UI = {
+  title: 'Qabul jadvali',
+  add: 'Qabul qoʻshish',
+  edit: 'Qabulni tahrirlash',
+  empty_day: 'Bu kunga qabul yoʻq',
+  today: 'Bugun',
+  patient: 'Bemor',
+  time: 'Vaqt',
+  date: 'Sana',
+  status: 'Holat',
+  note: 'Izoh',
+  pick_patient: 'Bemorni qidiring',
+  no_matches: 'Bemor topilmadi',
+  delete_title: 'Qabul oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  month_total: (n: number) => `${n} ta qabul`,
+  date_unreadable: 'Sanani oʻqib boʻlmadi',
+} as const
