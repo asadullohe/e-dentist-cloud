@@ -29,6 +29,12 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
     return ok(await queue.join(opts.deps, code, input, req.ip))
   })
 
+  // Kutish xonasi ekrani. Javobda bemor ismlari yoʻq
+  app.get('/n/:code/screen', async (req) => {
+    const { code } = req.params as { code: string }
+    return ok(await queue.screen(opts.deps, code))
+  })
+
   // Jonli yangilanish. SSE tanlangani: maʼlumot bir tomonga oqadi va u
   // oddiy HTTP boʻlgani uchun proxy orqali muammosiz oʻtadi (tz.md 14-boʻlim)
   app.get('/n/:code/stream', async (req, reply) => {

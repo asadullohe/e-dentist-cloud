@@ -1,7 +1,9 @@
 import { apiRequest } from '@/shared/api'
-import type { QueueBoard, QueueTicket } from './model'
+import type { QueueBoard, QueueScreen, QueueTicket } from './model'
 
 export const fetchBoard = (code: string) => apiRequest<QueueBoard>(`/n/${code}`)
+
+export const fetchScreen = (code: string) => apiRequest<QueueScreen>(`/n/${code}/screen`)
 
 export const fetchTicket = (code: string, id: string) =>
   apiRequest<QueueTicket>(`/n/${code}/ticket/${id}`)

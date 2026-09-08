@@ -21,3 +21,10 @@ export interface QueueTicket {
   doctorName: string
   waitMinutes: number
 }
+
+export interface QueueScreen {
+  clinicName: string
+  /// Hozir chaqirilganlar. Ismlar yoʻq — faqat raqam va shifokor
+  called: { number: number; doctorName: string }[]
+  next: number[]
+}

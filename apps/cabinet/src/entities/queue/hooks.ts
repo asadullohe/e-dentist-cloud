@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { fetchBoard, fetchTicket, type JoinPayload, joinQueue } from './api'
+import { fetchBoard, fetchScreen, fetchTicket, type JoinPayload, joinQueue } from './api'
 
 export const QUEUE_KEYS = {
   board: (code: string) => ['queue', code] as const,
+  screen: (code: string) => ['queue', code, 'screen'] as const,
   ticket: (code: string, id: string) => ['queue', code, 'ticket', id] as const,
 }
 
@@ -15,6 +16,15 @@ export function useQueueBoard(code: string) {
   return useQuery({
     queryKey: QUEUE_KEYS.board(code),
     queryFn: () => fetchBoard(code),
+    refetchInterval: FALLBACK_MS,
+    retry: false,
+  })
+}
+
+export function useQueueScreen(code: string) {
+  return useQuery({
+    queryKey: QUEUE_KEYS.screen(code),
+    queryFn: () => fetchScreen(code),
     refetchInterval: FALLBACK_MS,
     retry: false,
   })

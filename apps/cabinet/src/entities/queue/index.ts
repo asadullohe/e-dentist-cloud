@@ -1,3 +1,10 @@
-export { fetchBoard, fetchTicket, joinQueue } from './api'
-export { QUEUE_KEYS, useJoinQueue, useQueueBoard, useQueueStream, useQueueTicket } from './hooks'
-export type { QueueBoard, QueueDoctor, QueueStatus, QueueTicket } from './model'
+export { fetchBoard, fetchScreen, fetchTicket, joinQueue } from './api'
+export {
+  QUEUE_KEYS,
+  useJoinQueue,
+  useQueueBoard,
+  useQueueScreen,
+  useQueueStream,
+  useQueueTicket,
+} from './hooks'
+export type { QueueBoard, QueueDoctor, QueueScreen, QueueStatus, QueueTicket } from './model'

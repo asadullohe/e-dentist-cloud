@@ -230,6 +230,64 @@ describe('navbat sanogʻi', () => {
   })
 })
 
+describe('kutish xonasi ekrani', () => {
+  it('chaqirilgan raqam va keyingilari koʻrinadi', async () => {
+    const tickets = []
+    for (const name of ['Ekran Bir', 'Ekran Ikki', 'Ekran Uch', 'Ekran Toʻrt', 'Ekran Besh']) {
+      const r = await open('POST', `/api/n/${code}/join`, { doctorId, fullName: name })
+      tickets.push(r.json().data)
+    }
+
+    // Qabulxona birinchisini chaqirdi, qolganlari navbatda
+    await h.ownerDb.appointment.update({
+      where: { id: tickets[0]?.id },
+      data: { queueStatus: 'called' },
+    })
+    for (const ticket of tickets.slice(1)) {
+      await h.ownerDb.appointment.update({
+        where: { id: ticket.id },
+        data: { queueStatus: 'waiting' },
+      })
+    }
+
+    const data = (await open('GET', `/api/n/${code}/screen`)).json().data
+    expect(data.called).toEqual([{ number: tickets[0]?.number, doctorName: 'Sinov Egasi' }])
+
+    // Faqat keyingi uchtasi — ekranga koʻproq sigʻmaydi. Kutayotganlar
+    // bu testdan oldin ham boʻlishi mumkin, shuning uchun kutilgan
+    // roʻyxatni bazadan olamiz
+    const waiting = await h.ownerDb.appointment.findMany({
+      where: { clinicId: h.clinicId, queueStatus: 'waiting' },
+      select: { queueNumber: true },
+      orderBy: { queueNumber: 'asc' },
+      take: 3,
+    })
+    expect(data.next).toEqual(waiting.map((row) => row.queueNumber))
+    expect(data.next).toHaveLength(3)
+  })
+
+  // Kutayotganlar bir-birining ismini bilmasligi kerak (tz.md 14-boʻlim)
+  it('ekranda bemor ismlari yoʻq', async () => {
+    const raw = (await open('GET', `/api/n/${code}/screen`)).payload
+    expect(raw).not.toContain('Ekran Bir')
+    expect(raw).not.toMatch(/guestName|guestPhone|patientId/)
+  })
+
+  it('tasdiqlanmagan yozuvlar ekranga chiqmaydi', async () => {
+    const joined = (
+      await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Tasdiqsiz Bemor' })
+    ).json().data
+    const data = (await open('GET', `/api/n/${code}/screen`)).json().data
+    expect(data.next).not.toContain(joined.number)
+  })
+
+  it('navbat oʻchirilgan boʻlsa ekran ham yopiladi', async () => {
+    await h.ownerDb.clinic.update({ where: { id: h.clinicId }, data: { queueEnabled: false } })
+    expect((await open('GET', `/api/n/${code}/screen`)).statusCode).toBe(403)
+    await h.ownerDb.clinic.update({ where: { id: h.clinicId }, data: { queueEnabled: true } })
+  })
+})
+
 describe('jonli oqim', () => {
   // SSE javobi tugamaydi, shuning uchun inject ishlamaydi — haqiqiy
   // ulanish ochamiz

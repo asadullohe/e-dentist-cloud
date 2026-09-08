@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 4.4** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.5** — bosqich 3 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -611,7 +611,17 @@ _Alohida boʻlim. Muddat qisqarsa — birinchi qisqartiriladigan joy._
 >
 > Har 25 soniyada izohli qator (`: ping`) yuboriladi: jim turgan oqimni
 > proxy uzib yuboradi.
-- [ ] **4.4 Kutish xonasi ekrani `/n/<kod>/ekran`** — katta shrift, faqat raqamlar, ismsiz
+- [x] **4.4 Kutish xonasi ekrani `/n/<kod>/ekran`** — katta shrift, faqat raqamlar, ismsiz
+
+> **Ekran javobida ism umuman yoʻq**
+>
+> Marshrut chaqirilgan raqamlar (shifokor nomi bilan) va keyingi uchtasini
+> qaytaradi — bemor ismi, telefoni va id si javobga kirmaydi. Test buni
+> tekshiradi: javob matnida bemor ismi ham, `guestName`/`patientId`
+> maydonlari ham topilmasligi kerak.
+>
+> Oʻlchamlar `vh` da: ekran televizorga chiqariladi va uzoqdan oʻqilishi
+> kerak. Yangilanish oʻsha SSE oqimidan.
 - [ ] **4.5 Kabinetdagi navbat** — toʻliq roʻyxat, chaqirish / keldi / kelmadi / yakunlandi,
       `queue.manage` ruxsati
 - [ ] **4.6 Suiisteʼmoldan himoya** — qurilmadan kuniga 2 ta, IP dan soatiga 5 ta,

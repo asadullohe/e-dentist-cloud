@@ -126,6 +126,44 @@ export function board(deps: QueueDeps, code: string): Promise<Board> {
   )
 }
 
+/// Kutish xonasi ekrani. Ismlar yoʻq — faqat raqamlar (tz.md 14-boʻlim:
+/// kutayotgan odamlar bir-birining ismini bilmasligi kerak)
+export interface Screen {
+  clinicName: string
+  called: { number: number; doctorName: string }[]
+  next: number[]
+}
+
+/// Ekranda nechta keyingi raqam koʻrsatiladi
+const NEXT_SHOWN = 3
+
+export function screen(deps: QueueDeps, code: string): Promise<Screen> {
+  return findClinic(deps, code).then((clinic) =>
+    withClinic(deps.db, clinic.id, async (tx) => {
+      const { from, to } = today()
+      const [entries, doctors] = await Promise.all([
+        repo.queueOfDay(tx, from, to),
+        auth.listDoctorsTx(tx),
+      ])
+      const doctorName = new Map(doctors.map((doctor) => [doctor.id, doctor.fullName]))
+
+      return {
+        clinicName: clinic.name,
+        called: entries
+          .filter((entry) => entry.queueStatus === 'called' && entry.queueNumber !== null)
+          .map((entry) => ({
+            number: entry.queueNumber as number,
+            doctorName: entry.doctorId ? (doctorName.get(entry.doctorId) ?? '') : '',
+          })),
+        next: entries
+          .filter((entry) => entry.queueStatus === 'waiting' && entry.queueNumber !== null)
+          .slice(0, NEXT_SHOWN)
+          .map((entry) => entry.queueNumber as number),
+      }
+    }),
+  )
+}
+
 export async function join(
   deps: QueueDeps,
   code: string,

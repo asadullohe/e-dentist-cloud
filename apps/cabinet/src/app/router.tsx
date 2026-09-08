@@ -11,6 +11,7 @@ import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Placeholder } from '@/pages/Placeholder'
 import { Queue } from '@/pages/Queue'
+import { QueueScreen } from '@/pages/QueueScreen'
 import { Register } from '@/pages/Register'
 import { Reports } from '@/pages/Reports'
 import { Schedule } from '@/pages/Schedule'
@@ -57,6 +58,7 @@ export function Router() {
       <Route path="/invite" element={<AcceptInvite />} />
       {/* Navbat — yagona loginsiz sahifa (tz.md 14-boʻlim) */}
       <Route path="/n/:code" element={<Queue />} />
+      <Route path="/n/:code/ekran" element={<QueueScreen />} />
 
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
