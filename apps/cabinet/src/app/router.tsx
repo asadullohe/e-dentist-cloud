@@ -3,6 +3,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
+import { Expenses } from '@/pages/Expenses'
 import { Login } from '@/pages/Login'
 import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
@@ -46,10 +47,13 @@ export function Router() {
           <Route path="debtors" element={<Debtors />} />
           <Route path="services" element={<Services />} />
           <Route path="schedule" element={<Schedule />} />
+          <Route path="expenses" element={<Expenses />} />
           {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
           {NAV_SECTIONS.filter(
             (section) =>
-              !['/patients', '/debtors', '/services', '/schedule'].includes(section.path),
+              !['/patients', '/debtors', '/services', '/schedule', '/expenses'].includes(
+                section.path,
+              ),
           ).map((section) => (
             <Route
               key={section.path}

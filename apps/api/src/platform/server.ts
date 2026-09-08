@@ -8,6 +8,7 @@ import multipart from '@fastify/multipart'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
 import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
+import { expenseRoutes } from '../modules/expenses/routes.js'
 import { healthRoutes } from '../modules/health/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
 import { paymentRoutes } from '../modules/payments/routes.js'
@@ -129,6 +130,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(serviceRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(scheduleRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app
 }

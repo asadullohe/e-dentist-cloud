@@ -52,6 +52,7 @@ model Clinic {
   appointments Appointment[]
   services     Service[]
   images       PatientImage[]
+  expenses     Expense[]
 
   @@index([status])
   @@map("clinics")
@@ -345,6 +346,40 @@ model Service {
 
   @@unique([clinicId, name])
   @@map("services")
+}
+
+// ───────────────────────────────  Xarajatlar  ───────────────────────────────
+
+/// Turkumlar oflayn ilovadan koʻchdi. `lab` — texnik ishi: naryad
+/// topshirilganda texnik narxi shu turkumda xarajatga tushadi (tz.md 9-boʻlim),
+/// busiz hisobotdagi sof foyda yolgʻon chiqadi
+enum ExpenseCategory {
+  materials
+  equipment
+  rent
+  utilities
+  salary
+  ads
+  tax
+  lab
+  other
+}
+
+model Expense {
+  id          String          @id @default(uuid(7)) @db.Uuid
+  clinicId    String          @map("clinic_id") @db.Uuid
+  date        DateTime        @db.Date
+  category    ExpenseCategory @default(other)
+  description String
+  /// Soʻm, butun son
+  amount      Int
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, date])
+  @@map("expenses")
 }
 
 // ────────────────────────────  Bemor rasmlari  ────────────────────────────

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.1** — bosqich 2 tugadi — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.2** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -442,7 +442,17 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 
 ## Bosqich 3 — Pul, hisobot, texnik · ~2 hafta
 
-- [ ] **3.1 `expenses` moduli va Xarajatlar sahifasi**
+- [x] **3.1 `expenses` moduli va Xarajatlar sahifasi**
+
+> **Xarajat uchun bitta ruxsat**
+>
+> Ruxsatlar roʻyxatida `expenses.read` bitta (tz.md 6-boʻlim) — u boʻlimni
+> butunlay ochadi: xarajatni koʻrgan odam uni yoza ham oladi. Boʻlim egasiga
+> tegishli, shuning uchun oʻqish/yozish ajratilmadi.
+>
+> Turkumlar oflayn ilovadan koʻchdi, ustiga `lab` qoʻshildi: naryad
+> topshirilganda texnik narxi shu turkumda xarajatga tushadi (3.6).
+> `lab` moduli `expenses` jadvaliga tegmaydi — `expenses.addTx` ni chaqiradi.
 - [ ] **3.2 `reports` moduli** — oylik tushum, sof foyda, 12 oylik grafik
 - [ ] **3.3 Xodimlar va rollar** — taklifnoma oqimi (7 kun), ruxsat matritsasi UI,
       qulflanib qolishdan himoya

@@ -315,6 +315,49 @@ export const SERVICE_UI = {
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
 } as const
 
+// Xarajat xatolari
+export const EXPENSE_TEXT = {
+  not_found: 'Xarajat topilmadi',
+  description_required: 'Nima uchun sarflanganini yozing',
+  date_required: 'Sana kiritilishi shart',
+  amount_required: 'Summani kiriting',
+  category_invalid: 'Bunday turkum yoʻq',
+  month_invalid: 'Oyni oʻqib boʻlmadi',
+} as const
+
+/// Turkum nomlari. Bazada inglizcha kalit, ekranda shu matn
+export const EXPENSE_CATEGORY_LABELS = {
+  materials: 'Materiallar',
+  equipment: 'Uskuna',
+  rent: 'Ijara',
+  utilities: 'Kommunal',
+  salary: 'Ish haqi',
+  ads: 'Reklama',
+  tax: 'Soliq',
+  lab: 'Texnik ishlari',
+  other: 'Boshqa',
+} as const
+
+// Xarajatlar sahifasi
+export const EXPENSE_UI = {
+  title: 'Xarajatlar',
+  subtitle: 'Klinika xarajatlarini yozib borish',
+  add: 'Yangi xarajat',
+  edit: 'Xarajatni tahrirlash',
+  empty: 'Bu oyda xarajat yozilmagan',
+  date: 'Sana',
+  category: 'Turkumi',
+  description: 'Nima uchun',
+  description_hint: 'Masalan: plomba materiali',
+  amount: 'Summa',
+  total: 'Jami',
+  this_month: 'Shu oy',
+  prev_month: 'Oldingi oy',
+  next_month: 'Keyingi oy',
+  delete_title: 'Xarajat oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {
