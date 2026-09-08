@@ -1,7 +1,6 @@
 import { formatUzPhone, SCHEDULE_UI } from '@e-dentist/shared'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
 import { useState } from 'react'
-import { usePatients } from '@/entities/patient'
 import { useDebounced } from '@/shared/lib'
 import {
   Button,
@@ -14,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/shared/ui'
+import { usePatients } from '../hooks'
 
 interface PatientPickerProps {
   value: string | null

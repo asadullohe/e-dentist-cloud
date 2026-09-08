@@ -162,3 +162,8 @@ export function remove(deps: ScheduleDeps, clinicId: string, userId: string, id:
     })
   })
 }
+
+/// Toʻliq eksport uchun (export moduli)
+export function exportAppointmentsTx(tx: ClinicTx) {
+  return repo.allAppointments(tx)
+}

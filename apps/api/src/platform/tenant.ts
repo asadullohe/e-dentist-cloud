@@ -30,6 +30,8 @@ export const TENANT_MODELS = new Set([
   'Appointment',
   'Service',
   'PatientImage',
+  'Expense',
+  'LabOrder',
 ])
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

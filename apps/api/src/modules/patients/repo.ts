@@ -149,3 +149,8 @@ export function findImage(tx: ClinicTx, id: string) {
 export function removeImage(tx: ClinicTx, id: string) {
   return tx.patientImage.delete({ where: { id } })
 }
+
+/// Oraliqda qoʻshilgan bemorlar soni. Hisobot uchun
+export function countCreatedBetween(tx: ClinicTx, from: Date, to: Date) {
+  return tx.patient.count({ where: { createdAt: { gte: from, lt: to } } })
+}

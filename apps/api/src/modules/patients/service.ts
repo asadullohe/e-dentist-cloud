@@ -75,6 +75,11 @@ export function findByIds(tx: ClinicTx, ids: string[]) {
   return repo.findByIds(tx, ids)
 }
 
+/// Boshqa modullar uchun (reports): oraliqda qoʻshilgan bemorlar soni
+export function countCreatedTx(tx: ClinicTx, from: Date, to: Date): Promise<number> {
+  return repo.countCreatedBetween(tx, from, to)
+}
+
 export function list(deps: PatientDeps, clinicId: string, input: PatientListInput) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const { items, total } = await repo.list(tx, input)
@@ -468,4 +473,13 @@ export async function importErrors(
   const session = await deps.imports.read<ImportSession>(clinicId, token)
   if (!session) throw errors.badRequest(IMPORT_TEXT.session_expired)
   return buildErrorReport(session.rows)
+}
+
+/// Toʻliq eksport uchun (export moduli): barcha bemorlar va tayyor .xlsx
+export function exportRowsTx(tx: ClinicTx) {
+  return repo.listAll(tx)
+}
+
+export function buildPatientsSheet(rows: Awaited<ReturnType<typeof repo.listAll>>) {
+  return buildExport(rows)
 }

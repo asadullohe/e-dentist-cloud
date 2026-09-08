@@ -207,7 +207,7 @@ Uch qatlamli himoya:
 | `appointments` | clinic_id, patient_id, at, status |  |
 | `services` | clinic_id, name, price | Narxnoma |
 | `expenses` | clinic_id, date, category, amount |  |
-| `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, returns | Naryad. `returns` — necha marta qaytgani |
+| `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
 | `images` | patient_id, key, caption | `key` — MinIO dagi obyekt nomi |
 | `audit_log` | clinic_id, user_id, action, entity, entity_id, meta, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart. `entity_id` boʻlmasa «qaysi bemor yozuvi» degan savolga javob yoʻq (12-boʻlim talabi) |
 
@@ -436,13 +436,18 @@ PATCH  /api/lab-orders/:id/status     # tayyor | topshirildi | qaytarildi
 GET    /api/appointments?from=2026-09-01&to=2026-09-30
 POST   /api/payments
 GET    /api/debtors
-GET    /api/reports/monthly?ym=2026-09
+GET    /api/reports?month=2026-09
+GET    /api/export                # barcha maʼlumot, zip
 
-GET    /api/staff
+GET    /api/staff                # xodimlar + kutilayotgan taklifnomalar
 POST   /api/staff/invite
+DELETE /api/staff/invites/:id    # taklifnomani bekor qilish
 PATCH  /api/staff/:id            # rol, status
 GET    /api/roles
 PATCH  /api/roles/:id            # ruxsatlar roʻyxati
+
+GET    /api/invites/:token       # ochiq: havoladagi klinika va rol
+POST   /api/invites/accept       # ochiq: parol qoʻyiladi, sessiya ochiladi
 
 POST   /api/auth/register        # klinika + egasi, sinov boshlanadi
 POST   /api/auth/verify          # pochtani tasdiqlash

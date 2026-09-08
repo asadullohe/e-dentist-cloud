@@ -44,3 +44,17 @@ export async function paidTotalOf(tx: ClinicTx, patientId: string): Promise<numb
   const row = await tx.payment.aggregate({ where: { patientId }, _sum: { amount: true } })
   return row._sum.amount ?? 0
 }
+
+/// Kun boʻyicha tushum. Oyga yigʻish xizmat qatlamida (visits bilan bir xil sabab)
+export function dailyTotals(tx: ClinicTx, from: Date, to: Date) {
+  return tx.payment.groupBy({
+    by: ['date'],
+    where: { date: { gte: from, lte: to } },
+    _sum: { amount: true },
+  })
+}
+
+/// Toʻliq eksport uchun
+export function allPayments(tx: ClinicTx) {
+  return tx.payment.findMany({ select: SELECT, orderBy: [{ date: 'asc' }, { id: 'asc' }] })
+}

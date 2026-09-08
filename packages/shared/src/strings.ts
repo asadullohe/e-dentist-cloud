@@ -315,6 +315,302 @@ export const SERVICE_UI = {
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
 } as const
 
+// Xarajat xatolari
+export const EXPENSE_TEXT = {
+  not_found: 'Xarajat topilmadi',
+  description_required: 'Nima uchun sarflanganini yozing',
+  date_required: 'Sana kiritilishi shart',
+  amount_required: 'Summani kiriting',
+  category_invalid: 'Bunday turkum yoʻq',
+  month_invalid: 'Oyni oʻqib boʻlmadi',
+} as const
+
+/// Turkum nomlari. Bazada inglizcha kalit, ekranda shu matn
+export const EXPENSE_CATEGORY_LABELS = {
+  materials: 'Materiallar',
+  equipment: 'Uskuna',
+  rent: 'Ijara',
+  utilities: 'Kommunal',
+  salary: 'Ish haqi',
+  ads: 'Reklama',
+  tax: 'Soliq',
+  lab: 'Texnik ishlari',
+  other: 'Boshqa',
+} as const
+
+// Xarajatlar sahifasi
+export const EXPENSE_UI = {
+  title: 'Xarajatlar',
+  subtitle: 'Klinika xarajatlarini yozib borish',
+  add: 'Yangi xarajat',
+  edit: 'Xarajatni tahrirlash',
+  empty: 'Bu oyda xarajat yozilmagan',
+  date: 'Sana',
+  category: 'Turkumi',
+  description: 'Nima uchun',
+  description_hint: 'Masalan: plomba materiali',
+  amount: 'Summa',
+  total: 'Jami',
+  this_month: 'Shu oy',
+  prev_month: 'Oldingi oy',
+  next_month: 'Keyingi oy',
+  delete_title: 'Xarajat oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+} as const
+
+// Hisobotlar sahifasi
+export const REPORT_UI = {
+  title: 'Hisobotlar',
+  subtitle: 'Oy boʻyicha daromad va tashriflar tahlili',
+  visits: 'Tashriflar',
+  charges: 'Qilingan ish narxi',
+  payments: 'Tushum (toʻlovlar)',
+  expenses: 'Xarajatlar',
+  profit: 'Sof foyda',
+  new_patients: 'Yangi bemorlar',
+  last_months: 'Oxirgi 12 oy',
+  chart_hint: 'Ustunni bosing — oʻsha oyga oʻtadi',
+  treatments_title: 'Muolajalar',
+  expenses_title: 'Xarajatlar',
+  treatment: 'Muolaja',
+  category: 'Turkumi',
+  count: 'Soni',
+  total: 'Jami',
+  empty_visits: 'Bu oyda tashrif boʻlmagan',
+  empty_expenses: 'Bu oyda xarajat yozilmagan',
+} as const
+
+// Xodimlar va rollar
+export const STAFF_TEXT = {
+  not_found: 'Xodim topilmadi',
+  invite_not_found: 'Taklifnoma topilmadi',
+  invite_expired: 'Taklifnoma muddati tugagan yoki allaqachon ishlatilgan',
+  email_taken: 'Bu pochta bilan hisob allaqachon bor',
+  invite_exists: 'Bu pochtaga taklifnoma yuborilgan — avval uni bekor qiling',
+  role_not_found: 'Rol topilmadi',
+  self_change: 'Oʻz rolingizni yoki holatingizni oʻzgartira olmaysiz',
+  last_owner: 'Klinikada kamida bitta faol egasi qolishi shart',
+  role_required: 'Rolni tanlang',
+  name_required: 'Ism-familiyani yozing',
+  invite_subject: 'E-Dentist — sizni klinikaga taklif qilishdi',
+} as const
+
+// Sozlamalar → Xodimlar va Rollar
+export const STAFF_UI = {
+  title: 'Sozlamalar',
+  staff_tab: 'Xodimlar',
+  roles_tab: 'Rollar',
+  invite: 'Taklif qilish',
+  invite_title: 'Xodimni taklif qilish',
+  invite_sent: 'Taklifnoma yuborildi',
+  pending: 'Kutilmoqda',
+  pending_title: 'Yuborilgan taklifnomalar',
+  expires: 'Muddati',
+  revoke: 'Bekor qilish',
+  revoke_title: 'Taklifnoma bekor qilinsinmi?',
+  revoke_text: 'Havola ishlamay qoladi. Kerak boʻlsa qaytadan yuborasiz.',
+  name: 'Xodim',
+  email: 'Pochta',
+  role: 'Rol',
+  status: 'Holat',
+  last_login: 'Oxirgi kirish',
+  never: 'hech qachon',
+  active: 'Faol',
+  disabled: 'Faolsizlantirilgan',
+  disable: 'Faolsizlantirish',
+  enable: 'Faollashtirish',
+  you: 'siz',
+  permissions: 'Ruxsatlar',
+  save_role: 'Saqlash',
+  role_saved: 'Rol yangilandi',
+  owner_locked: 'Egasi bu ruxsatlarni yoʻqota olmaydi',
+  accept_title: 'Klinikaga qoʻshilish',
+  accept_hint: (clinic: string, role: string) =>
+    `${clinic} sizni «${role}» roli bilan taklif qildi`,
+  accept_button: 'Hisobni ochish',
+  accept_invalid: 'Havola ishlamaydi yoki muddati tugagan',
+} as const
+
+/// Ruxsat nomlari — matritsada shu matn koʻrinadi
+export const PERMISSION_LABELS = {
+  'patients.read': 'Bemorlarni koʻrish',
+  'patients.write': 'Bemorlarni oʻzgartirish',
+  'visits.write': 'Tashrif yozish',
+  'teeth.write': 'Tish xaritasi',
+  'payments.read': 'Toʻlovlar va qarzdorlik',
+  'payments.write': 'Toʻlov qabul qilish',
+  'schedule.write': 'Qabul jadvali',
+  'services.manage': 'Narxnoma',
+  'expenses.read': 'Xarajatlar',
+  'reports.read': 'Hisobotlar',
+  'lab.own': 'Oʻz naryadlari',
+  'lab.write': 'Naryad yozish',
+  'lab.cost': 'Texnik narxlari',
+  'queue.manage': 'Navbat',
+  'staff.manage': 'Xodimlar va rollar',
+  'billing.manage': 'Obuna va toʻlov',
+  'data.export': 'Maʼlumotni yuklab olish',
+} as const
+
+// Naryad (texnik ishlari)
+export const LAB_TEXT = {
+  not_found: 'Naryad topilmadi',
+  teeth_required: 'Kamida bitta tish tanlansin',
+  tooth_invalid: 'Bunday tish raqami yoʻq',
+  due_required: 'Muddat kiritilishi shart',
+  shade_invalid: 'Bunday rang yoʻq',
+  price_negative: 'Narx manfiy boʻlishi mumkin emas',
+  tech_not_found: 'Texnik topilmadi',
+  reason_required: 'Qaytarish sababini tanlang',
+  status_flow: 'Naryad bu holatga bu bosqichdan oʻta olmaydi',
+  not_your_order: 'Bu naryad sizga biriktirilmagan',
+  return_from_ready: 'Faqat «Tayyor» naryadni qaytarish mumkin',
+  /// Naryad topshirilganda xarajatlarga shu izoh bilan tushadi
+  expense_note: (work: string, fio: string) => `${work} — ${fio}`,
+} as const
+
+export const LAB_WORK_TYPE_LABELS = {
+  crown: 'Koronka',
+  bridge: 'Koʻprik',
+  denture: 'Olinadigan protez',
+  clasp_denture: 'Bugel',
+  veneer: 'Vinir',
+  inlay: 'Inley/onley',
+  mouthguard: 'Kappa',
+  ortho_plate: 'Ortodontik plastinka',
+} as const
+
+export const LAB_MATERIAL_LABELS = {
+  metal_ceramic: 'Metall-keramika',
+  zirconia: 'Sirkoniy',
+  press_ceramic: 'Press-keramika',
+  acrylic: 'Plastmassa',
+  cast_metal: 'Quyma metall',
+  nylon: 'Neylon',
+} as const
+
+export const LAB_STATUS_LABELS = {
+  issued: 'Berildi',
+  ready: 'Tayyor',
+  delivered: 'Topshirildi',
+} as const
+
+export const LAB_RETURN_REASON_LABELS = {
+  fit: 'Oʻlchov mos emas',
+  shade: 'Rang mos emas',
+  broken: 'Sindi',
+  other: 'Boshqa',
+} as const
+
+/// VITA Classical shkalasi
+export const VITA_SHADES = [
+  'A1',
+  'A2',
+  'A3',
+  'A3.5',
+  'A4',
+  'B1',
+  'B2',
+  'B3',
+  'B4',
+  'C1',
+  'C2',
+  'C3',
+  'C4',
+  'D2',
+  'D3',
+  'D4',
+] as const
+
+// «Texnik ishlari» sahifasi
+export const LAB_UI = {
+  title: 'Texnik ishlari',
+  add: 'Yangi naryad',
+  edit: 'Naryadni tahrirlash',
+  empty: 'Naryadlar yoʻq',
+  tab: 'Texnik ishlari',
+  empty_patient: 'Bu bemorga naryad yozilmagan',
+  patient: 'Bemor',
+  doctor: 'Shifokor',
+  tech: 'Texnik',
+  tech_none: 'Tanlanmagan',
+  teeth: 'Tishlar',
+  work_type: 'Ish turi',
+  material: 'Material',
+  shade: 'Rang',
+  due: 'Muddat',
+  tech_price: 'Texnik narxi',
+  status: 'Holat',
+  note: 'Izoh',
+  overdue: 'Muddati oʻtgan',
+  returns: (n: number) => `${n} marta qaytgan`,
+  mark_ready: 'Tayyor',
+  mark_delivered: 'Topshirildi',
+  mark_returned: 'Qaytarish',
+  return_title: 'Naryadni qaytarish',
+  return_reason: 'Sababi',
+  return_note: 'Izoh',
+  returned_at: 'Qaytarilgan',
+  filter_status: 'Holat boʻyicha',
+  filter_tech: 'Texnik boʻyicha',
+  filter_all: 'Hammasi',
+  delete_title: 'Naryad oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+} as const
+
+// Toʻliq eksport: fayl nomlari va ustun sarlavhalari
+export const EXPORT_FILES = {
+  archive: (stamp: string) => `e-dentist-malumot-${stamp}.zip`,
+  patients: 'bemorlar.xlsx',
+  visits: 'tashriflar.xlsx',
+  teeth: 'tish-xaritasi.xlsx',
+  payments: 'tolovlar.xlsx',
+  appointments: 'qabullar.xlsx',
+  expenses: 'xarajatlar.xlsx',
+  lab: 'naryadlar.xlsx',
+  services: 'narxnoma.xlsx',
+  readme: 'malumot.txt',
+} as const
+
+export const EXPORT_COLUMNS = {
+  patient: 'Bemor',
+  date: 'Sana',
+  time: 'Vaqt',
+  treatment: 'Muolaja',
+  tooth: 'Tish',
+  price: 'Narx',
+  note: 'Izoh',
+  status: 'Holat',
+  material: 'Material',
+  teeth: 'Tishlar',
+  amount: 'Summa',
+  category: 'Turkumi',
+  service: 'Xizmat',
+  work_type: 'Ish turi',
+  shade: 'Rang',
+  due: 'Muddat',
+  tech: 'Texnik',
+  tech_price: 'Texnik narxi',
+  returns: 'Qaytishlar',
+  bridge: 'Koʻprik',
+} as const
+
+export const EXPORT_UI = {
+  title: 'Maʼlumot',
+  tab: 'Maʼlumot',
+  hint: 'Klinikaning barcha maʼlumoti Excel fayllari koʻrinishida bitta arxivda yuklab olinadi. Rasmlar bemor kartochkasidan alohida yuklab olinadi.',
+  download: 'Barcha maʼlumotni yuklab olish',
+  preparing: 'Tayyorlanmoqda…',
+  readme: (clinic: string, date: string) =>
+    [
+      `Klinika: ${clinic}`,
+      `Yuklab olingan sana: ${date}`,
+      '',
+      'Arxivdagi fayllar Excel (.xlsx) koʻrinishida.',
+      'Bemorlar fayli import shabloni bilan bir xil — uni tahrirlab qaytadan yuklash mumkin.',
+    ].join('\n'),
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {

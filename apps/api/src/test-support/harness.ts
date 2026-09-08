@@ -7,7 +7,7 @@
 import type { FastifyInstance } from 'fastify'
 import { createDb, type Db } from '../platform/db.js'
 import { createImportStore } from '../platform/importStore.js'
-import { memoryMailer } from '../platform/mailer.js'
+import { type Mail, memoryMailer } from '../platform/mailer.js'
 import { createRateLimiter, type RateLimiter } from '../platform/rateLimit.js'
 import { createServer } from '../platform/server.js'
 import { createSessionStore, type SessionStore } from '../platform/session.js'
@@ -29,6 +29,8 @@ export interface Harness {
   /// Superuser ulanishi — sinov maʼlumotini tayyorlash va tekshirish uchun.
   /// RLS unga taʼsir qilmaydi
   ownerDb: Db
+  /// Yuborilgan xatlar — havoladagi kalitni shu yerdan olamiz
+  sentMail: Mail[]
   cookie: string
   clinicId: string
   userId: string
@@ -101,6 +103,7 @@ export async function startHarness(): Promise<Harness> {
     app,
     clientIp,
     ownerDb,
+    sentMail: mailer.sent,
     cookie,
     clinicId,
     userId: owner?.id ?? '',
@@ -127,8 +130,10 @@ export async function removeClinic(ownerDb: Db, clinicId: string): Promise<void>
   await ownerDb.tooth.deleteMany(where)
   await ownerDb.bridge.deleteMany(where)
   await ownerDb.patientImage.deleteMany(where)
+  await ownerDb.labOrder.deleteMany(where)
   await ownerDb.patient.deleteMany(where)
   await ownerDb.service.deleteMany(where)
+  await ownerDb.expense.deleteMany(where)
   await ownerDb.invite.deleteMany(where)
   await ownerDb.user.deleteMany(where)
   await ownerDb.role.deleteMany(where)

@@ -1,7 +1,8 @@
-// clinics moduli `clinics` va `roles` jadvallariga egalik qiladi.
+// clinics moduli `clinics`, `roles` va `invites` jadvallariga egalik qiladi.
 // Boshqa modullar bu yerga emas, service.ts ga murojaat qiladi.
 
 import { ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
+import type { Db } from '../../platform/db.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
 export interface NewClinic {
@@ -60,4 +61,92 @@ export async function findClinic(tx: ClinicTx, clinicId: string) {
     where: { id: clinicId },
     select: { id: true, name: true, isTrial: true, expiresAt: true, status: true },
   })
+}
+
+// ─────────────────────────────  Rollar  ─────────────────────────────
+
+const ROLE_SELECT = {
+  id: true,
+  name: true,
+  template: true,
+  permissions: true,
+  isOwner: true,
+}
+
+export function listRoles(tx: ClinicTx) {
+  return tx.role.findMany({ select: ROLE_SELECT, orderBy: { name: 'asc' } })
+}
+
+export function findRoleById(tx: ClinicTx, roleId: string) {
+  return tx.role.findUnique({ where: { id: roleId }, select: ROLE_SELECT })
+}
+
+export function setRolePermissions(tx: ClinicTx, roleId: string, permissions: string[]) {
+  return tx.role.update({ where: { id: roleId }, data: { permissions }, select: ROLE_SELECT })
+}
+
+// ──────────────────────────  Taklifnomalar  ──────────────────────────
+
+const INVITE_SELECT = {
+  id: true,
+  email: true,
+  roleId: true,
+  expiresAt: true,
+  createdAt: true,
+}
+
+export interface NewInvite {
+  id: string
+  roleId: string
+  email: string
+  tokenHash: string
+  expiresAt: Date
+}
+
+export function createInvite(tx: ClinicTx, m: NewInvite) {
+  return tx.invite.create({ data: tenantScoped(m), select: INVITE_SELECT })
+}
+
+/// Faqat kutayotganlari: qabul qilingani xodimlar roʻyxatida koʻrinadi,
+/// muddati oʻtgani esa foydasiz
+export function listPendingInvites(tx: ClinicTx) {
+  return tx.invite.findMany({
+    where: { acceptedAt: null, expiresAt: { gt: new Date() } },
+    select: INVITE_SELECT,
+    orderBy: { createdAt: 'desc' },
+  })
+}
+
+export function findPendingInviteByEmail(tx: ClinicTx, email: string) {
+  return tx.invite.findFirst({
+    where: { email, acceptedAt: null, expiresAt: { gt: new Date() } },
+    select: INVITE_SELECT,
+  })
+}
+
+export function deleteInvite(tx: ClinicTx, id: string) {
+  return tx.invite.delete({ where: { id } })
+}
+
+export function markInviteAccepted(tx: ClinicTx, id: string) {
+  return tx.invite.update({ where: { id }, data: { acceptedAt: new Date() } })
+}
+
+/// invite_find funksiyasi qaytaradigan qator (SECURITY DEFINER):
+/// havolani ochgan odam hali klinikaga tegishli emas, RLS `invites` ni
+/// yopib turadi
+export interface InviteRow {
+  id: string
+  clinic_id: string
+  role_id: string
+  email: string
+  expires_at: Date
+  accepted_at: Date | null
+  clinic_name: string
+  role_name: string
+}
+
+export async function findInviteByTokenHash(db: Db, tokenHash: string): Promise<InviteRow | null> {
+  const rows = await db.$queryRaw<InviteRow[]>`SELECT * FROM invite_find(${tokenHash})`
+  return rows[0] ?? null
 }

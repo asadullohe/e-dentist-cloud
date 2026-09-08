@@ -1,9 +1,16 @@
 // Klinika, rollar va ruxsatlar. Boshqa modullar clinics ga faqat shu fayl
 // orqali murojaat qiladi (tz.md 2-boʻlim: modul chegarasi).
 
-import { OWNER_REQUIRED_PERMISSIONS, PERMISSIONS, type Permission } from '@e-dentist/shared'
+import {
+  OWNER_REQUIRED_PERMISSIONS,
+  PERMISSIONS,
+  type Permission,
+  STAFF_TEXT,
+} from '@e-dentist/shared'
+import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
+import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
-import type { ClinicTx } from '../../platform/tenant.js'
+import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import * as repo from './repo.js'
 
 export type { NewClinic, RoleInfo } from './repo.js'
@@ -53,4 +60,80 @@ export function assertRolePermissions(isOwner: boolean, permissions: readonly st
         'aks holda klinika oʻz kabinetiga kira olmay qoladi',
     )
   }
+}
+
+// ─────────────────────────  Rollar (HTTP orqali)  ─────────────────────────
+
+export interface ClinicDeps {
+  db: Db
+}
+
+export function listRoles(deps: ClinicDeps, clinicId: string) {
+  return withClinic(deps.db, clinicId, (tx) => repo.listRoles(tx))
+}
+
+/// Rol ruxsatlarini almashtiradi. Egasi roli majburiy ruxsatlarni yoʻqota
+/// olmaydi — assertRolePermissions tekshiradi
+export function updateRolePermissions(
+  deps: ClinicDeps,
+  clinicId: string,
+  userId: string,
+  roleId: string,
+  permissions: string[],
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const role = await repo.findRoleById(tx, roleId)
+    if (!role) throw errors.notFound(STAFF_TEXT.role_not_found)
+
+    assertRolePermissions(role.isOwner, permissions)
+
+    const updated = await repo.setRolePermissions(tx, roleId, permissions)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.role_changed,
+      entity: 'role',
+      entityId: roleId,
+      meta: { permissions },
+    })
+    return updated
+  })
+}
+
+// ────────────────  Taklifnomalar (auth moduli uchun)  ────────────────
+//
+// Yozuv shu modulniki, lekin xat yuborish va hisob ochish auth da:
+// `users` jadvali oʻshaniki. Shuning uchun bu funksiyalar ochiq
+// tranzaksiya ichida ishlaydi — chaqiruvchi sessiyani oʻzi ochadi
+
+export function createInviteTx(tx: ClinicTx, m: repo.NewInvite) {
+  return repo.createInvite(tx, m)
+}
+
+export function listPendingInvitesTx(tx: ClinicTx) {
+  return repo.listPendingInvites(tx)
+}
+
+export function findPendingInviteByEmailTx(tx: ClinicTx, email: string) {
+  return repo.findPendingInviteByEmail(tx, email)
+}
+
+export function deleteInviteTx(tx: ClinicTx, id: string) {
+  return repo.deleteInvite(tx, id)
+}
+
+export function markInviteAcceptedTx(tx: ClinicTx, id: string) {
+  return repo.markInviteAccepted(tx, id)
+}
+
+/// Sessiyasiz qidiruv — havolani ochgan odam hali klinikaga tegishli emas
+export function findInviteByToken(db: Db, tokenHash: string) {
+  return repo.findInviteByTokenHash(db, tokenHash)
+}
+
+export function listRolesTx(tx: ClinicTx) {
+  return repo.listRoles(tx)
+}
+
+export function findRoleByIdTx(tx: ClinicTx, roleId: string) {
+  return repo.findRoleById(tx, roleId)
 }

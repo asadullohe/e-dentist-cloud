@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.1** — bosqich 2 tugadi — bosqich 1 tugadi, `master` da
+**Hozirgi task: 4.1** — bosqich 3 tugadi — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -442,18 +442,111 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 
 ## Bosqich 3 — Pul, hisobot, texnik · ~2 hafta
 
-- [ ] **3.1 `expenses` moduli va Xarajatlar sahifasi**
-- [ ] **3.2 `reports` moduli** — oylik tushum, sof foyda, 12 oylik grafik
-- [ ] **3.3 Xodimlar va rollar** — taklifnoma oqimi (7 kun), ruxsat matritsasi UI,
+- [x] **3.1 `expenses` moduli va Xarajatlar sahifasi**
+
+> **Xarajat uchun bitta ruxsat**
+>
+> Ruxsatlar roʻyxatida `expenses.read` bitta (tz.md 6-boʻlim) — u boʻlimni
+> butunlay ochadi: xarajatni koʻrgan odam uni yoza ham oladi. Boʻlim egasiga
+> tegishli, shuning uchun oʻqish/yozish ajratilmadi.
+>
+> Turkumlar oflayn ilovadan koʻchdi, ustiga `lab` qoʻshildi: naryad
+> topshirilganda texnik narxi shu turkumda xarajatga tushadi (3.6).
+> `lab` moduli `expenses` jadvaliga tegmaydi — `expenses.addTx` ni chaqiradi.
+- [x] **3.2 `reports` moduli** — oylik tushum, sof foyda, 12 oylik grafik
+
+> **Hisobotning oʻz jadvali yoʻq**
+>
+> `reports` uchta modulning xizmat qatlamidan kunlik jamlanma soʻraydi
+> (`visits.dailyTotalsTx`, `payments.dailyTotalsTx`, `expenses.dailyTotalsTx`)
+> va oyga oʻzi yigʻadi. Prisma `groupBy` oy kesimini bilmaydi, xom SQL esa
+> ijarachi kengaytmasini chetlab oʻtardi — kunlik guruhlashda bir yilga
+> koʻpi bilan 366 qator qaytadi.
+>
+> **Sof foyda = tushum − xarajat**, qilingan ish narxi emas: hali toʻlanmagan
+> ish foyda emas. Oy chegarasi `created_at` uchun klinika vaqtida olinadi
+> (jarayon TZ si Asia/Tashkent) — UTC da olinsa 1-may soat 01:00 da qoʻshilgan
+> bemor aprelga tushib qolardi. Buni test ushlab turadi.
+- [x] **3.3 Xodimlar va rollar** — taklifnoma oqimi (7 kun), ruxsat matritsasi UI,
       qulflanib qolishdan himoya
-- [ ] **3.4 Prisma: `lab_orders`** + RLS
-- [ ] **3.5 `lab` moduli** — naryad CRUD, holatlar (berildi → tayyor → topshirildi),
+
+> **Xodim marshrutlari `auth` da, taklifnoma yozuvi `clinics` da**
+>
+> `users` jadvali `auth` niki, `invites` va `roles` — `clinics` niki. Agar
+> `/api/staff` marshrutlari `clinics` ga qoʻyilsa, u `auth` ni import qilardi
+> va ikki modul bir-birini chaqirib halqa hosil qilardi. Shuning uchun
+> yoʻnalish bitta: `auth` → `clinics`. Rol marshrutlari (`/api/roles`)
+> esa `clinics` da.
+>
+> Havoladagi kalit bazada saqlanmaydi — faqat sha256 xeshi. Kalitni sessiyasiz
+> topish uchun `invite_find` SECURITY DEFINER funksiyasi (auth_find_user bilan
+> bir xil uslub): RLS `invites` ni yopib turadi, funksiya esa faqat kerakli
+> maydonlarni qaytaradi.
+>
+> **Uch qulf:** oʻzini oʻzgartira olmaydi · oxirgi faol egani tushirib
+> boʻlmaydi · egasi roli `staff.manage` va `billing.manage` ni yoʻqotmaydi.
+> Nazorat testi: oxirgi qulf olib tashlanganda egasi faolsizlantirildi va
+> keyingi testlar 403 ga uchradi — yaʼni test haqiqatan ushlaydi.
+- [x] **3.4 Prisma: `lab_orders`** + RLS
+- [x] **3.5 `lab` moduli** — naryad CRUD, holatlar (berildi → tayyor → topshirildi),
       «qaytarildi» amali va sababi
-- [ ] **3.6 Lab bogʻlanishlari** — «topshirildi» da tish xaritasi yangilanadi,
+
+> **Texnik faqat oʻzinikini koʻradi — buni marshrut emas, xizmat qatlami hal qiladi**
+>
+> `GET /api/lab-orders` ga `lab.own` **yoki** `lab.write` bilan kiriladi
+> (`requireAnyPermission` shu uchun qoʻshildi). `lab.write` yoʻq boʻlsa
+> xizmat qatlami `techId` ni majburan foydalanuvchining oʻziga tenglaydi —
+> soʻrovdagi filtr eʼtiborga olinmaydi. Nazorat testi: bu qator olib
+> tashlanganda texnik begona naryadlarni koʻrib qoldi.
+>
+> Texnik **oʻz** naryadining narxini koʻradi (tz.md 7-boʻlim), boshqalarniki
+> uchun `lab.cost` kerak; yozish esa faqat `lab.cost` bilan.
+- [x] **3.6 Lab bogʻlanishlari** — «topshirildi» da tish xaritasi yangilanadi,
       texnik narxi xarajatga tushadi
-- [ ] **3.7 «Texnik ishlari» sahifasi** — filtrlar, muddati oʻtganlari tepada.
+
+> **Ikkala bogʻlanish ham bitta tranzaksiyada**
+>
+> Naryad «topshirildi» boʻlganda `visits.setToothTx` tishlarni koronka
+> (koʻprikda «quyma tish») holatiga oʻtkazadi va materialini yozadi,
+> `expenses.addTx` esa texnik narxini `lab` turkumiga qoʻshadi. Ikkalasi
+> ham `setStatus` ning oʻz tranzaksiyasida: «topshirildi» yozilib, xarajat
+> yozilmay qolishi mumkin emas.
+>
+> Olinadigan protez, kappa va ortodontik plastinka tish xaritasiga
+> tegmaydi — ular tishga oʻrnatilmaydi. Narx 0 boʻlsa xarajat yozilmaydi.
+> Naryadni ikki marta topshirib boʻlmagani uchun xarajat ham takrorlanmaydi
+> (test buni tekshiradi).
+- [x] **3.7 «Texnik ishlari» sahifasi** — filtrlar, muddati oʻtganlari tepada.
       Texnik kirganda boshlangʻich sahifasi shu
-- [ ] **3.8 Toʻliq eksport** — «Barcha maʼlumotni yuklab olish», zip formatida
+
+> **Ismlar uchun alohida marshrut**
+>
+> Shifokor naryadga texnik tayinlaydi, lekin unda `staff.manage` yoʻq —
+> toʻliq xodimlar roʻyxatida esa pochta, holat va oxirgi kirish bor.
+> Shuning uchun `GET /api/staff/names` qoʻshildi: faqat id va ism,
+> `staff.manage` **yoki** `lab.write` bilan ochiladi.
+>
+> Boshlangʻich sahifa rol nomiga emas, ruxsatga qarab tanlanadi:
+> `patients.read` yoʻq, `lab.own` bor boʻlsa — «Texnik ishlari».
+> Klinika rol shablonini oʻzgartirsa ham toʻgʻri ishlaydi.
+>
+> Frontendda qatlam qoidasi endi biome bilan tekshiriladi: `features`
+> yonidagi featureni, `entities` esa featureni import qila olmaydi
+> (`PatientPicker` shu sabab `entities/patient` ga koʻchdi).
+- [x] **3.8 Toʻliq eksport** — «Barcha maʼlumotni yuklab olish», zip formatida
+
+> **Arxivda maʼlumot bor, rasm yoʻq**
+>
+> Har boʻlim alohida `.xlsx` fayl: bemorlar (import shabloni bilan bir xil),
+> tashriflar, tish xaritasi, koʻpriklar, toʻlovlar, qabullar, xarajatlar,
+> naryadlar, narxnoma va `malumot.txt`. Modul oʻz jadvaliga ega emas —
+> hammasi boshqa modullarning `export*Tx` funksiyalari orqali oʻqiladi.
+>
+> Rasmlar qoʻshilmadi: ular MinIO da va arxivni oʻn barobar kattalashtiradi.
+> Kartochkadan alohida yuklab olinadi. Kerak boʻlsa keyin qoʻshiladi.
+>
+> `adm-zip` 0.6.0 ishlatildi (0.5.x da yuqori darajali zaiflik bor edi).
+> Biz faqat arxiv yaratamiz, begona arxivni ochmaymiz.
 
 ---
 

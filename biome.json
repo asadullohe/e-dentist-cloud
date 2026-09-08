@@ -62,6 +62,86 @@
           }
         }
       }
+    },
+    {
+      "includes": ["apps/cabinet/src/entities/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/pages/*", "@/widgets/*", "@/features/*"],
+                    "message": "Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi va yonma-yon emas (CLAUDE.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/cabinet/src/features/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/pages/*", "@/widgets/*", "@/features/*"],
+                    "message": "Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi va yonma-yon emas (CLAUDE.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/cabinet/src/widgets/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/pages/*"],
+                    "message": "Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi va yonma-yon emas (CLAUDE.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/cabinet/src/shared/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/pages/*", "@/widgets/*", "@/features/*", "@/entities/*"],
+                    "message": "Qatlam qoidasi: yuqoridagi pastdagini import qiladi, teskarisi va yonma-yon emas (CLAUDE.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   ],
   "css": {

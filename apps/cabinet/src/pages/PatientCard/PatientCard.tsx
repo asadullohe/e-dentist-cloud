@@ -6,6 +6,7 @@ import {
   formatSom,
   formatUzPhone,
   IMAGE_UI,
+  LAB_UI,
   PAYMENT_UI,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
@@ -13,6 +14,7 @@ import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { usePatient } from '@/entities/patient'
+import { useHasPermission } from '@/entities/session'
 import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
 import { useVisits, type Visit } from '@/entities/visit'
 import { BridgeFormDialog, useDeleteBridge } from '@/features/bridge-form'
@@ -44,6 +46,7 @@ import {
   TabsTrigger,
 } from '@/shared/ui'
 import { ImagesTab } from './ImagesTab'
+import { LabTab } from './LabTab'
 import { PaymentsTab } from './PaymentsTab'
 
 function VisitsTab({ patientId }: { patientId: string }) {
@@ -248,6 +251,7 @@ function ChartTab({ patientId }: { patientId: string }) {
 export function PatientCard() {
   const { id = '' } = useParams()
   const { data: patient, isPending } = usePatient(id)
+  const hasPermission = useHasPermission()
   const [editOpen, setEditOpen] = useState(false)
 
   if (isPending) {
@@ -290,6 +294,7 @@ export function PatientCard() {
           <TabsTrigger value="chart">{CARD_UI.tab_chart}</TabsTrigger>
           <TabsTrigger value="payments">{PAYMENT_UI.tab}</TabsTrigger>
           <TabsTrigger value="images">{IMAGE_UI.tab}</TabsTrigger>
+          {hasPermission('lab.write') && <TabsTrigger value="lab">{LAB_UI.tab}</TabsTrigger>}
         </TabsList>
         <TabsContent value="visits" className="mt-3">
           <VisitsTab patientId={id} />
@@ -303,6 +308,11 @@ export function PatientCard() {
         <TabsContent value="images" className="mt-3">
           <ImagesTab patientId={id} />
         </TabsContent>
+        {hasPermission('lab.write') && (
+          <TabsContent value="lab" className="mt-3">
+            <LabTab patientId={id} />
+          </TabsContent>
+        )}
       </Tabs>
 
       <PatientFormDialog open={editOpen} onOpenChange={setEditOpen} patient={patient} />
