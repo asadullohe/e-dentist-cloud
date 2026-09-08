@@ -17,7 +17,7 @@ import type { Mailer } from '../../platform/mailer.js'
 import { hashPassword, verifyPassword } from '../../platform/password.js'
 import type { RateLimiter } from '../../platform/rateLimit.js'
 import type { SessionData, SessionStore } from '../../platform/session.js'
-import { withClinic } from '../../platform/tenant.js'
+import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as clinics from '../clinics/service.js'
 import * as repo from './repo.js'
@@ -282,6 +282,18 @@ export interface StaffMember {
   roleName: string | null
   status: 'active' | 'disabled'
   lastLoginAt: Date | null
+}
+
+/// Boshqa modullar uchun (lab): xodim ismlari. Ochiq tranzaksiya ichida
+export async function staffNamesTx(tx: ClinicTx, ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map()
+  const rows = await repo.findStaffByIds(tx, ids)
+  return new Map(rows.map((row) => [row.id, row.fullName ?? '']))
+}
+
+/// Xodim shu klinikada bormi — naryadga texnik tayinlashda tekshiriladi
+export async function existsInClinic(tx: ClinicTx, userId: string): Promise<boolean> {
+  return (await repo.findStaff(tx, userId)) !== null
 }
 
 export function listStaff(deps: AuthDeps, clinicId: string) {

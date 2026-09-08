@@ -452,6 +452,108 @@ export const PERMISSION_LABELS = {
   'data.export': 'Maʼlumotni yuklab olish',
 } as const
 
+// Naryad (texnik ishlari)
+export const LAB_TEXT = {
+  not_found: 'Naryad topilmadi',
+  teeth_required: 'Kamida bitta tish tanlansin',
+  tooth_invalid: 'Bunday tish raqami yoʻq',
+  due_required: 'Muddat kiritilishi shart',
+  shade_invalid: 'Bunday rang yoʻq',
+  price_negative: 'Narx manfiy boʻlishi mumkin emas',
+  tech_not_found: 'Texnik topilmadi',
+  reason_required: 'Qaytarish sababini tanlang',
+  status_flow: 'Naryad bu holatga bu bosqichdan oʻta olmaydi',
+  not_your_order: 'Bu naryad sizga biriktirilmagan',
+  return_from_ready: 'Faqat «Tayyor» naryadni qaytarish mumkin',
+} as const
+
+export const LAB_WORK_TYPE_LABELS = {
+  crown: 'Koronka',
+  bridge: 'Koʻprik',
+  denture: 'Olinadigan protez',
+  clasp_denture: 'Bugel',
+  veneer: 'Vinir',
+  inlay: 'Inley/onley',
+  mouthguard: 'Kappa',
+  ortho_plate: 'Ortodontik plastinka',
+} as const
+
+export const LAB_MATERIAL_LABELS = {
+  metal_ceramic: 'Metall-keramika',
+  zirconia: 'Sirkoniy',
+  press_ceramic: 'Press-keramika',
+  acrylic: 'Plastmassa',
+  cast_metal: 'Quyma metall',
+  nylon: 'Neylon',
+} as const
+
+export const LAB_STATUS_LABELS = {
+  issued: 'Berildi',
+  ready: 'Tayyor',
+  delivered: 'Topshirildi',
+} as const
+
+export const LAB_RETURN_REASON_LABELS = {
+  fit: 'Oʻlchov mos emas',
+  shade: 'Rang mos emas',
+  broken: 'Sindi',
+  other: 'Boshqa',
+} as const
+
+/// VITA Classical shkalasi
+export const VITA_SHADES = [
+  'A1',
+  'A2',
+  'A3',
+  'A3.5',
+  'A4',
+  'B1',
+  'B2',
+  'B3',
+  'B4',
+  'C1',
+  'C2',
+  'C3',
+  'C4',
+  'D2',
+  'D3',
+  'D4',
+] as const
+
+// «Texnik ishlari» sahifasi
+export const LAB_UI = {
+  title: 'Texnik ishlari',
+  add: 'Yangi naryad',
+  edit: 'Naryadni tahrirlash',
+  empty: 'Naryadlar yoʻq',
+  patient: 'Bemor',
+  doctor: 'Shifokor',
+  tech: 'Texnik',
+  tech_none: 'Tanlanmagan',
+  teeth: 'Tishlar',
+  work_type: 'Ish turi',
+  material: 'Material',
+  shade: 'Rang',
+  due: 'Muddat',
+  tech_price: 'Texnik narxi',
+  status: 'Holat',
+  note: 'Izoh',
+  overdue: 'Muddati oʻtgan',
+  returns: (n: number) => `${n} marta qaytgan`,
+  mark_ready: 'Tayyor',
+  mark_delivered: 'Topshirildi',
+  mark_returned: 'Qaytarish',
+  return_title: 'Naryadni qaytarish',
+  return_reason: 'Sababi',
+  return_note: 'Izoh',
+  returned_at: 'Qaytarilgan',
+  filter_status: 'Holat boʻyicha',
+  filter_tech: 'Texnik boʻyicha',
+  filter_all: 'Hammasi',
+  delete_title: 'Naryad oʻchirilsinmi?',
+  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+} as const
+
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
 // chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
 export const PATIENT_EXCEL_COLUMNS = {

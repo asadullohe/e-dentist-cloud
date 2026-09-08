@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 3.5** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 3.6** — bosqich 2 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -488,8 +488,19 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 > Nazorat testi: oxirgi qulf olib tashlanganda egasi faolsizlantirildi va
 > keyingi testlar 403 ga uchradi — yaʼni test haqiqatan ushlaydi.
 - [x] **3.4 Prisma: `lab_orders`** + RLS
-- [ ] **3.5 `lab` moduli** — naryad CRUD, holatlar (berildi → tayyor → topshirildi),
+- [x] **3.5 `lab` moduli** — naryad CRUD, holatlar (berildi → tayyor → topshirildi),
       «qaytarildi» amali va sababi
+
+> **Texnik faqat oʻzinikini koʻradi — buni marshrut emas, xizmat qatlami hal qiladi**
+>
+> `GET /api/lab-orders` ga `lab.own` **yoki** `lab.write` bilan kiriladi
+> (`requireAnyPermission` shu uchun qoʻshildi). `lab.write` yoʻq boʻlsa
+> xizmat qatlami `techId` ni majburan foydalanuvchining oʻziga tenglaydi —
+> soʻrovdagi filtr eʼtiborga olinmaydi. Nazorat testi: bu qator olib
+> tashlanganda texnik begona naryadlarni koʻrib qoldi.
+>
+> Texnik **oʻz** naryadining narxini koʻradi (tz.md 7-boʻlim), boshqalarniki
+> uchun `lab.cost` kerak; yozish esa faqat `lab.cost` bilan.
 - [ ] **3.6 Lab bogʻlanishlari** — «topshirildi» da tish xaritasi yangilanadi,
       texnik narxi xarajatga tushadi
 - [ ] **3.7 «Texnik ishlari» sahifasi** — filtrlar, muddati oʻtganlari tepada.

@@ -14,8 +14,11 @@ declare module 'fastify' {
   }
 
   interface FastifyInstance {
-    /// `preHandler: app.talabRuxsat('patients.read')`
+    /// `preHandler: app.requirePermission('patients.read')`
     requirePermission(required: Permission): preHandlerHookHandler
+    /// Sanab oʻtilganlardan bittasi yetarli. Naryadlarda kerak: texnik
+    /// `lab.own` bilan, shifokor `lab.write` bilan bir marshrutga kiradi
+    requireAnyPermission(...required: Permission[]): preHandlerHookHandler
   }
 }
 
@@ -53,12 +56,31 @@ export type PermissionLoader = (clinicId: string, userId: string) => Promise<rea
 export function permissionGuard(load: PermissionLoader) {
   return (required: Permission): preHandlerHookHandler => {
     return async (req: FastifyRequest) => {
-      const session = requireAuth(req)
-      if (!session.clinicId) throw errors.forbidden()
-
-      const permissions = await load(session.clinicId, session.userId)
-      req.permissions = permissions
+      const permissions = await loadInto(load, req)
       if (!permissions.includes(required)) throw errors.forbidden()
     }
   }
+}
+
+/// Bittasi yetarli. Marshrut ichida `req.permissions` orqali qaysi biri
+/// borligini aniqlash mumkin — masalan texnik faqat oʻz naryadlarini koʻradi
+export function anyPermissionGuard(load: PermissionLoader) {
+  return (...required: Permission[]): preHandlerHookHandler => {
+    return async (req: FastifyRequest) => {
+      const permissions = await loadInto(load, req)
+      if (!required.some((item) => permissions.includes(item))) throw errors.forbidden()
+    }
+  }
+}
+
+async function loadInto(
+  load: PermissionLoader,
+  req: FastifyRequest,
+): Promise<readonly Permission[]> {
+  const session = requireAuth(req)
+  if (!session.clinicId) throw errors.forbidden()
+
+  const permissions = await load(session.clinicId, session.userId)
+  req.permissions = permissions
+  return permissions
 }

@@ -81,6 +81,10 @@ export function listStaff(tx: ClinicTx) {
   return tx.user.findMany({ select: STAFF_SELECT, orderBy: { createdAt: 'asc' } })
 }
 
+export function findStaffByIds(tx: ClinicTx, ids: string[]) {
+  return tx.user.findMany({ where: { id: { in: ids } }, select: { id: true, fullName: true } })
+}
+
 export function findStaff(tx: ClinicTx, userId: string) {
   return tx.user.findUnique({ where: { id: userId }, select: STAFF_SELECT })
 }
