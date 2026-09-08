@@ -465,8 +465,10 @@ GET    /api/me
 
 # faqat platforma admini (clinic_id boʻsh)
 GET    /api/admin/me
-GET    /api/admin/clinics
+GET    /api/admin/clinics?search=
+GET    /api/admin/clinics/:id        # kartochka: xodimlar, hajm, tarix
 POST   /api/admin/clinics/:id/extend
+POST   /api/admin/clinics/:id/status # bloklash / blokdan chiqarish
 ```
 
 Javob shakli hamma joyda bir xil — mavjud ilovadagi `{ok, data|error}` qoidasining davomi:

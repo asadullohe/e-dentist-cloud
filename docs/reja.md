@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.3** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.4** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -697,7 +697,27 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 >
 > Admin qoʻlda yaratiladi: `npm run admin:create -w @e-dentist/api --
 > pochta parol "Ism"`. Parol kamida 12 belgi.
-- [ ] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix
+- [x] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix
+
+> **Panel bemor maʼlumotini koʻrmaydi — bu baza kafolati**
+>
+> Panelga ilova ulanishini egasi huquqiga oʻtkazish oson yoʻl edi, lekin
+> u holda paneldagi bitta xato butun kartotekani ochib yuborardi. Oʻrniga
+> har bir soʻrov tor SECURITY DEFINER funksiya: `admin_clinics`,
+> `admin_clinic`, `admin_clinic_staff`, `admin_clinic_history`,
+> `admin_extend_clinic`, `admin_set_clinic_status`. Ular faqat klinika
+> darajasidagi ustunlarni qaytaradi.
+>
+> Tarix `entity_id` va `meta` ni **qaytarmaydi**: ularda bemor yozuvining
+> identifikatori boʻlishi mumkin. Test javob matnida bemor ismi yoʻqligini
+> tekshiradi.
+>
+> Muddat uzaytirilganda `is_trial` oʻchadi (toʻlov qilindi degani) va yangi
+> muddat `greatest(expires_at, current_date)` dan hisoblanadi — muddati
+> oʻtgan klinikada uzaytirish oʻtmishga tushib qolmasin.
+>
+> Paneldagi har amal klinikaning **oʻz** audit tarixiga yoziladi: egasi
+> ham koʻra oladi.
 - [ ] **5.4 Statistika va hodisalar**
 - [ ] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
 - [ ] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/pochta.ts`). Serverda

@@ -3,6 +3,7 @@ import { LogOutIcon } from 'lucide-react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAdmin } from '@/entities/admin'
 import { useLogout } from '@/features/auth'
+import { ClinicCard } from '@/pages/ClinicCard'
 import { Clinics } from '@/pages/Clinics'
 import { Login } from '@/pages/Login'
 import { Button, Skeleton } from '@/shared/ui'
@@ -33,6 +34,7 @@ function Shell() {
       <main className="mx-auto max-w-5xl p-4">
         <Routes>
           <Route path="/" element={<Clinics />} />
+          <Route path="/klinika/:id" element={<ClinicCard />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
