@@ -24,9 +24,19 @@ export interface SessionRole {
   isOwner: boolean
 }
 
+export interface SessionSubscription {
+  /// YYYY-MM-DD
+  expiresAt: string
+  isTrial: boolean
+  blocked: boolean
+  /// Muddat tugagan yoki bloklangan — yozish yopiq
+  readOnly: boolean
+}
+
 export interface Session {
   user: SessionUser
   clinic: SessionClinic | null
+  subscription: SessionSubscription | null
   role: SessionRole | null
   permissions: Permission[]
 }

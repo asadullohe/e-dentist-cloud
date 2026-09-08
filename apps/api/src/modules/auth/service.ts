@@ -19,6 +19,7 @@ import type { RateLimiter } from '../../platform/rateLimit.js'
 import type { SessionData, SessionStore } from '../../platform/session.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
+import * as billing from '../billing/service.js'
 import * as clinics from '../clinics/service.js'
 import * as repo from './repo.js'
 import type {
@@ -263,6 +264,9 @@ export async function currentUser(deps: AuthDeps, session: SessionData) {
     return {
       user: { id: u.id, email: u.email, fullName: u.fullName },
       clinic: clinic,
+      // Interfeys yozish tugmalarini oʻchirishi uchun — server baribir
+      // oʻzi tekshiradi
+      subscription: clinic ? billing.subscriptionOf(clinic) : null,
       role: role ? { name: role.name, template: role.template, isOwner: role.isOwner } : null,
       permissions: role?.permissions ?? [],
     }

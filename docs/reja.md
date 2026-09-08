@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.1** — bosqich 4 tugadi — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.2** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -663,8 +663,23 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 
 ### Dastur
 
-- [ ] **5.1 `billing` moduli** — `expires_at` tekshiruvi, muddat tugasa faqat-oʻqish rejimi.
+- [x] **5.1 `billing` moduli** — `expires_at` tekshiruvi, muddat tugasa faqat-oʻqish rejimi.
       Maʼlumot hech qachon oʻchirilmaydi
+
+> **Tekshiruv bitta joyda — yozuv metodlari ustidagi ilgak**
+>
+> Har modulga alohida qoʻshilsa bittasi unutilardi va bu jimgina yuz
+> berardi. Shuning uchun `preHandler` ilgagi: POST/PATCH/PUT/DELETE
+> soʻrovlari, sessiyada klinika bor boʻlsa, `billing.assertWritable` dan
+> oʻtadi.
+>
+> Ochiq qoladiganlar: **oʻqish** (maʼlumot koʻrinadi), **eksport**
+> («maʼlumot mening qoʻlimda» kafolati), **chiqish** (yopiq kabinetdan
+> chiqa olmaslik maʼnosiz) va ochiq navbat marshrutlari.
+>
+> Muddat har soʻrovda bazadan oʻqiladi: boshqaruv panelidan uzaytirilsa
+> darhol kuchga kiradi — test buni tekshiradi. `expires_at` «shu kungacha»:
+> oxirgi kunning oʻzida yozish hali ochiq.
 - [ ] **5.2 `apps/admin` skeleti** — kirish, platforma admini roli
       (`clinic_id` boʻsh, `patients` moduli umuman ochilmaydi)
 - [ ] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix

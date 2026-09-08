@@ -8,6 +8,7 @@ import multipart from '@fastify/multipart'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
 import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
+import * as billing from '../modules/billing/service.js'
 import { clinicRoutes } from '../modules/clinics/routes.js'
 import { expenseRoutes } from '../modules/expenses/routes.js'
 import { exportRoutes } from '../modules/export/routes.js'
@@ -107,6 +108,21 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   // butunlay oʻqilguncha kutib oʻtirilmaydi
   app.register(multipart, { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } })
   app.addHook('onRequest', sessionHook(deps.sessions))
+
+  // Obuna tekshiruvi. Oʻqish har doim ochiq — muddat tugasa ham klinika
+  // oʻz maʼlumotini koʻradi va eksport qiladi (tz.md 8-boʻlim).
+  // Chiqish ham ochiq: yopiq kabinetdan chiqa olmaslik maʼnosiz
+  const WRITE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE'])
+  const BILLING_FREE = ['/api/auth/', '/api/invites/', '/api/n/']
+
+  app.addHook('preHandler', async (req) => {
+    if (!WRITE_METHODS.has(req.method)) return
+    const clinicId = req.session?.clinicId
+    if (!clinicId) return
+    if (BILLING_FREE.some((prefix) => req.url.startsWith(prefix))) return
+
+    await billing.assertWritable({ db: deps.db }, clinicId)
+  })
 
   app.register(healthRoutes, { prefix: '/api' })
   // Ruxsat tekshiruvi barcha marshrutlarga ochiladi:

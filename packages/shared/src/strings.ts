@@ -86,6 +86,8 @@ export const UI_TEXT = {
   verified_hint: 'Endi hisobingizga kira olasiz.',
   trial_left: (days: number) => `Sinov muddati: ${days} kun qoldi`,
   trial_over: 'Sinov muddati tugadi — faqat oʻqish rejimi',
+  subscription_over:
+    'Obuna muddati tugadi — faqat oʻqish rejimi. Muddatni uzaytirish uchun bogʻlaning',
   section_soon: 'Bu boʻlim keyingi bosqichda qoʻshiladi',
   menu: 'Menyu',
   close: 'Yopish',
@@ -679,6 +681,13 @@ export const QUEUE_STATUS_LABELS = {
   waiting: 'Kutmoqda',
   called: 'Chaqirildi',
   finished: 'Yakunlandi',
+} as const
+
+// Obuna va muddat
+export const BILLING_TEXT = {
+  expired:
+    'Obuna muddati tugagan — hozircha faqat oʻqish mumkin. Maʼlumotingiz joyida, muddatni uzaytirsangiz yozish yana ochiladi',
+  blocked: 'Klinika bloklangan. Batafsil maʼlumot uchun bogʻlaning',
 } as const
 
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
