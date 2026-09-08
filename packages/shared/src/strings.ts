@@ -312,3 +312,43 @@ export const SERVICE_UI = {
   delete_title: 'Xizmat oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
 } as const
+
+// Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
+// chiqarilgan fayl aynan shablon boʻlishi kerak (tz.md 8-boʻlim)
+export const PATIENT_EXCEL_COLUMNS = {
+  id: 'ID',
+  fio: 'F.I.O.',
+  phone: 'Telefon',
+  birthDate: 'Tugʻilgan sana',
+  address: 'Manzil',
+  note: 'Izoh',
+} as const
+
+export const EXCEL_UI = {
+  template: 'Shablon',
+  export: 'Excelga chiqarish',
+  downloading: 'Tayyorlanmoqda…',
+} as const
+
+export const EXCEL_TEXT = {
+  sheet_patients: 'Bemorlar',
+  sheet_guide: 'Qoʻllanma',
+  template_file: 'bemorlar-shablon.xlsx',
+  export_file: (date: string) => `bemorlar-${date}.xlsx`,
+  guide_title: 'Bemorlarni Excel dan yuklash',
+  guide_rows: [
+    ['Ustun', 'Majburiy', 'Qanday yoziladi'],
+    ['ID', 'Yoʻq', 'Faqat chiqarilgan faylda boʻladi. Bor boʻlsa mavjud bemor yangilanadi'],
+    ['F.I.O.', 'Ha', 'Kamida 3 belgi'],
+    ['Telefon', 'Yoʻq', '901234567 · +998901234567 · 90 123 45 67 — hammasi boʻladi'],
+    ['Tugʻilgan sana', 'Yoʻq', 'Kun/oy/yil: 12/05/1990. Excel sana katagi ham boʻladi'],
+    ['Manzil', 'Yoʻq', 'Erkin matn'],
+    ['Izoh', 'Yoʻq', 'Allergiya, surunkali kasalliklar'],
+  ],
+  guide_notes: [
+    'Ustunlar sarlavha nomi boʻyicha tanaladi — tartibini oʻzgartirsangiz ham ishlaydi.',
+    'Birinchi qator sarlavha boʻlishi kerak.',
+    'Sana kun/oy/yil tartibida oʻqiladi: 05/12/1990 — 5-dekabr.',
+    'Bu faylni toʻldirib, kabinetdagi «Excel dan yuklash» orqali qaytaring.',
+  ],
+} as const

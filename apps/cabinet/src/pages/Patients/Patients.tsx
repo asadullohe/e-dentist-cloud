@@ -1,9 +1,10 @@
-import { age, formatDate, formatUzPhone, PATIENT_UI } from '@e-dentist/shared'
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { age, EXCEL_UI, formatDate, formatUzPhone, PATIENT_UI, UI_TEXT } from '@e-dentist/shared'
+import { FileDownIcon, PencilIcon, PlusIcon, SheetIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Patient, usePatients } from '@/entities/patient'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
+import { ApiError, downloadFile } from '@/shared/api'
 import { useDebounced } from '@/shared/lib'
 import {
   AlertDialog,
@@ -29,7 +30,24 @@ import {
 
 const PAGE_SIZE = 20
 
+type Download = 'template' | 'export' | null
+
 export function Patients() {
+  const [busy, setBusy] = useState<Download>(null)
+  const [downloadError, setDownloadError] = useState('')
+
+  async function download(what: Exclude<Download, null>) {
+    setBusy(what)
+    setDownloadError('')
+    try {
+      await downloadFile(what === 'template' ? '/patients/import/template' : '/patients/export')
+    } catch (error) {
+      setDownloadError(error instanceof ApiError ? error.message : UI_TEXT.offline)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
   const debouncedSearch = useDebounced(search)
@@ -61,10 +79,30 @@ export function Patients() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold tracking-tight">{PATIENT_UI.title}</h1>
-        <Button onClick={openNew}>
-          <PlusIcon />
-          {PATIENT_UI.add}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy !== null}
+            onClick={() => download('template')}
+          >
+            <FileDownIcon />
+            {busy === 'template' ? EXCEL_UI.downloading : EXCEL_UI.template}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy !== null}
+            onClick={() => download('export')}
+          >
+            <SheetIcon />
+            {busy === 'export' ? EXCEL_UI.downloading : EXCEL_UI.export}
+          </Button>
+          <Button onClick={openNew}>
+            <PlusIcon />
+            {PATIENT_UI.add}
+          </Button>
+        </div>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-3">
@@ -82,6 +120,9 @@ export function Patients() {
         )}
       </div>
 
+      {downloadError && (
+        <p className="text-destructive mb-3 text-sm font-medium">{downloadError}</p>
+      )}
       <Card className="gap-0 overflow-hidden p-0">
         {isPending && !data ? (
           <div className="space-y-2 p-4">

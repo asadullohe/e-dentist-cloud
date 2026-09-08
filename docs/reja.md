@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 2.13** — bosqich 1 tugadi, `master` da
+**Hozirgi task: 2.14** — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -380,8 +380,23 @@ _Mahsulotning yuragi. Oxirida klinika haqiqatan ishlata boshlashi mumkin._
 >
 > Xizmat oʻchirilsa tashriflardagi nom va narx **saqlanib qoladi**
 > (`serviceId` `null` boʻladi) — narxnoma oʻzgarsa tarix buzilmasin.
-- [ ] **2.13 Excel: shablon va chiqarish** — `GET /api/patients/import/template`,
-      `GET /api/patients/export`. Chiqarilgan fayl = shablon, `id` ustuni bilan
+- [x] **2.13 Excel: shablon va chiqarish** — shablonda toʻgʻri ustunlar, ikkita
+      namuna qator va ikkinchi varaqda qoʻllanma. Chiqarilgan fayl aynan
+      shablon — uni tahrirlab qaytadan yuklash mumkin. 6 ta test
+
+> **SheetJS oʻrniga boshqa kutubxona**
+>
+> TZ da SheetJS (`xlsx`) aytilgan edi, lekin uning npm dagi nusxasi
+> (`0.18.5`) tashlab qoʻyilgan: ikkita **yuqori** darajali zaiflik —
+> prototype pollution va ReDoS, **tuzatish yoʻq**. SheetJS oʻz CDN siga
+> koʻchgan.
+>
+> Bu import bosqichida (2.14) muhim: biz **foydalanuvchi yuklagan faylni**
+> tahlil qilamiz — tahlilchidagi zaiflik aynan oʻsha yerda ishlaydi.
+>
+> Tanlandi: `write-excel-file` + `read-excel-file` — ogohlantirish yoʻq,
+> bogʻliqligi bitta, faol qoʻllab-quvvatlanadi. Sabab `tz.md` 3-boʻlimiga
+> yozildi.
 - [ ] **2.14 Excel: import preview** — sarlavha nomi boʻyicha ustun tanish, sana tuzoqlari,
       telefon normallashtirish, takrorlarni topish, birinchi 20 qator jadvalda
 - [ ] **2.15 Excel: import commit** — yozish, hisobot (qoʻshildi / yangilandi / oʻtkazildi),

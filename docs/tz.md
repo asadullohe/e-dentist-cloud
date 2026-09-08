@@ -100,7 +100,7 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Forma | react-hook-form + zod | Sxema serverdagi bilan bir xil shaklda, xato matnlari `strings.ts` dan |
 | Fayllar | MinIO (S3 mos) | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
-| Excel | SheetJS (`xlsx`) | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi |
+| Excel | `write-excel-file` + `read-excel-file` | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi. **SheetJS oʻrniga:** uning npm dagi nusxasi (`xlsx@0.18.5`) tashlab qoʻyilgan va ikkita yuqori darajali zaifligi bor — prototype pollution va ReDoS, tuzatishsiz. Biz foydalanuvchi yuklagan faylni tahlil qilamiz, bu esa aynan oʻsha zaifliklar xavfli boʻlgan joy. Tanlangan kutubxonada ogohlantirish yoʻq va bogʻliqligi bitta |
 | Matnlar | Bitta modul, oʻzbekcha | Barcha yozuvlar `packages/shared/strings.ts` da. Rus tili keyin qoʻshilsa — bitta fayl nusxalanadi, kodga tegilmaydi |
 | Deploy | Docker Compose | Bitta `docker compose up`. Kubernetes bu hajmda ortiqcha |
 | Format va lint | Biome | Prettier va ESLint oʻrniga bitta asbob: bitta konfiguratsiya fayli, sezilarli darajada tez. Modul chegarasini `noRestrictedImports` bilan majburlab boʻladi |

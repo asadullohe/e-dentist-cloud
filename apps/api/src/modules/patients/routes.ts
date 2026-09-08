@@ -1,4 +1,12 @@
-import { IMAGE_TEXT } from '@e-dentist/shared'
+import { EXCEL_TEXT, IMAGE_TEXT, todayISO } from '@e-dentist/shared'
+
+const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+/// Fayl nomida oʻzbekcha harflar bor — RFC 5987 koʻrinishi kerak
+function attachment(filename: string): string {
+  return `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`
+}
+
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
@@ -26,6 +34,26 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
   app.get('/patients', read, async (req) => {
     const { clinicId } = clinicOf(req)
     return ok(await service.list(opts.deps, clinicId, validateInput(patientListSchema, req.query)))
+  })
+
+  // Ikkalasi ham `/patients/:id` dan oldin: aks holda «export» bemor
+  // identifikatori deb tushunilishi mumkin
+  app.get('/patients/import/template', write, async (_req, reply) => {
+    const file = await service.exportTemplate()
+    return reply
+      .header('content-type', XLSX_TYPE)
+      .header('content-disposition', attachment(EXCEL_TEXT.template_file))
+      .send(file)
+  })
+
+  app.get('/patients/export', read, async (req, reply) => {
+    const { clinicId, userId } = clinicOf(req)
+    const file = await service.exportPatients(opts.deps, clinicId, userId)
+    const name = EXCEL_TEXT.export_file(todayISO())
+    return reply
+      .header('content-type', XLSX_TYPE)
+      .header('content-disposition', attachment(name))
+      .send(file)
   })
 
   app.get('/patients/:id', read, async (req) => {

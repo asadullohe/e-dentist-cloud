@@ -8,6 +8,7 @@ import { errors } from '../../platform/errors.js'
 import { imageKey, type Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
+import { buildExport, buildTemplate } from './excel.js'
 import * as repo from './repo.js'
 import type { PatientCreateInput, PatientListInput, PatientUpdateInput } from './schema.js'
 
@@ -233,4 +234,24 @@ export async function removeImage(deps: PatientDeps, clinicId: string, userId: s
 /// bir xil, lekin bu modulning oʻzida — patients oʻz jadvalini biladi)
 async function assertPatientExists(tx: ClinicTx, patientId: string): Promise<void> {
   if (!(await repo.exists(tx, patientId))) throw errors.notFound(PATIENT_TEXT.not_found)
+}
+
+// --- Excel ---
+
+export function exportTemplate(): Promise<Buffer> {
+  return buildTemplate()
+}
+
+/// Roʻyxatni Excel ga chiqarish. Audit'ga bitta yozuv: kim, qachon, nechta
+export function exportPatients(deps: PatientDeps, clinicId: string, userId: string) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const rows = await repo.listAll(tx)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.patients_exported,
+      entity: 'patient',
+      meta: { count: rows.length },
+    })
+    return buildExport(rows)
+  })
 }

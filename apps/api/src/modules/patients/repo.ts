@@ -54,6 +54,14 @@ export async function exists(tx: ClinicTx, id: string): Promise<boolean> {
   return (await tx.patient.count({ where: { id } })) > 0
 }
 
+/// Excel ga chiqarish uchun — sahifalashsiz, toʻliq roʻyxat
+export function listAll(tx: ClinicTx) {
+  return tx.patient.findMany({
+    select: { id: true, fio: true, phone: true, birthDate: true, address: true, note: true },
+    orderBy: { fio: 'asc' },
+  })
+}
+
 export function findByIds(tx: ClinicTx, ids: string[]) {
   return tx.patient.findMany({
     where: { id: { in: ids } },

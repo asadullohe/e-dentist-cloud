@@ -33,6 +33,7 @@ export const AUDIT_ACTION = {
   payment_updated: 'payment_updated',
   payment_deleted: 'payment_deleted',
   service_changed: 'service_changed',
+  patients_exported: 'patients_exported',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

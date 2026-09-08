@@ -295,3 +295,88 @@ describe('bemor rasmlari', () => {
     expect(await h.ownerDb.patientImage.count({ where: { patientId: otherPatientId } })).toBe(0)
   })
 })
+
+describe('Excel', () => {
+  /// Oqimdan oʻqilganda read-excel-file barcha varaqlarni
+  /// [{sheet, data}] koʻrinishida qaytaradi va `sheet` sozlamasini
+  /// eʼtiborsiz qoldiradi — kerakli varaqni oʻzimiz tanlaymiz
+  async function sheetRows(body: Buffer, index = 1) {
+    const { Readable } = await import('node:stream')
+    const readXlsxFile = (await import('read-excel-file/node')).default
+    const sheets = (await readXlsxFile(Readable.from(body))) as unknown as {
+      sheet: string
+      data: unknown[][]
+    }[]
+    return sheets[index - 1]?.data ?? []
+  }
+
+  it('shablon toʻgʻri ustunlar va ikkita namuna qator bilan keladi', async () => {
+    const r = await h.app.inject({
+      method: 'GET',
+      url: '/api/patients/import/template',
+      headers: { cookie: h.cookie },
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.headers['content-type']).toContain('spreadsheetml')
+
+    const rows = await sheetRows(r.rawPayload)
+    expect(rows[0]).toEqual(['ID', 'F.I.O.', 'Telefon', 'Tugʻilgan sana', 'Manzil', 'Izoh'])
+    expect(rows).toHaveLength(3)
+    expect(rows[1]?.[1]).toBe('Karimov Aziz Akmalovich')
+  })
+
+  it('shablonda qoʻllanma varagʻi ham bor', async () => {
+    const r = await h.app.inject({
+      method: 'GET',
+      url: '/api/patients/import/template',
+      headers: { cookie: h.cookie },
+    })
+    const rows = await sheetRows(r.rawPayload, 2)
+    expect(rows[0]?.[0]).toBe('Bemorlarni Excel dan yuklash')
+    expect(rows.flat().join(' ')).toMatch(/kun\/oy\/yil/)
+  })
+
+  // Chiqarilgan fayl aynan shablon boʻlishi kerak — uni tahrirlab qaytadan
+  // yuklash mumkin (tz.md 8-boʻlim)
+  it('chiqarilgan faylning ustunlari shablon bilan bir xil', async () => {
+    const r = await h.app.inject({
+      method: 'GET',
+      url: '/api/patients/export',
+      headers: { cookie: h.cookie },
+    })
+    expect(r.statusCode).toBe(200)
+
+    const rows = await sheetRows(r.rawPayload)
+    expect(rows[0]).toEqual(['ID', 'F.I.O.', 'Telefon', 'Tugʻilgan sana', 'Manzil', 'Izoh'])
+  })
+
+  it('bemorlar id si bilan chiqadi, sana KK/OO/YYYY da', async () => {
+    await post('/api/patients', { fio: 'Eksport Bemori', birthDate: '1990-05-12' })
+
+    const r = await h.app.inject({
+      method: 'GET',
+      url: '/api/patients/export',
+      headers: { cookie: h.cookie },
+    })
+    const rows = await sheetRows(r.rawPayload)
+    const row = rows.find((line) => line[1] === 'Eksport Bemori')
+
+    expect(row?.[0]).toMatch(/^[0-9a-f-]{36}$/)
+    expect(row?.[3]).toBe('12/05/1990')
+  })
+
+  it('begona klinikaning bemori chiqmaydi', async () => {
+    const r = await h.app.inject({
+      method: 'GET',
+      url: '/api/patients/export',
+      headers: { cookie: h.cookie },
+    })
+    const rows = await sheetRows(r.rawPayload)
+    expect(rows.flat()).not.toContain('Begona Bemor')
+  })
+
+  it('faylni yuklab olish uchun ruxsat kerak', async () => {
+    const r = await h.app.inject({ method: 'GET', url: '/api/patients/export' })
+    expect(r.statusCode).toBe(401)
+  })
+})
