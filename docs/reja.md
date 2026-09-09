@@ -807,8 +807,23 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 
 > **Qadamlar `docs/server.md` da:** birinchi koʻtarish, yangilash,
 > admin yaratish va tekshirish roʻyxati.
-- [ ] **5.11 GitHub Actions** — test → qurish → `docker compose pull && up -d`.
+- [x] **5.11 GitHub Actions** — test → qurish → `docker compose pull && up -d`.
       Migratsiya ishga tushishdan oldin. Orqaga qaytarish: oldingi image tegi
+      _(ish oqimlari tayyor, birinchi chiqarishda sinaladi)_
+
+> **CI haqiqiy bazada ishlaydi**
+>
+> Koʻp ijarachilik himoyasi RLS ga tayanadi, uni soxta baza bilan sinab
+> boʻlmaydi. Shuning uchun CI lokaldagi oʻsha `docker compose` ni
+> koʻtaradi — notebook va CI bir xil muhitni ishlatadi.
+>
+> Deploy `ci.yml` ni `workflow_call` orqali qayta ishlatadi: sinovdan
+> oʻtmagan kod serverga chiqmaydi. Chiqarishdan keyin API `healthy`
+> boʻlishini kutadi va boʻlmasa loglarni koʻrsatib yiqiladi.
+>
+> Orqaga qaytarish — «Run workflow» tugmasi va oldingi commit sha si.
+> Migratsiyalar esa orqaga qaytmaydi: sxemani buzadigan oʻzgarish ikki
+> bosqichda chiqariladi (docs/server.md).
 - [ ] **5.12 Zaxira** — kunlik `pg_dump` (30 kun), MinIO nusxasi,
       **tiklashni bir marta sinab koʻrish** — sinalmagan zaxira zaxira emas
 - [ ] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari

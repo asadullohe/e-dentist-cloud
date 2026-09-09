@@ -28,7 +28,8 @@
     "db:studio": "npm run db:studio -w @e-dentist/api",
     "db:generate": "npm run db:generate -w @e-dentist/api",
     "db:app-role": "docker compose exec -T postgres bash /docker-entrypoint-initdb.d/01-app-role.sh",
-    "dev:admin": "npm run dev -w @e-dentist/admin"
+    "dev:admin": "npm run dev -w @e-dentist/admin",
+    "db:migrate:deploy": "npm run migrate:deploy -w @e-dentist/api"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.12",

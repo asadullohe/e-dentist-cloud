@@ -100,6 +100,9 @@ docker compose -f docker-compose.prod.yml exec api \
 
 ## Yangilash
 
+Odatda qoʻlda yangilash kerak emas — `master` ga push qilinganda GitHub
+Actions oʻzi chiqaradi (pastga qarang). Qoʻlda kerak boʻlsa:
+
 ```bash
 cd /opt/e-dentist
 git pull
@@ -108,6 +111,58 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Migratsiya avtomatik: `migrate` konteyneri API dan **oldin** ishlaydi va
 tugaguncha API koʻtarilmaydi. Yaʼni eski kod yangi sxemani koʻrmaydi.
+
+## Avtomatik chiqarish (GitHub Actions)
+
+Tartib: testlar → tasvirlar qurilib GHCR ga yuklanadi → serverda
+`docker compose up -d`.
+
+### Bir marta sozlanadi
+
+**1. Serverga chiqarish uchun kalit.** Oʻz kompyuteringizda:
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/e-dentist-deploy -C "github-actions" -N ""
+ssh-copy-id -i ~/.ssh/e-dentist-deploy.pub edentist@<SERVER_IP>
+ssh-keyscan -H <SERVER_IP>          # natijani saqlab qoʻying
+```
+
+**2. GitHub → Settings → Secrets and variables → Actions** da toʻrtta secret:
+
+| Nomi | Qiymati |
+|---|---|
+| `SSH_HOST` | server IP |
+| `SSH_USER` | `edentist` |
+| `SSH_KEY` | `~/.ssh/e-dentist-deploy` faylining **toʻliq** mazmuni |
+| `SSH_KNOWN_HOSTS` | `ssh-keyscan` natijasi |
+
+**3. Serverda GHCR ga kirish.** Tasvirlar shaxsiy boʻlgani uchun server
+ularni tortib olishga ruxsat soʻraydi. GitHub da `read:packages` huquqli
+token yasang va serverda bir marta:
+
+```bash
+echo "<TOKEN>" | docker login ghcr.io -u <GITHUB_FOYDALANUVCHI> --password-stdin
+```
+
+**4. `.env` da tasvir nomlari:**
+
+```
+IMAGE_API=ghcr.io/<foydalanuvchi>/<repo>-api
+IMAGE_WEB=ghcr.io/<foydalanuvchi>/<repo>-web
+TAG=latest
+```
+
+### Orqaga qaytarish
+
+Chiqarilgan har bir versiya GHCR da commit sha si bilan saqlanadi.
+
+- **GitHub dan:** Actions → Deploy → «Run workflow» → `tag` maydoniga
+  oldingi commit sha sini yozasiz
+- **Serverdan:** `cd /opt/e-dentist && TAG=<eski-sha> docker compose -f docker-compose.prod.yml up -d`
+
+> Migratsiyalar orqaga qaytmaydi. Sxemani buzadigan oʻzgarish (ustun
+> oʻchirish, nom almashtirish) kiritilsa, avval eski kod ham ishlaydigan
+> qilib chiqariladi, keyingi chiqarishda esa eskisi olib tashlanadi.
 
 ## Toʻxtatish
 
