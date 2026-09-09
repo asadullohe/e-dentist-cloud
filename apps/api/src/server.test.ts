@@ -6,6 +6,7 @@ import { memoryBus } from './platform/bus.js'
 import type { Db } from './platform/db.js'
 import { errors } from './platform/errors.js'
 import { memoryMailer } from './platform/mailer.js'
+import { silentNotifier } from './platform/notify.js'
 import { createServer, type ServerDeps } from './platform/server.js'
 import type { SessionStore } from './platform/session.js'
 import { fakeImports, fakeStorage, testConfig } from './test-support/config.js'
@@ -29,6 +30,7 @@ const fakeDeps: ServerDeps = {
   imports: fakeImports,
   mailer: memoryMailer(),
   bus: memoryBus(),
+  notify: silentNotifier(),
 }
 
 const config = testConfig()

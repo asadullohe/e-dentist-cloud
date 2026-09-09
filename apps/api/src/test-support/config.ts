@@ -17,6 +17,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? 'edentist',
     S3_SECRET_KEY: process.env.S3_SECRET_KEY ?? 'lokal_parol_2026',
     S3_BUCKET: process.env.S3_BUCKET ?? 'edentist-test',
+    SMTP_PORT: 587,
     ...overrides,
   }
 }

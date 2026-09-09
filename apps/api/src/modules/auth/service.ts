@@ -14,6 +14,7 @@ import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import type { Mailer } from '../../platform/mailer.js'
+import type { Notifier } from '../../platform/notify.js'
 import { hashPassword, verifyPassword } from '../../platform/password.js'
 import type { RateLimiter } from '../../platform/rateLimit.js'
 import type { SessionData, SessionStore } from '../../platform/session.js'
@@ -52,6 +53,8 @@ export interface AuthDeps {
   sessions: SessionStore
   rateLimiter: RateLimiter
   mailer: Mailer
+  /// Yangi klinika haqida platforma egasiga xabar (Telegram)
+  notify: Notifier
   cabinetUrl: string
   log: (message: string, meta?: Record<string, unknown>) => void
 }
@@ -143,6 +146,25 @@ export async function register(
       'Agar bu siz boʻlmasangiz, xatni eʼtiborsiz qoldiring.',
     ].join('\n'),
   })
+
+  // Xabarnoma oxirida va himoyalangan holda: klinika allaqachon
+  // yaratilgan, xabar yuborilmagani uchun roʻyxatdan oʻtishni
+  // yiqitib boʻlmaydi
+  try {
+    await deps.notify.send(
+      [
+        'Yangi klinika roʻyxatdan oʻtdi',
+        `Nomi: ${input.clinicName}`,
+        `Egasi: ${input.fullName} (${input.email})`,
+        input.phone ? `Telefon: ${input.phone}` : '',
+        `Sinov: ${formatDate(expiresAt.toISOString().slice(0, 10))} gacha`,
+      ]
+        .filter(Boolean)
+        .join('\n'),
+    )
+  } catch (error) {
+    deps.log('platforma xabarnomasi yuborilmadi', { error: String(error) })
+  }
 
   return { clinicId }
 }

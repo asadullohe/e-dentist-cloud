@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.5** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.6** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -732,9 +732,23 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > roʻyxat klinika ichidagi shovqinga toʻlib ketadi. «Klinika amallari
 > bilan» tugmasi hammasini ochadi, lekin u yerda ham faqat vaqt, amal,
 > klinika nomi va xodim pochtasi bor.
-- [ ] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
-- [ ] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/pochta.ts`). Serverda
+- [x] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
+
+> **Xabar hech qachon asosiy oqimni buzmaydi**
+>
+> Telegram yotgan boʻlsa ham roʻyxatdan oʻtish tugaydi: xabar yuborish
+> `register` ning oxirida va `try/catch` ichida. Nazorat testi ataylab
+> yiqiladigan xabarnoma bilan roʻyxatdan oʻtadi va 200 kutadi.
+> Sozlanmagan boʻlsa (lokalda) hech narsa yuborilmaydi.
+- [x] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/mailer.ts`). Serverda
       haqiqiy pochta kerak, aks holda hech kim roʻyxatdan oʻta olmaydi
+
+> **Prod da SMTP sozlanmagan boʻlsa server koʻtarilmaydi**
+>
+> Pochta tasdigʻisiz kabinet ochilmaydi, yaʼni xatsiz roʻyxatdan oʻtish
+> oqimi butunlay ishlamaydi. Yarim ishlaydigan holatda koʻtarilgandan
+> koʻra darhol toʻxtagani yaxshi — config shuni tekshiradi.
+> Lokalda esa boʻsh qoladi va xat konsolga chiqadi.
 
 ### Server — Hetzner
 

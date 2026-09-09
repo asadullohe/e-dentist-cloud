@@ -29,6 +29,7 @@ import { AppError, errors } from './errors.js'
 import { anyPermissionGuard, permissionGuard, sessionHook } from './guards.js'
 import type { ImportStore } from './importStore.js'
 import type { Mailer } from './mailer.js'
+import type { Notifier } from './notify.js'
 import type { RateLimiter } from './rateLimit.js'
 import { errorResponse } from './response.js'
 import type { SessionStore } from './session.js'
@@ -43,6 +44,8 @@ export interface ServerDeps {
   mailer: Mailer
   /// Navbat oʻzgarganda ochiq sahifalarga xabar beradi (SSE)
   bus: Bus
+  /// Platforma egasiga Telegram xabari
+  notify: Notifier
 }
 
 // Har qanday xatoni AppXato ga keltiradi. Foydalanuvchi hech qachon
@@ -142,6 +145,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
       sessions: deps.sessions,
       rateLimiter: deps.rateLimiter,
       mailer: deps.mailer,
+      notify: deps.notify,
       cabinetUrl: config.CABINET_URL,
       log: (message, meta) => app.log.warn(meta ?? {}, message),
     },

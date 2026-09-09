@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { memoryBus } from '../../platform/bus.js'
 import { createDb, type Db } from '../../platform/db.js'
 import { memoryMailer } from '../../platform/mailer.js'
+import { memoryNotifier } from '../../platform/notify.js'
 import { createRateLimiter } from '../../platform/rateLimit.js'
 import { createServer } from '../../platform/server.js'
 import { createSessionStore } from '../../platform/session.js'
@@ -17,6 +18,7 @@ const appUrl = process.env.APP_DATABASE_URL
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379'
 if (!ownerUrl || !appUrl) throw new Error('DATABASE_URL va APP_DATABASE_URL kerak')
 
+const MISSING_EMAIL = 'umuman-yoq@example.com'
 const config = testConfig()
 
 const EMAIL = `sinov-${Date.now()}@example.com`
@@ -28,6 +30,7 @@ const LIMIT_EMAIL = `cheklov-${Date.now()}@example.com`
 
 let app: FastifyInstance
 let ownerDb: Db
+const notify = memoryNotifier()
 let db: Db
 let sessions: ReturnType<typeof createSessionStore>
 let rateLimiter: ReturnType<typeof createRateLimiter>
@@ -52,6 +55,8 @@ beforeAll(async () => {
     `login:ip:${CLIENT_IP}`,
     `login:account:${EMAIL}`,
     `login:account:${LIMIT_EMAIL}`,
+    // Mavjud boʻlmagan pochta ham hisobga tushadi — u ham tozalanadi
+    `login:account:${MISSING_EMAIL}`,
   ]) {
     await rateLimiter.reset(k)
   }
@@ -64,6 +69,7 @@ beforeAll(async () => {
     rateLimiter,
     mailer,
     bus: memoryBus(),
+    notify,
   })
 
   // Ruxsat tekshiruvini sinash uchun himoyalangan marshrut
@@ -172,6 +178,63 @@ describe('roʻyxatdan oʻtish', () => {
   })
 })
 
+describe('platforma xabarnomasi', () => {
+  // Yangi klinika haqida platforma egasiga Telegram xabari boradi
+  it('roʻyxatdan oʻtishda xabar yuboriladi', () => {
+    const message = notify.sent.at(-1) ?? ''
+    expect(message).toContain('Yangi klinika roʻyxatdan oʻtdi')
+    expect(message).toContain(EMAIL)
+  })
+
+  // Xabar yuborish asosiy oqimni buzmasligi kerak
+  it('xabar yiqilsa ham roʻyxatdan oʻtish tugaydi', async () => {
+    const broken = {
+      send: async () => {
+        throw new Error('telegram yotibdi')
+      },
+    }
+    const brokenApp = createServer(config, {
+      db: ownerDb,
+      sessions,
+      rateLimiter,
+      storage: fakeStorage,
+      imports: fakeImports,
+      mailer: memoryMailer(),
+      bus: memoryBus(),
+      notify: broken,
+    })
+    await brokenApp.ready()
+
+    const r = await brokenApp.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      // Roʻyxat cheklovi Redis da bir kun yashaydi — har yugurishda
+      // boshqa IP olamiz
+      remoteAddress: `10.77.${Math.floor(Date.now() / 1000) % 250}.${Date.now() % 250}`,
+      payload: {
+        clinicName: `Xabarsiz klinika ${Date.now()}`,
+        fullName: 'Sinov Egasi',
+        email: `xabarsiz-${Date.now()}@example.com`,
+        password: 'juda-yaxshi-parol',
+      },
+    })
+
+    // Xabar yiqildi, lekin foydalanuvchi buni sezmasligi kerak
+    expect(r.statusCode).toBe(200)
+    const created = await ownerDb.clinic.findFirst({
+      where: { name: { startsWith: 'Xabarsiz klinika' } },
+    })
+    expect(created).not.toBeNull()
+    if (created) {
+      await ownerDb.auditLog.deleteMany({ where: { clinicId: created.id } })
+      await ownerDb.user.deleteMany({ where: { clinicId: created.id } })
+      await ownerDb.role.deleteMany({ where: { clinicId: created.id } })
+      await ownerDb.clinic.delete({ where: { id: created.id } })
+    }
+    await brokenApp.close()
+  })
+})
+
 describe('navbat kodi', () => {
   // Kod roʻyxatdan oʻtishda beriladi: klinika uni eshikdagi QR ga chiqaradi
   it('har klinikaga oʻz kodi beriladi va navbat yoqilgan boʻladi', async () => {
@@ -274,7 +337,7 @@ describe('kirish va sessiya', () => {
       remoteAddress: CLIENT_IP,
       method: 'POST',
       url: '/api/auth/login',
-      payload: { email: 'umuman-yoq@example.com', password: 'boshqa-parol' },
+      payload: { email: MISSING_EMAIL, password: 'boshqa-parol' },
     })
     expect(wrong.statusCode).toBe(401)
     expect(yoq.statusCode).toBe(401)
