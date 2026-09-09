@@ -7,6 +7,9 @@ build/
 .env
 .env.*
 !.env.example
+# Serverdagi namuna ham repoda turishi kerak — undagi qatorlar
+# hujjatning bir qismi (docs/birinchi-chiqarish.md)
+!.env.prod.example
 *.pem
 *.key
 
