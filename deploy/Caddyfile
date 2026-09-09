@@ -1,0 +1,63 @@
+# Caddy sozlamasi. HTTPS avtomatik: Let's Encrypt sertifikati birinchi
+# soʻrovda olinadi va oʻzi yangilanadi.
+#
+# Apex (e-dentist.uz) va www bu yerda yoʻq — ular Netlify'dagi landing
+# saytiga tegishli va tegilmaydi (tz.md 13-boʻlim).
+
+{
+	email {$ACME_EMAIL}
+	# Loglar konteyner chiqishiga — `docker compose logs caddy`
+	log {
+		output stdout
+		format console
+	}
+}
+
+(xavfsizlik) {
+	header {
+		# Brauzer faqat HTTPS orqali kelsin
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		# Server nomi va versiyasi koʻrinmasin
+		-Server
+	}
+}
+
+(api) {
+	handle /api/* {
+		reverse_proxy api:3000 {
+			# Navbat sahifasi SSE bilan ishlaydi: oqim buferlanmasin,
+			# aks holda «chaqirildi» xabari kech keladi
+			flush_interval -1
+			# Cheklovlar IP boʻyicha ishlaydi — haqiqiy manzil kerak
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+}
+
+kabinet.{$DOMAIN} {
+	import xavfsizlik
+	import api
+
+	handle {
+		root * /srv/kabinet
+		encode gzip zstd
+		# SPA: ichki marshrutlar (masalan /n/abc123) index.html ga tushadi
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+admin.{$DOMAIN} {
+	import xavfsizlik
+	import api
+
+	handle {
+		root * /srv/admin
+		encode gzip zstd
+		try_files {path} /index.html
+		file_server
+	}
+}

@@ -13,7 +13,9 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:migrate:create": "prisma migrate dev --create-only",
-    "admin:create": "tsx --env-file=../../.env src/scripts/create-admin.ts"
+    "admin:create": "tsx --env-file=../../.env src/scripts/create-admin.ts",
+    "start:prod": "tsx src/index.ts",
+    "migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1127.0",
@@ -29,14 +31,15 @@
     "fastify": "^5.12.3",
     "ioredis": "^6.0.0",
     "nodemailer": "^7.0.13",
+    "prisma": "^7.10.0",
     "read-excel-file": "^9.3.10",
+    "tsx": "^4.20.7",
     "write-excel-file": "^4.1.1",
     "zod": "^4.5.4"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
     "@types/nodemailer": "^8.0.1",
-    "pino-pretty": "^13.1.3",
-    "prisma": "^7.10.0"
+    "pino-pretty": "^13.1.3"
   }
 }

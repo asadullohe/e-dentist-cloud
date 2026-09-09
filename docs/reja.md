@@ -759,9 +759,36 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
       `fail2ban`, Docker oʻrnatish
 - [ ] **5.8 DNS** — `kabinet.e-dentist.uz` va `admin.e-dentist.uz` → server IP.
       Apex va `www` Netlify'da qoladi, **tegilmaydi**
-- [ ] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik
-- [ ] **5.10 Prod `docker-compose.yml`** — lokaldan ajratilgan, portlar tashqariga ochiq emas,
+- [x] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik _(fayl tayyor, serverda sinaladi)_
+
+> **SSE uchun bitta muhim sozlama**
+>
+> `reverse_proxy` da `flush_interval -1`: aks holda proxy oqimni buferlab
+> qoʻyadi va navbatdagi «chaqirildi» xabari kech keladi. Shuningdek
+> `X-Forwarded-For` uzatiladi — cheklovlar IP boʻyicha ishlaydi.
+>
+> Kabinet va panel bitta tasvirda: ular bitta koddan quriladi va birga
+> yangilanadi. SPA marshrutlari (`/n/<kod>`) uchun `try_files … /index.html`.
+- [x] **5.10 Prod `docker-compose.yml`** — lokaldan ajratilgan, portlar tashqariga ochiq emas,
       faqat Caddy orqali
+
+> **Migratsiya alohida konteynerda**
+>
+> `migrate` bir marta ishlab toʻxtaydi, `api` esa
+> `service_completed_successfully` bilan uni kutadi — eski kod yangi
+> sxemani koʻrib qolmaydi.
+>
+> Postgres, Redis va MinIO portlari **umuman** chiqarilmagan: tashqi
+> dunyoga ochiq yagona joy — Caddy (80/443).
+>
+> Tasvir lokalda sinovdan oʻtkazildi: migratsiya bajarildi, API konteyner
+> tarmogʻi orqali bazaga ulandi va healthcheck yashil boʻldi. Yoʻl-yoʻlakay
+> uchta narsa tuzatildi — `prisma.config.ts` konteynerda `.env` topolmay
+> yiqilardi, `tsx` va `prisma` dev bogʻliqlikda edi (prod tasvirida
+> boʻlmasdi), va vite qurishi uchun `tsconfig.base.json` kerak edi.
+
+> **Qadamlar `docs/server.md` da:** birinchi koʻtarish, yangilash,
+> admin yaratish va tekshirish roʻyxati.
 - [ ] **5.11 GitHub Actions** — test → qurish → `docker compose pull && up -d`.
       Migratsiya ishga tushishdan oldin. Orqaga qaytarish: oldingi image tegi
 - [ ] **5.12 Zaxira** — kunlik `pg_dump` (30 kun), MinIO nusxasi,
