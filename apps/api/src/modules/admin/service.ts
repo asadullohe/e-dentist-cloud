@@ -12,7 +12,7 @@ import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { withClinic } from '../../platform/tenant.js'
 import * as repo from './repo.js'
-import type { ClinicListInput, ExtendInput, StatusInput } from './schema.js'
+import type { ClinicListInput, EventsInput, ExtendInput, StatusInput } from './schema.js'
 
 export interface AdminDeps {
   db: Db
@@ -179,4 +179,59 @@ export async function setClinicStatus(
   )
 
   return clinicCard(deps, clinicId)
+}
+
+// ─────────────────────────  Statistika va hodisalar  ─────────────────────────
+
+/// Grafik uchun oylar soni
+const MONTHS_SHOWN = 12
+
+export interface Stats {
+  total: number
+  active: number
+  trial: number
+  expired: number
+  blocked: number
+  staff: number
+  /// Oylar kesimi: roʻyxatdan oʻtganlar va uzaytirishlar.
+  /// Daromad summasi yoʻq — narx modeli hali belgilanmagan
+  months: { month: string; registered: number; extended: number }[]
+}
+
+export async function stats(deps: AdminDeps): Promise<Stats> {
+  const [counts, months] = await Promise.all([
+    repo.stats(deps.db),
+    repo.monthly(deps.db, MONTHS_SHOWN),
+  ])
+
+  return {
+    total: Number(counts.total),
+    active: Number(counts.active),
+    trial: Number(counts.trial),
+    expired: Number(counts.expired),
+    blocked: Number(counts.blocked),
+    staff: Number(counts.staff),
+    months: months.map((row) => ({
+      month: row.month,
+      registered: Number(row.registered),
+      extended: Number(row.extended),
+    })),
+  }
+}
+
+export interface PlatformEvent {
+  at: string
+  action: string
+  clinicName: string
+  actor: string | null
+}
+
+export async function events(deps: AdminDeps, input: EventsInput): Promise<PlatformEvent[]> {
+  const rows = await repo.events(deps.db, input.limit, !input.all)
+  return rows.map((row) => ({
+    at: row.at.toISOString(),
+    action: row.action,
+    clinicName: row.clinic_name,
+    actor: row.actor,
+  }))
 }

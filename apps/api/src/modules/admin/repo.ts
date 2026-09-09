@@ -68,3 +68,38 @@ export async function setStatus(db: Db, clinicId: string, status: 'active' | 'bl
     SELECT * FROM admin_set_clinic_status(${clinicId}::uuid, ${status}::"ClinicStatus")`
   return rows[0] ?? null
 }
+
+export interface StatsRow {
+  total: bigint
+  active: bigint
+  trial: bigint
+  expired: bigint
+  blocked: bigint
+  staff: bigint
+}
+
+export async function stats(db: Db): Promise<StatsRow> {
+  const rows = await db.$queryRaw<StatsRow[]>`SELECT * FROM admin_stats()`
+  return rows[0] as StatsRow
+}
+
+export interface MonthRow {
+  month: string
+  registered: bigint
+  extended: bigint
+}
+
+export function monthly(db: Db, months: number) {
+  return db.$queryRaw<MonthRow[]>`SELECT * FROM admin_monthly(${months})`
+}
+
+export interface EventRow {
+  at: Date
+  action: string
+  clinic_name: string
+  actor: string | null
+}
+
+export function events(db: Db, limit: number, platformOnly: boolean) {
+  return db.$queryRaw<EventRow[]>`SELECT * FROM admin_events(${limit}, ${platformOnly})`
+}

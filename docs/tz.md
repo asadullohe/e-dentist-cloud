@@ -469,6 +469,8 @@ GET    /api/admin/clinics?search=
 GET    /api/admin/clinics/:id        # kartochka: xodimlar, hajm, tarix
 POST   /api/admin/clinics/:id/extend
 POST   /api/admin/clinics/:id/status # bloklash / blokdan chiqarish
+GET    /api/admin/stats              # klinikalar soni, oylar kesimi
+GET    /api/admin/events?all=0       # hodisalar: roʻyxatdan oʻtish, kirish urinishi
 ```
 
 Javob shakli hamma joyda bir xil — mavjud ilovadagi `{ok, data|error}` qoidasining davomi:

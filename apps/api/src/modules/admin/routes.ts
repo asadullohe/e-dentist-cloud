@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import { requirePlatformAdmin } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { clinicListSchema, extendSchema, statusSchema } from './schema.js'
+import { clinicListSchema, eventsSchema, extendSchema, statusSchema } from './schema.js'
 import * as service from './service.js'
 
 export interface AdminRouteOpts {
@@ -13,6 +13,17 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteOpts> = async (app, opts)
   app.get('/admin/me', async (req) => {
     const session = requirePlatformAdmin(req)
     return ok(await service.currentAdmin(opts.deps, session.userId))
+  })
+
+  app.get('/admin/stats', async (req) => {
+    requirePlatformAdmin(req)
+    return ok(await service.stats(opts.deps))
+  })
+
+  app.get('/admin/events', async (req) => {
+    requirePlatformAdmin(req)
+    const input = validateInput(eventsSchema, req.query)
+    return ok(await service.events(opts.deps, input))
   })
 
   app.get('/admin/clinics', async (req) => {

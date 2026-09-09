@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.4** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.5** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -718,7 +718,20 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 >
 > Paneldagi har amal klinikaning **oʻz** audit tarixiga yoziladi: egasi
 > ham koʻra oladi.
-- [ ] **5.4 Statistika va hodisalar**
+- [x] **5.4 Statistika va hodisalar**
+
+> **Daromad hisobi qoʻshilmadi — narx modeli hali yoʻq**
+>
+> tz.md statistikada «oylik daromad» ni soʻraydi, lekin bir obuna qancha
+> turishi hali belgilanmagan (ochiq savol 2). Shu sababli oylar kesimida
+> **roʻyxatdan oʻtganlar va uzaytirishlar soni** koʻrsatiladi; narx
+> belgilangach summa shu qatordan hisoblanadi. Sahifada shu yozib qoʻyilgan.
+>
+> Hodisalar sukut boʻyicha faqat platformaga aloqador amallarni koʻrsatadi
+> (roʻyxatdan oʻtish, kirish urinishi, bloklash, muddat) — aks holda
+> roʻyxat klinika ichidagi shovqinga toʻlib ketadi. «Klinika amallari
+> bilan» tugmasi hammasini ochadi, lekin u yerda ham faqat vaqt, amal,
+> klinika nomi va xodim pochtasi bor.
 - [ ] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
 - [ ] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/pochta.ts`). Serverda
       haqiqiy pochta kerak, aks holda hech kim roʻyxatdan oʻta olmaydi

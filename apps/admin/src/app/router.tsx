@@ -1,11 +1,12 @@
 import { ADMIN_UI, UI_TEXT } from '@e-dentist/shared'
 import { LogOutIcon } from 'lucide-react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
 import { useAdmin } from '@/entities/admin'
 import { useLogout } from '@/features/auth'
 import { ClinicCard } from '@/pages/ClinicCard'
 import { Clinics } from '@/pages/Clinics'
 import { Login } from '@/pages/Login'
+import { Stats } from '@/pages/Stats'
 import { Button, Skeleton } from '@/shared/ui'
 
 /// Panel bitta ekrandan iborat: kirish yoki klinikalar. Kabinetdagi kabi
@@ -16,8 +17,25 @@ function Shell() {
 
   return (
     <div className="min-h-dvh">
-      <header className="bg-brand-deep flex items-center justify-between px-4 py-2.5 text-white">
-        <span className="font-display font-bold tracking-tight">{ADMIN_UI.brand}</span>
+      <header className="bg-brand-deep flex items-center justify-between gap-4 px-4 py-2.5 text-white">
+        <div className="flex items-center gap-4">
+          <span className="font-display font-bold tracking-tight">{ADMIN_UI.brand}</span>
+          <nav className="flex gap-3 text-sm">
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) => (isActive ? 'text-white' : 'text-white/60')}
+            >
+              {ADMIN_UI.clinics}
+            </NavLink>
+            <NavLink
+              to="/statistika"
+              className={({ isActive }) => (isActive ? 'text-white' : 'text-white/60')}
+            >
+              {ADMIN_UI.stats}
+            </NavLink>
+          </nav>
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/70">{admin?.email}</span>
           <Button
@@ -35,6 +53,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Clinics />} />
           <Route path="/klinika/:id" element={<ClinicCard />} />
+          <Route path="/statistika" element={<Stats />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

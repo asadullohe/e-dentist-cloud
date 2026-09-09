@@ -243,3 +243,76 @@ describe('tarix nomlari', () => {
     }
   })
 })
+
+describe('statistika', () => {
+  it('klinikalar soni holatlar boʻyicha', async () => {
+    const stats = (await asAdmin('GET', '/api/admin/stats')).json().data
+    expect(stats.total).toBeGreaterThan(0)
+    expect(stats.staff).toBeGreaterThan(0)
+    // Har bir klinika bitta guruhga tushadi
+    expect(stats.active + stats.expired + stats.blocked).toBeLessThanOrEqual(stats.total)
+  })
+
+  it('bloklangan klinika alohida sanaladi', async () => {
+    const before = (await asAdmin('GET', '/api/admin/stats')).json().data
+    await asAdmin('POST', `/api/admin/clinics/${h.clinicId}/status`, { status: 'blocked' })
+
+    const after = (await asAdmin('GET', '/api/admin/stats')).json().data
+    expect(after.blocked).toBe(before.blocked + 1)
+
+    await asAdmin('POST', `/api/admin/clinics/${h.clinicId}/status`, { status: 'active' })
+  })
+
+  it('oxirgi 12 oy qatori toʻliq', async () => {
+    const stats = (await asAdmin('GET', '/api/admin/stats')).json().data
+    expect(stats.months).toHaveLength(12)
+    expect(stats.months.at(-1).month).toBe(new Date().toISOString().slice(0, 7))
+    // Shu oyda sinov klinikasi roʻyxatdan oʻtgan
+    expect(stats.months.at(-1).registered).toBeGreaterThan(0)
+  })
+})
+
+describe('hodisalar', () => {
+  it('platforma hodisalari klinika nomi bilan qaytadi', async () => {
+    const rows = (await asAdmin('GET', '/api/admin/events')).json().data
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows[0]).toHaveProperty('clinicName')
+    expect(Object.keys(rows[0]).sort()).toEqual(['action', 'actor', 'at', 'clinicName'])
+  })
+
+  // Sukut boʻyicha faqat platformaga aloqador amallar — aks holda
+  // roʻyxat klinika ichidagi shovqinga toʻlib ketadi
+  it('sukut boʻyicha bemor amallari koʻrinmaydi', async () => {
+    const actions = (await asAdmin('GET', '/api/admin/events'))
+      .json()
+      .data.map((row: { action: string }) => row.action)
+    expect(actions).not.toContain('patient_viewed')
+    expect(actions).not.toContain('patient_created')
+  })
+
+  it('«hammasi» rejimida klinika amallari ham koʻrinadi', async () => {
+    const actions = (await asAdmin('GET', '/api/admin/events?all=1&limit=200'))
+      .json()
+      .data.map((row: { action: string }) => row.action)
+    expect(actions).toContain('patient_created')
+  })
+
+  it('hodisalarda bemor ismi yoʻq', async () => {
+    const raw = (await asAdmin('GET', '/api/admin/events?all=1&limit=200')).payload
+    expect(raw).not.toContain('Maxfiy Bemor')
+  })
+
+  it('chegara hurmat qilinadi', async () => {
+    const rows = (await asAdmin('GET', '/api/admin/events?all=1&limit=3')).json().data
+    expect(rows).toHaveLength(3)
+  })
+
+  it('klinika xodimi hodisalarni koʻra olmaydi', async () => {
+    const r = await h.app.inject({
+      method: 'GET',
+      url: '/api/admin/events',
+      headers: { cookie: h.cookie },
+    })
+    expect(r.statusCode).toBe(403)
+  })
+})
