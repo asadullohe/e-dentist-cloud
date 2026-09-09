@@ -253,12 +253,17 @@ describe('statistika', () => {
     expect(stats.active + stats.expired + stats.blocked).toBeLessThanOrEqual(stats.total)
   })
 
+  // Sanoq butun bazaga tegishli va boshqa test fayllari ham oʻz
+  // klinikalarini bloklashi mumkin — shuning uchun oʻzgarish emas,
+  // shu klinikaning holati tekshiriladi
   it('bloklangan klinika alohida sanaladi', async () => {
-    const before = (await asAdmin('GET', '/api/admin/stats')).json().data
     await asAdmin('POST', `/api/admin/clinics/${h.clinicId}/status`, { status: 'blocked' })
 
-    const after = (await asAdmin('GET', '/api/admin/stats')).json().data
-    expect(after.blocked).toBe(before.blocked + 1)
+    const stats = (await asAdmin('GET', '/api/admin/stats')).json().data
+    expect(stats.blocked).toBeGreaterThanOrEqual(1)
+
+    const rows: ClinicSummary[] = (await asAdmin('GET', '/api/admin/clinics')).json().data
+    expect(rows.find((row) => row.id === h.clinicId)?.status).toBe('blocked')
 
     await asAdmin('POST', `/api/admin/clinics/${h.clinicId}/status`, { status: 'active' })
   })
