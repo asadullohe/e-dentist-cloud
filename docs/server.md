@@ -211,6 +211,22 @@ systemctl list-timers 'e-dentist-*'
 
 Kunlik zaxira 03:20 da, haftalik **tiklash sinovi** dushanba 04:10 da.
 
+**`sudo` boʻlmasa** — oʻsha jadvalni `crontab` bilan ham qoʻyish mumkin,
+u root talab qilmaydi:
+
+```bash
+crontab -e
+```
+
+Faylga ikki qator:
+
+```
+20 3 * * * cd /opt/e-dentist && bash deploy/backup.sh >> backups/backup.log 2>&1
+10 4 * * 1 cd /opt/e-dentist && bash deploy/backup-check.sh >> backups/check.log 2>&1
+```
+
+Tekshirish: `crontab -l` va bir necha kundan keyin `tail backups/backup.log`.
+
 ### Tiklash sinovi
 
 Sinalmagan zaxira — zaxira emas. `backup-check.sh` oxirgi dumpni

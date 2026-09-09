@@ -60,8 +60,12 @@ if ! id -u "$USERNAME" >/dev/null 2>&1; then
 fi
 
 # `sudo` guruhi parol soʻraydi, parolsiz foydalanuvchi esa uni hech qachon
-# kiritolmaydi — sudo butunlay ishlamay qoladi. Terminal boʻlsa shu yerda
-# soʻraymiz, boʻlmasa oxirida eslatma chiqadi
+# kiritolmaydi — sudo butunlay ishlamay qoladi.
+#
+# Terminal boʻlsa parolni shu yerda soʻraymiz. Boʻlmasa (ssh buyruq
+# rejimi) parolsiz sudo yoqiladi: buzuq sudo bilan qoldirish xavfsizroq
+# emas — u odamni root parolini tiklashga va konsolga majbur qiladi,
+# oxiri baribir shu yerga keladi
 PASSWORD_SET=1
 if ! passwd -S "$USERNAME" 2>/dev/null | awk '{exit $2 == "P" ? 0 : 1}'; then
   if [[ -t 0 ]]; then
@@ -69,6 +73,8 @@ if ! passwd -S "$USERNAME" 2>/dev/null | awk '{exit $2 == "P" ? 0 : 1}'; then
     passwd "$USERNAME"
   else
     PASSWORD_SET=0
+    echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$USERNAME"
+    chmod 440 "/etc/sudoers.d/$USERNAME"
   fi
 fi
 usermod -aG sudo "$USERNAME"
@@ -157,14 +163,19 @@ if [[ "$PASSWORD_SET" -eq 0 ]]; then
   cat <<'MSG'
 
 ╭──────────────────────────────────────────────────────────────╮
-│ BAJARILMAGAN QADAM: parol                                    │
+│ SUDO PAROLSIZ ISHLAYDI                                       │
 │                                                              │
-│ Skript terminalsiz ishga tushdi, shuning uchun parol         │
-│ soʻralmadi. Parolsiz `sudo` ishlamaydi. Shu oynada bajaring: │
+│ Skript terminalsiz ishga tushdi, parol soʻray olmadi —       │
+│ shuning uchun `sudo` parolsiz qilib qoʻyildi. Serverga       │
+│ faqat SSH kaliti bilan kiriladi, lekin kalit oʻgʻirlansa     │
+│ hujumchi darhol root boʻla oladi.                            │
+│                                                              │
+│ Qatʼiyroq variantga oʻtish (tavsiya etiladi):                │
 │                                                              │
 │     passwd edentist                                          │
+│     rm /etc/sudoers.d/edentist                               │
 │                                                              │
-│ Bu parol faqat sudo uchun — SSH ga parol bilan kirish yopiq. │
+│ Shundan keyin sudo har safar parol soʻraydi.                 │
 ╰──────────────────────────────────────────────────────────────╯
 MSG
 fi
