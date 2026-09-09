@@ -22,6 +22,8 @@ export interface SessionData {
 // huquqlari bilan ishlab turardi. Rol har tekshiruvda bazadan oʻqiladi
 
 export interface SessionStore {
+  /// Kuzatuv uchun: Redis javob beryaptimi
+  ping(): Promise<void>
   create(data: SessionData): Promise<string>
   read(id: string): Promise<SessionData | null>
   destroy(id: string): Promise<void>
@@ -32,6 +34,10 @@ export function createSessionStore(redisUrl: string): SessionStore {
   const redis = new Redis(redisUrl)
 
   return {
+    async ping() {
+      await redis.ping()
+    },
+
     async create(data) {
       const id = randomBytes(32).toString('base64url')
       await redis.set(sessionKey(id), JSON.stringify(data), 'EX', SESSION_TTL)

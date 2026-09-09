@@ -842,7 +842,26 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > sinovi 7 klinika · 16 migratsiya · 15 siyosat topdi. Nazorat sinovi —
 > boʻsh dump berilganda skript «ZAXIRA YAROQSIZ» deb 1 kod bilan
 > yiqildi.
-- [ ] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari
+- [x] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari
+
+> **`/api/health` yetarli emas edi**
+>
+> Eski manzil faqat «API javob beryapti» deb aytardi. Baza yoki Redis
+> yiqilganda kuzatuv yashil turaverardi. Yangi `/api/health/ready`
+> ikkalasini ham tekshiradi va yiqilganda 503 beradi — compose dagi
+> healthcheck ham shunga oʻtdi.
+>
+> Javobda tafsilot yoʻq: manzil ochiq, qaysi qism yiqilgani faqat logda.
+> Test buni tekshiradi (parol va xost nomi javobga tushmasligi).
+>
+> Uptime Kuma serverning oʻzida, lekin `127.0.0.1` da — internetda yana
+> bitta kirish oynasi turmasin. SSH tunneli bilan ochiladi. Server
+> butunlay yiqilsa Kuma ham yiqiladi, shuning uchun tashqi bepul kuzatuv
+> ham tavsiya qilingan (docs/server.md).
+>
+> Loglar 10 MB × 3 fayl bilan chegaralandi — 40 GB diskda cheklanmagan
+> log bir necha oyda hammasini yeb qoʻyardi. Postgres endi sekin
+> soʻrovlarni (>500 ms), ulanish va qulflarni yozadi.
 - [ ] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish
 
 ---

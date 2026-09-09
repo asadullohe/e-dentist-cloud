@@ -16,6 +16,7 @@ import { fakeImports, fakeStorage, testConfig } from './test-support/config.js'
 const fakeDeps: ServerDeps = {
   db: {} as Db,
   sessions: {
+    ping: async () => {},
     create: async () => 'sinov',
     read: async () => null,
     destroy: async () => {},
@@ -124,6 +125,67 @@ describe('xato javoblari', () => {
     expect(r.statusCode).toBe(400)
     expect(r.json().error.code).toBe('bad_request')
     expect(r.json().error.message).toBe('Soʻrov notoʻgʻri yuborildi')
+    await app.close()
+  })
+})
+
+describe('GET /api/health/ready', () => {
+  // Kuzatuv shu manzilni soʻraydi: baza yoki Redis yotgan boʻlsa API
+  // «tirik» deb koʻrinib turmasligi kerak
+  it('hammasi joyida boʻlsa 200', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: { $queryRaw: async () => [{ '?column?': 1 }] } as unknown as Db,
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.statusCode).toBe(200)
+    expect(r.json()).toMatchObject({ ok: true, data: { status: 'ok' } })
+    await app.close()
+  })
+
+  it('baza javob bermasa 503', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: {
+        $queryRaw: async () => {
+          throw new Error('ECONNREFUSED')
+        },
+      } as unknown as Db,
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.statusCode).toBe(503)
+    await app.close()
+  })
+
+  it('Redis javob bermasa 503', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: { $queryRaw: async () => [{ '?column?': 1 }] } as unknown as Db,
+      sessions: {
+        ...fakeDeps.sessions,
+        ping: async () => {
+          throw new Error('ECONNREFUSED')
+        },
+      },
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.statusCode).toBe(503)
+    await app.close()
+  })
+
+  // Manzil ochiq — qaysi qism yiqilgani javobda koʻrinmasligi kerak
+  it('javobda texnik tafsilot yoʻq', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: {
+        $queryRaw: async () => {
+          throw new Error('parol notoʻgʻri: edentist_app@postgres')
+        },
+      } as unknown as Db,
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.payload).not.toContain('parol')
+    expect(r.payload).not.toContain('postgres')
     await app.close()
   })
 })

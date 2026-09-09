@@ -221,6 +221,66 @@ BACKUP_REMOTE=zaxira@boshqa-server:/srv/e-dentist/
 > yaratiladi va maʼlumot qaysi yurisdiksiyada tursa, nusxasi ham **oʻsha
 > yurisdiksiyada** boʻlishi kerak.
 
+## Kuzatuv
+
+### Uptime Kuma
+
+Kuzatuv paneli serverning oʻzida ishlaydi, lekin **internetga chiqmaydi**:
+u faqat `127.0.0.1:3001` ni tinglaydi. Ochish uchun SSH tunneli:
+
+```bash
+ssh -L 3001:127.0.0.1:3001 edentist@<SERVER_IP>
+# keyin brauzerda: http://localhost:3001
+```
+
+Birinchi ochilishda admin hisobi yaratasiz. Keyin uchta kuzatuvchi
+qoʻshing:
+
+| Nomi | Turi | Manzil | Tekshirish oraligʻi |
+|---|---|---|---|
+| API | HTTP(s) | `https://kabinet.<domen>/api/health/ready` | 60 s |
+| Kabinet | HTTP(s) | `https://kabinet.<domen>/` | 300 s |
+| Panel | HTTP(s) | `https://admin.<domen>/` | 300 s |
+
+`/api/health/ready` oddiy `/api/health` dan farq qiladi: u **bazani va
+Redis ni ham** tekshiradi. Ular yiqilganda API «tirik» boʻlib koʻrinib
+turmasligi kerak.
+
+Sertifikat muddati uchun Kuma da alohida sozlama bor — «Certificate
+Expiry Notification» ni yoqib qoʻying.
+
+### Telegram xabarnomasi
+
+Kuma → Settings → Notifications → Telegram. Bot tokeni va chat id si
+`.env` dagi bilan bir xil boʻlishi mumkin.
+
+> **Bitta serverning cheklovi:** server butunlay yiqilsa Kuma ham
+> yiqiladi va xabar kelmaydi. Shuning uchun tashqi bepul kuzatuv ham
+> qoʻshib qoʻying (masalan UptimeRobot) — u `https://kabinet.<domen>/`
+> ni tashqaridan tekshiradi.
+
+### Loglar
+
+```bash
+cd /opt/e-dentist
+docker compose -f docker-compose.prod.yml logs -f api        # ilova
+docker compose -f docker-compose.prod.yml logs -f caddy      # HTTPS, soʻrovlar
+docker compose -f docker-compose.prod.yml logs postgres | grep -i error
+```
+
+Postgres sekin soʻrovlarni (500 ms dan uzun), ulanish va qulflarni
+yozadi — muammoni keyin topish uchun.
+
+Har servisning logi **10 MB × 3 fayl** bilan chegaralangan: 40 GB disk
+loglar bilan toʻlib qolmasin.
+
+### Nimaga eʼtibor berish kerak
+
+- `docker compose ps` — hammasi `Up` va `healthy`
+- `df -h` — disk 80% dan oshmasin (rasmlar va zaxira oʻsib boradi)
+- `journalctl -u e-dentist-backup-check` — haftalik zaxira sinovi oʻtdimi
+- `sudo fail2ban-client status sshd` — bloklanganlar soni keskin oshdimi
+
 ## Toʻxtatish
 
 ```bash

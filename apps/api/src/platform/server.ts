@@ -128,7 +128,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     await billing.assertWritable({ db: deps.db }, clinicId)
   })
 
-  app.register(healthRoutes, { prefix: '/api' })
+  app.register(healthRoutes, { prefix: '/api', deps: { db: deps.db, sessions: deps.sessions } })
   // Ruxsat tekshiruvi barcha marshrutlarga ochiladi:
   //   preHandler: app.talabRuxsat('patients.read')
   // Ruxsatlar clinics modulidan oʻqiladi — platform modullarni import qilmaydi,

@@ -11,10 +11,33 @@
 
 name: e-dentist
 
+# Loglar diskni yeb qoʻymasligi kerak: 40 GB da cheklanmagan json-log
+# bir necha oyda hammasini toʻldiradi. Har servis shu chegarani oladi
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    logging: *logging
+    # Sekin soʻrovlar va ulanishlar logga tushadi — muammoni keyin
+    # topish uchun. 500 ms: oddiy CRUD undan tez, sekinlashsa koʻrinadi
+    command:
+      - postgres
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+      - -c
+      - log_lock_waits=on
+      - -c
+      - log_line_prefix=%m [%p] %u@%d
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -34,6 +57,7 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    logging: *logging
     # Sessiyalar shu yerda: server qayta ishga tushganda xodimlar
     # qaytadan kirmasin
     command: ["redis-server", "--appendonly", "yes"]
@@ -48,6 +72,7 @@ services:
   minio:
     image: minio/minio:latest
     restart: unless-stopped
+    logging: *logging
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
@@ -77,6 +102,7 @@ services:
 
   api:
     image: ${IMAGE_API:-e-dentist/api}:${TAG:-latest}
+    logging: *logging
     build:
       context: .
       dockerfile: deploy/api.Dockerfile
@@ -111,7 +137,7 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 10s
       timeout: 5s
       retries: 6
@@ -119,6 +145,7 @@ services:
 
   caddy:
     image: ${IMAGE_WEB:-e-dentist/web}:${TAG:-latest}
+    logging: *logging
     build:
       context: .
       dockerfile: deploy/web.Dockerfile
@@ -140,9 +167,21 @@ services:
       api:
         condition: service_started
 
+  # Kuzatuv. Faqat 127.0.0.1 ga bogʻlanadi: ochiq internetda yana bitta
+  # kirish oynasi turmasin. Ochish uchun SSH tunneli (docs/server.md)
+  kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - kumadata:/app/data
+    ports:
+      - "127.0.0.1:3001:3001"
+
 volumes:
   pgdata:
   redisdata:
   miniodata:
   caddydata:
   caddyconfig:
+  kumadata:
