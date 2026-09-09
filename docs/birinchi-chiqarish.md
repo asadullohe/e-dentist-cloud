@@ -119,7 +119,7 @@ tuzatasiz.
 
 ## 4. Cloudflare va DNS
 
-**Nega:** brauzer `kabinet.e-dentist.uz` ni server IP siga aylantirishi
+**Nega:** brauzer `cabinet.e-dentist.uz` ni server IP siga aylantirishi
 kerak, HTTPS esa shu nom uchun olinadi.
 
 Cloudflare → DNS → Records:
@@ -128,7 +128,7 @@ Cloudflare → DNS → Records:
 |---|---|---|---|
 | A | `@` | `<SERVER_IP>` | Proxied |
 | A | `www` | `<SERVER_IP>` | Proxied |
-| A | `kabinet` | `<SERVER_IP>` | Proxied |
+| A | `cabinet` | `<SERVER_IP>` | Proxied |
 | A | `admin` | `<SERVER_IP>` | Proxied |
 
 - `www` ning eski **CNAME** yozuvi (`e-dentist.netlify.app`) oʻchiriladi
@@ -150,7 +150,7 @@ Cloudflare sozlamalari:
 
 ```bash
 dig +short NS e-dentist.uz          # cloudflare.com chiqishi kerak
-dig +short kabinet.e-dentist.uz     # Cloudflare IP lari
+dig +short cabinet.e-dentist.uz     # Cloudflare IP lari
 ```
 
 ---
@@ -235,7 +235,7 @@ bash deploy/backup-check.sh
 
 - [ ] `https://e-dentist.uz` — landing ochiladi
 - [ ] `https://www.e-dentist.uz` — apex ga yoʻnaltiradi
-- [ ] `https://kabinet.e-dentist.uz` — kirish oynasi, HTTPS yashil
+- [ ] `https://cabinet.e-dentist.uz` — kirish oynasi, HTTPS yashil
 - [ ] `https://admin.e-dentist.uz` — panelga kirasiz
 - [ ] Kabinetda roʻyxatdan oʻting, keyin serverda:
       `docker compose -f docker-compose.prod.yml logs api | grep token=` —

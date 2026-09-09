@@ -62,7 +62,7 @@ S3_BUCKET=edentist-files
 
 TZ=Asia/Tashkent
 SESSION_SECRET=$SESSION
-CABINET_URL=https://kabinet.$DOMAIN
+CABINET_URL=https://cabinet.$DOMAIN
 
 # SMTP hozircha sozlanmagan: xat server logiga chiqadi.
 #   docker compose -f docker-compose.prod.yml logs api | grep token=

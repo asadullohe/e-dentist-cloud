@@ -13,7 +13,7 @@ Manzillar:
 |---|---|
 | `e-dentist.uz` | shu sahifa |
 | `www.e-dentist.uz` | apex ga yoʻnaltiriladi |
-| `kabinet.e-dentist.uz` | klinikalar kabineti |
+| `cabinet.e-dentist.uz` | klinikalar kabineti |
 | `admin.e-dentist.uz` | boshqaruv paneli |
 
 > Bu papka biome tekshiruvidan chetda (`biome.json`): sayt alohida

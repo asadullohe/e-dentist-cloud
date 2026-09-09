@@ -3,7 +3,7 @@
 Bu yerda **serverdagi** ish tartibi. Lokal muhit `README.md` da.
 
 Server: Ubuntu 24.04, Docker va Docker Compose oʻrnatilgan.
-Domen: `kabinet.e-dentist.uz` va `admin.e-dentist.uz` server IP siga
+Domen: `cabinet.e-dentist.uz` va `admin.e-dentist.uz` server IP siga
 qaratilgan (apex va `www` — Netlify'dagi landing, tegilmaydi).
 
 ## Nima qayerda ishlaydi
@@ -60,7 +60,7 @@ Tarqalishi bir necha soat olishi mumkin.
 |---|---|---|
 | A | `@` | server IP |
 | A | `www` | server IP |
-| A | `kabinet` | server IP |
+| A | `cabinet` | server IP |
 | A | `admin` | server IP |
 
 **4. Cloudflare sozlamalari** — bularsiz ilova notoʻgʻri ishlaydi:
@@ -72,15 +72,15 @@ Tarqalishi bir necha soat olishi mumkin.
 | Caching → Cache Rules | `/api/*` uchun **Bypass cache** | API javoblari keshlanmasligi kerak |
 
 > **Sertifikat birinchi marta olinmasa:** Cloudflare proxy yoqilganda
-> Let's Encrypt tekshiruvi ham u orqali oʻtadi. Muammo boʻlsa `kabinet`
+> Let's Encrypt tekshiruvi ham u orqali oʻtadi. Muammo boʻlsa `cabinet`
 > yozuvini vaqtincha «DNS only» (gray cloud) qilib qoʻying, Caddy
 > sertifikat olsin, keyin proxy ni qayta yoqing.
 
 Tekshirish:
 
 ```bash
-dig +short kabinet.e-dentist.uz     # Cloudflare IP lari chiqadi (proxy)
-curl -sI https://kabinet.e-dentist.uz | head -3
+dig +short cabinet.e-dentist.uz     # Cloudflare IP lari chiqadi (proxy)
+curl -sI https://cabinet.e-dentist.uz | head -3
 ```
 
 > **Haqiqiy IP.** Proxy orqasida barcha soʻrovlar Cloudflare IP laridan
@@ -279,8 +279,8 @@ qoʻshing:
 
 | Nomi | Turi | Manzil | Tekshirish oraligʻi |
 |---|---|---|---|
-| API | HTTP(s) | `https://kabinet.<domen>/api/health/ready` | 60 s |
-| Kabinet | HTTP(s) | `https://kabinet.<domen>/` | 300 s |
+| API | HTTP(s) | `https://cabinet.<domen>/api/health/ready` | 60 s |
+| Kabinet | HTTP(s) | `https://cabinet.<domen>/` | 300 s |
 | Panel | HTTP(s) | `https://admin.<domen>/` | 300 s |
 
 `/api/health/ready` oddiy `/api/health` dan farq qiladi: u **bazani va
@@ -297,7 +297,7 @@ Kuma → Settings → Notifications → Telegram. Bot tokeni va chat id si
 
 > **Bitta serverning cheklovi:** server butunlay yiqilsa Kuma ham
 > yiqiladi va xabar kelmaydi. Shuning uchun tashqi bepul kuzatuv ham
-> qoʻshib qoʻying (masalan UptimeRobot) — u `https://kabinet.<domen>/`
+> qoʻshib qoʻying (masalan UptimeRobot) — u `https://cabinet.<domen>/`
 > ni tashqaridan tekshiradi.
 
 ### Loglar
@@ -337,7 +337,7 @@ docker compose -f docker-compose.prod.yml down -v   # MAʼLUMOT OʻCHADI
 Koʻtargandan keyin:
 
 - [ ] `https://e-dentist.uz` — landing ochiladi, `www` apex ga yoʻnaltiradi
-- [ ] `https://kabinet.e-dentist.uz` ochiladi va HTTPS yashil
+- [ ] `https://cabinet.e-dentist.uz` ochiladi va HTTPS yashil
 - [ ] Roʻyxatdan oʻtib koʻring — tasdiqlash **xati keldimi** (SMTP ishlayaptimi)
 - [ ] `https://admin.e-dentist.uz` ochiladi va admin hisobi kiradi
 - [ ] `docker compose -f docker-compose.prod.yml logs api | grep -i error` boʻsh

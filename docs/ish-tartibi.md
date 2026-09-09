@@ -106,7 +106,7 @@ siz koʻrib chiqasiz, keyingi bosqich boshlanadi.
 | 2 | Bemor qoʻshasiz, tish xaritasini toʻldirasiz, Excel dan yuklaysiz |
 | 3 | Hisobotni koʻrasiz, naryad yozasiz, texnik hisobi bilan kirasiz |
 | 4 | Telefonda QR ni skanerlab navbatga yozilasiz |
-| 5 | Hammasi `kabinet.e-dentist.uz` da ishlaydi |
+| 5 | Hammasi `cabinet.e-dentist.uz` da ishlaydi |
 
 ## 7. Hujjatlar qachon yangilanadi
 
@@ -134,7 +134,7 @@ topilmaydigan boʻlib qoladi.
 | Qachon | Hozirdan bosqich 5 gacha | 5.6 dan boshlab |
 | Baza | Docker `postgres:16`, `localhost:5432` | Konteyner, tashqariga ochilmagan |
 | Fayllar | Docker MinIO, `localhost:9000` | Konteyner, Caddy orqali |
-| API | `npm run dev`, `localhost:3000` | Konteyner, `kabinet.e-dentist.uz/api` |
+| API | `npm run dev`, `localhost:3000` | Konteyner, `cabinet.e-dentist.uz/api` |
 | Kabinet | Vite, `localhost:5173` | Caddy statik fayl sifatida beradi |
 | Pochta | Xat konsolga chiqadi | SMTP |
 

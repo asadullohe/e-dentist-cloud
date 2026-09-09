@@ -775,7 +775,7 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
       Joylashuv: Falkenstein yoki Helsinki
 - [ ] **5.7 Serverni sozlash** — ssh kalit, root ni yopish, `ufw` firewall,
       `fail2ban`, Docker oʻrnatish
-- [ ] **5.8 DNS** — Cloudflare (proxy yoqilgan): apex, `www`, `kabinet.`
+- [ ] **5.8 DNS** — Cloudflare (proxy yoqilgan): apex, `www`, `cabinet.`
       va `admin.` → server IP. Netlify'dan voz kechildi _(qaror 09/09/2026)_
 
 > **Cloudflare proxy IP ni yashiradi**

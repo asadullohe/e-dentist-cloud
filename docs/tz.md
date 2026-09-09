@@ -579,7 +579,7 @@ _Bitta server yetadi. Boshidan ortiqcha murakkablik qurmang._
 | OS | Ubuntu 24.04 LTS |  |
 | Konteynerlar | api · postgres · redis · minio · caddy | Docker Compose, bitta fayl |
 | Proxy | Caddy | HTTPS avtomatik, sozlash nginx'dan sodda |
-| Domen | `e-dentist.uz` | Hammasi shu serverda: apex va `www` — landing, `kabinet.` va `admin.` — ilova. DNS Cloudflare orqali (proxy yoqilgan) |
+| Domen | `e-dentist.uz` | Hammasi shu serverda: apex va `www` — landing, `cabinet.` va `admin.` — ilova. DNS Cloudflare orqali (proxy yoqilgan) |
 | Kuzatuv | Uptime Kuma + Postgres loglar | Boshida shu yetadi |
 
 > **Landing ham shu serverda** _(qaror 09/09/2026 da oʻzgardi)_
@@ -686,6 +686,6 @@ _Kod yozishdan oldin javob berilishi kerak boʻlgan narsalar._
 1. **Mijoz bilan shartnoma.** Klinika bilan tuziladigan shartnomada maʼlumot kimga tegishli, zaxira va uzilish boʻyicha javobgarlik qanday yozilishi kerak? Yurist bilan — toʻlov integratsiyasi bosqichida.
 2. **Narx.** Oylik obuna qancha? Sinovdan keyin qanday tarif taklif qilinadi? Bu `billing` modulining tuzilishiga taʼsir qiladi.
 3. ~~**Server provayderi.**~~ Hal qilindi: Hetzner Cloud, Ubuntu 24.04. Server bosqich 5.6 da olinadi — undan oldin ishlab chiqish notebookda, Docker da.
-4. ~~**Domen.**~~ Hal qilindi: `e-dentist.uz`. Landing Netlify'da apex'da qoladi, ilova `kabinet.e-dentist.uz`, panel `admin.e-dentist.uz`.
+4. ~~**Domen.**~~ Hal qilindi: `e-dentist.uz`. Landing Netlify'da apex'da qoladi, ilova `cabinet.e-dentist.uz`, panel `admin.e-dentist.uz`.
 5. **Xodim soni tarifga taʼsir qiladimi?** Cheklovsizmi yoki «5 xodimgacha» kabi bosqichlarmi? Bu `billing` va xodim qoʻshish oqimiga taʼsir qiladi.
 6. **Kim quradi.** Oʻzingizmi yoki dasturchi yollaysizmi? Yollasangiz bu TZ shartnomaga ilova boʻladi.

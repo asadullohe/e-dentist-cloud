@@ -3,7 +3,7 @@
 #
 # Uchta manzil bitta serverda:
 #   e-dentist.uz          landing (www apex ga yoʻnaltiriladi)
-#   kabinet.e-dentist.uz  klinikalar kabineti
+#   cabinet.e-dentist.uz  klinikalar kabineti
 #   admin.e-dentist.uz    boshqaruv paneli
 
 {
@@ -82,7 +82,7 @@ www.{$DOMAIN} {
 
 # ──────────────────────────  Kabinet va panel  ──────────────────────────
 
-kabinet.{$DOMAIN} {
+cabinet.{$DOMAIN} {
 	import xavfsizlik
 	import api
 
