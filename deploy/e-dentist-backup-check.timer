@@ -1,0 +1,10 @@
+# Har dushanba 04:10 da
+[Unit]
+Description=E-Dentist zaxira sinovi taymeri
+
+[Timer]
+OnCalendar=Mon *-*-* 04:10:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

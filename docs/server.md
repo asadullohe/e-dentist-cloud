@@ -164,6 +164,63 @@ Chiqarilgan har bir versiya GHCR da commit sha si bilan saqlanadi.
 > oʻchirish, nom almashtirish) kiritilsa, avval eski kod ham ishlaydigan
 > qilib chiqariladi, keyingi chiqarishda esa eskisi olib tashlanadi.
 
+## Zaxira
+
+Kunlik `pg_dump` va bemor rasmlari nusxasi `/opt/e-dentist/backups` da:
+
+```
+backups/
+├─ db/     edentist-2026-09-09_0320.sql.gz   (30 kun saqlanadi)
+└─ files/  MinIO dagi rasmlarning nusxasi
+```
+
+### Yoqish (bir marta)
+
+```bash
+cd /opt/e-dentist
+sudo cp deploy/e-dentist-backup*.service deploy/e-dentist-backup*.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now e-dentist-backup.timer e-dentist-backup-check.timer
+systemctl list-timers 'e-dentist-*'
+```
+
+Kunlik zaxira 03:20 da, haftalik **tiklash sinovi** dushanba 04:10 da.
+
+### Tiklash sinovi
+
+Sinalmagan zaxira — zaxira emas. `backup-check.sh` oxirgi dumpni
+**alohida vaqtinchalik bazaga** tiklaydi, klinika/xodim/bemor sonini va
+RLS siyosatlari joyidaligini tekshiradi, keyin oʻsha bazani oʻchiradi.
+Haqiqiy bazaga umuman tegmaydi.
+
+```bash
+bash deploy/backup-check.sh          # qoʻlda ishga tushirish
+journalctl -u e-dentist-backup-check # taymer natijalari
+```
+
+### Haqiqiy tiklash
+
+```bash
+bash deploy/restore.sh backups/db/edentist-2026-09-09_0320.sql.gz
+```
+
+Skript «ha» deb tasdiqlashni soʻraydi, API ni toʻxtatadi, bazani
+tiklaydi, ilova roliga huquqlarni qaytaradi va API ni koʻtaradi.
+
+### Boshqa joyga nusxa
+
+tz.md 12-boʻlim haftalik nusxani **boshqa jismoniy joyga** talab qiladi.
+`.env` ga `BACKUP_REMOTE` qoʻshsangiz, skript har safar oʻsha manzilga
+`rsync` qiladi:
+
+```
+BACKUP_REMOTE=zaxira@boshqa-server:/srv/e-dentist/
+```
+
+> Zaxirada bemor maʼlumoti bor. Papka `700`, fayllar `600` huquqi bilan
+> yaratiladi va maʼlumot qaysi yurisdiksiyada tursa, nusxasi ham **oʻsha
+> yurisdiksiyada** boʻlishi kerak.
+
 ## Toʻxtatish
 
 ```bash

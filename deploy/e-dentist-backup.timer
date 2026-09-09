@@ -1,0 +1,11 @@
+# Har kuni kechasi soat 03:20 da (Toshkent vaqti bilan)
+[Unit]
+Description=E-Dentist zaxira taymeri
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+# Server oʻchiq boʻlgan boʻlsa — yoqilishi bilan bajariladi
+Persistent=true
+
+[Install]
+WantedBy=timers.target

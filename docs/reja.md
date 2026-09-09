@@ -824,8 +824,24 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > Orqaga qaytarish — «Run workflow» tugmasi va oldingi commit sha si.
 > Migratsiyalar esa orqaga qaytmaydi: sxemani buzadigan oʻzgarish ikki
 > bosqichda chiqariladi (docs/server.md).
-- [ ] **5.12 Zaxira** — kunlik `pg_dump` (30 kun), MinIO nusxasi,
+- [x] **5.12 Zaxira** — kunlik `pg_dump` (30 kun), MinIO nusxasi,
       **tiklashni bir marta sinab koʻrish** — sinalmagan zaxira zaxira emas
+
+> **Sinov avtomatik, har hafta**
+>
+> «Bir marta sinab koʻrish» yetarli emas: zaxira bugun ishlagani ertaga
+> ham ishlashini kafolatlamaydi. Shuning uchun `backup-check.sh` haftada
+> bir marta oxirgi dumpni **alohida vaqtinchalik bazaga** tiklaydi,
+> klinika/xodim/bemor sonini va **RLS siyosatlari** joyidaligini
+> tekshiradi, keyin oʻsha bazani oʻchiradi.
+>
+> RLS ni ham tekshirish muhim: siyosatlarsiz tiklangan baza koʻrinishdan
+> toʻgʻri, aslida esa butun kartoteka ochiq boʻladi.
+>
+> Skriptlar lokal stekda sinaldi: zaxira olindi (dump + rasmlar), tiklash
+> sinovi 7 klinika · 16 migratsiya · 15 siyosat topdi. Nazorat sinovi —
+> boʻsh dump berilganda skript «ZAXIRA YAROQSIZ» deb 1 kod bilan
+> yiqildi.
 - [ ] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari
 - [ ] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish
 

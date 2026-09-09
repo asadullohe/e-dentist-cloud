@@ -1,0 +1,13 @@
+# Kunlik zaxira. Taymer ishga tushiradi: e-dentist-backup.timer
+[Unit]
+Description=E-Dentist kunlik zaxira
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=edentist
+WorkingDirectory=/opt/e-dentist
+ExecStart=/usr/bin/env bash /opt/e-dentist/deploy/backup.sh
+# Zaxira uzoq davom etsa ham tizim uni uzmasin
+TimeoutStartSec=1h
