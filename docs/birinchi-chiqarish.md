@@ -85,6 +85,18 @@ ssh root@<SERVER_IP> "bash /root/server-setup.sh"
 
 **Kutilgan natija:** oxirida «Tayyor» va tekshirish buyruqlari.
 
+> Skript SSH orqali terminalsiz ishga tushsa, `edentist` uchun parol
+> soʻray olmaydi va oxirida buni eslatadi. Root sessiyangizda qoʻying —
+> **parolsiz `sudo` ishlamaydi**:
+>
+> ```bash
+> passwd edentist
+> ```
+>
+> Bu parol faqat `sudo` uchun kerak: SSH ga parol bilan kirish yopilgan,
+> shuning uchun u tashqi hujum yuzasi emas — aksincha, kalit oʻgʻirlansa
+> root huquqiga oʻtishga toʻsiq boʻladi.
+
 Skript: `edentist` foydalanuvchisi · root va parol bilan kirish yopiladi ·
 `ufw` (faqat SSH, 80, 443) · `fail2ban` · avtomatik yangilanishlar ·
 2 GB swap · Docker.
@@ -92,8 +104,10 @@ Skript: `edentist` foydalanuvchisi · root va parol bilan kirish yopiladi ·
 **Tekshiring** (eski oynani yopmasdan, yangi oynada):
 
 ```bash
-ssh edentist@<SERVER_IP> "docker --version && sudo ufw status | head -5"
+ssh -t edentist@<SERVER_IP> "docker --version && sudo ufw status | head -5"
 ```
+
+`-t` kerak: `sudo` parol soʻrash uchun terminal talab qiladi.
 
 **Xato: kirolmadingiz** — eski oyna hali ochiq, Hetzner konsolidan ham
 kirish mumkin. Sozlamani `/etc/ssh/sshd_config.d/99-e-dentist.conf` dan

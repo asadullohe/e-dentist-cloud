@@ -58,6 +58,19 @@ echo "──> Foydalanuvchi: $USERNAME"
 if ! id -u "$USERNAME" >/dev/null 2>&1; then
   adduser --disabled-password --gecos "" "$USERNAME"
 fi
+
+# `sudo` guruhi parol soʻraydi, parolsiz foydalanuvchi esa uni hech qachon
+# kiritolmaydi — sudo butunlay ishlamay qoladi. Terminal boʻlsa shu yerda
+# soʻraymiz, boʻlmasa oxirida eslatma chiqadi
+PASSWORD_SET=1
+if ! passwd -S "$USERNAME" 2>/dev/null | awk '{exit $2 == "P" ? 0 : 1}'; then
+  if [[ -t 0 ]]; then
+    echo "    sudo uchun parol qoʻying (SSH ga parol bilan kirish yopiq):"
+    passwd "$USERNAME"
+  else
+    PASSWORD_SET=0
+  fi
+fi
 usermod -aG sudo "$USERNAME"
 install -d -m 700 -o "$USERNAME" -g "$USERNAME" "/home/$USERNAME/.ssh"
 install -m 600 -o "$USERNAME" -g "$USERNAME" "$ROOT_KEYS" "/home/$USERNAME/.ssh/authorized_keys"
@@ -139,3 +152,19 @@ Tekshirib koʻring:
 DIQQAT: shu oynani yopmang, avval yangi ulanish ishlashiga ishonch hosil
 qiling. Ishlamasa — Hetzner konsolidan (Console) kirib tuzatish mumkin.
 MSG
+
+if [[ "$PASSWORD_SET" -eq 0 ]]; then
+  cat <<'MSG'
+
+╭──────────────────────────────────────────────────────────────╮
+│ BAJARILMAGAN QADAM: parol                                    │
+│                                                              │
+│ Skript terminalsiz ishga tushdi, shuning uchun parol         │
+│ soʻralmadi. Parolsiz `sudo` ishlamaydi. Shu oynada bajaring: │
+│                                                              │
+│     passwd edentist                                          │
+│                                                              │
+│ Bu parol faqat sudo uchun — SSH ga parol bilan kirish yopiq. │
+╰──────────────────────────────────────────────────────────────╯
+MSG
+fi
