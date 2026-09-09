@@ -8,7 +8,8 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.6** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.14** — bosqich 5 `master` da. Server ishlayapti: kabinet,
+boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
 
@@ -750,8 +751,9 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > `register` ning oxirida va `try/catch` ichida. Nazorat testi ataylab
 > yiqiladigan xabarnoma bilan roʻyxatdan oʻtadi va 200 kutadi.
 > Sozlanmagan boʻlsa (lokalda) hech narsa yuborilmaydi.
-- [x] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/mailer.ts`). Serverda
-      haqiqiy pochta kerak, aks holda hech kim roʻyxatdan oʻta olmaydi
+- [x] **5.5b SMTP** — lokalda xat konsolga chiqadi (`platform/mailer.ts`), serverda
+      Resend sozlandi _(09/09/2026)_. Xat haqiqatan yetib borishi uchun Resend'da
+      domen tasdigʻi qoladi — hali tekshirilmagan
 
 > **SMTP hozircha ixtiyoriy — qaror 09/09/2026**
 >
@@ -770,13 +772,14 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 
 ### Server — Hetzner
 
-- [ ] **5.6 Serverni olish** _(siz qilasiz, qadamma-qadam koʻrsataman)_ — Hetzner Cloud,
-      Ubuntu 24.04. Tavsiya: CX32 (4 vCPU / 8 GB / 80 GB) yoki CPX31.
-      Joylashuv: Falkenstein yoki Helsinki
-- [ ] **5.7 Serverni sozlash** — ssh kalit, root ni yopish, `ufw` firewall,
-      `fail2ban`, Docker oʻrnatish
-- [ ] **5.8 DNS** — Cloudflare (proxy yoqilgan): apex, `www`, `cabinet.`
-      va `admin.` → server IP. Netlify'dan voz kechildi _(qaror 09/09/2026)_
+- [x] **5.6 Serverni olish** — Hetzner Cloud, Ubuntu 24.04, 4 GB, Nürnberg (`nbg1`)
+- [x] **5.7 Serverni sozlash** — `deploy/server-setup.sh`: `edentist` foydalanuvchisi,
+      root va parol bilan kirish yopiq, `ufw`, `fail2ban`, Docker.
+      Eslatma: shu serverda `sudo` ishlamay qoldi, shuning uchun zaxira
+      taymer emas, `crontab` orqali qoʻyildi
+- [x] **5.8 DNS** — Cloudflare (proxy yoqilgan): apex, `www`, `cabinet.`
+      va `admin.` → server IP. NS lar ahost'dan Cloudflare'ga oʻtkazildi.
+      Netlify'dan voz kechildi _(qaror 09/09/2026)_
 
 > **Cloudflare proxy IP ni yashiradi**
 >
@@ -789,7 +792,8 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > **bevosita qoʻshni** (Caddy) ishonchli. `true` boʻlsa mijoz yuborgan
 > soxta `X-Forwarded-For` bilan cheklovni aylanib oʻtish mumkin edi.
 > Uchta test buni tekshiradi.
-- [x] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik _(fayl tayyor, serverda sinaladi)_
+- [x] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik. Serverda sinaldi:
+      `www` → apex 301, HTTP → HTTPS 308, uchala nom sertifikat oldi _(09/09/2026)_
 
 > **SSE uchun bitta muhim sozlama**
 >
