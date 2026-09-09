@@ -15,3 +15,6 @@ Manzillar:
 | `www.e-dentist.uz` | apex ga yoʻnaltiriladi |
 | `kabinet.e-dentist.uz` | klinikalar kabineti |
 | `admin.e-dentist.uz` | boshqaruv paneli |
+
+> Bu papka biome tekshiruvidan chetda (`biome.json`): sayt alohida
+> yozilgan va uning uslubi ilova kodiga tegishli emas.
