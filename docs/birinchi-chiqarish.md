@@ -164,36 +164,24 @@ cd /opt/e-dentist
 cp .env.prod.example .env
 ```
 
-Parollarni generatsiya qiling — har biri uchun alohida:
+`.env` ni skript yasaydi — parollar oʻzi generatsiya qilinadi, sizdan
+faqat pochta soʻraladi:
 
 ```bash
-openssl rand -base64 32
+bash deploy/make-env.sh
 ```
 
-`nano .env` bilan toʻldiring. Eng muhim qatorlar:
+**Kutilgan natija:** «Tayyor: /opt/e-dentist/.env» va sozlamalar
+xulosasi. Parollar ekranga chiqarilmaydi.
 
-```
-DOMAIN=e-dentist.uz
-ACME_EMAIL=<pochtangiz>
+Tekshirish:
 
-POSTGRES_PASSWORD=<1-parol>
-APP_DB_PASSWORD=<2-parol>
-DATABASE_URL=postgresql://edentist:<1-parol>@postgres:5432/edentist
-APP_DATABASE_URL=postgresql://edentist_app:<2-parol>@postgres:5432/edentist
-
-MINIO_ROOT_PASSWORD=<3-parol>
-S3_SECRET_KEY=<3-parol>          # MINIO_ROOT_PASSWORD bilan bir xil
-
-SESSION_SECRET=<4-parol>
-CABINET_URL=https://kabinet.e-dentist.uz
-
-# SMTP hozircha boʻsh — xat server logiga chiqadi
-SMTP_HOST=
+```bash
+grep -E '^(DOMAIN|ACME_EMAIL|CABINET_URL|SMTP_HOST)=' .env
 ```
 
-> Parollarda `@` va `:` belgilari boʻlmasin: ular `DATABASE_URL` ichida
-> ajratuvchi hisoblanadi. `openssl rand -base64 32` da `+` va `/` chiqishi
-> mumkin — ular muammo qilmaydi.
+> `.env` ning nusxasi hech qayerda yoʻq va git ga tushmaydi. Uni
+> yoʻqotsangiz bazadagi parollarni ham almashtirish kerak boʻladi.
 
 ---
 
