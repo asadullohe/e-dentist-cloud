@@ -100,37 +100,6 @@ export function updateRolePermissions(
   })
 }
 
-// ────────────────  Taklifnomalar (auth moduli uchun)  ────────────────
-//
-// Yozuv shu modulniki, lekin xat yuborish va hisob ochish auth da:
-// `users` jadvali oʻshaniki. Shuning uchun bu funksiyalar ochiq
-// tranzaksiya ichida ishlaydi — chaqiruvchi sessiyani oʻzi ochadi
-
-export function createInviteTx(tx: ClinicTx, m: repo.NewInvite) {
-  return repo.createInvite(tx, m)
-}
-
-export function listPendingInvitesTx(tx: ClinicTx) {
-  return repo.listPendingInvites(tx)
-}
-
-export function findPendingInviteByEmailTx(tx: ClinicTx, email: string) {
-  return repo.findPendingInviteByEmail(tx, email)
-}
-
-export function deleteInviteTx(tx: ClinicTx, id: string) {
-  return repo.deleteInvite(tx, id)
-}
-
-export function markInviteAcceptedTx(tx: ClinicTx, id: string) {
-  return repo.markInviteAccepted(tx, id)
-}
-
-/// Sessiyasiz qidiruv — havolani ochgan odam hali klinikaga tegishli emas
-export function findInviteByToken(db: Db, tokenHash: string) {
-  return repo.findInviteByTokenHash(db, tokenHash)
-}
-
 export function listRolesTx(tx: ClinicTx) {
   return repo.listRoles(tx)
 }

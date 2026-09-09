@@ -117,7 +117,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   // oʻz maʼlumotini koʻradi va eksport qiladi (tz.md 8-boʻlim).
   // Chiqish ham ochiq: yopiq kabinetdan chiqa olmaslik maʼnosiz
   const WRITE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE'])
-  const BILLING_FREE = ['/api/auth/', '/api/invites/', '/api/n/']
+  const BILLING_FREE = ['/api/auth/', '/api/n/']
 
   app.addHook('preHandler', async (req) => {
     if (!WRITE_METHODS.has(req.method)) return

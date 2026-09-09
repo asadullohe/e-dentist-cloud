@@ -32,7 +32,9 @@ await storage.ensureBucket()
 const imports = createImportStore(config.REDIS_URL)
 const bus = createBus(config.REDIS_URL)
 
-// Prod da SMTP majburiy — config uni tekshiradi. Lokalda xat konsolga chiqadi
+// SMTP sozlanmagan boʻlsa xat konsolga (server logiga) chiqadi.
+// Tasdiqlash havolasini logdan olib qoʻlda yuborish mumkin:
+//   docker compose -f docker-compose.prod.yml logs api | grep token=
 const mailer: Mailer =
   config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASSWORD && config.SMTP_FROM
     ? smtpMailer({

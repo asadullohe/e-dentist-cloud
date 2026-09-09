@@ -386,16 +386,14 @@ export const REPORT_UI = {
 // Xodimlar va rollar
 export const STAFF_TEXT = {
   not_found: 'Xodim topilmadi',
-  invite_not_found: 'Taklifnoma topilmadi',
-  invite_expired: 'Taklifnoma muddati tugagan yoki allaqachon ishlatilgan',
   email_taken: 'Bu pochta bilan hisob allaqachon bor',
-  invite_exists: 'Bu pochtaga taklifnoma yuborilgan — avval uni bekor qiling',
   role_not_found: 'Rol topilmadi',
   self_change: 'Oʻz rolingizni yoki holatingizni oʻzgartira olmaysiz',
   last_owner: 'Klinikada kamida bitta faol egasi qolishi shart',
   role_required: 'Rolni tanlang',
   name_required: 'Ism-familiyani yozing',
-  invite_subject: 'E-Dentist — sizni klinikaga taklif qilishdi',
+  password_wrong: 'Joriy parol notoʻgʻri',
+  password_same: 'Yangi parol eskisidan farq qilishi kerak',
 } as const
 
 // Sozlamalar → Xodimlar va Rollar
@@ -403,15 +401,12 @@ export const STAFF_UI = {
   title: 'Sozlamalar',
   staff_tab: 'Xodimlar',
   roles_tab: 'Rollar',
-  invite: 'Taklif qilish',
-  invite_title: 'Xodimni taklif qilish',
-  invite_sent: 'Taklifnoma yuborildi',
-  pending: 'Kutilmoqda',
-  pending_title: 'Yuborilgan taklifnomalar',
-  expires: 'Muddati',
-  revoke: 'Bekor qilish',
-  revoke_title: 'Taklifnoma bekor qilinsinmi?',
-  revoke_text: 'Havola ishlamay qoladi. Kerak boʻlsa qaytadan yuborasiz.',
+  account_tab: 'Hisobim',
+  add: 'Xodim qoʻshish',
+  add_title: 'Yangi xodim',
+  add_hint:
+    'Parolni siz belgilaysiz va xodimga aytasiz. U kirgach «Hisobim» boʻlimida oʻzgartira oladi.',
+  password: 'Boshlangʻich parol',
   name: 'Xodim',
   email: 'Pochta',
   role: 'Rol',
@@ -427,11 +422,11 @@ export const STAFF_UI = {
   save_role: 'Saqlash',
   role_saved: 'Rol yangilandi',
   owner_locked: 'Egasi bu ruxsatlarni yoʻqota olmaydi',
-  accept_title: 'Klinikaga qoʻshilish',
-  accept_hint: (clinic: string, role: string) =>
-    `${clinic} sizni «${role}» roli bilan taklif qildi`,
-  accept_button: 'Hisobni ochish',
-  accept_invalid: 'Havola ishlamaydi yoki muddati tugagan',
+  // Oʻz parolini almashtirish
+  change_password: 'Parolni almashtirish',
+  current_password: 'Joriy parol',
+  new_password: 'Yangi parol',
+  password_changed: 'Parol almashtirildi',
 } as const
 
 /// Ruxsat nomlari — matritsada shu matn koʻrinadi

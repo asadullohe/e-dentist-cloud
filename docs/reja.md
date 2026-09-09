@@ -734,6 +734,16 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > klinika nomi va xodim pochtasi bor.
 - [x] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
 
+> **Xodim taklifnomasi oʻrniga parol — qaror 09/09/2026**
+>
+> Taklifnoma havolasi pochta orqali ketardi, SMTP esa yoʻq. Endi egasi
+> «Xodim qoʻshish» oynasida ism, pochta, rol va boshlangʻich parolni
+> kiritadi — hisob darhol ishlaydi. Xodim kirgach «Hisobim» boʻlimida
+> parolni almashtiradi, joriy parol soʻraladi.
+>
+> `invites` jadvali va `invite_find` funksiyasi bazada qoldi: SMTP
+> qoʻshilganda taklifnoma oqimini qaytarish oson boʻlsin.
+
 > **Xabar hech qachon asosiy oqimni buzmaydi**
 >
 > Telegram yotgan boʻlsa ham roʻyxatdan oʻtish tugaydi: xabar yuborish
@@ -743,12 +753,20 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 - [x] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/mailer.ts`). Serverda
       haqiqiy pochta kerak, aks holda hech kim roʻyxatdan oʻta olmaydi
 
-> **Prod da SMTP sozlanmagan boʻlsa server koʻtarilmaydi**
+> **SMTP hozircha ixtiyoriy — qaror 09/09/2026**
 >
-> Pochta tasdigʻisiz kabinet ochilmaydi, yaʼni xatsiz roʻyxatdan oʻtish
-> oqimi butunlay ishlamaydi. Yarim ishlaydigan holatda koʻtarilgandan
-> koʻra darhol toʻxtagani yaxshi — config shuni tekshiradi.
-> Lokalda esa boʻsh qoladi va xat konsolga chiqadi.
+> Birinchi versiyada SMTP sozlanmaydi. Server usiz ham koʻtariladi, xat
+> esa server logiga chiqadi: roʻyxatdan oʻtgan klinikaning tasdiqlash
+> havolasini logdan olib qoʻlda yuborish mumkin
+> (`docker compose logs api | grep token=`).
+>
+> Buning ikkita oqibati bor:
+> 1. Ochiq roʻyxatdan oʻtish amalda ishlamaydi — klinikalarni siz qoʻlda
+>    tasdiqlaysiz
+> 2. Xodim taklifnomasi oʻrniga egasi hisobni oʻzi ochadi va parolni
+>    belgilaydi (quyida)
+>
+> SMTP qoʻshilgach ikkalasi ham asl holiga qaytariladi — kod joyida.
 
 ### Server — Hetzner
 

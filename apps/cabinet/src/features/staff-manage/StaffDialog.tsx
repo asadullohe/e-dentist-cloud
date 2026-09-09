@@ -14,6 +14,7 @@ import {
   DialogTitle,
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,33 +26,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui'
-import { useInviteStaff } from './hooks'
+import { useCreateStaff } from './hooks'
 
 const schema = z.object({
   email: z.string().trim().email(AUTH_TEXT.email_invalid),
+  fullName: z.string().trim().min(3, AUTH_TEXT.full_name_too_short).max(120),
   roleId: z.string().uuid(),
+  password: z.string().min(8, AUTH_TEXT.password_too_short).max(200),
 })
 
 type Values = z.infer<typeof schema>
 
-interface InviteDialogProps {
+interface StaffDialogProps {
   open: boolean
   onOpenChange(open: boolean): void
 }
 
-export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
+/// Xodim hisobini egasi ochadi va parolni oʻzi belgilaydi — pochta
+/// tasdiqlash oqimi bu yerda yoʻq
+export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
   const { data: roles } = useRoles()
-  const { mutateAsync, isPending } = useInviteStaff()
+  const { mutateAsync, isPending } = useCreateStaff()
   const [formError, setFormError] = useState('')
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', roleId: '' },
+    defaultValues: { email: '', fullName: '', roleId: '', password: '' },
   })
 
   useEffect(() => {
     if (open) {
-      form.reset({ email: '', roleId: '' })
+      form.reset({ email: '', fullName: '', roleId: '', password: '' })
       setFormError('')
     }
   }, [open, form])
@@ -70,11 +75,24 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{STAFF_UI.invite_title}</DialogTitle>
+          <DialogTitle>{STAFF_UI.add_title}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{UI_TEXT.full_name}</FormLabel>
+                  <FormControl>
+                    <Input autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -112,6 +130,20 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{STAFF_UI.password}</FormLabel>
+                  <FormControl>
+                    <Input type="text" autoComplete="off" {...field} />
+                  </FormControl>
+                  <FormDescription>{STAFF_UI.add_hint}</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
 
@@ -120,7 +152,7 @@ export function InviteDialog({ open, onOpenChange }: InviteDialogProps) {
                 {CARD_UI.cancel}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? UI_TEXT.sending : STAFF_UI.invite}
+                {isPending ? UI_TEXT.loading : CARD_UI.save}
               </Button>
             </DialogFooter>
           </form>

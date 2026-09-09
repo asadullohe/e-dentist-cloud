@@ -40,9 +40,12 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 })
 
-export const inviteSchema = z.object({
+export const staffCreateSchema = z.object({
   email,
+  fullName: z.string().trim().min(3, STAFF_TEXT.name_required).max(120),
   roleId: z.string().uuid(STAFF_TEXT.role_required),
+  // Parolni egasi belgilaydi va xodimga aytadi; xodim keyin oʻzgartiradi
+  password,
 })
 
 export const staffUpdateSchema = z.object({
@@ -50,15 +53,14 @@ export const staffUpdateSchema = z.object({
   status: z.enum(['active', 'disabled']).optional(),
 })
 
-export const inviteAcceptSchema = z.object({
-  token: z.string().min(10),
-  fullName: z.string().trim().min(3, STAFF_TEXT.name_required).max(120),
-  password,
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: password,
 })
 
-export type InviteInput = z.infer<typeof inviteSchema>
+export type StaffCreateInput = z.infer<typeof staffCreateSchema>
 export type StaffUpdateInput = z.infer<typeof staffUpdateSchema>
-export type InviteAcceptInput = z.infer<typeof inviteAcceptSchema>
+export type PasswordChangeInput = z.infer<typeof passwordChangeSchema>
 
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>

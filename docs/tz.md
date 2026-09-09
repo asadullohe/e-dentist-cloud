@@ -198,7 +198,7 @@ Uch qatlamli himoya:
 | `clinics` | name, phone, status, plan, expires_at, is_trial | Ijarachi. Sinov ham shu qator, faqat `is_trial = true` |
 | `users` | clinic_id, role_id, email, password_hash, full_name, status, email_verified_at | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi. `email` butun tizimda yagona: 1-versiyada bitta odam ikki klinikada ishlay olmaydi |
 | `roles` | clinic_id, template, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi. `template` — qaysi shablondan kelgani: texnikning boshlangʻich sahifasi shunga qarab tanlanadi |
-| `invites` | clinic_id, role_id, email, token_hash, expires_at, accepted_at | Xodimni taklif qilish havolasi, 7 kun amal qiladi. Bazada kalitning oʻzi emas, **xeshi** saqlanadi — baza sizib chiqsa ham taklifnoma bilan hisob ochib boʻlmaydi |
+| `invites` | clinic_id, role_id, email, token_hash, expires_at, accepted_at | Xodimni taklif qilish havolasi. **1-versiyada ishlatilmaydi**: SMTP sozlanmagani uchun hisobni egasi parol bilan ochadi (6-boʻlim). Jadval SMTP qoʻshilgan kunga saqlanib turadi |
 | `patients` | clinic_id, fio, phone, birth_date, note | Qidiruv uchun `fio` va `phone` ga indeks |
 | `visits` | patient_id, date, treatment, tooth, price |  |
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
@@ -258,10 +258,18 @@ Roʻyxat ataylab qisqa — 16 ta ruxsat. Har boʻlim uchun alohida «koʻrish/qo
 
 ### Xodim qoʻshish oqimi
 
-1. Egasi: Sozlamalar → Xodimlar → «Taklif qilish», pochta va rolni tanlaydi
-2. Server `invites` ga yozuv qoʻshadi va havola beradi (7 kun amal qiladi)
-3. Xodim havolani ochib parol qoʻyadi — hisob faollashadi
+1. Egasi: Sozlamalar → Xodimlar → «Xodim qoʻshish»: ism, pochta, rol va **boshlangʻich parol**
+2. Hisob darhol faol boʻladi — egasi parolni xodimga aytadi
+3. Xodim kirgach Sozlamalar → «Hisobim» da parolni oʻzgartiradi (joriy parol soʻraladi)
 4. Ishdan boʻshasa: hisob **oʻchirilmaydi**, `status = disabled` boʻladi. Uning tashriflari va `audit_log` dagi yozuvlari joyida qoladi
+
+> **Nega taklifnoma emas**
+>
+> Dastlab taklifnoma havolasi pochta orqali yuborilishi rejalashtirilgan
+> edi. Birinchi versiyada SMTP sozlanmaydi (5.5b), xatsiz esa havola
+> yetib bormaydi. Shuning uchun hisobni egasining oʻzi ochadi va parolni
+> qoʻlda uzatadi (Telegram, ogʻzaki). `invites` jadvali bazada qoladi —
+> SMTP qoʻshilgach taklifnoma oqimini qaytarish mumkin.
 
 > **Hal qilinmagan**
 >
@@ -439,15 +447,12 @@ GET    /api/debtors
 GET    /api/reports?month=2026-09
 GET    /api/export                # barcha maʼlumot, zip
 
-GET    /api/staff                # xodimlar + kutilayotgan taklifnomalar
-POST   /api/staff/invite
-DELETE /api/staff/invites/:id    # taklifnomani bekor qilish
+GET    /api/staff                # klinika xodimlari
+POST   /api/staff                # egasi hisob ochadi, parolni oʻzi belgilaydi
 PATCH  /api/staff/:id            # rol, status
+POST   /api/me/password          # oʻz parolini almashtirish
 GET    /api/roles
 PATCH  /api/roles/:id            # ruxsatlar roʻyxati
-
-GET    /api/invites/:token       # ochiq: havoladagi klinika va rol
-POST   /api/invites/accept       # ochiq: parol qoʻyiladi, sessiya ochiladi
 
 GET    /api/n/:code               # ochiq: klinika, shifokorlar, navbat soni
 POST   /api/n/:code/join          # ochiq: navbatga yozilish
