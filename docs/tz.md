@@ -579,14 +579,14 @@ _Bitta server yetadi. Boshidan ortiqcha murakkablik qurmang._
 | OS | Ubuntu 24.04 LTS |  |
 | Konteynerlar | api · postgres · redis · minio · caddy | Docker Compose, bitta fayl |
 | Proxy | Caddy | HTTPS avtomatik, sozlash nginx'dan sodda |
-| Domen | `e-dentist.uz` | Asosiy manzil va `www` — Netlify'dagi landing, tegilmaydi. Serverga faqat `kabinet.` va `admin.` qaratiladi |
+| Domen | `e-dentist.uz` | Hammasi shu serverda: apex va `www` — landing, `kabinet.` va `admin.` — ilova. DNS Cloudflare orqali (proxy yoqilgan) |
 | Kuzatuv | Uptime Kuma + Postgres loglar | Boshida shu yetadi |
 
-> **Landing alohida qoladi**
+> **Landing ham shu serverda** _(qaror 09/09/2026 da oʻzgardi)_
 >
-> Mavjud sayt (`web/`, oflayn ilovalar repozitoriyasida) Netlify'da qolaveradi va `e-dentist.uz` ni egallaydi. Bulut ilovasi `kabinet.e-dentist.uz` ga chiqadi.
+> Dastlab landing Netlify'da qolishi rejalashtirilgan edi: server yiqilganda ham marketing sahifasi ochiq turishi uchun. Egasi hammasini bitta joyga yigʻishga qaror qildi — sayt `apps/landing/` ga koʻchdi va Caddy uni ham tarqatadi.
 >
-> Sabab: marketing sahifasi ilovadan mustaqil boʻlishi kerak. Serverni yangilayotganda yoki u yiqilganda ham sayt ochiladi — mijoz «umuman ishlamayapti» degan xulosaga kelmaydi.
+> Buning narxi: server yiqilsa landing ham ochilmaydi. Buni yumshatish uchun Cloudflare proxy yoqilgan — statik sahifa uning keshidan berilishi mumkin — va tashqi kuzatuv qoʻshilgan (docs/server.md).
 
 ### Chiqarish tartibi
 

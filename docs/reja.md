@@ -775,8 +775,20 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
       Joylashuv: Falkenstein yoki Helsinki
 - [ ] **5.7 Serverni sozlash** — ssh kalit, root ni yopish, `ufw` firewall,
       `fail2ban`, Docker oʻrnatish
-- [ ] **5.8 DNS** — `kabinet.e-dentist.uz` va `admin.e-dentist.uz` → server IP.
-      Apex va `www` Netlify'da qoladi, **tegilmaydi**
+- [ ] **5.8 DNS** — Cloudflare (proxy yoqilgan): apex, `www`, `kabinet.`
+      va `admin.` → server IP. Netlify'dan voz kechildi _(qaror 09/09/2026)_
+
+> **Cloudflare proxy IP ni yashiradi**
+>
+> Proxy orqasida barcha soʻrovlar Cloudflare IP laridan kelayotgandek
+> koʻrinadi. Busiz navbatdagi «bir IP dan soatiga 5 ta yozuv» cheklovi
+> butun mamlakatga **bitta** boʻlib qolardi va navbat ishlamay qoʻyardi.
+>
+> Ikki qatlam qoʻshildi: Caddy da `trusted_proxies` (Cloudflare
+> oraliqlari roʻyxati) va API da `trustProxy` — endi `true` emas, faqat
+> **bevosita qoʻshni** (Caddy) ishonchli. `true` boʻlsa mijoz yuborgan
+> soxta `X-Forwarded-For` bilan cheklovni aylanib oʻtish mumkin edi.
+> Uchta test buni tekshiradi.
 - [x] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik _(fayl tayyor, serverda sinaladi)_
 
 > **SSE uchun bitta muhim sozlama**

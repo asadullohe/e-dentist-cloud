@@ -1,7 +1,9 @@
-# Kabinet va boshqaruv paneli — statik fayllar, Caddy ularni tarqatadi.
+# Landing, kabinet va boshqaruv paneli — statik fayllar, Caddy ularni
+# tarqatadi.
 #
-# Ikkalasi bitta tasvirda: ular bitta koddan quriladi va birga
-# yangilanadi, alohida konteyner qilishning maʼnosi yoʻq.
+# Uchalasi bitta tasvirda: ular bitta repozitoriyadan chiqadi va birga
+# yangilanadi, alohida konteyner qilishning maʼnosi yoʻq. Landing da
+# qurish bosqichi yoʻq — fayllar shundayligicha koʻchiriladi.
 
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -32,4 +34,5 @@ RUN npm run build -w @e-dentist/cabinet && npm run build -w @e-dentist/admin
 FROM caddy:2-alpine AS runtime
 COPY --from=build /app/apps/cabinet/dist /srv/kabinet
 COPY --from=build /app/apps/admin/dist /srv/admin
+COPY apps/landing /srv/landing
 COPY deploy/Caddyfile /etc/caddy/Caddyfile

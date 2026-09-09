@@ -91,8 +91,13 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     // ishlaydigan serverda xatoni izlash imkoni boʻlishi shart
     genReqId: () => randomUUID(),
     // Caddy orqasida haqiqiy IP koʻrinishi uchun. Kirish urinishlarini
-    // IP boʻyicha cheklash shunga tayanadi (1.14)
-    trustProxy: config.NODE_ENV === 'production',
+    // IP boʻyicha cheklash shunga tayanadi (1.14).
+    //
+    // `true` emas: faqat bevosita qoʻshni — Caddy — ishonchli deb
+    // olinadi (hop 0). `true` boʻlsa mijoz yuborgan X-Forwarded-For
+    // zanjirining boshi ham hisobga olinardi va cheklovni soxta IP
+    // bilan aylanib oʻtish mumkin boʻlardi
+    trustProxy: config.NODE_ENV === 'production' ? (_address, hop) => hop === 0 : false,
   })
 
   app.setErrorHandler((err, req, reply) => {

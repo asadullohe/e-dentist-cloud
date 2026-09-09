@@ -10,7 +10,7 @@ qaratilgan (apex va `www` — Netlify'dagi landing, tegilmaydi).
 
 | Konteyner | Nima qiladi | Tashqariga ochiqmi |
 |---|---|---|
-| `caddy` | HTTPS, statik fayllar (kabinet va panel), `/api/*` ni API ga uzatadi | **Ha** — 80, 443 |
+| `caddy` | HTTPS, statik fayllar (landing, kabinet, panel), `/api/*` ni API ga uzatadi | **Ha** — 80, 443 |
 | `api` | Fastify server | Yoʻq |
 | `postgres` | Baza | Yoʻq |
 | `redis` | Sessiya, cheklovlar, navbat hodisalari | Yoʻq |
@@ -42,27 +42,52 @@ xavfsizlik yangilanishlari, 2 GB swap va Docker.
 > Skript SSH kaliti yoʻqligini oʻzi tekshiradi va kalitsiz parolni
 > yopmaydi — aks holda serverga umuman kira olmay qolardingiz.
 
-## DNS
+## DNS va Cloudflare
 
-Domen boshqaruvida (masalan ahost.uz kabinetida) ikkita **A** yozuv:
+Domen ahost.uz da olingan, DNS esa Cloudflare orqali boshqariladi
+(proxy yoqilgan). Bir marta sozlanadi:
+
+**1. Cloudflare ga domenni qoʻshish.** `dash.cloudflare.com` → «Add a
+site» → `e-dentist.uz`. Cloudflare ikkita NS beradi.
+
+**2. ahost da NS larni almashtirish.** Domen sozlamalarida
+«Nameservers» ni Cloudflare bergan qiymatlarga oʻzgartirasiz.
+Tarqalishi bir necha soat olishi mumkin.
+
+**3. Cloudflare da toʻrtta yozuv** (hammasi **Proxied**, orange cloud):
 
 | Turi | Nomi | Qiymati |
 |---|---|---|
+| A | `@` | server IP |
+| A | `www` | server IP |
 | A | `kabinet` | server IP |
 | A | `admin` | server IP |
 
-Apex (`e-dentist.uz`) va `www` **tegilmaydi** — ular Netlify'dagi landing
-saytiga qaragan (tz.md 13-boʻlim).
+**4. Cloudflare sozlamalari** — bularsiz ilova notoʻgʻri ishlaydi:
 
-Tekshirish (yozuv tarqalgach, odatda 5–30 daqiqa):
+| Boʻlim | Qiymat | Nega |
+|---|---|---|
+| SSL/TLS → Overview | **Full (strict)** | Caddy da haqiqiy Let's Encrypt sertifikati bor |
+| Speed → Optimization | **Rocket Loader oʻchiq** | u JS ni kechiktiradi va kabinetni buzadi |
+| Caching → Cache Rules | `/api/*` uchun **Bypass cache** | API javoblari keshlanmasligi kerak |
+
+> **Sertifikat birinchi marta olinmasa:** Cloudflare proxy yoqilganda
+> Let's Encrypt tekshiruvi ham u orqali oʻtadi. Muammo boʻlsa `kabinet`
+> yozuvini vaqtincha «DNS only» (gray cloud) qilib qoʻying, Caddy
+> sertifikat olsin, keyin proxy ni qayta yoqing.
+
+Tekshirish:
 
 ```bash
-dig +short kabinet.e-dentist.uz
-dig +short admin.e-dentist.uz
+dig +short kabinet.e-dentist.uz     # Cloudflare IP lari chiqadi (proxy)
+curl -sI https://kabinet.e-dentist.uz | head -3
 ```
 
-Ikkalasi ham server IP sini qaytarishi kerak. Shundan keyingina Caddy
-Let's Encrypt sertifikatini ola oladi.
+> **Haqiqiy IP.** Proxy orqasida barcha soʻrovlar Cloudflare IP laridan
+> kelayotgandek koʻrinadi. Caddy `trusted_proxies` roʻyxati bilan
+> haqiqiy manzilni tiklaydi, API esa faqat Caddy ga ishonadi. Bu
+> roʻyxat `deploy/Caddyfile` da; Cloudflare uni oʻzgartirsa yangilash
+> kerak: `curl https://www.cloudflare.com/ips-v4`.
 
 ## Birinchi marta koʻtarish
 
@@ -295,6 +320,7 @@ docker compose -f docker-compose.prod.yml down -v   # MAʼLUMOT OʻCHADI
 
 Koʻtargandan keyin:
 
+- [ ] `https://e-dentist.uz` — landing ochiladi, `www` apex ga yoʻnaltiradi
 - [ ] `https://kabinet.e-dentist.uz` ochiladi va HTTPS yashil
 - [ ] Roʻyxatdan oʻtib koʻring — tasdiqlash **xati keldimi** (SMTP ishlayaptimi)
 - [ ] `https://admin.e-dentist.uz` ochiladi va admin hisobi kiradi

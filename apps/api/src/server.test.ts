@@ -189,3 +189,33 @@ describe('GET /api/health/ready', () => {
     await app.close()
   })
 })
+
+describe('proxy orqasidagi IP', () => {
+  // Cheklovlar IP boʻyicha ishlaydi. Caddy haqiqiy manzilni
+  // X-Forwarded-For da uzatadi, mijoz esa uni soxtalashtira olmasligi kerak
+  function ipOf(headers: Record<string, string>, env: 'production' | 'test') {
+    const app = createServer(testConfig({ NODE_ENV: env }), fakeDeps)
+    app.get('/sinov/ip', async (req) => ({ ip: req.ip }))
+    return app
+      .inject({ method: 'GET', url: '/sinov/ip', headers, remoteAddress: '10.0.0.5' })
+      .then((r) => {
+        const ip = r.json().ip
+        return app.close().then(() => ip)
+      })
+  }
+
+  it('ishlab chiqarishda X-Forwarded-For oxirgi qiymati olinadi', async () => {
+    expect(await ipOf({ 'x-forwarded-for': '203.0.113.7' }, 'production')).toBe('203.0.113.7')
+  })
+
+  // Mijoz zanjir boshiga soxta manzil qoʻshsa ham u hisobga olinmaydi
+  it('soxta X-Forwarded-For zanjiri cheklovni aylanib oʻta olmaydi', async () => {
+    expect(await ipOf({ 'x-forwarded-for': '1.2.3.4, 203.0.113.7' }, 'production')).toBe(
+      '203.0.113.7',
+    )
+  })
+
+  it('lokalda sarlavhaga umuman ishonilmaydi', async () => {
+    expect(await ipOf({ 'x-forwarded-for': '203.0.113.7' }, 'test')).toBe('10.0.0.5')
+  })
+})
