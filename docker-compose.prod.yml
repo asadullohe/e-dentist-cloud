@@ -53,6 +53,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
+      # Birinchi koʻtarilishda boʻsh diskda initdb va init skripti
+      # yuradi — 4 GB serverda bu 60 soniyadan oshdi va sanoq oʻsha
+      # paytda tugab, migrate bilan api ishga tushmay qolgan edi
+      start_period: 90s
 
   redis:
     image: redis:7-alpine
