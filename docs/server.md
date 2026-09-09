@@ -20,6 +20,50 @@ qaratilgan (apex va `www` — Netlify'dagi landing, tegilmaydi).
 Bazaning, Redis va MinIO ning portlari **ataylab** tashqariga chiqarilmagan.
 Ularga faqat konteyner tarmogʻi ichidan yetish mumkin.
 
+## Serverni tayyorlash (bir marta)
+
+Yangi Hetzner serveri — toza Ubuntu. Unga hech narsa oʻrnatilmagan.
+
+```bash
+# Oʻz kompyuteringizda: kalit yasab, serverga qoʻshasiz
+ssh-keygen -t ed25519 -C "e-dentist"
+ssh-copy-id root@<SERVER_IP>
+
+# Serverda: tayyorlash skripti
+ssh root@<SERVER_IP>
+curl -fsSL https://raw.githubusercontent.com/<repo>/master/deploy/server-setup.sh -o setup.sh
+bash setup.sh
+```
+
+Skript nima qiladi: `edentist` foydalanuvchisi, root va parol bilan
+kirishni yopish, `ufw` (faqat SSH/80/443), `fail2ban`, avtomatik
+xavfsizlik yangilanishlari, 2 GB swap va Docker.
+
+> Skript SSH kaliti yoʻqligini oʻzi tekshiradi va kalitsiz parolni
+> yopmaydi — aks holda serverga umuman kira olmay qolardingiz.
+
+## DNS
+
+Domen boshqaruvida (masalan ahost.uz kabinetida) ikkita **A** yozuv:
+
+| Turi | Nomi | Qiymati |
+|---|---|---|
+| A | `kabinet` | server IP |
+| A | `admin` | server IP |
+
+Apex (`e-dentist.uz`) va `www` **tegilmaydi** — ular Netlify'dagi landing
+saytiga qaragan (tz.md 13-boʻlim).
+
+Tekshirish (yozuv tarqalgach, odatda 5–30 daqiqa):
+
+```bash
+dig +short kabinet.e-dentist.uz
+dig +short admin.e-dentist.uz
+```
+
+Ikkalasi ham server IP sini qaytarishi kerak. Shundan keyingina Caddy
+Let's Encrypt sertifikatini ola oladi.
+
 ## Birinchi marta koʻtarish
 
 ```bash
