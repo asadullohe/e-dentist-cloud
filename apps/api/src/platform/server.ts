@@ -6,8 +6,10 @@ import { IMAGE_TEXT } from '@e-dentist/shared'
 import cookie from '@fastify/cookie'
 import multipart from '@fastify/multipart'
 import Fastify, { type FastifyError, type FastifyInstance } from 'fastify'
+import { adminRoutes } from '../modules/admin/routes.js'
 import { authRoutes } from '../modules/auth/routes.js'
 import * as auth from '../modules/auth/service.js'
+import * as billing from '../modules/billing/service.js'
 import { clinicRoutes } from '../modules/clinics/routes.js'
 import { expenseRoutes } from '../modules/expenses/routes.js'
 import { exportRoutes } from '../modules/export/routes.js'
@@ -27,6 +29,7 @@ import { AppError, errors } from './errors.js'
 import { anyPermissionGuard, permissionGuard, sessionHook } from './guards.js'
 import type { ImportStore } from './importStore.js'
 import type { Mailer } from './mailer.js'
+import type { Notifier } from './notify.js'
 import type { RateLimiter } from './rateLimit.js'
 import { errorResponse } from './response.js'
 import type { SessionStore } from './session.js'
@@ -41,6 +44,8 @@ export interface ServerDeps {
   mailer: Mailer
   /// Navbat oʻzgarganda ochiq sahifalarga xabar beradi (SSE)
   bus: Bus
+  /// Platforma egasiga Telegram xabari
+  notify: Notifier
 }
 
 // Har qanday xatoni AppXato ga keltiradi. Foydalanuvchi hech qachon
@@ -86,8 +91,13 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     // ishlaydigan serverda xatoni izlash imkoni boʻlishi shart
     genReqId: () => randomUUID(),
     // Caddy orqasida haqiqiy IP koʻrinishi uchun. Kirish urinishlarini
-    // IP boʻyicha cheklash shunga tayanadi (1.14)
-    trustProxy: config.NODE_ENV === 'production',
+    // IP boʻyicha cheklash shunga tayanadi (1.14).
+    //
+    // `true` emas: faqat bevosita qoʻshni — Caddy — ishonchli deb
+    // olinadi (hop 0). `true` boʻlsa mijoz yuborgan X-Forwarded-For
+    // zanjirining boshi ham hisobga olinardi va cheklovni soxta IP
+    // bilan aylanib oʻtish mumkin boʻlardi
+    trustProxy: config.NODE_ENV === 'production' ? (_address, hop) => hop === 0 : false,
   })
 
   app.setErrorHandler((err, req, reply) => {
@@ -108,7 +118,22 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(multipart, { limits: { fileSize: MAX_UPLOAD_BYTES, files: 1 } })
   app.addHook('onRequest', sessionHook(deps.sessions))
 
-  app.register(healthRoutes, { prefix: '/api' })
+  // Obuna tekshiruvi. Oʻqish har doim ochiq — muddat tugasa ham klinika
+  // oʻz maʼlumotini koʻradi va eksport qiladi (tz.md 8-boʻlim).
+  // Chiqish ham ochiq: yopiq kabinetdan chiqa olmaslik maʼnosiz
+  const WRITE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE'])
+  const BILLING_FREE = ['/api/auth/', '/api/n/']
+
+  app.addHook('preHandler', async (req) => {
+    if (!WRITE_METHODS.has(req.method)) return
+    const clinicId = req.session?.clinicId
+    if (!clinicId) return
+    if (BILLING_FREE.some((prefix) => req.url.startsWith(prefix))) return
+
+    await billing.assertWritable({ db: deps.db }, clinicId)
+  })
+
+  app.register(healthRoutes, { prefix: '/api', deps: { db: deps.db, sessions: deps.sessions } })
   // Ruxsat tekshiruvi barcha marshrutlarga ochiladi:
   //   preHandler: app.talabRuxsat('patients.read')
   // Ruxsatlar clinics modulidan oʻqiladi — platform modullarni import qilmaydi,
@@ -125,6 +150,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
       sessions: deps.sessions,
       rateLimiter: deps.rateLimiter,
       mailer: deps.mailer,
+      notify: deps.notify,
       cabinetUrl: config.CABINET_URL,
       log: (message, meta) => app.log.warn(meta ?? {}, message),
     },
@@ -147,6 +173,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(reportRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(clinicRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(adminRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(labRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(exportRoutes, { prefix: '/api', deps: { db: deps.db } })
 

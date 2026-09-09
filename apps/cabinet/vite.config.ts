@@ -9,10 +9,10 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
-    // Ildizda `prisma` CLI ichidagi Prisma Studio React 19 ni tortib keladi,
-    // kabinet esa React 18 da (tz.md 3-boʻlim). Ikkita nusxa boʻlsa
-    // react-router bittasini, bizning kod boshqasini koʻradi va hooklar
-    // umuman ishlamaydi. dedupe hammasini bitta nusxaga yigʻadi
+    // Ildizdagi `prisma` CLI Prisma Studio bilan birga oʻz React nusxasini
+    // tortib keladi. Ikkita nusxa boʻlsa react-router bittasini, bizning
+    // kod boshqasini koʻradi va hooklar umuman ishlamaydi — dedupe
+    // hammasini bitta nusxaga yigʻadi
     dedupe: ['react', 'react-dom'],
   },
   server: {

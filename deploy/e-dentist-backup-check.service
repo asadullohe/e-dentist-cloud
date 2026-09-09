@@ -1,0 +1,12 @@
+# Zaxirani tiklab koʻrish. Sinalmagan zaxira — zaxira emas (tz.md 12-boʻlim)
+[Unit]
+Description=E-Dentist zaxirasini tiklab sinash
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=edentist
+WorkingDirectory=/opt/e-dentist
+ExecStart=/usr/bin/env bash /opt/e-dentist/deploy/backup-check.sh
+TimeoutStartSec=1h

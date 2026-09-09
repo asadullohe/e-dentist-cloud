@@ -1,7 +1,7 @@
 import { apiRequest } from '@/shared/api'
-import type { Role, StaffList, StaffName } from './model'
+import type { Role, StaffMember, StaffName } from './model'
 
-export const fetchStaff = () => apiRequest<StaffList>('/staff')
+export const fetchStaff = () => apiRequest<StaffMember[]>('/staff')
 
 export const fetchRoles = () => apiRequest<Role[]>('/roles')
 

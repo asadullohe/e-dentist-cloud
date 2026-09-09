@@ -23,13 +23,27 @@ function call(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?
   })
 }
 
-/// Xatdagi havoladan kalitni olamiz — kalit bazada saqlanmaydi
-function lastToken(): string {
-  return /token=([\w-]+)/.exec(h.sentMail.at(-1)?.body ?? '')?.[1] ?? ''
+async function addStaff(email: string, extra: Record<string, unknown> = {}) {
+  return call('POST', '/api/staff', {
+    email,
+    fullName: 'Yangi Xodim',
+    roleId: doctorRoleId,
+    password: 'juda-yaxshi-parol',
+    ...extra,
+  })
 }
 
-async function invite(email: string, roleId = doctorRoleId) {
-  return call('POST', '/api/staff/invite', { email, roleId })
+async function loginAs(email: string, password: string) {
+  const r = await h.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    remoteAddress: h.clientIp,
+    payload: { email, password },
+  })
+  return {
+    status: r.statusCode,
+    cookie: `ed_session=${r.cookies.find((c) => c.name === 'ed_session')?.value}`,
+  }
 }
 
 beforeAll(async () => {
@@ -48,132 +62,24 @@ afterAll(async () => {
   await h.stop()
 })
 
-describe('taklifnoma', () => {
-  it('yuboriladi va xatda havola boʻladi', async () => {
-    const r = await invite('shifokor@example.com')
+describe('xodim qoʻshish', () => {
+  it('egasi hisob ochadi va parolni oʻzi belgilaydi', async () => {
+    const r = await addStaff('shifokor@example.com')
     expect(r.statusCode).toBe(200)
-    expect(h.sentMail.at(-1)?.to).toBe('shifokor@example.com')
-    expect(lastToken().length).toBeGreaterThan(20)
-  })
-
-  // Kalit bazada emas, faqat xeshi: baza sizib chiqsa ham havola tiklanmaydi
-  it('kalitning oʻzi bazada saqlanmaydi', async () => {
-    const token = lastToken()
-    const rows = await h.ownerDb.invite.findMany({ where: { clinicId: h.clinicId } })
-    expect(rows.length).toBeGreaterThan(0)
-    expect(rows.some((row) => row.tokenHash === token)).toBe(false)
-  })
-
-  it('kutilayotgan taklifnoma roʻyxatda koʻrinadi', async () => {
-    const data = (await call('GET', '/api/staff')).json().data
-    expect(data.invites.map((i: { email: string }) => i.email)).toContain('shifokor@example.com')
-  })
-
-  it('bitta pochtaga ikkinchi taklifnoma yuborilmaydi', async () => {
-    const r = await invite('shifokor@example.com')
-    expect(r.statusCode).toBe(409)
-  })
-
-  it('hisobi bor pochtaga taklifnoma yuborilmaydi', async () => {
-    const r = await invite(h.email)
-    expect(r.statusCode).toBe(409)
-  })
-
-  it('yoʻq rol bilan yuborilmaydi', async () => {
-    const r = await invite('boshqa@example.com', '0195f7b7-0000-7000-8000-000000000000')
-    expect(r.statusCode).toBe(404)
-  })
-})
-
-describe('havola', () => {
-  it('maʼlumot beradi: klinika va rol', async () => {
-    const token = lastToken()
-    await invite('havola@example.com')
-    const r = await h.app.inject({ method: 'GET', url: `/api/invites/${lastToken()}` })
-    expect(r.statusCode).toBe(200)
-    expect(r.json().data).toMatchObject({ email: 'havola@example.com', roleName: 'Shifokor' })
-    expect(token).not.toBe(lastToken())
-  })
-
-  it('notoʻgʻri kalit 404', async () => {
-    const r = await h.app.inject({ method: 'GET', url: '/api/invites/yoq-bunday-kalit' })
-    expect(r.statusCode).toBe(404)
-  })
-
-  it('muddati oʻtgan havola ishlamaydi', async () => {
-    await invite('eski@example.com')
-    const token = lastToken()
-    await h.ownerDb.invite.updateMany({
-      where: { email: 'eski@example.com' },
-      data: { expiresAt: new Date('2020-01-01') },
+    expect(r.json().data).toMatchObject({
+      email: 'shifokor@example.com',
+      fullName: 'Yangi Xodim',
+      roleName: 'Shifokor',
+      status: 'active',
     })
 
-    const info = await h.app.inject({ method: 'GET', url: `/api/invites/${token}` })
-    expect(info.statusCode).toBe(400)
-
-    const accept = await h.app.inject({
-      method: 'POST',
-      url: '/api/invites/accept',
-      remoteAddress: h.clientIp,
-      payload: { token, fullName: 'Eski Xodim', password: 'juda-yaxshi-parol' },
-    })
-    expect(accept.statusCode).toBe(400)
-  })
-})
-
-describe('hisob ochish', () => {
-  it('parol qoʻyiladi, hisob faol boʻladi va sessiya beriladi', async () => {
-    await invite('yangi@example.com')
-    const token = lastToken()
-
-    const r = await h.app.inject({
-      method: 'POST',
-      url: '/api/invites/accept',
-      remoteAddress: h.clientIp,
-      payload: { token, fullName: 'Yangi Shifokor', password: 'juda-yaxshi-parol' },
-    })
-    expect(r.statusCode).toBe(200)
-    expect(r.cookies.find((c) => c.name === 'ed_session')?.value).toBeTruthy()
-
-    const created = await h.ownerDb.user.findFirst({ where: { email: 'yangi@example.com' } })
-    expect(created?.clinicId).toBe(h.clinicId)
-    expect(created?.status).toBe('active')
-    // Havola pochta egaligini isbotladi — qayta tasdiqlash soʻralmaydi
-    expect(created?.emailVerifiedAt).not.toBeNull()
-  })
-
-  it('bitta havola ikki marta ishlamaydi', async () => {
-    await invite('bir-marta@example.com')
-    const token = lastToken()
-    const payload = { token, fullName: 'Bir Marta', password: 'juda-yaxshi-parol' }
-
-    const first = await h.app.inject({
-      method: 'POST',
-      url: '/api/invites/accept',
-      remoteAddress: h.clientIp,
-      payload,
-    })
-    expect(first.statusCode).toBe(200)
-
-    const second = await h.app.inject({
-      method: 'POST',
-      url: '/api/invites/accept',
-      remoteAddress: h.clientIp,
-      payload,
-    })
-    expect(second.statusCode).toBe(400)
+    // Hisob darhol ishlaydi: pochta tasdigʻi soʻralmaydi
+    const login = await loginAs('shifokor@example.com', 'juda-yaxshi-parol')
+    expect(login.status).toBe(200)
   })
 
   it('yangi xodim oʻz roli doirasida ishlaydi', async () => {
-    await invite('ruxsat@example.com')
-    const token = lastToken()
-    const accepted = await h.app.inject({
-      method: 'POST',
-      url: '/api/invites/accept',
-      remoteAddress: h.clientIp,
-      payload: { token, fullName: 'Ruxsat Shifokor', password: 'juda-yaxshi-parol' },
-    })
-    const cookie = `ed_session=${accepted.cookies.find((c) => c.name === 'ed_session')?.value}`
+    const { cookie } = await loginAs('shifokor@example.com', 'juda-yaxshi-parol')
 
     const patients = await h.app.inject({
       method: 'GET',
@@ -181,20 +87,94 @@ describe('hisob ochish', () => {
       headers: { cookie },
     })
     expect(patients.statusCode).toBe(200)
-    // Shifokorda staff.manage yoʻq
+    // Shifokorda `staff.manage` yoʻq
     const staff = await h.app.inject({ method: 'GET', url: '/api/staff', headers: { cookie } })
     expect(staff.statusCode).toBe(403)
   })
 
-  it('taklifnoma bekor qilinsa havola ishlamaydi', async () => {
-    await invite('bekor@example.com')
-    const token = lastToken()
-    const list = (await call('GET', '/api/staff')).json().data
-    const pending = list.invites.find((i: { email: string }) => i.email === 'bekor@example.com')
+  it('band pochta bilan hisob ochilmaydi', async () => {
+    expect((await addStaff('shifokor@example.com')).statusCode).toBe(409)
+    expect((await addStaff(h.email)).statusCode).toBe(409)
+  })
 
-    expect((await call('DELETE', `/api/staff/invites/${pending.id}`)).statusCode).toBe(200)
-    const r = await h.app.inject({ method: 'GET', url: `/api/invites/${token}` })
+  it('qisqa parol rad etiladi', async () => {
+    const r = await addStaff('qisqa@example.com', { password: '123' })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields.password).toBeTruthy()
+  })
+
+  it('yoʻq rol bilan hisob ochilmaydi', async () => {
+    const r = await addStaff('boshqa@example.com', {
+      roleId: '0195f7b7-0000-7000-8000-000000000000',
+    })
     expect(r.statusCode).toBe(404)
+  })
+
+  it('roʻyxatda xodimlar rol nomi bilan koʻrinadi', async () => {
+    const rows: StaffRow[] = (await call('GET', '/api/staff')).json().data
+    expect(rows.find((row) => row.email === h.email)?.roleName).toBe('Egasi')
+    expect(rows.find((row) => row.email === 'shifokor@example.com')?.roleName).toBe('Shifokor')
+  })
+
+  it('`staff.manage` yoʻq boʻlsa hisob ocha olmaydi', async () => {
+    const { cookie } = await loginAs('shifokor@example.com', 'juda-yaxshi-parol')
+    const r = await h.app.inject({
+      method: 'POST',
+      url: '/api/staff',
+      headers: { cookie },
+      payload: {
+        email: 'ruxsatsiz@example.com',
+        fullName: 'Ruxsatsiz Xodim',
+        roleId: doctorRoleId,
+        password: 'juda-yaxshi-parol',
+      },
+    })
+    expect(r.statusCode).toBe(403)
+  })
+})
+
+describe('parolni almashtirish', () => {
+  const email = 'parol@example.com'
+
+  beforeAll(async () => {
+    await addStaff(email)
+  })
+
+  it('joriy parol notoʻgʻri boʻlsa almashtirilmaydi', async () => {
+    const { cookie } = await loginAs(email, 'juda-yaxshi-parol')
+    const r = await h.app.inject({
+      method: 'POST',
+      url: '/api/me/password',
+      headers: { cookie },
+      payload: { currentPassword: 'boshqa-parol', newPassword: 'yangi-yaxshi-parol' },
+    })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.message).toMatch(/Joriy parol/)
+  })
+
+  it('eski parolni qayta qoʻyib boʻlmaydi', async () => {
+    const { cookie } = await loginAs(email, 'juda-yaxshi-parol')
+    const r = await h.app.inject({
+      method: 'POST',
+      url: '/api/me/password',
+      headers: { cookie },
+      payload: { currentPassword: 'juda-yaxshi-parol', newPassword: 'juda-yaxshi-parol' },
+    })
+    expect(r.statusCode).toBe(400)
+  })
+
+  it('almashtirilgach eski parol ishlamaydi', async () => {
+    const { cookie } = await loginAs(email, 'juda-yaxshi-parol')
+    const changed = await h.app.inject({
+      method: 'POST',
+      url: '/api/me/password',
+      headers: { cookie },
+      payload: { currentPassword: 'juda-yaxshi-parol', newPassword: 'yangi-yaxshi-parol' },
+    })
+    expect(changed.statusCode).toBe(200)
+
+    expect((await loginAs(email, 'juda-yaxshi-parol')).status).toBe(401)
+    expect((await loginAs(email, 'yangi-yaxshi-parol')).status).toBe(200)
   })
 })
 
@@ -211,14 +191,7 @@ describe('qulflanib qolishdan himoya', () => {
   })
 
   it('ikkita ega boʻlsa birini egalikdan chiqarish mumkin', async () => {
-    await invite('ega2@example.com', ownerRoleId)
-    const accepted = await h.app.inject({
-      method: 'POST',
-      url: '/api/invites/accept',
-      remoteAddress: h.clientIp,
-      payload: { token: lastToken(), fullName: 'Ikkinchi Ega', password: 'juda-yaxshi-parol' },
-    })
-    const secondCookie = `ed_session=${accepted.cookies.find((c) => c.name === 'ed_session')?.value}`
+    await addStaff('ega2@example.com', { roleId: ownerRoleId, fullName: 'Ikkinchi Ega' })
     const second = await h.ownerDb.user.findFirst({ where: { email: 'ega2@example.com' } })
 
     const demote = await h.app.inject({
@@ -228,7 +201,6 @@ describe('qulflanib qolishdan himoya', () => {
       payload: { roleId: doctorRoleId },
     })
     expect(demote.statusCode).toBe(200)
-    expect(secondCookie.length).toBeGreaterThan(12)
   })
 
   // Bu yerda amalni egasi emas, `staff.manage` berilgan boshqa xodim bajaradi —
@@ -237,15 +209,7 @@ describe('qulflanib qolishdan himoya', () => {
     await call('PATCH', `/api/roles/${doctorRoleId}`, {
       permissions: ['patients.read', 'staff.manage'],
     })
-    const doctor = await h.ownerDb.user.findFirst({ where: { email: 'ruxsat@example.com' } })
-    const login = await h.app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      remoteAddress: h.clientIp,
-      payload: { email: 'ruxsat@example.com', password: 'juda-yaxshi-parol' },
-    })
-    const doctorCookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
-    expect(doctor?.id).toBeTruthy()
+    const { cookie: doctorCookie } = await loginAs('shifokor@example.com', 'juda-yaxshi-parol')
 
     for (const payload of [{ status: 'disabled' }, { roleId: doctorRoleId }]) {
       const r = await h.app.inject({
@@ -282,12 +246,10 @@ describe('qulflanib qolishdan himoya', () => {
     })
     expect(r.statusCode).toBe(200)
 
-    const doctor = await h.ownerDb.user.findFirst({ where: { email: 'ruxsat@example.com' } })
+    // Egasini vaqtincha shifokor roliga oʻtkazamiz — yangi ruxsatlar
+    // darhol kuchga kirishini shu koʻrsatadi
     const owner = await h.ownerDb.role.findFirst({ where: { clinicId: h.clinicId, isOwner: true } })
-    await h.ownerDb.user.update({
-      where: { id: h.userId },
-      data: { roleId: doctor ? doctorRoleId : owner?.id },
-    })
+    await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: doctorRoleId } })
 
     // Egasi endi shifokor roli bilan: xarajat ochiq, xodimlar yopiq
     expect((await call('GET', '/api/expenses?month=2026-03')).statusCode).toBe(200)
@@ -316,25 +278,17 @@ describe('qulflanib qolishdan himoya', () => {
 
 describe('xodim holati', () => {
   it('faolsizlantirilgan xodim kira olmaydi', async () => {
-    const target = await h.ownerDb.user.findFirst({ where: { email: 'yangi@example.com' } })
+    const target = await h.ownerDb.user.findFirst({ where: { email: 'shifokor@example.com' } })
     expect(
       (await call('PATCH', `/api/staff/${target?.id}`, { status: 'disabled' })).statusCode,
     ).toBe(200)
 
-    const login = await h.app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      remoteAddress: h.clientIp,
-      payload: { email: 'yangi@example.com', password: 'juda-yaxshi-parol' },
-    })
-    expect(login.statusCode).toBe(403)
+    expect((await loginAs('shifokor@example.com', 'juda-yaxshi-parol')).status).toBe(403)
   })
 
   it('roʻyxatda rol nomi va holat koʻrinadi', async () => {
-    const data = (await call('GET', '/api/staff')).json().data
-    const rows: StaffRow[] = data.staff
-    const disabled = rows.find((row) => row.email === 'yangi@example.com')
-    expect(disabled?.status).toBe('disabled')
+    const rows: StaffRow[] = (await call('GET', '/api/staff')).json().data
+    expect(rows.find((row) => row.email === 'shifokor@example.com')?.status).toBe('disabled')
     expect(rows.find((row) => row.email === h.email)?.roleName).toBe('Egasi')
   })
 })

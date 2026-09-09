@@ -1,9 +1,2 @@
-export {
-  useAcceptInvite,
-  useInvite,
-  useInviteStaff,
-  useRevokeInvite,
-  useUpdateRole,
-  useUpdateStaff,
-} from './hooks'
-export { InviteDialog } from './InviteDialog'
+export { useChangePassword, useCreateStaff, useUpdateRole, useUpdateStaff } from './hooks'
+export { StaffDialog } from './StaffDialog'

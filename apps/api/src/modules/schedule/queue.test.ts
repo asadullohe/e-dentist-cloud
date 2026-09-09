@@ -29,9 +29,10 @@ function open(method: 'GET' | 'POST', url: string, payload?: object, ip = random
 }
 
 // Cheklov hisoblagichi Redis da bir soat yashaydi. Har ishga tushirish
-// oʻz IP oraligʻini oladi — aks holda ikkinchi yugurish birinchisining
-// qoldigʻiga urilib 429 oladi
-const IP_PREFIX = `10.${Math.floor(Date.now() / 60_000) % 250}`
+// oʻz IP oraligʻini oladi — aks holda ketma-ket yugurishlar bir-birining
+// qoldigʻiga urilib 429 olardi. Vaqtga bogʻlash yetarli emas: bir daqiqa
+// ichida ikki marta ishga tushsa oraliq baribir bir xil boʻlardi
+const IP_PREFIX = `10.${1 + Math.floor(Math.random() * 250)}`
 let ipCounter = 0
 function randomIp(): string {
   ipCounter += 1
@@ -146,7 +147,7 @@ describe('navbatga yozilish', () => {
   })
 
   it('bitta IP dan soatiga besh martadan koʻp yozib boʻlmaydi', async () => {
-    const ip = `${IP_PREFIX}.200.${Date.now() % 250}`
+    const ip = `${IP_PREFIX}.200.${1 + Math.floor(Math.random() * 250)}`
     const codes: number[] = []
     for (let i = 0; i < 7; i++) {
       const r = await open('POST', `/api/n/${code}/join`, { doctorId, fullName: `Sinov ${i}` }, ip)

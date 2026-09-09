@@ -86,6 +86,8 @@ export const UI_TEXT = {
   verified_hint: 'Endi hisobingizga kira olasiz.',
   trial_left: (days: number) => `Sinov muddati: ${days} kun qoldi`,
   trial_over: 'Sinov muddati tugadi — faqat oʻqish rejimi',
+  subscription_over:
+    'Obuna muddati tugadi — faqat oʻqish rejimi. Muddatni uzaytirish uchun bogʻlaning',
   section_soon: 'Bu boʻlim keyingi bosqichda qoʻshiladi',
   menu: 'Menyu',
   close: 'Yopish',
@@ -384,16 +386,14 @@ export const REPORT_UI = {
 // Xodimlar va rollar
 export const STAFF_TEXT = {
   not_found: 'Xodim topilmadi',
-  invite_not_found: 'Taklifnoma topilmadi',
-  invite_expired: 'Taklifnoma muddati tugagan yoki allaqachon ishlatilgan',
   email_taken: 'Bu pochta bilan hisob allaqachon bor',
-  invite_exists: 'Bu pochtaga taklifnoma yuborilgan — avval uni bekor qiling',
   role_not_found: 'Rol topilmadi',
   self_change: 'Oʻz rolingizni yoki holatingizni oʻzgartira olmaysiz',
   last_owner: 'Klinikada kamida bitta faol egasi qolishi shart',
   role_required: 'Rolni tanlang',
   name_required: 'Ism-familiyani yozing',
-  invite_subject: 'E-Dentist — sizni klinikaga taklif qilishdi',
+  password_wrong: 'Joriy parol notoʻgʻri',
+  password_same: 'Yangi parol eskisidan farq qilishi kerak',
 } as const
 
 // Sozlamalar → Xodimlar va Rollar
@@ -401,15 +401,12 @@ export const STAFF_UI = {
   title: 'Sozlamalar',
   staff_tab: 'Xodimlar',
   roles_tab: 'Rollar',
-  invite: 'Taklif qilish',
-  invite_title: 'Xodimni taklif qilish',
-  invite_sent: 'Taklifnoma yuborildi',
-  pending: 'Kutilmoqda',
-  pending_title: 'Yuborilgan taklifnomalar',
-  expires: 'Muddati',
-  revoke: 'Bekor qilish',
-  revoke_title: 'Taklifnoma bekor qilinsinmi?',
-  revoke_text: 'Havola ishlamay qoladi. Kerak boʻlsa qaytadan yuborasiz.',
+  account_tab: 'Hisobim',
+  add: 'Xodim qoʻshish',
+  add_title: 'Yangi xodim',
+  add_hint:
+    'Parolni siz belgilaysiz va xodimga aytasiz. U kirgach «Hisobim» boʻlimida oʻzgartira oladi.',
+  password: 'Boshlangʻich parol',
   name: 'Xodim',
   email: 'Pochta',
   role: 'Rol',
@@ -425,11 +422,11 @@ export const STAFF_UI = {
   save_role: 'Saqlash',
   role_saved: 'Rol yangilandi',
   owner_locked: 'Egasi bu ruxsatlarni yoʻqota olmaydi',
-  accept_title: 'Klinikaga qoʻshilish',
-  accept_hint: (clinic: string, role: string) =>
-    `${clinic} sizni «${role}» roli bilan taklif qildi`,
-  accept_button: 'Hisobni ochish',
-  accept_invalid: 'Havola ishlamaydi yoki muddati tugagan',
+  // Oʻz parolini almashtirish
+  change_password: 'Parolni almashtirish',
+  current_password: 'Joriy parol',
+  new_password: 'Yangi parol',
+  password_changed: 'Parol almashtirildi',
 } as const
 
 /// Ruxsat nomlari — matritsada shu matn koʻrinadi
@@ -679,6 +676,105 @@ export const QUEUE_STATUS_LABELS = {
   waiting: 'Kutmoqda',
   called: 'Chaqirildi',
   finished: 'Yakunlandi',
+} as const
+
+// Obuna va muddat
+export const BILLING_TEXT = {
+  expired:
+    'Obuna muddati tugagan — hozircha faqat oʻqish mumkin. Maʼlumotingiz joyida, muddatni uzaytirsangiz yozish yana ochiladi',
+  blocked: 'Klinika bloklangan. Batafsil maʼlumot uchun bogʻlaning',
+} as const
+
+// Boshqaruv paneli (apps/admin)
+export const ADMIN_UI = {
+  brand: 'E-Dentist — boshqaruv',
+  login_title: 'Boshqaruv paneli',
+  login_hint: 'Faqat platforma admini uchun',
+  clinics: 'Klinikalar',
+  stats: 'Statistika',
+  soon: 'Bu boʻlim keyingi taskda toʻldiriladi',
+  not_admin: 'Bu hisob boshqaruv paneliga kira olmaydi',
+  search: 'Nom yoki telefon boʻyicha qidirish',
+  empty: 'Klinika topilmadi',
+  clinic: 'Klinika',
+  plan: 'Tarif',
+  expires: 'Muddat',
+  staff: 'Xodimlar',
+  patients_count: 'Bemorlar',
+  visits_count: 'Tashriflar',
+  last_login: 'Oxirgi kirish',
+  created: 'Roʻyxatdan oʻtgan',
+  trial: 'Sinov',
+  expired: 'Muddati oʻtgan',
+  blocked: 'Bloklangan',
+  active: 'Faol',
+  extend: 'Muddatni uzaytirish',
+  extend_days: (n: number) => `+${n} kun`,
+  block: 'Bloklash',
+  unblock: 'Blokdan chiqarish',
+  history: 'Tarix',
+  never: 'hech qachon',
+  back: 'Klinikalar',
+  queue_on: 'Navbat yoqilgan',
+  queue_off: 'Navbat oʻchirilgan',
+  total: 'Jami klinika',
+  active_clinics: 'Faol',
+  trial_clinics: 'Sinovda',
+  expired_clinics: 'Muddati oʻtgan',
+  blocked_clinics: 'Bloklangan',
+  staff_total: 'Xodimlar',
+  monthly: 'Oylar kesimi',
+  registered_month: 'Roʻyxatdan oʻtgan',
+  extended_month: 'Uzaytirilgan',
+  revenue_pending: 'Daromad hisobi narx modeli belgilangach qoʻshiladi',
+  events: 'Hodisalar',
+  events_all: 'Klinika amallari bilan',
+  events_platform: 'Faqat platforma hodisalari',
+  event_time: 'Vaqt',
+  event_action: 'Amal',
+  event_who: 'Kim',
+} as const
+
+/// Tarixdagi amallar — panelda koʻrinadigan nomlar.
+/// Roʻyxat `platform/audit.ts` dagi AUDIT_ACTION bilan bir xil boʻlishi kerak
+export const AUDIT_LABELS = {
+  registered: 'Roʻyxatdan oʻtdi',
+  email_verified: 'Pochta tasdiqlandi',
+  logged_in: 'Kirdi',
+  login_failed: 'Kirish urinishi rad etildi',
+  logged_out: 'Chiqdi',
+  role_changed: 'Rol oʻzgardi',
+  staff_changed: 'Xodim oʻzgardi',
+  patient_created: 'Bemor qoʻshildi',
+  patient_updated: 'Bemor tahrirlandi',
+  patient_deleted: 'Bemor oʻchirildi',
+  patient_viewed: 'Bemor kartochkasi ochildi',
+  visit_created: 'Tashrif yozildi',
+  visit_updated: 'Tashrif tahrirlandi',
+  visit_deleted: 'Tashrif oʻchirildi',
+  tooth_updated: 'Tish xaritasi oʻzgardi',
+  bridge_created: 'Koʻprik qoʻshildi',
+  bridge_deleted: 'Koʻprik oʻchirildi',
+  image_uploaded: 'Rasm yuklandi',
+  image_deleted: 'Rasm oʻchirildi',
+  payment_created: 'Toʻlov qabul qilindi',
+  payment_updated: 'Toʻlov tahrirlandi',
+  payment_deleted: 'Toʻlov oʻchirildi',
+  service_changed: 'Narxnoma oʻzgardi',
+  patients_exported: 'Bemorlar Excelga chiqarildi',
+  patients_imported: 'Bemorlar Exceldan yuklandi',
+  appointment_changed: 'Qabul oʻzgardi',
+  expense_changed: 'Xarajat oʻzgardi',
+  lab_created: 'Naryad yozildi',
+  lab_updated: 'Naryad tahrirlandi',
+  lab_deleted: 'Naryad oʻchirildi',
+  lab_status_changed: 'Naryad holati oʻzgardi',
+  lab_returned: 'Naryad qaytarildi',
+  data_exported: 'Maʼlumot yuklab olindi',
+  queue_changed: 'Navbat oʻzgardi',
+  subscription_extended: 'Muddat uzaytirildi',
+  clinic_blocked: 'Bloklandi',
+  clinic_unblocked: 'Blokdan chiqarildi',
 } as const
 
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —

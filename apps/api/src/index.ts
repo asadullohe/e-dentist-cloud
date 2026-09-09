@@ -2,7 +2,8 @@ import { createBus } from './platform/bus.js'
 import { loadConfig } from './platform/config.js'
 import { createDb } from './platform/db.js'
 import { createImportStore } from './platform/importStore.js'
-import { consoleMailer } from './platform/mailer.js'
+import { consoleMailer, type Mailer, smtpMailer } from './platform/mailer.js'
+import { type Notifier, silentNotifier, telegramNotifier } from './platform/notify.js'
 import { createRateLimiter } from './platform/rateLimit.js'
 import { createServer } from './platform/server.js'
 import { createSessionStore } from './platform/session.js'
@@ -31,13 +32,38 @@ await storage.ensureBucket()
 const imports = createImportStore(config.REDIS_URL)
 const bus = createBus(config.REDIS_URL)
 
+// SMTP sozlanmagan boʻlsa xat konsolga (server logiga) chiqadi.
+// Tasdiqlash havolasini logdan olib qoʻlda yuborish mumkin:
+//   docker compose -f docker-compose.prod.yml logs api | grep token=
+const mailer: Mailer =
+  config.SMTP_HOST && config.SMTP_USER && config.SMTP_PASSWORD && config.SMTP_FROM
+    ? smtpMailer({
+        host: config.SMTP_HOST,
+        port: config.SMTP_PORT,
+        user: config.SMTP_USER,
+        password: config.SMTP_PASSWORD,
+        from: config.SMTP_FROM,
+      })
+    : consoleMailer((message) => app.log.info(message))
+
+// Telegram sozlanmagan boʻlsa xabar yuborilmaydi — bu xato emas
+const notify: Notifier =
+  config.TELEGRAM_BOT_TOKEN && config.TELEGRAM_CHAT_ID
+    ? telegramNotifier({
+        token: config.TELEGRAM_BOT_TOKEN,
+        chatId: config.TELEGRAM_CHAT_ID,
+        log: (message, meta) => app.log.warn(meta ?? {}, message),
+      })
+    : silentNotifier()
+
 const app = createServer(config, {
   db,
   storage,
   imports,
   sessions,
   rateLimiter,
-  mailer: consoleMailer((message) => app.log.info(message)),
+  mailer,
+  notify,
   bus,
 })
 

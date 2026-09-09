@@ -1,0 +1,74 @@
+# Test va tekshiruvlar. Har push va pull request da ishlaydi.
+#
+# Testlar haqiqiy Postgres, Redis va MinIO ga ulanadi — koʻp ijarachilik
+# himoyasi RLS ga tayanadi, uni soxta baza bilan sinab boʻlmaydi.
+# Shuning uchun lokaldagi oʻsha `docker compose` ishlatiladi: CI va
+# notebook bir xil muhitni koʻtaradi.
+
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  # Deploy ish oqimi shu testlarni qayta ishlatadi
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_USER: edentist
+      POSTGRES_PASSWORD: ci-parol
+      POSTGRES_DB: edentist
+      POSTGRES_PORT: 5433
+      APP_DB_USER: edentist_app
+      APP_DB_PASSWORD: ci-app-parol
+      REDIS_PORT: 6379
+      MINIO_ROOT_USER: edentist
+      MINIO_ROOT_PASSWORD: ci-minio-parol
+      MINIO_PORT: 9000
+      MINIO_CONSOLE_PORT: 9001
+      MINIO_BUCKET: edentist-test
+
+      TZ: Asia/Tashkent
+      NODE_ENV: test
+      DATABASE_URL: postgresql://edentist:ci-parol@localhost:5433/edentist
+      APP_DATABASE_URL: postgresql://edentist_app:ci-app-parol@localhost:5433/edentist
+      REDIS_URL: redis://localhost:6379
+      SESSION_SECRET: ci-sessiya-kaliti-uzun-satr
+      S3_ENDPOINT: http://localhost:9000
+      S3_ACCESS_KEY: edentist
+      S3_SECRET_KEY: ci-minio-parol
+      S3_BUCKET: edentist-test
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Bogʻliqliklar
+        run: npm ci
+
+      - name: Muhit konteynerlari
+        run: docker compose up -d --wait
+
+      - name: Migratsiya
+        run: npm run db:migrate:deploy
+
+      - name: Format va lint
+        run: npm run ci
+
+      - name: Tiplarni tekshirish
+        run: npm run typecheck
+
+      - name: Testlar
+        run: npm test
+
+      - name: Xato boʻlsa loglar
+        if: failure()
+        run: docker compose logs --tail 50

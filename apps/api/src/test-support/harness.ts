@@ -10,6 +10,7 @@ import { memoryBus } from '../platform/bus.js'
 import { createDb, type Db } from '../platform/db.js'
 import { createImportStore } from '../platform/importStore.js'
 import { type Mail, memoryMailer } from '../platform/mailer.js'
+import { memoryNotifier } from '../platform/notify.js'
 import { createRateLimiter, type RateLimiter } from '../platform/rateLimit.js'
 import { createServer } from '../platform/server.js'
 import { createSessionStore, type SessionStore } from '../platform/session.js'
@@ -35,6 +36,8 @@ export interface Harness {
   sentMail: Mail[]
   /// Navbat hodisalari shinasi (SSE)
   bus: ReturnType<typeof memoryBus>
+  /// Telegram xabarlari
+  notify: ReturnType<typeof memoryNotifier>
   cookie: string
   clinicId: string
   userId: string
@@ -75,6 +78,7 @@ export async function startHarness(): Promise<Harness> {
   const imports = createImportStore(REDIS_URL)
 
   const bus = memoryBus()
+  const notify = memoryNotifier()
   const app = createServer(config, {
     db,
     storage,
@@ -82,6 +86,7 @@ export async function startHarness(): Promise<Harness> {
     sessions,
     rateLimiter,
     mailer,
+    notify,
     bus,
   })
   await app.ready()
@@ -118,6 +123,7 @@ export async function startHarness(): Promise<Harness> {
     ownerDb,
     sentMail: mailer.sent,
     bus,
+    notify,
     cookie,
     clinicId,
     userId: owner?.id ?? '',

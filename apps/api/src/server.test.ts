@@ -6,6 +6,7 @@ import { memoryBus } from './platform/bus.js'
 import type { Db } from './platform/db.js'
 import { errors } from './platform/errors.js'
 import { memoryMailer } from './platform/mailer.js'
+import { silentNotifier } from './platform/notify.js'
 import { createServer, type ServerDeps } from './platform/server.js'
 import type { SessionStore } from './platform/session.js'
 import { fakeImports, fakeStorage, testConfig } from './test-support/config.js'
@@ -15,6 +16,7 @@ import { fakeImports, fakeStorage, testConfig } from './test-support/config.js'
 const fakeDeps: ServerDeps = {
   db: {} as Db,
   sessions: {
+    ping: async () => {},
     create: async () => 'sinov',
     read: async () => null,
     destroy: async () => {},
@@ -29,6 +31,7 @@ const fakeDeps: ServerDeps = {
   imports: fakeImports,
   mailer: memoryMailer(),
   bus: memoryBus(),
+  notify: silentNotifier(),
 }
 
 const config = testConfig()
@@ -123,5 +126,96 @@ describe('xato javoblari', () => {
     expect(r.json().error.code).toBe('bad_request')
     expect(r.json().error.message).toBe('Soʻrov notoʻgʻri yuborildi')
     await app.close()
+  })
+})
+
+describe('GET /api/health/ready', () => {
+  // Kuzatuv shu manzilni soʻraydi: baza yoki Redis yotgan boʻlsa API
+  // «tirik» deb koʻrinib turmasligi kerak
+  it('hammasi joyida boʻlsa 200', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: { $queryRaw: async () => [{ '?column?': 1 }] } as unknown as Db,
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.statusCode).toBe(200)
+    expect(r.json()).toMatchObject({ ok: true, data: { status: 'ok' } })
+    await app.close()
+  })
+
+  it('baza javob bermasa 503', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: {
+        $queryRaw: async () => {
+          throw new Error('ECONNREFUSED')
+        },
+      } as unknown as Db,
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.statusCode).toBe(503)
+    await app.close()
+  })
+
+  it('Redis javob bermasa 503', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: { $queryRaw: async () => [{ '?column?': 1 }] } as unknown as Db,
+      sessions: {
+        ...fakeDeps.sessions,
+        ping: async () => {
+          throw new Error('ECONNREFUSED')
+        },
+      },
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.statusCode).toBe(503)
+    await app.close()
+  })
+
+  // Manzil ochiq — qaysi qism yiqilgani javobda koʻrinmasligi kerak
+  it('javobda texnik tafsilot yoʻq', async () => {
+    const app = createServer(config, {
+      ...fakeDeps,
+      db: {
+        $queryRaw: async () => {
+          throw new Error('parol notoʻgʻri: edentist_app@postgres')
+        },
+      } as unknown as Db,
+    })
+    const r = await app.inject({ method: 'GET', url: '/api/health/ready' })
+    expect(r.payload).not.toContain('parol')
+    expect(r.payload).not.toContain('postgres')
+    await app.close()
+  })
+})
+
+describe('proxy orqasidagi IP', () => {
+  // Cheklovlar IP boʻyicha ishlaydi. Caddy haqiqiy manzilni
+  // X-Forwarded-For da uzatadi, mijoz esa uni soxtalashtira olmasligi kerak
+  function ipOf(headers: Record<string, string>, env: 'production' | 'test') {
+    const app = createServer(testConfig({ NODE_ENV: env }), fakeDeps)
+    app.get('/sinov/ip', async (req) => ({ ip: req.ip }))
+    return app
+      .inject({ method: 'GET', url: '/sinov/ip', headers, remoteAddress: '10.0.0.5' })
+      .then((r) => {
+        const ip = r.json().ip
+        return app.close().then(() => ip)
+      })
+  }
+
+  it('ishlab chiqarishda X-Forwarded-For oxirgi qiymati olinadi', async () => {
+    expect(await ipOf({ 'x-forwarded-for': '203.0.113.7' }, 'production')).toBe('203.0.113.7')
+  })
+
+  // Mijoz zanjir boshiga soxta manzil qoʻshsa ham u hisobga olinmaydi
+  it('soxta X-Forwarded-For zanjiri cheklovni aylanib oʻta olmaydi', async () => {
+    expect(await ipOf({ 'x-forwarded-for': '1.2.3.4, 203.0.113.7' }, 'production')).toBe(
+      '203.0.113.7',
+    )
+  })
+
+  it('lokalda sarlavhaga umuman ishonilmaydi', async () => {
+    expect(await ipOf({ 'x-forwarded-for': '203.0.113.7' }, 'test')).toBe('10.0.0.5')
   })
 })

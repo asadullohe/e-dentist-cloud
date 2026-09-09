@@ -103,7 +103,7 @@ export function countActiveByRoles(tx: ClinicTx, roleIds: string[]) {
   return tx.user.count({ where: { roleId: { in: roleIds }, status: 'active' } })
 }
 
-export interface InvitedUser {
+export interface NewStaff {
   userId: string
   roleId: string
   email: string
@@ -111,9 +111,9 @@ export interface InvitedUser {
   fullName: string
 }
 
-/// Taklifnoma bilan ochilgan hisob darhol faol: havolaning oʻzi pochta
-/// egaligini isbotlaydi, shuning uchun qayta tasdiqlash soʻralmaydi
-export function createInvited(tx: ClinicTx, m: InvitedUser) {
+/// Egasi ochgan hisob darhol faol: pochta tasdigʻi klinikaning oʻzi
+/// roʻyxatdan oʻtishida kerak, xodimni esa klinika oʻzi qoʻshadi
+export function createStaff(tx: ClinicTx, m: NewStaff) {
   return tx.user.create({
     data: tenantScoped({
       id: m.userId,
@@ -125,4 +125,14 @@ export function createInvited(tx: ClinicTx, m: InvitedUser) {
     }),
     select: STAFF_SELECT,
   })
+}
+
+/// Parolni almashtirish uchun: joriy xeshni oʻqish va yangisini yozish
+export async function passwordOf(tx: ClinicTx, userId: string): Promise<string | null> {
+  const row = await tx.user.findUnique({ where: { id: userId }, select: { passwordHash: true } })
+  return row?.passwordHash ?? null
+}
+
+export async function setPassword(tx: ClinicTx, userId: string, passwordHash: string) {
+  await tx.user.update({ where: { id: userId }, data: { passwordHash } })
 }

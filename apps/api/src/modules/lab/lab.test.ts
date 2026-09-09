@@ -52,20 +52,25 @@ beforeAll(async () => {
 
   patientId = (await call('POST', '/api/patients', { fio: 'Naryad Bemori' })).json().data.id
 
-  // Texnik hisobini taklifnoma orqali ochamiz — haqiqiy oqim
+  // Texnik hisobini egasi ochadi — haqiqiy oqim
   const techRole = await h.ownerDb.role.findFirst({
     where: { clinicId: h.clinicId, template: 'texnik' },
   })
-  await call('POST', '/api/staff/invite', { email: 'texnik@example.com', roleId: techRole?.id })
-  const token = /token=([\w-]+)/.exec(h.sentMail.at(-1)?.body ?? '')?.[1] ?? ''
-  const accepted = await h.app.inject({
-    method: 'POST',
-    url: '/api/invites/accept',
-    remoteAddress: h.clientIp,
-    payload: { token, fullName: 'Usta Karim', password: 'juda-yaxshi-parol' },
+  const tech = await call('POST', '/api/staff', {
+    email: 'texnik@example.com',
+    fullName: 'Usta Karim',
+    roleId: techRole?.id,
+    password: 'juda-yaxshi-parol',
   })
-  techCookie = `ed_session=${accepted.cookies.find((c) => c.name === 'ed_session')?.value}`
-  techId = (await h.ownerDb.user.findFirst({ where: { email: 'texnik@example.com' } }))?.id ?? ''
+  techId = tech.json().data.id
+
+  const login = await h.app.inject({
+    method: 'POST',
+    url: '/api/auth/login',
+    remoteAddress: h.clientIp,
+    payload: { email: 'texnik@example.com', password: 'juda-yaxshi-parol' },
+  })
+  techCookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
 
   const other = await createOtherClinic(h.ownerDb, 'B klinikasi')
   otherClinicId = other.id

@@ -140,3 +140,19 @@ topilmaydigan boʻlib qoladi.
 
 Lokalda ishlaydigan narsa serverda ham ishlashi kerak — shu sabab lokalda ham
 xizmatlar Docker da turadi, notebookga toʻgʻridan-toʻgʻri Postgres oʻrnatilmaydi.
+
+## Testlar bir-birining qoldigʻiga urilmasin
+
+Testlar haqiqiy Postgres va Redis da ishlaydi, shuning uchun ikkita
+tuzoq bor. Ikkalasi ham amalda «goh oʻtadi, goh yiqiladi» degan holatga
+olib keldi:
+
+1. **Redis dagi hisoblagichlar** ishga tushirishlar orasida qoladi
+   (cheklov oynasi — bir soat yoki bir kun). Cheklov sinaladigan test
+   har yugurishda **tasodifiy IP** olishi kerak, vaqtga bogʻlash
+   yetarli emas: bir daqiqada ikki marta ishga tushsa oraliq baribir
+   bir xil boʻladi.
+
+2. **Umumiy sanoqlar** — masalan «nechta klinika bloklangan» — boshqa
+   test fayllari bilan parallel oʻzgaradi. Sanoq **oʻzgarishini**
+   emas, oʻz yozuvining holatini tekshiring.

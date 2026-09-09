@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.1** — bosqich 4 tugadi — bosqich 1 tugadi, `master` da
+**Hozirgi task: 5.6** — bosqich 4 `master` da — bosqich 1 tugadi, `master` da
 
 ---
 
@@ -663,15 +663,110 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 
 ### Dastur
 
-- [ ] **5.1 `billing` moduli** — `expires_at` tekshiruvi, muddat tugasa faqat-oʻqish rejimi.
+- [x] **5.1 `billing` moduli** — `expires_at` tekshiruvi, muddat tugasa faqat-oʻqish rejimi.
       Maʼlumot hech qachon oʻchirilmaydi
-- [ ] **5.2 `apps/admin` skeleti** — kirish, platforma admini roli
+
+> **Tekshiruv bitta joyda — yozuv metodlari ustidagi ilgak**
+>
+> Har modulga alohida qoʻshilsa bittasi unutilardi va bu jimgina yuz
+> berardi. Shuning uchun `preHandler` ilgagi: POST/PATCH/PUT/DELETE
+> soʻrovlari, sessiyada klinika bor boʻlsa, `billing.assertWritable` dan
+> oʻtadi.
+>
+> Ochiq qoladiganlar: **oʻqish** (maʼlumot koʻrinadi), **eksport**
+> («maʼlumot mening qoʻlimda» kafolati), **chiqish** (yopiq kabinetdan
+> chiqa olmaslik maʼnosiz) va ochiq navbat marshrutlari.
+>
+> Muddat har soʻrovda bazadan oʻqiladi: boshqaruv panelidan uzaytirilsa
+> darhol kuchga kiradi — test buni tekshiradi. `expires_at` «shu kungacha»:
+> oxirgi kunning oʻzida yozish hali ochiq.
+- [x] **5.2 `apps/admin` skeleti** — kirish, platforma admini roli
       (`clinic_id` boʻsh, `patients` moduli umuman ochilmaydi)
-- [ ] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix
-- [ ] **5.4 Statistika va hodisalar**
-- [ ] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
-- [ ] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/pochta.ts`). Serverda
+
+> **Admin qatori ilovaga koʻrinmaydi — bu xususiyat, xato emas**
+>
+> Adminda `clinic_id` boʻsh, RLS siyosati esa `clinic_id = app_clinic_id()`
+> ni talab qiladi va boʻsh ustun hech qachon mos kelmaydi. «`clinic_id IS
+> NULL` boʻlsa ochiq» degan siyosat yozib boʻlmaydi: u holda admin qatorlari
+> **har qanday** klinika soʻroviga koʻrinardi. Shuning uchun boshqa
+> joylardagidek tor `admin_find` SECURITY DEFINER funksiyasi.
+>
+> Klinika marshrutlari adminga oʻzidan-oʻzi yopiq: ular ruxsat talab
+> qiladi, ruxsat roldan keladi, rol esa klinikaniki. Test buni tekshiradi —
+> bemorlar, navbat, hisobot va eksport hammasi 403.
+>
+> Admin qoʻlda yaratiladi: `npm run admin:create -w @e-dentist/api --
+> pochta parol "Ism"`. Parol kamida 12 belgi.
+- [x] **5.3 Klinikalar roʻyxati va kartochkasi** — muddatni uzaytirish, bloklash, tarix
+
+> **Panel bemor maʼlumotini koʻrmaydi — bu baza kafolati**
+>
+> Panelga ilova ulanishini egasi huquqiga oʻtkazish oson yoʻl edi, lekin
+> u holda paneldagi bitta xato butun kartotekani ochib yuborardi. Oʻrniga
+> har bir soʻrov tor SECURITY DEFINER funksiya: `admin_clinics`,
+> `admin_clinic`, `admin_clinic_staff`, `admin_clinic_history`,
+> `admin_extend_clinic`, `admin_set_clinic_status`. Ular faqat klinika
+> darajasidagi ustunlarni qaytaradi.
+>
+> Tarix `entity_id` va `meta` ni **qaytarmaydi**: ularda bemor yozuvining
+> identifikatori boʻlishi mumkin. Test javob matnida bemor ismi yoʻqligini
+> tekshiradi.
+>
+> Muddat uzaytirilganda `is_trial` oʻchadi (toʻlov qilindi degani) va yangi
+> muddat `greatest(expires_at, current_date)` dan hisoblanadi — muddati
+> oʻtgan klinikada uzaytirish oʻtmishga tushib qolmasin.
+>
+> Paneldagi har amal klinikaning **oʻz** audit tarixiga yoziladi: egasi
+> ham koʻra oladi.
+- [x] **5.4 Statistika va hodisalar**
+
+> **Daromad hisobi qoʻshilmadi — narx modeli hali yoʻq**
+>
+> tz.md statistikada «oylik daromad» ni soʻraydi, lekin bir obuna qancha
+> turishi hali belgilanmagan (ochiq savol 2). Shu sababli oylar kesimida
+> **roʻyxatdan oʻtganlar va uzaytirishlar soni** koʻrsatiladi; narx
+> belgilangach summa shu qatordan hisoblanadi. Sahifada shu yozib qoʻyilgan.
+>
+> Hodisalar sukut boʻyicha faqat platformaga aloqador amallarni koʻrsatadi
+> (roʻyxatdan oʻtish, kirish urinishi, bloklash, muddat) — aks holda
+> roʻyxat klinika ichidagi shovqinga toʻlib ketadi. «Klinika amallari
+> bilan» tugmasi hammasini ochadi, lekin u yerda ham faqat vaqt, amal,
+> klinika nomi va xodim pochtasi bor.
+- [x] **5.5 Telegram xabarnoma** — yangi roʻyxatdan oʻtish haqida xabar
+
+> **Xodim taklifnomasi oʻrniga parol — qaror 09/09/2026**
+>
+> Taklifnoma havolasi pochta orqali ketardi, SMTP esa yoʻq. Endi egasi
+> «Xodim qoʻshish» oynasida ism, pochta, rol va boshlangʻich parolni
+> kiritadi — hisob darhol ishlaydi. Xodim kirgach «Hisobim» boʻlimida
+> parolni almashtiradi, joriy parol soʻraladi.
+>
+> `invites` jadvali va `invite_find` funksiyasi bazada qoldi: SMTP
+> qoʻshilganda taklifnoma oqimini qaytarish oson boʻlsin.
+
+> **Xabar hech qachon asosiy oqimni buzmaydi**
+>
+> Telegram yotgan boʻlsa ham roʻyxatdan oʻtish tugaydi: xabar yuborish
+> `register` ning oxirida va `try/catch` ichida. Nazorat testi ataylab
+> yiqiladigan xabarnoma bilan roʻyxatdan oʻtadi va 200 kutadi.
+> Sozlanmagan boʻlsa (lokalda) hech narsa yuborilmaydi.
+- [x] **5.5b SMTP** — hozir xat konsolga chiqadi (`platform/mailer.ts`). Serverda
       haqiqiy pochta kerak, aks holda hech kim roʻyxatdan oʻta olmaydi
+
+> **SMTP hozircha ixtiyoriy — qaror 09/09/2026**
+>
+> Birinchi versiyada SMTP sozlanmaydi. Server usiz ham koʻtariladi, xat
+> esa server logiga chiqadi: roʻyxatdan oʻtgan klinikaning tasdiqlash
+> havolasini logdan olib qoʻlda yuborish mumkin
+> (`docker compose logs api | grep token=`).
+>
+> Buning ikkita oqibati bor:
+> 1. Ochiq roʻyxatdan oʻtish amalda ishlamaydi — klinikalarni siz qoʻlda
+>    tasdiqlaysiz
+> 2. Xodim taklifnomasi oʻrniga egasi hisobni oʻzi ochadi va parolni
+>    belgilaydi (quyida)
+>
+> SMTP qoʻshilgach ikkalasi ham asl holiga qaytariladi — kod joyida.
 
 ### Server — Hetzner
 
@@ -680,16 +775,105 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
       Joylashuv: Falkenstein yoki Helsinki
 - [ ] **5.7 Serverni sozlash** — ssh kalit, root ni yopish, `ufw` firewall,
       `fail2ban`, Docker oʻrnatish
-- [ ] **5.8 DNS** — `kabinet.e-dentist.uz` va `admin.e-dentist.uz` → server IP.
-      Apex va `www` Netlify'da qoladi, **tegilmaydi**
-- [ ] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik
-- [ ] **5.10 Prod `docker-compose.yml`** — lokaldan ajratilgan, portlar tashqariga ochiq emas,
+- [ ] **5.8 DNS** — Cloudflare (proxy yoqilgan): apex, `www`, `kabinet.`
+      va `admin.` → server IP. Netlify'dan voz kechildi _(qaror 09/09/2026)_
+
+> **Cloudflare proxy IP ni yashiradi**
+>
+> Proxy orqasida barcha soʻrovlar Cloudflare IP laridan kelayotgandek
+> koʻrinadi. Busiz navbatdagi «bir IP dan soatiga 5 ta yozuv» cheklovi
+> butun mamlakatga **bitta** boʻlib qolardi va navbat ishlamay qoʻyardi.
+>
+> Ikki qatlam qoʻshildi: Caddy da `trusted_proxies` (Cloudflare
+> oraliqlari roʻyxati) va API da `trustProxy` — endi `true` emas, faqat
+> **bevosita qoʻshni** (Caddy) ishonchli. `true` boʻlsa mijoz yuborgan
+> soxta `X-Forwarded-For` bilan cheklovni aylanib oʻtish mumkin edi.
+> Uchta test buni tekshiradi.
+- [x] **5.9 Caddy va HTTPS** — Let's Encrypt avtomatik _(fayl tayyor, serverda sinaladi)_
+
+> **SSE uchun bitta muhim sozlama**
+>
+> `reverse_proxy` da `flush_interval -1`: aks holda proxy oqimni buferlab
+> qoʻyadi va navbatdagi «chaqirildi» xabari kech keladi. Shuningdek
+> `X-Forwarded-For` uzatiladi — cheklovlar IP boʻyicha ishlaydi.
+>
+> Kabinet va panel bitta tasvirda: ular bitta koddan quriladi va birga
+> yangilanadi. SPA marshrutlari (`/n/<kod>`) uchun `try_files … /index.html`.
+- [x] **5.10 Prod `docker-compose.yml`** — lokaldan ajratilgan, portlar tashqariga ochiq emas,
       faqat Caddy orqali
-- [ ] **5.11 GitHub Actions** — test → qurish → `docker compose pull && up -d`.
+
+> **Migratsiya alohida konteynerda**
+>
+> `migrate` bir marta ishlab toʻxtaydi, `api` esa
+> `service_completed_successfully` bilan uni kutadi — eski kod yangi
+> sxemani koʻrib qolmaydi.
+>
+> Postgres, Redis va MinIO portlari **umuman** chiqarilmagan: tashqi
+> dunyoga ochiq yagona joy — Caddy (80/443).
+>
+> Tasvir lokalda sinovdan oʻtkazildi: migratsiya bajarildi, API konteyner
+> tarmogʻi orqali bazaga ulandi va healthcheck yashil boʻldi. Yoʻl-yoʻlakay
+> uchta narsa tuzatildi — `prisma.config.ts` konteynerda `.env` topolmay
+> yiqilardi, `tsx` va `prisma` dev bogʻliqlikda edi (prod tasvirida
+> boʻlmasdi), va vite qurishi uchun `tsconfig.base.json` kerak edi.
+
+> **Qadamlar `docs/server.md` da:** birinchi koʻtarish, yangilash,
+> admin yaratish va tekshirish roʻyxati.
+- [x] **5.11 GitHub Actions** — test → qurish → `docker compose pull && up -d`.
       Migratsiya ishga tushishdan oldin. Orqaga qaytarish: oldingi image tegi
-- [ ] **5.12 Zaxira** — kunlik `pg_dump` (30 kun), MinIO nusxasi,
+      _(ish oqimlari tayyor, birinchi chiqarishda sinaladi)_
+
+> **CI haqiqiy bazada ishlaydi**
+>
+> Koʻp ijarachilik himoyasi RLS ga tayanadi, uni soxta baza bilan sinab
+> boʻlmaydi. Shuning uchun CI lokaldagi oʻsha `docker compose` ni
+> koʻtaradi — notebook va CI bir xil muhitni ishlatadi.
+>
+> Deploy `ci.yml` ni `workflow_call` orqali qayta ishlatadi: sinovdan
+> oʻtmagan kod serverga chiqmaydi. Chiqarishdan keyin API `healthy`
+> boʻlishini kutadi va boʻlmasa loglarni koʻrsatib yiqiladi.
+>
+> Orqaga qaytarish — «Run workflow» tugmasi va oldingi commit sha si.
+> Migratsiyalar esa orqaga qaytmaydi: sxemani buzadigan oʻzgarish ikki
+> bosqichda chiqariladi (docs/server.md).
+- [x] **5.12 Zaxira** — kunlik `pg_dump` (30 kun), MinIO nusxasi,
       **tiklashni bir marta sinab koʻrish** — sinalmagan zaxira zaxira emas
-- [ ] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari
+
+> **Sinov avtomatik, har hafta**
+>
+> «Bir marta sinab koʻrish» yetarli emas: zaxira bugun ishlagani ertaga
+> ham ishlashini kafolatlamaydi. Shuning uchun `backup-check.sh` haftada
+> bir marta oxirgi dumpni **alohida vaqtinchalik bazaga** tiklaydi,
+> klinika/xodim/bemor sonini va **RLS siyosatlari** joyidaligini
+> tekshiradi, keyin oʻsha bazani oʻchiradi.
+>
+> RLS ni ham tekshirish muhim: siyosatlarsiz tiklangan baza koʻrinishdan
+> toʻgʻri, aslida esa butun kartoteka ochiq boʻladi.
+>
+> Skriptlar lokal stekda sinaldi: zaxira olindi (dump + rasmlar), tiklash
+> sinovi 7 klinika · 16 migratsiya · 15 siyosat topdi. Nazorat sinovi —
+> boʻsh dump berilganda skript «ZAXIRA YAROQSIZ» deb 1 kod bilan
+> yiqildi.
+- [x] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari
+
+> **`/api/health` yetarli emas edi**
+>
+> Eski manzil faqat «API javob beryapti» deb aytardi. Baza yoki Redis
+> yiqilganda kuzatuv yashil turaverardi. Yangi `/api/health/ready`
+> ikkalasini ham tekshiradi va yiqilganda 503 beradi — compose dagi
+> healthcheck ham shunga oʻtdi.
+>
+> Javobda tafsilot yoʻq: manzil ochiq, qaysi qism yiqilgani faqat logda.
+> Test buni tekshiradi (parol va xost nomi javobga tushmasligi).
+>
+> Uptime Kuma serverning oʻzida, lekin `127.0.0.1` da — internetda yana
+> bitta kirish oynasi turmasin. SSH tunneli bilan ochiladi. Server
+> butunlay yiqilsa Kuma ham yiqiladi, shuning uchun tashqi bepul kuzatuv
+> ham tavsiya qilingan (docs/server.md).
+>
+> Loglar 10 MB × 3 fayl bilan chegaralandi — 40 GB diskda cheklanmagan
+> log bir necha oyda hammasini yeb qoʻyardi. Postgres endi sekin
+> soʻrovlarni (>500 ms), ulanish va qulflarni yozadi.
 - [ ] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish
 
 ---

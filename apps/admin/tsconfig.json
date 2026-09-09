@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    // Avtomatik @types qoʻshilishi oʻchiriladi: prisma CLI ichidagi Prisma
+    // Studio ildizga oʻz React tiplarini tortib keladi
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*", "vite.config.ts", "../../packages/shared/src/**/*"]
+}

@@ -1,18 +1,10 @@
-import { CARD_UI, formatDateTime, STAFF_UI } from '@e-dentist/shared'
-import { PlusIcon, Trash2Icon, UserCheckIcon, UserXIcon } from 'lucide-react'
+import { formatDateTime, STAFF_UI } from '@e-dentist/shared'
+import { PlusIcon, UserCheckIcon, UserXIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useSession } from '@/entities/session'
-import { type PendingInvite, useRoles, useStaff } from '@/entities/staff'
-import { InviteDialog, useRevokeInvite, useUpdateStaff } from '@/features/staff-manage'
+import { useRoles, useStaff } from '@/entities/staff'
+import { StaffDialog, useUpdateStaff } from '@/features/staff-manage'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
   Badge,
   Button,
   Card,
@@ -32,13 +24,11 @@ import {
 
 export function StaffTab() {
   const { data: session } = useSession()
-  const { data, isPending } = useStaff()
+  const { data: staff, isPending } = useStaff()
   const { data: roles } = useRoles()
   const { mutateAsync: update } = useUpdateStaff()
-  const { mutateAsync: revoke } = useRevokeInvite()
 
-  const [inviteOpen, setInviteOpen] = useState(false)
-  const [revoking, setRevoking] = useState<PendingInvite | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
   const [error, setError] = useState('')
 
   async function change(id: string, payload: { roleId?: string; status?: 'active' | 'disabled' }) {
@@ -55,9 +45,9 @@ export function StaffTab() {
   return (
     <>
       <div className="mb-3 flex justify-end">
-        <Button size="sm" onClick={() => setInviteOpen(true)}>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
           <PlusIcon />
-          {STAFF_UI.invite}
+          {STAFF_UI.add}
         </Button>
       </div>
 
@@ -74,7 +64,7 @@ export function StaffTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data?.staff.map((person) => {
+            {staff?.map((person) => {
               const isSelf = person.id === session?.user.id
               return (
                 <TableRow key={person.id}>
@@ -140,71 +130,7 @@ export function StaffTab() {
         </Table>
       </Card>
 
-      {data && data.invites.length > 0 && (
-        <>
-          <h2 className="font-display mt-6 mb-2 font-semibold">{STAFF_UI.pending_title}</h2>
-          <Card className="overflow-hidden py-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{STAFF_UI.email}</TableHead>
-                  <TableHead className="w-44">{STAFF_UI.role}</TableHead>
-                  <TableHead className="hidden w-44 sm:table-cell">{STAFF_UI.expires}</TableHead>
-                  <TableHead className="w-16" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.invites.map((invite) => (
-                  <TableRow key={invite.id}>
-                    <TableCell className="font-medium">
-                      {invite.email}
-                      <Badge variant="secondary" className="ml-2">
-                        {STAFF_UI.pending}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{invite.roleName ?? '—'}</TableCell>
-                    <TableCell className="text-muted-foreground hidden sm:table-cell">
-                      {formatDateTime(invite.expiresAt)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={STAFF_UI.revoke}
-                        onClick={() => setRevoking(invite)}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        </>
-      )}
-
-      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
-
-      <AlertDialog open={revoking !== null} onOpenChange={(open) => !open && setRevoking(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{STAFF_UI.revoke_title}</AlertDialogTitle>
-            <AlertDialogDescription>{STAFF_UI.revoke_text}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (revoking) await revoke(revoking.id)
-                setRevoking(null)
-              }}
-            >
-              {STAFF_UI.revoke}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <StaffDialog open={addOpen} onOpenChange={setAddOpen} />
     </>
   )
 }

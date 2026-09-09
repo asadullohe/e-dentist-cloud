@@ -17,19 +17,6 @@ export interface StaffName {
   fullName: string | null
 }
 
-export interface PendingInvite {
-  id: string
-  email: string
-  roleId: string
-  roleName: string | null
-  expiresAt: string
-}
-
-export interface StaffList {
-  staff: StaffMember[]
-  invites: PendingInvite[]
-}
-
 export interface Role {
   id: string
   name: string

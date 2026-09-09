@@ -44,6 +44,10 @@ export const AUDIT_ACTION = {
   lab_returned: 'lab_returned',
   data_exported: 'data_exported',
   queue_changed: 'queue_changed',
+  /// Boshqaruv panelidagi amallar — klinikaning oʻz tarixida qoladi
+  subscription_extended: 'subscription_extended',
+  clinic_blocked: 'clinic_blocked',
+  clinic_unblocked: 'clinic_unblocked',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]

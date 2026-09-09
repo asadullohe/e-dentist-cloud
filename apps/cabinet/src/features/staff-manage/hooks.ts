@@ -1,5 +1,5 @@
 import type { Permission } from '@e-dentist/shared'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { STAFF_KEYS } from '@/entities/staff'
 import * as api from './api'
 
@@ -11,12 +11,12 @@ function useStaffMutation<TArgs, TResult>(fn: (args: TArgs) => Promise<TResult>)
   })
 }
 
-export function useInviteStaff() {
-  return useStaffMutation(api.inviteStaff)
+export function useCreateStaff() {
+  return useStaffMutation(api.createStaff)
 }
 
-export function useRevokeInvite() {
-  return useStaffMutation(api.revokeInvite)
+export function useChangePassword() {
+  return useMutation({ mutationFn: api.changePassword })
 }
 
 export function useUpdateStaff() {
@@ -37,16 +37,4 @@ export function useUpdateRole() {
       queryClient.invalidateQueries({ queryKey: ['session'] })
     },
   })
-}
-
-export function useInvite(token: string) {
-  return useQuery({
-    queryKey: ['invite', token],
-    queryFn: () => api.fetchInvite(token),
-    retry: false,
-  })
-}
-
-export function useAcceptInvite() {
-  return useMutation({ mutationFn: api.acceptInvite })
 }

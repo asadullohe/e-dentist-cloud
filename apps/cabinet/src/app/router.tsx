@@ -1,7 +1,6 @@
 import { UI_TEXT } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
-import { AcceptInvite } from '@/pages/AcceptInvite'
 import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
 import { Expenses } from '@/pages/Expenses'
@@ -56,7 +55,6 @@ export function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<VerifyEmail />} />
-      <Route path="/invite" element={<AcceptInvite />} />
       {/* Navbat — yagona loginsiz sahifa (tz.md 14-boʻlim) */}
       <Route path="/n/:code" element={<Queue />} />
       <Route path="/n/:code/ekran" element={<QueueScreen />} />

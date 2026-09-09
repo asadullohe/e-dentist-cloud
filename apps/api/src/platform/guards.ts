@@ -44,6 +44,15 @@ export function requireAuth(req: FastifyRequest): SessionData {
   return req.session
 }
 
+/// Platforma admini — hech qaysi klinikaga tegishli emas (`clinic_id`
+/// boʻsh). Klinika marshrutlari unga baribir yopiq: ular ruxsat talab
+/// qiladi, ruxsatlar esa roldan keladi, rol esa klinikaniki
+export function requirePlatformAdmin(req: FastifyRequest): SessionData {
+  const session = requireAuth(req)
+  if (session.clinicId) throw errors.forbidden()
+  return session
+}
+
 /// Rolning ruxsatlarini oʻqiydi. clinics moduli beradi — platform modullarni
 /// import qilmaydi, shuning uchun funksiya tashqaridan uzatiladi
 export type PermissionLoader = (clinicId: string, userId: string) => Promise<readonly Permission[]>

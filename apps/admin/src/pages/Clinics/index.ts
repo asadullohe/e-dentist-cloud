@@ -1,0 +1,1 @@
+export { Clinics } from './Clinics'

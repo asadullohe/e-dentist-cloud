@@ -5,10 +5,10 @@ import { ok } from '../../platform/response.js'
 import { SESSION_COOKIE } from '../../platform/session.js'
 import { validateInput } from '../../platform/validate.js'
 import {
-  inviteAcceptSchema,
-  inviteSchema,
   loginSchema,
+  passwordChangeSchema,
   registerSchema,
+  staffCreateSchema,
   staffUpdateSchema,
   verifySchema,
 } from './schema.js'
@@ -23,6 +23,12 @@ export interface AuthRouteOpts {
 }
 
 export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) => {
+  function clinicOf(req: Parameters<typeof requireAuth>[0]) {
+    const session = requireAuth(req)
+    if (!session.clinicId) throw errors.forbidden()
+    return { clinicId: session.clinicId, userId: session.userId }
+  }
+
   app.post('/auth/register', async (req) => {
     const input = validateInput(registerSchema, req.body)
     return ok(await service.register(opts.deps, input, req.ip))
@@ -53,41 +59,22 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
     return ok({ loggedOut: true })
   })
 
+  // Har qanday kirgan xodim oʻz parolini almashtira oladi
+  app.post('/me/password', async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const input = validateInput(passwordChangeSchema, req.body)
+    await service.changePassword(opts.deps, clinicId, userId, input)
+    return ok({ changed: true })
+  })
+
   app.get('/me', async (req) => {
     const session = requireAuth(req)
     return ok(await service.currentUser(opts.deps, session))
   })
 
-  // ─────────────────────────  Taklifnoma (ochiq)  ─────────────────────────
-  // Havolani ochgan odam hali kirmagan — bu ikkisi sessiyasiz ishlaydi
-
-  app.get('/invites/:token', async (req) => {
-    const { token } = req.params as { token: string }
-    return ok(await service.inviteInfo(opts.deps, token))
-  })
-
-  app.post('/invites/accept', async (req, reply) => {
-    const input = validateInput(inviteAcceptSchema, req.body)
-    const sessionId = await service.acceptInvite(opts.deps, input, req.ip)
-    reply.setCookie(SESSION_COOKIE, sessionId, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: opts.secureCookie,
-      path: '/',
-      maxAge: SESSION_TTL,
-    })
-    return ok({ loggedIn: true })
-  })
-
   // ────────────────────────────  Xodimlar  ────────────────────────────
 
   const manage = { preHandler: app.requirePermission('staff.manage') }
-
-  function clinicOf(req: Parameters<typeof requireAuth>[0]) {
-    const session = requireAuth(req)
-    if (!session.clinicId) throw errors.forbidden()
-    return { clinicId: session.clinicId, userId: session.userId }
-  }
 
   app.get(
     '/staff/names',
@@ -103,17 +90,12 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
     return ok(await service.listStaff(opts.deps, clinicId))
   })
 
-  app.post('/staff/invite', manage, async (req) => {
+  // Hisobni egasi ochadi va parolni oʻzi belgilaydi — xodim keyin
+  // «Hisobim» boʻlimida almashtiradi
+  app.post('/staff', manage, async (req) => {
     const { clinicId, userId } = clinicOf(req)
-    const input = validateInput(inviteSchema, req.body)
-    return ok(await service.invite(opts.deps, clinicId, userId, input))
-  })
-
-  app.delete('/staff/invites/:id', manage, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
-    const { id } = req.params as { id: string }
-    await service.revokeInvite(opts.deps, clinicId, userId, id)
-    return ok({ deleted: true })
+    const input = validateInput(staffCreateSchema, req.body)
+    return ok(await service.createStaff(opts.deps, clinicId, userId, input))
   })
 
   app.patch('/staff/:id', manage, async (req) => {

@@ -1,0 +1,187 @@
+# Serverdagi tuzilma (Hetzner, Ubuntu 24.04).
+#
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml logs -f api
+#
+# Lokal fayldan ikkita muhim farqi bor:
+#   1. Bazaning, Redis va MinIO ning portlari tashqariga chiqarilmagan —
+#      ularga faqat konteyner tarmogʻi ichidan yetish mumkin. Tashqi
+#      dunyoga ochiq yagona joy — Caddy (80/443)
+#   2. Migratsiya alohida konteynerda va API dan oldin bajariladi
+
+name: e-dentist
+
+# Loglar diskni yeb qoʻymasligi kerak: 40 GB da cheklanmagan json-log
+# bir necha oyda hammasini toʻldiradi. Har servis shu chegarani oladi
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    logging: *logging
+    # Sekin soʻrovlar va ulanishlar logga tushadi — muammoni keyin
+    # topish uchun. 500 ms: oddiy CRUD undan tez, sekinlashsa koʻrinadi
+    command:
+      - postgres
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_connections=on
+      - -c
+      - log_disconnections=on
+      - -c
+      - log_lock_waits=on
+      - -c
+      - log_line_prefix=%m [%p] %u@%d
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      LANG: C.UTF-8
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    # Sessiyalar shu yerda: server qayta ishga tushganda xodimlar
+    # qaytadan kirmasin
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    logging: *logging
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # Bir martalik: migratsiyani bajaradi va toʻxtaydi. API undan keyin
+  # koʻtariladi — eski kod yangi sxemani koʻrib qolmasin
+  migrate:
+    image: ${IMAGE_API:-e-dentist/api}:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: deploy/api.Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    command: ["npm", "run", "migrate:deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: ${IMAGE_API:-e-dentist/api}:${TAG:-latest}
+    logging: *logging
+    build:
+      context: .
+      dockerfile: deploy/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TZ: ${TZ:-Asia/Tashkent}
+      API_PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      APP_DATABASE_URL: ${APP_DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      CABINET_URL: ${CABINET_URL}
+      S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  caddy:
+    image: ${IMAGE_WEB:-e-dentist/web}:${TAG:-latest}
+    logging: *logging
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+      # HTTP/3
+      - "443:443/udp"
+    volumes:
+      # Sertifikatlar shu yerda: konteyner qayta qurilganda
+      # Let's Encrypt dan qaytadan soʻralmasin (haftalik chegara bor)
+      - caddydata:/data
+      - caddyconfig:/config
+    depends_on:
+      api:
+        condition: service_started
+
+  # Kuzatuv. Faqat 127.0.0.1 ga bogʻlanadi: ochiq internetda yana bitta
+  # kirish oynasi turmasin. Ochish uchun SSH tunneli (docs/server.md)
+  kuma:
+    image: louislam/uptime-kuma:1
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - kumadata:/app/data
+    ports:
+      - "127.0.0.1:3001:3001"
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  caddydata:
+  caddyconfig:
+  kumadata:

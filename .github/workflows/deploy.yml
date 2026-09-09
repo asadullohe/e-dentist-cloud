@@ -1,0 +1,134 @@
+# Serverga chiqarish.
+#
+# Tartib: testlar oʻtadi → tasvirlar qurilib GHCR ga yuklanadi → serverda
+# `docker compose up -d` bajariladi. Migratsiya `migrate` konteynerida,
+# API dan oldin ishlaydi (docker-compose.prod.yml).
+#
+# Orqaga qaytarish: qoʻlda ishga tushirib, `tag` maydoniga oldingi
+# commit sha sini yozasiz. Tasvirlar GHCR da saqlanib turadi.
+
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Qaysi teg chiqarilsin (boʻsh boʻlsa — joriy commit)'
+        required: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_API: ghcr.io/${{ github.repository }}-api
+  IMAGE_WEB: ghcr.io/${{ github.repository }}-web
+
+jobs:
+  # Sinovdan oʻtmagan kod serverga chiqmaydi
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.value }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - id: tag
+        name: Teg
+        run: echo "value=${{ inputs.tag || github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: API tasviri
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/api.Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_API }}:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_API }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Kabinet va panel tasviri
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/web.Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_WEB }}:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_WEB }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Bir vaqtda bitta chiqarish: ikkita ish oqimi bir-birining ustiga
+    # yozib qoʻymasin
+    concurrency: deploy-production
+
+    steps:
+      - name: SSH kaliti
+        run: |
+          install -d -m 700 ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # Serverning barmoq izi — «unknown host» soʻrovi boʻlmasin
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Chiqarish
+        env:
+          TAG: ${{ needs.build.outputs.tag }}
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh "$USER@$HOST" bash -euo pipefail <<REMOTE
+          cd /opt/e-dentist
+
+          # Compose fayli va postgres init skripti serverdagi nusxadan
+          # olinadi — shuning uchun kod ham shu tegga tenglashtiriladi
+          git fetch --quiet origin
+          git checkout --quiet --force "$TAG"
+
+          # TAG muhit oʻzgaruvchisi .env dagidan ustun turadi
+          export TAG="$TAG"
+          docker compose -f docker-compose.prod.yml pull --quiet
+          docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+          # Eski tasvirlar diskni yeb qoʻymasin (oxirgi 3 tasi qoladi)
+          docker image prune -af --filter "until=336h"
+          REMOTE
+
+      - name: Tekshirish
+        env:
+          HOST: ${{ secrets.SSH_HOST }}
+          USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh "$USER@$HOST" bash -euo pipefail <<'REMOTE'
+          cd /opt/e-dentist
+          # API koʻtarilguncha kutamiz — healthcheck compose da belgilangan
+          for i in $(seq 1 30); do
+            status=$(docker compose -f docker-compose.prod.yml ps --format '{{.Service}} {{.Health}}' | awk '$1=="api"{print $2}')
+            [ "$status" = "healthy" ] && exit 0
+            sleep 5
+          done
+          echo "API koʻtarilmadi:" >&2
+          docker compose -f docker-compose.prod.yml logs --tail 80 api >&2
+          exit 1
+          REMOTE
