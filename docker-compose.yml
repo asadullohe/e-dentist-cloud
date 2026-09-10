@@ -32,9 +32,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
-      # Birinchi koʻtarilishda boʻsh diskda initdb va init skripti
-      # yuradi — 4 GB serverda bu 60 soniyadan oshdi va sanoq oʻsha
-      # paytda tugab, migrate bilan api ishga tushmay qolgan edi
+      # Birinchi koʻtarilishda initdb va init skripti yuradi — sogʻliq
+      # sanogʻi oʻsha paytda ketmasin. Sekin diskda bu bir necha oʻn soniya
       start_period: 90s
 
   redis:
