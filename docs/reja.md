@@ -858,7 +858,10 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > sinovi 7 klinika · 16 migratsiya · 15 siyosat topdi. Nazorat sinovi —
 > boʻsh dump berilganda skript «ZAXIRA YAROQSIZ» deb 1 kod bilan
 > yiqildi.
-- [x] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari
+- [x] **5.13 Kuzatuv** — Uptime Kuma, Postgres loglari. Serverda sozlandi
+      _(10/09/2026)_: beshta monitor (API tashqi va ichki, kabinet, panel,
+      landing) va Telegram xabarnomasi. Zanjir nazorat monitori bilan
+      sinaldi — qizarganda xabar keldi
 
 > **`/api/health` yetarli emas edi**
 >
