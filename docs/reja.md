@@ -881,7 +881,7 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > Loglar 10 MB × 3 fayl bilan chegaralandi — 40 GB diskda cheklanmagan
 > log bir necha oyda hammasini yeb qoʻyardi. Postgres endi sekin
 > soʻrovlarni (>500 ms), ulanish va qulflarni yozadi.
-- [ ] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish
+- [~] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish _(boshlandi 10/09/2026)_
 
 ---
 
