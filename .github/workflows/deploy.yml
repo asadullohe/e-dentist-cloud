@@ -12,6 +12,11 @@ name: Deploy
 on:
   push:
     branches: [master]
+    # Matn oʻzgarishi uchun serverni qayta chiqarish shart emas: qurish
+    # 10 daqiqa oladi va almashtirish paytida sayt qisqa uziladi
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
   workflow_dispatch:
     inputs:
       tag:

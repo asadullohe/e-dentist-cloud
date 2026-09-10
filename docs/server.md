@@ -3,8 +3,8 @@
 Bu yerda **serverdagi** ish tartibi. Lokal muhit `README.md` da.
 
 Server: Ubuntu 24.04, Docker va Docker Compose oʻrnatilgan.
-Domen: `cabinet.e-dentist.uz` va `admin.e-dentist.uz` server IP siga
-qaratilgan (apex va `www` — Netlify'dagi landing, tegilmaydi).
+Domen: apex, `www`, `cabinet.` va `admin.` — hammasi shu serverga
+qaratilgan, Cloudflare proxy ostida. Landing ham shu yerda, Caddy beradi.
 
 ## Nima qayerda ishlaydi
 
@@ -166,16 +166,20 @@ ularni tortib olishga ruxsat soʻraydi. GitHub da `read:packages` huquqli
 token yasang va serverda bir marta:
 
 ```bash
-echo "<TOKEN>" | docker login ghcr.io -u <GITHUB_FOYDALANUVCHI> --password-stdin
+docker login ghcr.io -u <GITHUB_FOYDALANUVCHI>
 ```
+
+Parol soʻralganda tokenni qoʻyasiz — shunda u buyruqlar tarixiga tushmaydi.
 
 **4. `.env` da tasvir nomlari:**
 
 ```
 IMAGE_API=ghcr.io/<foydalanuvchi>/<repo>-api
 IMAGE_WEB=ghcr.io/<foydalanuvchi>/<repo>-web
-TAG=latest
 ```
+
+`TAG` yozilmaydi: uni har chiqarishda Actions beradi, qoʻlda koʻtarsangiz
+`latest` boʻladi.
 
 ### Orqaga qaytarish
 

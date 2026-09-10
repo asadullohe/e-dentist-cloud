@@ -824,8 +824,8 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > **Qadamlar `docs/server.md` da:** birinchi koʻtarish, yangilash,
 > admin yaratish va tekshirish roʻyxati.
 - [x] **5.11 GitHub Actions** — test → qurish → `docker compose pull && up -d`.
-      Migratsiya ishga tushishdan oldin. Orqaga qaytarish: oldingi image tegi
-      _(ish oqimlari tayyor, birinchi chiqarishda sinaladi)_
+      Migratsiya ishga tushishdan oldin. Orqaga qaytarish: oldingi image tegi.
+      _(yoqildi va sinaldi 10/09/2026: sirlar qoʻyildi, server GHCR dan tortadi)_
 
 > **CI haqiqiy bazada ishlaydi**
 >
