@@ -708,6 +708,14 @@ export const ADMIN_UI = {
   expired: 'Muddati oʻtgan',
   blocked: 'Bloklangan',
   active: 'Faol',
+  new_clinic: 'Yangi klinika',
+  new_clinic_hint: 'Egasining pochtasiga parol belgilash havolasi yuboriladi',
+  owner_email: 'Egasining pochtasi',
+  trial_days: 'Sinov muddati (kun)',
+  create: 'Ochish',
+  invite_pending: 'Taklif yuborilgan',
+  invite_resend: 'Taklifnomani qayta yuborish',
+  invite_sent_at: (date: string) => `Taklifnoma ${date} da yuborilgan`,
   extend: 'Muddatni uzaytirish',
   extend_days: (n: number) => `+${n} kun`,
   block: 'Bloklash',
@@ -746,6 +754,9 @@ export const ADMIN_UI = {
 /// Roʻyxat `platform/audit.ts` dagi AUDIT_ACTION bilan bir xil boʻlishi kerak
 export const AUDIT_LABELS = {
   registered: 'Roʻyxatdan oʻtdi',
+  clinic_created: 'Klinika panelidan ochildi',
+  invite_sent: 'Taklifnoma yuborildi',
+  invite_accepted: 'Taklifnoma qabul qilindi',
   email_verified: 'Pochta tasdiqlandi',
   logged_in: 'Kirdi',
   login_failed: 'Kirish urinishi rad etildi',
@@ -822,6 +833,26 @@ export const EXCEL_TEXT = {
     'Sana kun/oy/yil tartibida oʻqiladi: 05/12/1990 — 5-dekabr.',
     'Bu faylni toʻldirib, kabinetdagi «Excel dan yuklash» orqali qaytaring.',
   ],
+} as const
+
+// Taklifnoma: panel klinika ochganda egasi shu havola orqali parol qoʻyadi
+export const INVITE_TEXT = {
+  subject: 'E-Dentist — klinikangiz uchun hisob',
+  link_invalid: 'Havola notoʻgʻri yoki muddati oʻtgan',
+  link_used: 'Bu havola allaqachon ishlatilgan — hisobingizga kiring',
+  email_taken: 'Bu pochta bilan hisob allaqachon mavjud',
+  expired_days: (days: number) => `Havola ${days} kun amal qiladi.`,
+} as const
+
+export const INVITE_UI = {
+  title: 'Hisobingizni oching',
+  hint: (clinic: string) => `«${clinic}» uchun parol belgilang`,
+  full_name: 'Ism-familiyangiz',
+  password: 'Yangi parol',
+  password_again: 'Parolni takrorlang',
+  password_mismatch: 'Parollar mos kelmadi',
+  submit: 'Hisobni ochish',
+  checking: 'Havola tekshirilmoqda…',
 } as const
 
 // Excel dan yuklash

@@ -6,16 +6,29 @@
 // yopiladi va bu yerga faqat klinikalar roʻyxati kabi umumiy maʼlumot
 // chiqadi (bemor maʼlumoti hech qachon).
 
-import { todayISO } from '@e-dentist/shared'
+import { AUTH_TEXT, addDays, todayISO } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import type { Mailer } from '../../platform/mailer.js'
 import { withClinic } from '../../platform/tenant.js'
+import { uuidV7 } from '../../platform/uuid.js'
+import * as auth from '../auth/service.js'
+import * as clinics from '../clinics/service.js'
 import * as repo from './repo.js'
-import type { ClinicListInput, EventsInput, ExtendInput, StatusInput } from './schema.js'
+import type {
+  ClinicCreateInput,
+  ClinicListInput,
+  EventsInput,
+  ExtendInput,
+  StatusInput,
+} from './schema.js'
 
 export interface AdminDeps {
   db: Db
+  /// Taklifnoma xati shu yerdan ketadi
+  mailer: Mailer
+  cabinetUrl: string
 }
 
 export interface AdminUser {
@@ -102,15 +115,20 @@ export interface ClinicCard extends ClinicSummary {
     lastLoginAt: string | null
   }[]
   history: { at: string; action: string; actor: string | null }[]
+  /// Qabul qilinmagan taklifnoma. Boʻlsa — klinika hali hech kim
+  /// kirmagan, panelda «Taklif yuborilgan» deb koʻrsatiladi
+  pendingInvite: { email: string; sentAt: string; expiresAt: string } | null
 }
 
 export async function clinicCard(deps: AdminDeps, clinicId: string): Promise<ClinicCard> {
   const clinic = await repo.findClinic(deps.db, clinicId)
   if (!clinic) throw errors.notFound()
 
-  const [staff, history] = await Promise.all([
+  const [staff, history, invite] = await Promise.all([
     repo.listStaff(deps.db, clinicId),
     repo.listHistory(deps.db, clinicId, HISTORY_LIMIT),
+    // Taklifnoma auth moduliniki — uning xizmati orqali oʻqiladi
+    withClinic(deps.db, clinicId, (tx) => auth.pendingInvite(tx)),
   ])
 
   return {
@@ -131,7 +149,107 @@ export async function clinicCard(deps: AdminDeps, clinicId: string): Promise<Cli
       action: row.action,
       actor: row.actor,
     })),
+    pendingInvite: invite
+      ? {
+          email: invite.email,
+          sentAt: invite.createdAt.toISOString(),
+          expiresAt: invite.expiresAt.toISOString(),
+        }
+      : null,
   }
+}
+
+/// Panelidan klinika ochish.
+///
+/// Parol bu yerda umuman yaratilmaydi: egasiga havola ketadi va parolni
+/// oʻzi qoʻyadi. Shu sababli admin uni na koʻradi, na tanlaydi — keyin
+/// «parolni kim bilardi» degan savol chiqmaydi.
+export async function createClinic(
+  deps: AdminDeps,
+  adminId: string,
+  input: ClinicCreateInput,
+): Promise<ClinicCard> {
+  // Band pochtani oldindan tekshiramiz: aks holda klinika yaratilib,
+  // qabul qilish bosqichida yiqilardi va boʻsh klinika qolib ketardi
+  if (await auth.emailTaken(deps.db, input.email)) {
+    throw errors.conflict(AUTH_TEXT.email_taken)
+  }
+
+  // Klinika id si kodda: RLS yozuvni kiritishdan oldin sessiyada oʻsha
+  // id turishini talab qiladi (auth/service.ts dagi register bilan bir xil)
+  const clinicId = uuidV7()
+  const expiresAt = addDays(input.trialDays)
+
+  const { token } = await withClinic(deps.db, clinicId, async (tx) => {
+    const { ownerRoleId } = await clinics.createClinicWithRoles(tx, {
+      clinicId,
+      name: input.name,
+      phone: input.phone ?? null,
+      expiresAt,
+    })
+    const invite = await auth.createInvite(tx, { roleId: ownerRoleId, email: input.email })
+
+    await writeAudit(tx, {
+      userId: adminId,
+      action: AUDIT_ACTION.clinic_created,
+      entity: 'clinic',
+      entityId: clinicId,
+      meta: { email: input.email, trialDays: input.trialDays },
+    })
+    await writeAudit(tx, {
+      userId: adminId,
+      action: AUDIT_ACTION.invite_sent,
+      entity: 'clinic',
+      entityId: clinicId,
+      meta: { email: input.email },
+    })
+
+    return invite
+  })
+
+  await auth.sendInviteMail(
+    { mailer: deps.mailer, cabinetUrl: deps.cabinetUrl },
+    { email: input.email, clinicName: input.name, token },
+  )
+
+  return clinicCard(deps, clinicId)
+}
+
+/// Xat yoʻqolsa yoki muddati oʻtsa — yangi havola. Eskisi ishlamay qoladi
+export async function resendInvite(
+  deps: AdminDeps,
+  adminId: string,
+  clinicId: string,
+): Promise<ClinicCard> {
+  const clinic = await repo.findClinic(deps.db, clinicId)
+  if (!clinic) throw errors.notFound()
+
+  const sent = await withClinic(deps.db, clinicId, async (tx) => {
+    const pending = await auth.pendingInvite(tx)
+    if (!pending) return null
+
+    const invite = await auth.createInvite(tx, {
+      roleId: pending.roleId,
+      email: pending.email,
+    })
+    await writeAudit(tx, {
+      userId: adminId,
+      action: AUDIT_ACTION.invite_sent,
+      entity: 'clinic',
+      entityId: clinicId,
+      meta: { email: pending.email, resent: true },
+    })
+    return { token: invite.token, email: pending.email }
+  })
+
+  if (!sent) throw errors.notFound()
+
+  await auth.sendInviteMail(
+    { mailer: deps.mailer, cabinetUrl: deps.cabinetUrl },
+    { email: sent.email, clinicName: clinic.name, token: sent.token },
+  )
+
+  return clinicCard(deps, clinicId)
 }
 
 /// Muddatni uzaytirish. Toʻlov hozircha qoʻlda: mijoz Telegram orqali

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 5.14** — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: 6.1** — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -882,6 +882,57 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > log bir necha oyda hammasini yeb qoʻyardi. Postgres endi sekin
 > soʻrovlarni (>500 ms), ulanish va qulflarni yozadi.
 - [~] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish _(boshlandi 10/09/2026)_
+
+---
+
+## Bosqich 6 — Panelidan klinika ochish va logotip · ~1 hafta
+
+- [x] **6.1 Taklifnoma oqimi (API)** — `POST /api/admin/clinics` klinika, beshta rol
+      va taklifnomani bitta tranzaksiyada yaratadi; `POST /api/admin/clinics/:id/invite`
+      qayta yuboradi. Kabinet tomonida `GET /api/auth/invite/:token` va
+      `POST /api/auth/invite`. 12 ta test
+> **Hisob taklifnoma qabul qilinganda yaratiladi**
+>
+> Klinika darrov paydo boʻladi, foydalanuvchi esa yoʻq: `invites` da faqat
+> pochta, rol va kalit xeshi turadi. Sabab — parolsiz hisob. Agar hisobni
+> darrov ochsak, unga qandaydir parol yozish kerak boʻlardi; tasodifiy
+> boʻlsa ham, u bazada «kirish mumkin» degan yozuv boʻlib turadi.
+>
+> Shu sababli panelda klinika «Taklif yuborilgan» holatida, xodimlar soni
+> nol boʻlib koʻrinadi.
+>
+> Uch himoya: qabul qilingan havola ikkinchi marta ishlamaydi, muddati
+> oʻtgani ishlamaydi (7 kun), qayta yuborilganda eskisi **oʻchiriladi** —
+> pochtada bir vaqtda ikkita amal qiluvchi havola yotmasin. Nazorat
+> sinovi: «ishlatilgan» tekshiruvi olib tashlanganda test yiqildi.
+>
+> Band pochta oldindan tekshiriladi: aks holda klinika yaratilib, qabul
+> qilish bosqichida yiqilardi va bazada egasiz klinika qolib ketardi.
+
+- [ ] **6.2 Panelda «Yangi klinika»** — nom, egasining pochtasi, sinov muddati.
+      Roʻyxatda «Taklif yuborilgan» holati va «Qayta yuborish» tugmasi
+- [ ] **6.3 Kabinetda taklifnoma sahifasi** — `/taklif?token=…`: klinika nomi
+      koʻrsatiladi, egasi ism va parolni oʻzi qoʻyadi, keyin darrov kiradi
+- [ ] **6.4 Klinika logotipi** — `clinics.logo_key`, yuklash klinikaning oʻzida
+      (Sozlamalar → Klinika) ham, panelda ham. Koʻrinadigan joylar: kabinet yon
+      menyusi, navbat sahifasi va kutish xonasi ekrani, paneldagi roʻyxat va
+      kartochka
+
+> **Ochiq roʻyxatdan oʻtish qoladi _(qaror 10/09/2026)_**
+>
+> Klinika oʻzi ham roʻyxatdan oʻta oladi, siz ham panelidan ocha olasiz.
+> Ikkala yoʻl bir xil natijaga olib keladi: klinika, beshta rol, egasi va
+> 14 kunlik sinov. Farqi faqat parolda — oʻzi roʻyxatdan oʻtsa darrov
+> qoʻyadi, siz ochsangiz taklifnoma havolasi orqali qoʻyadi.
+>
+> Parol hech qachon panelda koʻrinmaydi va admin uni bilmaydi.
+
+> **Excel ichidagi logotip — hozircha yoʻq**
+>
+> Eksport `write-excel-file` bilan yoziladi, u rasm qoʻya olmaydi. Logotip
+> uchun `exceljs` ga oʻtish kerak: bemorlar eksporti, xatolar fayli, shablon
+> va toʻliq zip — hammasi qayta yoziladi. Foydasi kichik, narxi katta,
+> shuning uchun kutadi. Ekrandagi hisobot sarlavhasiga qoʻyish mumkin.
 
 ---
 

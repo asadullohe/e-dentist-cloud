@@ -6,6 +6,7 @@ import {
   AUTH_TEXT,
   addDays,
   formatDate,
+  INVITE_TEXT,
   isDisposableEmail,
   type Permission,
   STAFF_TEXT,
@@ -24,6 +25,7 @@ import * as billing from '../billing/service.js'
 import * as clinics from '../clinics/service.js'
 import * as repo from './repo.js'
 import type {
+  InviteAcceptInput,
   LoginInput,
   PasswordChangeInput,
   RegisterInput,
@@ -33,6 +35,9 @@ import type {
 
 const TRIAL_DAYS = 14
 const VERIFY_TOKEN_HOURS = 24
+/// Taklifnoma xatdan yoʻqolib ketsa panel qayta yuboradi — shuning uchun
+/// muddat uzoq boʻlishi shart emas
+const INVITE_DAYS = 7
 
 // Cheklovlar. Hisob boʻyicha qattiqroq: bitta hisobga parol tanlashni
 // toʻsish kerak. IP boʻyicha yumshoqroq: bitta klinikada bir necha xodim
@@ -42,6 +47,7 @@ const LOGIN_ACCOUNT_LIMIT = 5
 const LOGIN_IP_LIMIT = 20
 const REGISTER_WINDOW = 24 * 60 * 60
 const REGISTER_IP_LIMIT = 3
+const INVITE_IP_LIMIT = 20
 
 export interface AuthDeps {
   db: Db
@@ -177,6 +183,143 @@ export async function verifyEmail(deps: AuthDeps, token: string): Promise<void> 
       entityId: result.user_id,
     }),
   )
+}
+
+// ─────────────────────────  Taklifnoma  ─────────────────────────
+//
+// Panel klinika ochganda egasining paroli hech kimga maʼlum boʻlmasligi
+// kerak: server tasodifiy kalit yozadi, xatga havola ketadi, parolni
+// egasining oʻzi qoʻyadi. Admin uni na koʻradi, na tanlaydi.
+
+export interface InviteMailDeps {
+  mailer: Mailer
+  cabinetUrl: string
+}
+
+/// Ochiq tranzaksiya ichida — chaqiruvchi klinika sessiyasini allaqachon ochgan
+export async function createInvite(
+  tx: ClinicTx,
+  m: { roleId: string; email: string },
+): Promise<{ token: string; expiresAt: Date }> {
+  const { token, hash } = createToken()
+  const expiresAt = addDays(INVITE_DAYS)
+
+  // Eski qabul qilinmagan havolalar oʻchadi: pochtada bir vaqtda ikkita
+  // amal qiluvchi havola yotmasin
+  await repo.deletePendingInvites(tx, m.email)
+  await repo.createInvite(tx, {
+    inviteId: uuidV7(),
+    roleId: m.roleId,
+    email: m.email,
+    tokenHash: hash,
+    expiresAt,
+  })
+
+  return { token, expiresAt }
+}
+
+export async function sendInviteMail(
+  deps: InviteMailDeps,
+  m: { email: string; clinicName: string; token: string },
+): Promise<void> {
+  await deps.mailer.send({
+    to: m.email,
+    subject: INVITE_TEXT.subject,
+    body: [
+      'Assalomu alaykum!',
+      '',
+      `«${m.clinicName}» uchun E-Dentist kabineti ochildi.`,
+      '',
+      'Parol belgilash uchun quyidagi havolani oching:',
+      `${deps.cabinetUrl}/taklif?token=${m.token}`,
+      '',
+      INVITE_TEXT.expired_days(INVITE_DAYS),
+      'Agar bu siz boʻlmasangiz, xatni eʼtiborsiz qoldiring.',
+    ].join('\n'),
+  })
+}
+
+/// Panel klinika ochishdan oldin tekshiradi: band pochtaga taklifnoma
+/// yuborilsa, klinika yaratilib, qabul qilish bosqichida yiqilardi
+export async function emailTaken(db: Db, email: string): Promise<boolean> {
+  return (await repo.findByEmail(db, email)) !== null
+}
+
+/// Qabul qilinmagan taklifnoma — panelda «Taklif yuborilgan» holati va
+/// qayta yuborish uchun
+export function pendingInvite(tx: ClinicTx) {
+  return repo.pendingInvite(tx)
+}
+
+async function findValidInvite(deps: AuthDeps, token: string) {
+  const hash = createHash('sha256').update(token).digest('hex')
+  const invite = await repo.findInvite(deps.db, hash)
+
+  if (!invite) throw errors.badRequest(INVITE_TEXT.link_invalid)
+  // Ishlatilgani va muddati oʻtgani alohida xabar beradi: birinchisida
+  // odam kirishi kerak, ikkinchisida yangi havola soʻrashi
+  if (invite.accepted_at) throw errors.badRequest(INVITE_TEXT.link_used)
+  if (invite.expires_at.getTime() < Date.now()) throw errors.badRequest(INVITE_TEXT.link_invalid)
+
+  return invite
+}
+
+export interface InviteInfo {
+  clinicName: string
+  email: string
+  roleName: string
+}
+
+/// Sahifa ochilganda: kimga va qaysi klinikaga taklif qilinganini koʻrsatish
+export async function inviteInfo(deps: AuthDeps, token: string): Promise<InviteInfo> {
+  const invite = await findValidInvite(deps, token)
+  return { clinicName: invite.clinic_name, email: invite.email, roleName: invite.role_name }
+}
+
+/// Qabul qilish: hisob yaratiladi va odam darhol kabinetga kiradi —
+/// havolani bosgan odam pochtaga egaligini allaqachon isbotladi
+export async function acceptInvite(
+  deps: AuthDeps,
+  input: InviteAcceptInput,
+  ip: string,
+): Promise<string> {
+  const check = await deps.rateLimiter.hit(`invite:ip:${ip}`, INVITE_IP_LIMIT, LOGIN_WINDOW)
+  if (!check.allowed) throw errors.rateLimited(AUTH_TEXT.too_many_attempts)
+
+  const invite = await findValidInvite(deps, input.token)
+
+  // Pochta band boʻlsa taklifnoma ishlamaydi: bitta pochta — bitta hisob
+  if (await repo.findByEmail(deps.db, invite.email)) {
+    throw errors.conflict(INVITE_TEXT.email_taken)
+  }
+
+  const userId = uuidV7()
+  const passwordHash = await hashPassword(input.password)
+
+  try {
+    await withClinic(deps.db, invite.clinic_id, async (tx) => {
+      await repo.createStaff(tx, {
+        userId,
+        roleId: invite.role_id,
+        email: invite.email,
+        passwordHash,
+        fullName: input.fullName,
+      })
+      await repo.markInviteAccepted(tx, invite.id)
+      await writeAudit(tx, {
+        userId,
+        action: AUDIT_ACTION.invite_accepted,
+        entity: 'user',
+        entityId: userId,
+        meta: { ip },
+      })
+    })
+  } catch (e) {
+    if (isDuplicateEmail(e)) throw errors.conflict(INVITE_TEXT.email_taken)
+    throw e
+  }
+
+  return deps.sessions.create({ userId, clinicId: invite.clinic_id })
 }
 
 export async function login(deps: AuthDeps, input: LoginInput, ip: string): Promise<string> {

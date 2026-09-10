@@ -1,10 +1,11 @@
-import type { FastifyPluginAsync } from 'fastify'
+import type { FastifyPluginAsync, FastifyReply } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { SESSION_COOKIE } from '../../platform/session.js'
 import { validateInput } from '../../platform/validate.js'
 import {
+  inviteAcceptSchema,
   loginSchema,
   passwordChangeSchema,
   registerSchema,
@@ -40,9 +41,7 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
     return ok({ verified: true })
   })
 
-  app.post('/auth/login', async (req, reply) => {
-    const input = validateInput(loginSchema, req.body)
-    const sessionId = await service.login(opts.deps, input, req.ip)
+  function setSession(reply: FastifyReply, sessionId: string) {
     reply.setCookie(SESSION_COOKIE, sessionId, {
       httpOnly: true,
       sameSite: 'lax',
@@ -50,6 +49,25 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
       path: '/',
       maxAge: SESSION_TTL,
     })
+  }
+
+  app.post('/auth/login', async (req, reply) => {
+    const input = validateInput(loginSchema, req.body)
+    setSession(reply, await service.login(opts.deps, input, req.ip))
+    return ok({ loggedIn: true })
+  })
+
+  // Taklifnoma: sahifa ochilganda kimga va qaysi klinikaga ekanini koʻrsatadi
+  app.get('/auth/invite/:token', async (req) => {
+    const { token } = req.params as { token: string }
+    return ok(await service.inviteInfo(opts.deps, token))
+  })
+
+  // Qabul qilingach odam darhol kabinetga kiradi — havolani bosgani
+  // pochtaga egaligini isbotlaydi
+  app.post('/auth/invite', async (req, reply) => {
+    const input = validateInput(inviteAcceptSchema, req.body)
+    setSession(reply, await service.acceptInvite(opts.deps, input, req.ip))
     return ok({ loggedIn: true })
   })
 

@@ -45,6 +45,9 @@ export const AUDIT_ACTION = {
   data_exported: 'data_exported',
   queue_changed: 'queue_changed',
   /// Boshqaruv panelidagi amallar — klinikaning oʻz tarixida qoladi
+  clinic_created: 'clinic_created',
+  invite_sent: 'invite_sent',
+  invite_accepted: 'invite_accepted',
   subscription_extended: 'subscription_extended',
   clinic_blocked: 'clinic_blocked',
   clinic_unblocked: 'clinic_unblocked',

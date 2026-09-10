@@ -54,6 +54,64 @@ export async function createOwner(tx: ClinicTx, m: NewOwner): Promise<void> {
   })
 }
 
+/// invite_find qaytaradigan qator. SECURITY DEFINER kerak: havolani
+/// bosgan odam hali kirmagan, sessiyada klinika yoʻq va RLS jadvalni
+/// yopib turadi. Funksiya faqat shu maydonlarni beradi
+export interface InviteRow {
+  id: string
+  clinic_id: string
+  role_id: string
+  email: string
+  expires_at: Date
+  accepted_at: Date | null
+  clinic_name: string
+  role_name: string
+}
+
+export async function findInvite(db: Db, tokenHash: string): Promise<InviteRow | null> {
+  const rows = await db.$queryRaw<InviteRow[]>`SELECT * FROM invite_find(${tokenHash})`
+  return rows[0] ?? null
+}
+
+export interface NewInvite {
+  inviteId: string
+  roleId: string
+  email: string
+  tokenHash: string
+  expiresAt: Date
+}
+
+export async function createInvite(tx: ClinicTx, m: NewInvite): Promise<void> {
+  await tx.invite.create({
+    data: tenantScoped({
+      id: m.inviteId,
+      roleId: m.roleId,
+      email: m.email,
+      tokenHash: m.tokenHash,
+      expiresAt: m.expiresAt,
+    }),
+  })
+}
+
+/// Qayta yuborishda eski havola ishlamay qolishi kerak: aks holda pochtada
+/// bir necha amal qiluvchi havola yotib qoladi
+export async function deletePendingInvites(tx: ClinicTx, email: string): Promise<void> {
+  await tx.invite.deleteMany({ where: { email, acceptedAt: null } })
+}
+
+export async function markInviteAccepted(tx: ClinicTx, inviteId: string): Promise<void> {
+  await tx.invite.update({ where: { id: inviteId }, data: { acceptedAt: new Date() } })
+}
+
+/// Panelda «Taklif yuborilgan» holati uchun: qabul qilinmagan oxirgisi
+export function pendingInvite(tx: ClinicTx) {
+  return tx.invite.findFirst({
+    where: { acceptedAt: null },
+    orderBy: { createdAt: 'desc' },
+    select: { email: true, roleId: true, createdAt: true, expiresAt: true },
+  })
+}
+
 export async function markLogin(tx: ClinicTx, userId: string): Promise<void> {
   await tx.user.update({ where: { id: userId }, data: { lastLoginAt: new Date() } })
 }

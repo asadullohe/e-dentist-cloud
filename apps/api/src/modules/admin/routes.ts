@@ -2,7 +2,13 @@ import type { FastifyPluginAsync } from 'fastify'
 import { requirePlatformAdmin } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { clinicListSchema, eventsSchema, extendSchema, statusSchema } from './schema.js'
+import {
+  clinicCreateSchema,
+  clinicListSchema,
+  eventsSchema,
+  extendSchema,
+  statusSchema,
+} from './schema.js'
 import * as service from './service.js'
 
 export interface AdminRouteOpts {
@@ -30,6 +36,20 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteOpts> = async (app, opts)
     requirePlatformAdmin(req)
     const input = validateInput(clinicListSchema, req.query)
     return ok(await service.listClinics(opts.deps, input))
+  })
+
+  // Panelidan klinika ochish: parol soʻralmaydi, egasiga havola ketadi
+  app.post('/admin/clinics', async (req) => {
+    const session = requirePlatformAdmin(req)
+    const input = validateInput(clinicCreateSchema, req.body)
+    return ok(await service.createClinic(opts.deps, session.userId, input))
+  })
+
+  // Xat yoʻqolsa yoki muddati oʻtsa — yangi havola
+  app.post('/admin/clinics/:id/invite', async (req) => {
+    const session = requirePlatformAdmin(req)
+    const { id } = req.params as { id: string }
+    return ok(await service.resendInvite(opts.deps, session.userId, id))
   })
 
   app.get('/admin/clinics/:id', async (req) => {
