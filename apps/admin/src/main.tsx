@@ -1,5 +1,4 @@
-import '@fontsource-variable/bricolage-grotesque'
-import '@fontsource-variable/schibsted-grotesk'
+import '@fontsource-variable/inter'
 import './app/styles/index.css'
 
 import { StrictMode } from 'react'

@@ -1,9 +1,9 @@
 import { ADMIN_UI, formatDate, formatDateTime, formatUzPhone } from '@e-dentist/shared'
+import { SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { type ClinicSummary, useClinics } from '@/entities/clinic'
+import { StatusBadge, useClinics } from '@/entities/clinic'
 import {
-  Badge,
   Card,
   Input,
   Skeleton,
@@ -15,27 +15,26 @@ import {
   TableRow,
 } from '@/shared/ui'
 
-function StatusBadge({ clinic }: { clinic: ClinicSummary }) {
-  if (clinic.status === 'blocked') return <Badge variant="destructive">{ADMIN_UI.blocked}</Badge>
-  if (clinic.expired) return <Badge variant="destructive">{ADMIN_UI.expired}</Badge>
-  if (clinic.isTrial) return <Badge variant="secondary">{ADMIN_UI.trial}</Badge>
-  return <Badge variant="outline">{ADMIN_UI.active}</Badge>
-}
-
 export function Clinics() {
   const [search, setSearch] = useState('')
   const { data: clinics, isPending } = useClinics(search)
 
   return (
-    <>
-      <h1 className="font-display mb-4 text-2xl font-bold tracking-tight">{ADMIN_UI.clinics}</h1>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">{ADMIN_UI.clinics}</h2>
+        <p className="text-sm text-muted-foreground">{ADMIN_UI.clinics_hint}</p>
+      </div>
 
-      <Input
-        className="mb-3 max-w-sm"
-        placeholder={ADMIN_UI.search}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-      />
+      <div className="relative max-w-sm">
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          className="pl-9"
+          placeholder={ADMIN_UI.search}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </div>
 
       {isPending ? (
         <Skeleton className="h-40 w-full" />
@@ -45,7 +44,7 @@ export function Clinics() {
             <TableHeader>
               <TableRow>
                 <TableHead>{ADMIN_UI.clinic}</TableHead>
-                <TableHead className="w-28">{ADMIN_UI.staff}</TableHead>
+                <TableHead className="w-28 text-right">{ADMIN_UI.staff}</TableHead>
                 <TableHead className="w-36">{ADMIN_UI.expires}</TableHead>
                 <TableHead className="w-44">{ADMIN_UI.last_login}</TableHead>
               </TableRow>
@@ -53,27 +52,27 @@ export function Clinics() {
             <TableBody>
               {clinics?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-muted-foreground text-center">
+                  <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
                     {ADMIN_UI.empty}
                   </TableCell>
                 </TableRow>
               )}
               {clinics?.map((clinic) => (
                 <TableRow key={clinic.id}>
-                  <TableCell>
-                    <Link to={`/klinika/${clinic.id}`} className="font-medium hover:underline">
-                      {clinic.name}
-                    </Link>
-                    <span className="ml-2">
+                  <TableCell className="py-3">
+                    <div className="flex items-center gap-2">
+                      <Link to={`/klinika/${clinic.id}`} className="font-medium hover:underline">
+                        {clinic.name}
+                      </Link>
                       <StatusBadge clinic={clinic} />
-                    </span>
-                    <div className="text-muted-foreground text-xs">
+                    </div>
+                    <div className="text-xs text-muted-foreground">
                       {clinic.phone ? formatUzPhone(clinic.phone) : '—'}
                     </div>
                   </TableCell>
-                  <TableCell className="tabular-nums">{clinic.staffCount}</TableCell>
+                  <TableCell className="text-right tabular-nums">{clinic.staffCount}</TableCell>
                   <TableCell className="tabular-nums">{formatDate(clinic.expiresAt)}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="text-xs text-muted-foreground">
                     {clinic.lastLoginAt ? formatDateTime(clinic.lastLoginAt) : ADMIN_UI.never}
                   </TableCell>
                 </TableRow>
@@ -82,6 +81,6 @@ export function Clinics() {
           </Table>
         </Card>
       )}
-    </>
+    </div>
   )
 }

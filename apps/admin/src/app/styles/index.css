@@ -4,87 +4,111 @@
 @custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * Dizayn tokenlari — oflayn ilovaning indigo palitrasidan olingan
- * (e-dentist/src/renderer/src/styles.css). Nomlar shadcn kutgan koʻrinishda,
- * shuning uchun tayyor komponentlar avtomatik bizning dizaynda chiqadi.
+ * Panel dizayni — neytral slate palitra (oklch), shadcn ning standart
+ * tokenlari. Kabinetdan ataylab farq qiladi: kabinet — kun boʻyi ishlanadigan
+ * ish joyi, panel esa kuniga bir necha marta ochiladigan boshqaruv asboblari.
+ * Bu yerda urgʻu maʼlumotda boʻlishi kerak, brend rangida emas.
  *
- * Diqqat: shadcn dagi `--accent` — bu menyu va tugmalardagi «ustiga
- * kelgandagi» yuza, brend urgʻu rangi emas. Bizning urgʻu — `--brand-accent`.
+ * `--chart-1…5` — grafiklar uchun, recharts shulardan oladi.
+ * `--sidebar-*` — yon menyu fon va chegaralari.
  */
 
 :root {
-  --radius: 0.875rem;
+  --radius: 0.625rem;
 
-  --background: #f4f5f9;
-  --foreground: #22312f;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.129 0.042 264.695);
 
-  --card: #fdfdff;
-  --card-foreground: #22312f;
-  --popover: #fdfdff;
-  --popover-foreground: #22312f;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.129 0.042 264.695);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.129 0.042 264.695);
 
-  --primary: #3e4c8f;
-  --primary-foreground: #ffffff;
+  --primary: oklch(0.208 0.042 265.755);
+  --primary-foreground: oklch(0.984 0.003 247.858);
 
-  --secondary: #eaecf3;
-  --secondary-foreground: #22312f;
-  --muted: #eaecf3;
-  --muted-foreground: #5c6b68;
-  --accent: #eaecf3;
-  --accent-foreground: #22312f;
+  --secondary: oklch(0.968 0.007 247.896);
+  --secondary-foreground: oklch(0.208 0.042 265.755);
+  --muted: oklch(0.968 0.007 247.896);
+  --muted-foreground: oklch(0.554 0.046 257.417);
+  --accent: oklch(0.968 0.007 247.896);
+  --accent-foreground: oklch(0.208 0.042 265.755);
 
-  /* Oflayn ilovada xato matnlari `--accent` bilan chiqardi, indigo palitrada
-   * esa u oltin rang — xato sifatida oʻqilmaydi. Shuning uchun alohida rang */
-  --destructive: #c0432f;
-  --destructive-foreground: #ffffff;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.984 0.003 247.858);
 
-  --border: #dcdfeb;
-  --input: #dcdfeb;
-  --ring: #3e4c8f;
+  --border: oklch(0.929 0.013 255.508);
+  --input: oklch(0.929 0.013 255.508);
+  --ring: oklch(0.704 0.04 256.788);
 
-  /* Brendga xos qoʻshimchalar */
-  --brand-deep: #252c54;
-  --brand-accent: #c2913a;
-  --ok: #2e7d4f;
-  --warn: #b97f10;
-  --info: #2b6ca3;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
 
-  --font-display: "Bricolage Grotesque Variable", system-ui, sans-serif;
-  --font-body: "Schibsted Grotesk Variable", system-ui, sans-serif;
+  --sidebar: oklch(0.984 0.003 247.858);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: oklch(0.968 0.007 247.896);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Logodagi nuqta — landing va oflayn ilovadagi oltin rang. Neytral
+   * palitradagi yagona brend dogʻi, boshqa joyda ishlatilmaydi */
+  --brand-accent: #d3a24a;
+
+  /* Klinika holatlari uchun: faol · muddati tugagan · bloklangan */
+  --ok: oklch(0.596 0.145 163.225);
+  --warn: oklch(0.769 0.188 70.08);
+  --info: oklch(0.588 0.158 241.966);
+
+  --font-body: "Inter Variable", system-ui, sans-serif;
 }
 
 .dark,
 [data-theme="dark"] {
-  --background: #14161f;
-  --foreground: #e9edea;
+  --background: oklch(0.129 0.042 264.695);
+  --foreground: oklch(0.984 0.003 247.858);
 
-  --card: #212536;
-  --card-foreground: #e9edea;
-  --popover: #212536;
-  --popover-foreground: #e9edea;
+  --card: oklch(0.14 0.04 259.21);
+  --card-foreground: oklch(0.984 0.003 247.858);
+  --popover: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.984 0.003 247.858);
 
-  --primary: #8f9ce0;
-  --primary-foreground: #0d0f18;
+  --primary: oklch(0.929 0.013 255.508);
+  --primary-foreground: oklch(0.208 0.042 265.755);
 
-  --secondary: #1b1e2a;
-  --secondary-foreground: #e9edea;
-  --muted: #1b1e2a;
-  --muted-foreground: #93a39f;
-  --accent: #1b1e2a;
-  --accent-foreground: #e9edea;
+  --secondary: oklch(0.279 0.041 260.031);
+  --secondary-foreground: oklch(0.984 0.003 247.858);
+  --muted: oklch(0.279 0.041 260.031);
+  --muted-foreground: oklch(0.704 0.04 256.788);
+  --accent: oklch(0.279 0.041 260.031);
+  --accent-foreground: oklch(0.984 0.003 247.858);
 
-  --destructive: #ee7d66;
-  --destructive-foreground: #14161f;
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.129 0.042 264.695);
 
-  --border: #343a52;
-  --input: #343a52;
-  --ring: #8f9ce0;
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.551 0.027 264.364);
 
-  --brand-deep: #0d0f18;
-  --brand-accent: #d9b05e;
-  --ok: #5cb585;
-  --warn: #d9a03a;
-  --info: #6aa5d8;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+
+  --sidebar: oklch(0.14 0.04 259.21);
+  --sidebar-accent: oklch(0.279 0.041 260.031);
+
+  --brand-accent: #e0b463;
+
+  --ok: oklch(0.696 0.17 162.48);
+  --warn: oklch(0.828 0.189 84.429);
+  --info: oklch(0.685 0.169 237.323);
 }
 
 @theme inline {
@@ -108,14 +132,29 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-brand-deep: var(--brand-deep);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --color-brand-accent: var(--brand-accent);
   --color-ok: var(--ok);
   --color-warn: var(--warn);
   --color-info: var(--info);
 
   --font-sans: var(--font-body);
-  --font-display: var(--font-display);
+  /* Sarlavhalar ham shu shriftda: panelda alohida display shrift kerak emas */
+  --font-display: var(--font-body);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -136,5 +175,11 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Tugma ustida qoʻl belgisi — namunadagi kabi */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }

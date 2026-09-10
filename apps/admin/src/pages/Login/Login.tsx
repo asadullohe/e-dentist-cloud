@@ -22,12 +22,13 @@ export function Login() {
 
   return (
     <div className="flex min-h-dvh items-center justify-center p-6">
-      <Card className="w-full max-w-sm p-6">
-        <div className="text-center">
-          <div className="font-display text-primary text-xl font-bold tracking-tight">
-            {ADMIN_UI.login_title}
+      <Card className="w-full max-w-sm gap-5 p-6">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <img src="/logo.png" alt={UI_TEXT.brand} className="size-14 rounded-2xl" />
+          <div>
+            <div className="text-lg font-semibold tracking-tight">{ADMIN_UI.login_title}</div>
+            <p className="text-sm text-muted-foreground">{ADMIN_UI.login_hint}</p>
           </div>
-          <p className="text-muted-foreground text-sm">{ADMIN_UI.login_hint}</p>
         </div>
 
         <form onSubmit={submit} className="space-y-3.5">
