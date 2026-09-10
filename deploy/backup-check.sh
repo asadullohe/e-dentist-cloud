@@ -14,9 +14,11 @@ BACKUP_DIR="${BACKUP_DIR:-$PROJECT_DIR/backups}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 TEST_DB="edentist_zaxira_sinov"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 # shellcheck disable=SC1091
-set -a && . ./.env && set +a
+. "$SCRIPT_DIR/env.sh"
+load_env ./.env
 
 compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
 psql_root() {

@@ -16,9 +16,11 @@ if [[ -z "$DUMP" || ! -f "$DUMP" ]]; then
   exit 1
 fi
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 # shellcheck disable=SC1091
-set -a && . ./.env && set +a
+. "$SCRIPT_DIR/env.sh"
+load_env ./.env
 
 compose() { docker compose -f "$COMPOSE_FILE" "$@"; }
 
