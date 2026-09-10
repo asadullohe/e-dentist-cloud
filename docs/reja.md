@@ -752,8 +752,8 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > yiqiladigan xabarnoma bilan roʻyxatdan oʻtadi va 200 kutadi.
 > Sozlanmagan boʻlsa (lokalda) hech narsa yuborilmaydi.
 - [x] **5.5b SMTP** — lokalda xat konsolga chiqadi (`platform/mailer.ts`), serverda
-      Resend sozlandi _(09/09/2026)_. Xat haqiqatan yetib borishi uchun Resend'da
-      domen tasdigʻi qoladi — hali tekshirilmagan
+      Resend orqali yuboriladi. Domen tasdiqlangan, roʻyxatdan oʻtish va
+      tasdiqlash xati serverda sinaldi _(09/09/2026)_
 
 > **SMTP hozircha ixtiyoriy — qaror 09/09/2026**
 >
