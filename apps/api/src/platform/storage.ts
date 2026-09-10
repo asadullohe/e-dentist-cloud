@@ -32,6 +32,12 @@ export interface Storage {
   remove(key: string): Promise<void>
 }
 
+/// S3 ning «bucket allaqachon bor» javoblari. Nomlar SDK dan keladi
+function bucketExists(error: unknown): boolean {
+  const name = (error as { name?: string } | null)?.name
+  return name === 'BucketAlreadyOwnedByYou' || name === 'BucketAlreadyExists'
+}
+
 export function createStorage(config: StorageConfig): Storage {
   const client = new S3Client({
     endpoint: config.endpoint,
@@ -46,7 +52,15 @@ export function createStorage(config: StorageConfig): Storage {
       try {
         await client.send(new HeadBucketCommand({ Bucket: config.bucket }))
       } catch {
-        await client.send(new CreateBucketCommand({ Bucket: config.bucket }))
+        try {
+          await client.send(new CreateBucketCommand({ Bucket: config.bucket }))
+        } catch (error) {
+          // Poyga: ikki jarayon bir vaqtda koʻtarilsa (CI da test fayllari
+          // parallel yuradi) ikkalasi ham bucket yoʻq deb topadi. Yutqazgan
+          // tomonga MinIO 409 qaytaradi — bucket bor, demak ish allaqachon
+          // bajarilgan, xato emas
+          if (!bucketExists(error)) throw error
+        }
       }
     },
 
