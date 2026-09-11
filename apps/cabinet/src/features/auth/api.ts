@@ -23,3 +23,22 @@ export const register = (input: RegisterInput) =>
 
 export const verifyEmail = (token: string) =>
   apiRequest<{ verified: true }>('/auth/verify', { method: 'POST', body: { token } })
+
+export interface InviteInfo {
+  clinicName: string
+  email: string
+  roleName: string
+}
+
+export interface InviteAcceptInput {
+  token: string
+  fullName: string
+  password: string
+}
+
+/// Havola amal qiladimi va kimga tegishli — sahifa ochilganda
+export const inviteInfo = (token: string) =>
+  apiRequest<InviteInfo>(`/auth/invite/${encodeURIComponent(token)}`)
+
+export const acceptInvite = (input: InviteAcceptInput) =>
+  apiRequest<{ loggedIn: true }>('/auth/invite', { method: 'POST', body: input })

@@ -6,6 +6,20 @@ export const fetchClinics = (search: string) =>
 
 export const fetchClinic = (id: string) => apiRequest<ClinicCard>(`/admin/clinics/${id}`)
 
+export interface ClinicCreatePayload {
+  name: string
+  phone?: string
+  email: string
+  trialDays: number
+}
+
+/// Parol yuborilmaydi — egasi uni taklifnoma havolasi orqali oʻzi qoʻyadi
+export const createClinic = (payload: ClinicCreatePayload) =>
+  apiRequest<ClinicCard>('/admin/clinics', { method: 'POST', body: payload })
+
+export const resendInvite = (id: string) =>
+  apiRequest<ClinicCard>(`/admin/clinics/${id}/invite`, { method: 'POST' })
+
 export const extendClinic = (id: string, days: number) =>
   apiRequest<ClinicCard>(`/admin/clinics/${id}/extend`, { method: 'POST', body: { days } })
 

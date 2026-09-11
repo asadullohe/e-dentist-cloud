@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 6.1** — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: 6.3** — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -909,10 +909,21 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > Band pochta oldindan tekshiriladi: aks holda klinika yaratilib, qabul
 > qilish bosqichida yiqilardi va bazada egasiz klinika qolib ketardi.
 
-- [ ] **6.2 Panelda «Yangi klinika»** — nom, egasining pochtasi, sinov muddati.
+- [x] **6.2 Panelda «Yangi klinika»** — nom, egasining pochtasi, sinov muddati.
       Roʻyxatda «Taklif yuborilgan» holati va «Qayta yuborish» tugmasi
-- [ ] **6.3 Kabinetda taklifnoma sahifasi** — `/taklif?token=…`: klinika nomi
-      koʻrsatiladi, egasi ism va parolni oʻzi qoʻyadi, keyin darrov kiradi
+- [x] **6.3 Kabinetda taklifnoma sahifasi** — `/taklif?token=…`: klinika nomi
+      koʻrsatiladi, egasi ism va parolni oʻzi qoʻyadi, keyin darrov kiradi.
+      Parol ikki marta soʻraladi
+> **Pochta maydoni sahifada oʻzgartirilmaydi**
+>
+> Taklifnoma aynan bitta manzilga yozilgan va kalit oʻsha yozuvga
+> bogʻlangan. Pochtani sahifada tahrirlashga ruxsat berilsa, havolaga ega
+> odam istalgan manzilga hisob ochib olardi. Shuning uchun u faqat
+> koʻrsatiladi.
+>
+> Parol ikki marta soʻraladi: bir marta yozilib xato qolsa, odam oʻz
+> kabinetiga kira olmaydi va yangi havola soʻrashga majbur boʻladi.
+
 - [ ] **6.4 Klinika logotipi** — `clinics.logo_key`, yuklash klinikaning oʻzida
       (Sozlamalar → Klinika) ham, panelda ham. Koʻrinadigan joylar: kabinet yon
       menyusi, navbat sahifasi va kutish xonasi ekrani, paneldagi roʻyxat va

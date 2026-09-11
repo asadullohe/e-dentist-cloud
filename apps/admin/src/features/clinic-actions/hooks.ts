@@ -1,5 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CLINIC_KEYS, extendClinic, setClinicStatus } from '@/entities/clinic'
+import {
+  CLINIC_KEYS,
+  type ClinicCreatePayload,
+  createClinic,
+  extendClinic,
+  resendInvite,
+  setClinicStatus,
+} from '@/entities/clinic'
 
 /// Javobda yangilangan kartochka keladi — uni darhol keshga qoʻyamiz,
 /// roʻyxat esa qayta soʻraladi
@@ -22,4 +29,12 @@ export function useSetClinicStatus() {
   return useClinicMutation(({ id, status }: { id: string; status: 'active' | 'blocked' }) =>
     setClinicStatus(id, status),
   )
+}
+
+export function useCreateClinic() {
+  return useClinicMutation((payload: ClinicCreatePayload) => createClinic(payload))
+}
+
+export function useResendInvite() {
+  return useClinicMutation((id: string) => resendInvite(id))
 }

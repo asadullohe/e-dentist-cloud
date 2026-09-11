@@ -5,10 +5,10 @@ import {
   formatDateTime,
   formatUzPhone,
 } from '@e-dentist/shared'
-import { ArrowLeftIcon } from 'lucide-react'
+import { ArrowLeftIcon, MailIcon, SendIcon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { StatusBadge, useClinic } from '@/entities/clinic'
-import { useExtendClinic, useSetClinicStatus } from '@/features/clinic-actions'
+import { useExtendClinic, useResendInvite, useSetClinicStatus } from '@/features/clinic-actions'
 import {
   Badge,
   Button,
@@ -40,6 +40,7 @@ export function ClinicCard() {
   const { data: clinic, isPending } = useClinic(id)
   const { mutate: extend, isPending: isExtending } = useExtendClinic()
   const { mutate: setStatus, isPending: isBlocking } = useSetClinicStatus()
+  const { mutate: resendInvite, isPending: isResending } = useResendInvite()
 
   if (isPending || !clinic) return <Skeleton className="h-64 w-full" />
 
@@ -72,6 +73,32 @@ export function ClinicCard() {
           </div>
         </div>
       </div>
+
+      {clinic.pendingInvite && (
+        <Card className="gap-0 border-info/40 bg-info/5 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2 font-medium">
+                <MailIcon className="size-4" />
+                {ADMIN_UI.invite_pending}
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {clinic.pendingInvite.email} ·{' '}
+                {ADMIN_UI.invite_sent_at(formatDateTime(clinic.pendingInvite.sentAt))}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={isResending}
+              onClick={() => resendInvite(clinic.id)}
+            >
+              <SendIcon />
+              {ADMIN_UI.invite_resend}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label={ADMIN_UI.expires} value={formatDate(clinic.expiresAt)} />

@@ -1,0 +1,1 @@
+export { ClinicCreateDialog } from './ClinicCreateDialog'

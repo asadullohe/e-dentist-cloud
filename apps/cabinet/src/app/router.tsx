@@ -4,6 +4,7 @@ import { useHasPermission, useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
 import { Expenses } from '@/pages/Expenses'
+import { Invite } from '@/pages/Invite'
 import { Lab } from '@/pages/Lab'
 import { Login } from '@/pages/Login'
 import { PatientCard } from '@/pages/PatientCard'
@@ -55,6 +56,8 @@ export function Router() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<VerifyEmail />} />
+      {/* Panel klinika ochganda egasi shu yerda parol qoʻyadi */}
+      <Route path="/taklif" element={<Invite />} />
       {/* Navbat — yagona loginsiz sahifa (tz.md 14-boʻlim) */}
       <Route path="/n/:code" element={<Queue />} />
       <Route path="/n/:code/ekran" element={<QueueScreen />} />

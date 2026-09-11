@@ -71,13 +71,16 @@ export interface ClinicSummary {
   lastLoginAt: string | null
   /// Muddat tugagan — panelda alohida belgi bilan koʻrsatiladi
   expired: boolean
+  /// Klinika ochilgan, lekin egasi hali kirmagan. Kartochkada shu holatning
+  /// tafsiloti bor (`pendingInvite`), roʻyxatda esa faqat belgi kerak
+  inviteSent: boolean
 }
 
 function toIso(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-function toSummary(row: repo.ClinicRow): ClinicSummary {
+function toSummary(row: repo.ClinicRow, inviteSent = false): ClinicSummary {
   const expiresAt = toIso(row.expires_at)
   return {
     id: row.id,
@@ -91,6 +94,7 @@ function toSummary(row: repo.ClinicRow): ClinicSummary {
     staffCount: Number(row.staff_count),
     lastLoginAt: row.last_login_at?.toISOString() ?? null,
     expired: expiresAt < todayISO(),
+    inviteSent,
   }
 }
 
@@ -99,7 +103,7 @@ export async function listClinics(
   input: ClinicListInput,
 ): Promise<ClinicSummary[]> {
   const rows = await repo.listClinics(deps.db, input.search)
-  return rows.map(toSummary)
+  return rows.map((row) => toSummary(row, row.pending_invite))
 }
 
 export interface ClinicCard extends ClinicSummary {
@@ -132,7 +136,7 @@ export async function clinicCard(deps: AdminDeps, clinicId: string): Promise<Cli
   ])
 
   return {
-    ...toSummary(clinic),
+    ...toSummary(clinic, invite !== null),
     queueEnabled: clinic.queue_enabled,
     patientCount: Number(clinic.patient_count),
     visitCount: Number(clinic.visit_count),

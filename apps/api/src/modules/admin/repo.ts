@@ -18,8 +18,14 @@ export interface ClinicRow {
   last_login_at: Date | null
 }
 
+/// Roʻyxatda qoʻshimcha belgi: klinika ochilgan, lekin egasi hali
+/// taklifnomani qabul qilmagan
+export interface ClinicListRow extends ClinicRow {
+  pending_invite: boolean
+}
+
 export function listClinics(db: Db, search: string) {
-  return db.$queryRaw<ClinicRow[]>`SELECT * FROM admin_clinics(${search})`
+  return db.$queryRaw<ClinicListRow[]>`SELECT * FROM admin_clinics(${search})`
 }
 
 export interface ClinicCardRow extends ClinicRow {

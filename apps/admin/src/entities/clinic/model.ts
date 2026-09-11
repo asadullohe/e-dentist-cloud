@@ -11,6 +11,8 @@ export interface ClinicSummary {
   staffCount: number
   lastLoginAt: string | null
   expired: boolean
+  /// Klinika panelidan ochilgan, egasi hali taklifnomani qabul qilmagan
+  inviteSent: boolean
 }
 
 export interface ClinicStaff {
@@ -22,7 +24,14 @@ export interface ClinicStaff {
   lastLoginAt: string | null
 }
 
+export interface PendingInvite {
+  email: string
+  sentAt: string
+  expiresAt: string
+}
+
 export interface ClinicCard extends ClinicSummary {
+  pendingInvite: PendingInvite | null
   queueEnabled: boolean
   patientCount: number
   visitCount: number

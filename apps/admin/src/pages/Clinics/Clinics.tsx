@@ -3,6 +3,7 @@ import { SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusBadge, useClinics } from '@/entities/clinic'
+import { ClinicCreateDialog } from '@/features/clinic-create'
 import {
   Card,
   Input,
@@ -21,9 +22,12 @@ export function Clinics() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold tracking-tight">{ADMIN_UI.clinics}</h2>
-        <p className="text-sm text-muted-foreground">{ADMIN_UI.clinics_hint}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">{ADMIN_UI.clinics}</h2>
+          <p className="text-sm text-muted-foreground">{ADMIN_UI.clinics_hint}</p>
+        </div>
+        <ClinicCreateDialog />
       </div>
 
       <div className="relative max-w-sm">

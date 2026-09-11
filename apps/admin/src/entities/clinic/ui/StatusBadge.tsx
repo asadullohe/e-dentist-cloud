@@ -6,6 +6,9 @@ import type { ClinicSummary } from '../model'
 /// eʼtibor kerak, qizil — toʻxtatilgan. Roʻyxatda ham, kartochkada ham bir xil
 export function StatusBadge({ clinic }: { clinic: ClinicSummary }) {
   if (clinic.status === 'blocked') return <Badge variant="destructive">{ADMIN_UI.blocked}</Badge>
+  // Muddatdan oldin: taklifnoma kutilayotgan klinikada hali hech kim
+  // ishlamaydi, shuning uchun muhimrogʻi shu
+  if (clinic.inviteSent) return <Badge variant="secondary">{ADMIN_UI.invite_pending}</Badge>
   if (clinic.expired)
     return <Badge className="border-transparent bg-warn/15 text-warn">{ADMIN_UI.expired}</Badge>
   if (clinic.isTrial)
