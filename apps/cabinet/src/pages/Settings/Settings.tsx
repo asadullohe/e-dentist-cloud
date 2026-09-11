@@ -1,5 +1,6 @@
-import { EXPORT_UI, QUEUE_CABINET_UI, STAFF_UI } from '@e-dentist/shared'
+import { EXPORT_UI, LOGO_UI, QUEUE_CABINET_UI, STAFF_UI } from '@e-dentist/shared'
 import { useHasPermission } from '@/entities/session'
+import { ClinicLogoCard } from '@/features/clinic-logo'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui'
 import { AccountTab } from './AccountTab'
 import { DataTab } from './DataTab'
@@ -19,6 +20,7 @@ export function Settings() {
           <TabsTrigger value="account">{STAFF_UI.account_tab}</TabsTrigger>
           <TabsTrigger value="staff">{STAFF_UI.staff_tab}</TabsTrigger>
           <TabsTrigger value="roles">{STAFF_UI.roles_tab}</TabsTrigger>
+          <TabsTrigger value="clinic">{LOGO_UI.tab}</TabsTrigger>
           <TabsTrigger value="queue">{QUEUE_CABINET_UI.settings_tab}</TabsTrigger>
           {hasPermission('data.export') && <TabsTrigger value="data">{EXPORT_UI.tab}</TabsTrigger>}
         </TabsList>
@@ -30,6 +32,9 @@ export function Settings() {
         </TabsContent>
         <TabsContent value="roles" className="mt-3">
           <RolesTab />
+        </TabsContent>
+        <TabsContent value="clinic" className="mt-3">
+          <ClinicLogoCard />
         </TabsContent>
         <TabsContent value="queue" className="mt-3">
           <QueueTab />

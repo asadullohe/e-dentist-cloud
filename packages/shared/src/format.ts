@@ -147,3 +147,12 @@ export function addDays(days: number, dan: Date = new Date()): Date {
 export function debtOf(p: { charges?: number; paid?: number } | null | undefined): number {
   return (p?.charges ?? 0) - (p?.paid ?? 0)
 }
+
+/// Klinika logotipining manzili.
+///
+/// Rasm API orqali beriladi — imzolangan havola serverdagi MinIO ga
+/// koʻrsatadi, u esa Docker tarmogʻi ichida va brauzerga koʻrinmaydi.
+/// Manzilda klinika raqami emas, navbat kodi: sahifa loginsiz ochiladi
+export function clinicLogoUrl(queueCode: string): string {
+  return `/api/n/${encodeURIComponent(queueCode)}/logo`
+}

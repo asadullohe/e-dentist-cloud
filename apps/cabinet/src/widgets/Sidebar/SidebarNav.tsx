@@ -1,4 +1,4 @@
-import { UI_TEXT } from '@e-dentist/shared'
+import { clinicLogoUrl, UI_TEXT } from '@e-dentist/shared'
 import { cn } from 'cn'
 import { LogOutIcon } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
@@ -31,7 +31,16 @@ export function SidebarNav({ onNavigate }: SidebarNavProps) {
       <div className="font-display px-2.5 text-xl font-bold tracking-tight text-white">
         {UI_TEXT.brand}
       </div>
-      <div className="px-2.5 pt-1 pb-5 text-xs text-white/55">{session?.clinic?.name}</div>
+      <div className="flex items-center gap-2 px-2.5 pt-1.5 pb-5">
+        {session?.clinic?.logoKey && (
+          <img
+            src={clinicLogoUrl(session.clinic.queueCode)}
+            alt=""
+            className="size-7 shrink-0 rounded bg-white/10 object-contain"
+          />
+        )}
+        <div className="truncate text-xs text-white/55">{session?.clinic?.name}</div>
+      </div>
 
       <nav className="flex flex-col gap-0.5">
         {sections.map((section) => (

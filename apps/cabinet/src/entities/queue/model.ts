@@ -10,6 +10,8 @@ export interface QueueDoctor {
 
 export interface QueueBoard {
   clinicName: string
+  /// Rasmning oʻzi alohida manzilda: clinicLogoUrl(kod)
+  hasLogo: boolean
   doctors: QueueDoctor[]
 }
 
@@ -24,6 +26,7 @@ export interface QueueTicket {
 
 export interface QueueScreen {
   clinicName: string
+  hasLogo: boolean
   /// Hozir chaqirilganlar. Ismlar yoʻq — faqat raqam va shifokor
   called: { number: number; doctorName: string }[]
   next: number[]

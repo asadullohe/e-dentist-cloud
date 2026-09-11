@@ -25,3 +25,13 @@ export const extendClinic = (id: string, days: number) =>
 
 export const setClinicStatus = (id: string, status: 'active' | 'blocked') =>
   apiRequest<ClinicCard>(`/admin/clinics/${id}/status`, { method: 'POST', body: { status } })
+
+/// Logotipni panel ham qoʻya oladi — klinika ochib berayotganda qulay
+export function setClinicLogo(id: string, file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return apiRequest<ClinicCard>(`/admin/clinics/${id}/logo`, { method: 'POST', body: form })
+}
+
+export const removeClinicLogo = (id: string) =>
+  apiRequest<ClinicCard>(`/admin/clinics/${id}/logo`, { method: 'DELETE' })

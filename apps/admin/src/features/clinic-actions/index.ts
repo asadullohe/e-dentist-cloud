@@ -1,1 +1,8 @@
-export { useCreateClinic, useExtendClinic, useResendInvite, useSetClinicStatus } from './hooks'
+export {
+  useCreateClinic,
+  useExtendClinic,
+  useRemoveClinicLogo,
+  useResendInvite,
+  useSetClinicLogo,
+  useSetClinicStatus,
+} from './hooks'

@@ -1,0 +1,1 @@
+export { ClinicLogoCard } from './ClinicLogoCard'

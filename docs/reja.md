@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 6.3** — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: 6.5** — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -924,10 +924,15 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > Parol ikki marta soʻraladi: bir marta yozilib xato qolsa, odam oʻz
 > kabinetiga kira olmaydi va yangi havola soʻrashga majbur boʻladi.
 
-- [ ] **6.4 Klinika logotipi** — `clinics.logo_key`, yuklash klinikaning oʻzida
-      (Sozlamalar → Klinika) ham, panelda ham. Koʻrinadigan joylar: kabinet yon
-      menyusi, navbat sahifasi va kutish xonasi ekrani, paneldagi roʻyxat va
-      kartochka
+- [x] **6.4 Klinika logotipi** — `clinics.logo_key`, yuklash klinikaning oʻzida
+      (Sozlamalar → Klinika) ham, panelda ham. Koʻrinadi: kabinet yon menyusi,
+      navbat sahifasi, kutish xonasi ekrani, paneldagi roʻyxat va kartochka.
+      8 ta test
+- [ ] **6.5 Bemor rasmlari serverda koʻrinmaydi** — imzolangan havola
+      `http://minio:9000` ga koʻrsatadi, bu Docker tarmogʻi ichidagi nom.
+      MinIO tashqariga ochilmagan va Caddy da unga yoʻl yoʻq, shuning uchun
+      brauzer rasmni ololmaydi. Yechim logotipdagidek: rasm API orqali
+      beriladi, sessiya va klinika oʻsha yerda tekshiriladi
 
 > **Ochiq roʻyxatdan oʻtish qoladi _(qaror 10/09/2026)_**
 >
@@ -937,6 +942,18 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > qoʻyadi, siz ochsangiz taklifnoma havolasi orqali qoʻyadi.
 >
 > Parol hech qachon panelda koʻrinmaydi va admin uni bilmaydi.
+
+> **Logotip imzolangan havola bilan berilmaydi**
+>
+> Bemor rasmlari `signedUrl` qaytaradi va bu lokalda ishlaydi, chunki
+> `S3_ENDPOINT=http://localhost:9000`. Serverda esa u `http://minio:9000`
+> — Docker tarmogʻi ichidagi nom, brauzer uni topa olmaydi.
+>
+> Shuning uchun logotip API orqali beriladi: `GET /api/n/<kod>/logo`.
+> Manzilda klinika raqami emas, navbat kodi — sahifa loginsiz ochiladi va
+> klinika raqami koʻrinmasligi kerak (tz.md 14-boʻlim).
+>
+> Xuddi shu muammo bemor rasmlarida ham bor — 6.5 da tuzatiladi.
 
 > **Excel ichidagi logotip — hozircha yoʻq**
 >

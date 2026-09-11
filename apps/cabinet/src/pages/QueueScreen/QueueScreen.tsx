@@ -1,4 +1,4 @@
-import { QUEUE_UI, UI_TEXT } from '@e-dentist/shared'
+import { clinicLogoUrl, QUEUE_UI, UI_TEXT } from '@e-dentist/shared'
 import { useParams } from 'react-router-dom'
 import { useQueueScreen, useQueueStream } from '@/entities/queue'
 import { ApiError } from '@/shared/api'
@@ -23,9 +23,18 @@ export function QueueScreen() {
 
   return (
     <main className="bg-brand-deep flex min-h-dvh flex-col p-[3vh] text-white">
-      <h1 className="font-display text-center text-[4vh] font-bold tracking-tight">
-        {data?.clinicName}
-      </h1>
+      <div className="flex items-center justify-center gap-[2vh]">
+        {data?.hasLogo && (
+          <img
+            src={clinicLogoUrl(code)}
+            alt=""
+            className="size-[7vh] rounded-lg bg-white/10 object-contain"
+          />
+        )}
+        <h1 className="font-display text-center text-[4vh] font-bold tracking-tight">
+          {data?.clinicName}
+        </h1>
+      </div>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-[2vh]">
         <div className="text-[3vh] text-white/60">{QUEUE_UI.screen_now}</div>

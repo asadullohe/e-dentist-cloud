@@ -27,6 +27,10 @@ export interface Storage {
   /// Bucket yoʻq boʻlsa yaratadi. Server koʻtarilganda bir marta
   ensureBucket(): Promise<void>
   put(key: string, body: Buffer, contentType: string): Promise<void>
+  /// Faylni serverning oʻzi oʻqiydi. Logotip shu yoʻl bilan beriladi:
+  /// imzolangan havola MinIO manziliga koʻrsatadi, u esa serverda Docker
+  /// tarmogʻi ichida va brauzerga koʻrinmaydi
+  get(key: string): Promise<{ body: Buffer; contentType: string } | null>
   /// Qisqa muddatli havola
   signedUrl(key: string): Promise<string>
   remove(key: string): Promise<void>
@@ -61,6 +65,21 @@ export function createStorage(config: StorageConfig): Storage {
           // bajarilgan, xato emas
           if (!bucketExists(error)) throw error
         }
+      }
+    },
+
+    async get(key) {
+      try {
+        const result = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: key }))
+        const bytes = await result.Body?.transformToByteArray()
+        if (!bytes) return null
+        return {
+          body: Buffer.from(bytes),
+          contentType: result.ContentType ?? 'application/octet-stream',
+        }
+      } catch {
+        // Fayl yoʻq yoki oʻchirilgan — chaqiruvchi 404 qaytaradi
+        return null
       }
     },
 

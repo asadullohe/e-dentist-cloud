@@ -16,6 +16,8 @@ export interface SessionClinic {
   /// Navbat sahifasining kodi: /n/<kod>
   queueCode: string
   queueEnabled: boolean
+  /// Logotip fayl kaliti. `null` — logotip qoʻyilmagan
+  logoKey: string | null
 }
 
 export interface SessionRole {

@@ -13,6 +13,9 @@ export interface ClinicSummary {
   expired: boolean
   /// Klinika panelidan ochilgan, egasi hali taklifnomani qabul qilmagan
   inviteSent: boolean
+  /// Logotip havolasi shu koddan yasaladi: clinicLogoUrl(queueCode)
+  queueCode: string
+  hasLogo: boolean
 }
 
 export interface ClinicStaff {

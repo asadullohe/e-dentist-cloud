@@ -26,6 +26,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
 export const fakeStorage = {
   ensureBucket: async () => {},
   put: async () => {},
+  get: async () => null,
   signedUrl: async () => 'http://sinov/imzolangan-havola',
   remove: async () => {},
 }

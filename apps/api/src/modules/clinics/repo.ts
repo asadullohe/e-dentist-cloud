@@ -69,7 +69,17 @@ export async function findClinic(tx: ClinicTx, clinicId: string) {
       status: true,
       queueCode: true,
       queueEnabled: true,
+      logoKey: true,
     },
+  })
+}
+
+/// Logotip kaliti. `null` — logotip oʻchirildi
+export async function setLogoKey(tx: ClinicTx, clinicId: string, logoKey: string | null) {
+  return tx.clinic.update({
+    where: { id: clinicId },
+    data: { logoKey },
+    select: { logoKey: true },
   })
 }
 
@@ -101,6 +111,7 @@ export interface QueueClinicRow {
   id: string
   name: string
   queue_enabled: boolean
+  logo_key: string | null
 }
 
 export async function findByQueueCode(db: Db, code: string): Promise<QueueClinicRow | null> {

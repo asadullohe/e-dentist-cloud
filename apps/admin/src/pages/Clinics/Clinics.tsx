@@ -1,5 +1,11 @@
-import { ADMIN_UI, formatDate, formatDateTime, formatUzPhone } from '@e-dentist/shared'
-import { SearchIcon } from 'lucide-react'
+import {
+  ADMIN_UI,
+  clinicLogoUrl,
+  formatDate,
+  formatDateTime,
+  formatUzPhone,
+} from '@e-dentist/shared'
+import { BuildingIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { StatusBadge, useClinics } from '@/entities/clinic'
@@ -64,14 +70,32 @@ export function Clinics() {
               {clinics?.map((clinic) => (
                 <TableRow key={clinic.id}>
                   <TableCell className="py-3">
-                    <div className="flex items-center gap-2">
-                      <Link to={`/klinika/${clinic.id}`} className="font-medium hover:underline">
-                        {clinic.name}
-                      </Link>
-                      <StatusBadge clinic={clinic} />
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {clinic.phone ? formatUzPhone(clinic.phone) : '—'}
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
+                        {clinic.hasLogo ? (
+                          <img
+                            src={clinicLogoUrl(clinic.queueCode)}
+                            alt=""
+                            className="size-full object-contain"
+                          />
+                        ) : (
+                          <BuildingIcon className="size-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/klinika/${clinic.id}`}
+                            className="font-medium hover:underline"
+                          >
+                            {clinic.name}
+                          </Link>
+                          <StatusBadge clinic={clinic} />
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {clinic.phone ? formatUzPhone(clinic.phone) : '—'}
+                        </div>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">{clinic.staffCount}</TableCell>

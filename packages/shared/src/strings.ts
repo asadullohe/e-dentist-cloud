@@ -757,6 +757,7 @@ export const AUDIT_LABELS = {
   clinic_created: 'Klinika panelidan ochildi',
   invite_sent: 'Taklifnoma yuborildi',
   invite_accepted: 'Taklifnoma qabul qilindi',
+  clinic_logo_changed: 'Logotip oʻzgardi',
   email_verified: 'Pochta tasdiqlandi',
   logged_in: 'Kirdi',
   login_failed: 'Kirish urinishi rad etildi',
@@ -833,6 +834,20 @@ export const EXCEL_TEXT = {
     'Sana kun/oy/yil tartibida oʻqiladi: 05/12/1990 — 5-dekabr.',
     'Bu faylni toʻldirib, kabinetdagi «Excel dan yuklash» orqali qaytaring.',
   ],
+} as const
+
+// Klinika logotipi
+export const LOGO_UI = {
+  tab: 'Klinika',
+  title: 'Logotip',
+  hint: 'Yon menyuda, navbat sahifasida va kutish xonasi ekranida koʻrinadi',
+  requirements: 'PNG, JPG yoki WEBP · eng koʻpi 2 MB',
+  empty: 'Logotip qoʻyilmagan',
+  choose: 'Rasm tanlash',
+  replace: 'Almashtirish',
+  remove: 'Oʻchirish',
+  uploading: 'Yuklanmoqda…',
+  confirm_remove: 'Logotip oʻchirilsinmi?',
 } as const
 
 // Taklifnoma: panel klinika ochganda egasi shu havola orqali parol qoʻyadi

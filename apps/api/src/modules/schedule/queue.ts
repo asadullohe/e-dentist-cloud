@@ -51,6 +51,8 @@ export interface DoctorBoard {
 
 export interface Board {
   clinicName: string
+  /// Rasmning oʻzi alohida manzilda: /api/n/<kod>/logo
+  hasLogo: boolean
   doctors: DoctorBoard[]
 }
 
@@ -124,6 +126,7 @@ export function board(deps: QueueDeps, code: string): Promise<Board> {
 
       return {
         clinicName: clinic.name,
+        hasLogo: clinic.logo_key !== null,
         doctors: doctors.map((doctor) => {
           const waiting = waitingByDoctor.get(doctor.id) ?? 0
           return { ...doctor, waiting, waitMinutes: waiting * minutes }
@@ -137,6 +140,7 @@ export function board(deps: QueueDeps, code: string): Promise<Board> {
 /// kutayotgan odamlar bir-birining ismini bilmasligi kerak)
 export interface Screen {
   clinicName: string
+  hasLogo: boolean
   called: { number: number; doctorName: string }[]
   next: number[]
 }
@@ -156,6 +160,7 @@ export function screen(deps: QueueDeps, code: string): Promise<Screen> {
 
       return {
         clinicName: clinic.name,
+        hasLogo: clinic.logo_key !== null,
         called: entries
           .filter((entry) => entry.queueStatus === 'called' && entry.queueNumber !== null)
           .map((entry) => ({

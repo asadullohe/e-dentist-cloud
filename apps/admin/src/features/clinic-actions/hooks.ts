@@ -4,7 +4,9 @@ import {
   type ClinicCreatePayload,
   createClinic,
   extendClinic,
+  removeClinicLogo,
   resendInvite,
+  setClinicLogo,
   setClinicStatus,
 } from '@/entities/clinic'
 
@@ -37,4 +39,12 @@ export function useCreateClinic() {
 
 export function useResendInvite() {
   return useClinicMutation((id: string) => resendInvite(id))
+}
+
+export function useSetClinicLogo() {
+  return useClinicMutation(({ id, file }: { id: string; file: File }) => setClinicLogo(id, file))
+}
+
+export function useRemoveClinicLogo() {
+  return useClinicMutation((id: string) => removeClinicLogo(id))
 }

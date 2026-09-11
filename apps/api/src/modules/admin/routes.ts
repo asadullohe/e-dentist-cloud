@@ -1,4 +1,6 @@
+import { IMAGE_TEXT } from '@e-dentist/shared'
 import type { FastifyPluginAsync } from 'fastify'
+import { errors } from '../../platform/errors.js'
 import { requirePlatformAdmin } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
@@ -50,6 +52,26 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteOpts> = async (app, opts)
     const session = requirePlatformAdmin(req)
     const { id } = req.params as { id: string }
     return ok(await service.resendInvite(opts.deps, session.userId, id))
+  })
+
+  app.post('/admin/clinics/:id/logo', async (req) => {
+    const session = requirePlatformAdmin(req)
+    const { id } = req.params as { id: string }
+    const file = await req.file()
+    if (!file) throw errors.badRequest(IMAGE_TEXT.no_file)
+
+    return ok(
+      await service.setClinicLogo(opts.deps, session.userId, id, {
+        buffer: await file.toBuffer(),
+        mimetype: file.mimetype,
+      }),
+    )
+  })
+
+  app.delete('/admin/clinics/:id/logo', async (req) => {
+    const session = requirePlatformAdmin(req)
+    const { id } = req.params as { id: string }
+    return ok(await service.removeClinicLogo(opts.deps, session.userId, id))
   })
 
   app.get('/admin/clinics/:id', async (req) => {

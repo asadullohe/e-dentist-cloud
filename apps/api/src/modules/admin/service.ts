@@ -11,6 +11,7 @@ import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import type { Mailer } from '../../platform/mailer.js'
+import type { Storage } from '../../platform/storage.js'
 import { withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -29,6 +30,8 @@ export interface AdminDeps {
   /// Taklifnoma xati shu yerdan ketadi
   mailer: Mailer
   cabinetUrl: string
+  /// Logotip: panel ham klinika uchun qoʻya oladi
+  storage: Storage
 }
 
 export interface AdminUser {
@@ -74,13 +77,16 @@ export interface ClinicSummary {
   /// Klinika ochilgan, lekin egasi hali kirmagan. Kartochkada shu holatning
   /// tafsiloti bor (`pendingInvite`), roʻyxatda esa faqat belgi kerak
   inviteSent: boolean
+  /// Logotip havolasi: /api/n/<queueCode>/logo
+  queueCode: string
+  hasLogo: boolean
 }
 
 function toIso(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-function toSummary(row: repo.ClinicRow, inviteSent = false): ClinicSummary {
+function toSummary(row: repo.ClinicRow): ClinicSummary {
   const expiresAt = toIso(row.expires_at)
   return {
     id: row.id,
@@ -94,7 +100,9 @@ function toSummary(row: repo.ClinicRow, inviteSent = false): ClinicSummary {
     staffCount: Number(row.staff_count),
     lastLoginAt: row.last_login_at?.toISOString() ?? null,
     expired: expiresAt < todayISO(),
-    inviteSent,
+    inviteSent: row.pending_invite,
+    queueCode: row.queue_code,
+    hasLogo: row.has_logo,
   }
 }
 
@@ -103,7 +111,7 @@ export async function listClinics(
   input: ClinicListInput,
 ): Promise<ClinicSummary[]> {
   const rows = await repo.listClinics(deps.db, input.search)
-  return rows.map((row) => toSummary(row, row.pending_invite))
+  return rows.map(toSummary)
 }
 
 export interface ClinicCard extends ClinicSummary {
@@ -136,7 +144,7 @@ export async function clinicCard(deps: AdminDeps, clinicId: string): Promise<Cli
   ])
 
   return {
-    ...toSummary(clinic, invite !== null),
+    ...toSummary(clinic),
     queueEnabled: clinic.queue_enabled,
     patientCount: Number(clinic.patient_count),
     visitCount: Number(clinic.visit_count),
@@ -356,4 +364,29 @@ export async function events(deps: AdminDeps, input: EventsInput): Promise<Platf
     clinicName: row.clinic_name,
     actor: row.actor,
   }))
+}
+
+/// Logotipni panel ham qoʻya oladi: klinika ochib berayotganda darrov
+/// qoʻyish qulay. Ish clinics moduliniki, bu yerda faqat chaqiruv
+export async function setClinicLogo(
+  deps: AdminDeps,
+  adminId: string,
+  clinicId: string,
+  file: clinics.UploadedLogo,
+): Promise<ClinicCard> {
+  if (!(await repo.findClinic(deps.db, clinicId))) throw errors.notFound()
+
+  await clinics.uploadLogo({ db: deps.db, storage: deps.storage }, clinicId, adminId, file)
+  return clinicCard(deps, clinicId)
+}
+
+export async function removeClinicLogo(
+  deps: AdminDeps,
+  adminId: string,
+  clinicId: string,
+): Promise<ClinicCard> {
+  if (!(await repo.findClinic(deps.db, clinicId))) throw errors.notFound()
+
+  await clinics.removeLogo({ db: deps.db, storage: deps.storage }, clinicId, adminId)
+  return clinicCard(deps, clinicId)
 }

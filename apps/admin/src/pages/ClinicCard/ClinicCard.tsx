@@ -9,6 +9,7 @@ import { ArrowLeftIcon, MailIcon, SendIcon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { StatusBadge, useClinic } from '@/entities/clinic'
 import { useExtendClinic, useResendInvite, useSetClinicStatus } from '@/features/clinic-actions'
+import { ClinicLogoCard } from '@/features/clinic-logo'
 import {
   Badge,
   Button,
@@ -130,6 +131,8 @@ export function ClinicCard() {
           {blocked ? ADMIN_UI.unblock : ADMIN_UI.block}
         </Button>
       </Card>
+
+      <ClinicLogoCard clinic={clinic} />
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card className="overflow-hidden py-0">

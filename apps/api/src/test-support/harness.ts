@@ -58,7 +58,12 @@ export async function startHarness(): Promise<Harness> {
   const rateLimiter: RateLimiter = createRateLimiter(REDIS_URL)
   const mailer = memoryMailer()
 
-  const email = `harness-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`
+  // Har nusxa uchun takrorlanmas belgi. Faqat `Date.now()` yetarli emas:
+  // test fayllari parallel yuradi va ikkitasi bir millisekundda
+  // boshlanishi mumkin — oʻshanda klinika nomlari bir xil boʻlib qolardi
+  // va «nom boʻyicha qidirish» testi ikkita qator topardi
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  const email = `harness-${suffix}@example.com`
   const clientIp = `10.${rnd()}.${rnd()}.${rnd()}`
 
   // Hisoblagichlar Redis da qoladi — oldingi ishga tushirishdan qolgani
@@ -96,7 +101,7 @@ export async function startHarness(): Promise<Harness> {
     url: '/api/auth/register',
     remoteAddress: clientIp,
     payload: {
-      clinicName: `Sinov klinikasi ${Date.now()}`,
+      clinicName: `Sinov klinikasi ${suffix}`,
       fullName: 'Sinov Egasi',
       email,
       password: 'juda-yaxshi-parol',

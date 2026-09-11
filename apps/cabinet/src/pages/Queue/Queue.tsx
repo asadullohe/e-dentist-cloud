@@ -1,4 +1,11 @@
-import { formatUzPhone, phoneDigits, QUEUE_UI, UI_TEXT, VALIDATION_TEXT } from '@e-dentist/shared'
+import {
+  clinicLogoUrl,
+  formatUzPhone,
+  phoneDigits,
+  QUEUE_UI,
+  UI_TEXT,
+  VALIDATION_TEXT,
+} from '@e-dentist/shared'
 import { cn } from 'cn'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
@@ -87,6 +94,13 @@ export function Queue() {
 
   return (
     <main className="mx-auto max-w-md p-4 pb-10">
+      {board.data?.hasLogo && (
+        <img
+          src={clinicLogoUrl(code)}
+          alt=""
+          className="mx-auto mb-2 size-16 rounded-lg object-contain"
+        />
+      )}
       <h1 className="font-display text-center text-xl font-bold tracking-tight">
         {board.data?.clinicName}
       </h1>

@@ -40,6 +40,8 @@ model Clinic {
   queueCode    String  @unique @map("queue_code")
   /// Klinika navbat tizimini butunlay yopa oladi
   queueEnabled Boolean @default(true) @map("queue_enabled")
+  /// Logotip fayli MinIO da; bazada faqat kalit. Yoʻq boʻlsa nom koʻrsatiladi
+  logoKey      String? @map("logo_key")
   /// Obuna tugash sanasi. Bundan keyin faqat oʻqish rejimi
   expiresAt DateTime     @map("expires_at") @db.Date
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)

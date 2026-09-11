@@ -1,3 +1,4 @@
+import { IMAGE_TEXT } from '@e-dentist/shared'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
@@ -31,6 +32,42 @@ export const clinicRoutes: FastifyPluginAsync<ClinicRouteOpts> = async (app, opt
     const input = validateInput(rolePermissionsSchema, req.body)
     return ok(
       await service.updateRolePermissions(opts.deps, clinicId, userId, id, [...input.permissions]),
+    )
+  })
+
+  // Logotip. Sozlama boʻlgani uchun ruxsat ham oʻsha — `staff.manage`
+  app.post('/clinic/logo', manage, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const file = await req.file()
+    if (!file) throw errors.badRequest(IMAGE_TEXT.no_file)
+
+    return ok(
+      await service.uploadLogo(opts.deps, clinicId, userId, {
+        buffer: await file.toBuffer(),
+        mimetype: file.mimetype,
+      }),
+    )
+  })
+
+  app.delete('/clinic/logo', manage, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    return ok(await service.removeLogo(opts.deps, clinicId, userId))
+  })
+
+  // Rasmning oʻzi. Loginsiz ochiladi: u navbat sahifasida ham koʻrsatiladi
+  // va maxfiy maʼlumot emas. Manzilda klinika raqami emas, navbat kodi
+  app.get('/n/:code/logo', async (req, reply) => {
+    const { code } = req.params as { code: string }
+    const logo = await service.logoByQueueCode(opts.deps, code)
+    if (!logo) throw errors.notFound()
+
+    return (
+      reply
+        .header('content-type', logo.contentType)
+        // Keshlanmaydi: logotip almashganda barcha ekranlarda darrov
+        // yangilanishi kerak, fayl esa kichkina
+        .header('cache-control', 'no-cache')
+        .send(logo.body)
     )
   })
 

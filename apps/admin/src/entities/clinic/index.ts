@@ -4,7 +4,9 @@ export {
   extendClinic,
   fetchClinic,
   fetchClinics,
+  removeClinicLogo,
   resendInvite,
+  setClinicLogo,
   setClinicStatus,
 } from './api'
 export { CLINIC_KEYS, useClinic, useClinics } from './hooks'

@@ -16,16 +16,15 @@ export interface ClinicRow {
   created_at: Date
   staff_count: bigint
   last_login_at: Date | null
-}
-
-/// Roʻyxatda qoʻshimcha belgi: klinika ochilgan, lekin egasi hali
-/// taklifnomani qabul qilmagan
-export interface ClinicListRow extends ClinicRow {
+  /// Klinika ochilgan, lekin egasi hali taklifnomani qabul qilmagan
   pending_invite: boolean
+  /// Logotip havolasi shu koddan yasaladi: /api/n/<kod>/logo
+  queue_code: string
+  has_logo: boolean
 }
 
 export function listClinics(db: Db, search: string) {
-  return db.$queryRaw<ClinicListRow[]>`SELECT * FROM admin_clinics(${search})`
+  return db.$queryRaw<ClinicRow[]>`SELECT * FROM admin_clinics(${search})`
 }
 
 export interface ClinicCardRow extends ClinicRow {
