@@ -268,16 +268,34 @@ describe('bemor rasmlari', () => {
     patientId = created.json().data.id
   })
 
-  it('rasm yuklanadi va imzolangan havola qaytadi', async () => {
+  it('rasm yuklanadi va havola serverning oʻziga koʻrsatadi', async () => {
     const r = await upload(patientId, PNG, 'image/png')
     expect(r.statusCode).toBe(200)
-    expect(r.json().data.url).toContain('X-Amz-Signature')
+    // Imzolangan havola emas: u MinIO manziliga koʻrsatadi va serverda
+    // brauzerga koʻrinmaydi (6.5)
+    expect(r.json().data.url).toMatch(/^\/api\/images\/[\w-]+\/file$/)
   })
 
   it('roʻyxatda koʻrinadi', async () => {
     const r = await get(`/api/patients/${patientId}/images`)
     expect(r.json().data).toHaveLength(1)
-    expect(r.json().data[0].url).toContain('X-Amz-Signature')
+    expect(r.json().data[0].url).toMatch(/^\/api\/images\/[\w-]+\/file$/)
+  })
+
+  it('rasmning oʻzi shu manzildan olinadi', async () => {
+    const image = (await get(`/api/patients/${patientId}/images`)).json().data[0]
+
+    const file = await get(image.url)
+    expect(file.statusCode).toBe(200)
+    expect(file.headers['content-type']).toBe('image/png')
+    expect(file.rawPayload.equals(PNG)).toBe(true)
+  })
+
+  it('loginsiz rasm berilmaydi', async () => {
+    const image = (await get(`/api/patients/${patientId}/images`)).json().data[0]
+
+    const file = await h.app.inject({ method: 'GET', url: image.url })
+    expect(file.statusCode).toBe(401)
   })
 
   it('rasm boʻlmagan fayl rad etiladi', async () => {
@@ -290,8 +308,7 @@ describe('bemor rasmlari', () => {
     const list = await get(`/api/patients/${patientId}/images`)
     const image = list.json().data[0]
 
-    const before = await fetch(image.url)
-    expect(before.status).toBe(200)
+    expect((await get(image.url)).statusCode).toBe(200)
 
     const r = await h.app.inject({
       method: 'DELETE',
@@ -300,8 +317,7 @@ describe('bemor rasmlari', () => {
     })
     expect(r.statusCode).toBe(200)
 
-    const after = await fetch(image.url)
-    expect(after.status).toBe(404)
+    expect((await get(image.url)).statusCode).toBe(404)
     expect((await get(`/api/patients/${patientId}/images`)).json().data).toHaveLength(0)
   })
 
@@ -309,6 +325,25 @@ describe('bemor rasmlari', () => {
     const r = await upload(otherPatientId, PNG, 'image/png')
     expect(r.statusCode).toBe(404)
     expect(await h.ownerDb.patientImage.count({ where: { patientId: otherPatientId } })).toBe(0)
+  })
+
+  it('begona klinikaning rasmi berilmaydi', async () => {
+    // B klinikasida rasm yozuvi bor, fayli esa muhim emas: soʻrov yozuvga
+    // yetib borgunicha RLS toʻxtatishi kerak
+    const foreign = await h.ownerDb.patientImage.create({
+      data: {
+        clinicId: otherClinicId,
+        patientId: otherPatientId,
+        key: `clinics/${otherClinicId}/patients/${otherPatientId}/begona.png`,
+        caption: null,
+      },
+      select: { id: true },
+    })
+
+    const file = await get(`/api/images/${foreign.id}/file`)
+    expect(file.statusCode).toBe(404)
+
+    await h.ownerDb.patientImage.delete({ where: { id: foreign.id } })
   })
 })
 

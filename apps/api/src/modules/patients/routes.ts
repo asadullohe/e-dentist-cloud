@@ -147,6 +147,22 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
     )
   })
 
+  // Rasmning oʻzi. Ochiq havola berilmaydi: har soʻrov sessiya va
+  // klinika tekshiruvidan oʻtadi
+  app.get('/images/:id/file', read, async (req, reply) => {
+    const { clinicId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    const file = await service.imageFile(opts.deps, clinicId, id)
+
+    return (
+      reply
+        .header('content-type', file.contentType)
+        // Faqat shu brauzerda va faqat sessiya davomida
+        .header('cache-control', 'private, max-age=300')
+        .send(file.body)
+    )
+  })
+
   app.delete('/images/:id', write, async (req) => {
     const { clinicId, userId } = clinicOf(req)
     const { id } = req.params as { id: string }

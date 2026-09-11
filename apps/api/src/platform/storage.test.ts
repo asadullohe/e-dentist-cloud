@@ -41,14 +41,13 @@ describe('saqlagich', () => {
     await expect(storage.ensureBucket()).resolves.toBeUndefined()
   })
 
-  it('fayl yoziladi va imzolangan havola orqali oʻqiladi', async () => {
+  it('fayl yoziladi va serverning oʻzi oʻqiydi', async () => {
     const key = newKey()
     await storage.put(key, Buffer.from('sinov mazmuni'), 'text/plain')
 
-    const url = await storage.signedUrl(key)
-    const response = await fetch(url)
-    expect(response.status).toBe(200)
-    expect(await response.text()).toBe('sinov mazmuni')
+    const file = await storage.get(key)
+    expect(file?.body.toString()).toBe('sinov mazmuni')
+    expect(file?.contentType).toBe('text/plain')
   })
 
   // Ochiq URL orqali kirib boʻlmasligi kerak (tz.md 12-boʻlim)
@@ -60,21 +59,11 @@ describe('saqlagich', () => {
     expect(response.status).toBe(403)
   })
 
-  it('havolada muddat va imzo bor', async () => {
-    const key = newKey()
-    await storage.put(key, Buffer.from('x'), 'text/plain')
-
-    const url = await storage.signedUrl(key)
-    expect(url).toContain('X-Amz-Signature')
-    expect(url).toContain('X-Amz-Expires')
-  })
-
   it('oʻchirilgandan keyin fayl topilmaydi', async () => {
     const key = newKey()
     await storage.put(key, Buffer.from('vaqtinchalik'), 'text/plain')
     await storage.remove(key)
 
-    const response = await fetch(await storage.signedUrl(key))
-    expect(response.status).toBe(404)
+    expect(await storage.get(key)).toBeNull()
   })
 })

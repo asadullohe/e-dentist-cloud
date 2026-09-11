@@ -7,6 +7,7 @@ import {
   normalizePhone,
   PATIENT_EXCEL_COLUMNS,
   PATIENT_TEXT,
+  patientImageUrl,
 } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
@@ -185,15 +186,29 @@ export interface UploadedFile {
 export function listImages(deps: PatientDeps, clinicId: string, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const rows = await repo.listImages(tx, patientId)
-    // Ochiq URL berilmaydi — har rasm uchun qisqa muddatli imzolangan havola
-    return Promise.all(
-      rows.map(async (row) => ({
-        id: row.id,
-        caption: row.caption,
-        url: await deps.storage.signedUrl(row.key),
-      })),
-    )
+    // Rasm serverning oʻzi orqali beriladi: imzolangan havola MinIO
+    // manziliga koʻrsatadi, u esa Docker tarmogʻi ichida va brauzerga
+    // koʻrinmaydi. Bu manzil esa sessiya va klinika tekshiruvidan oʻtadi
+    return rows.map((row) => ({
+      id: row.id,
+      caption: row.caption,
+      url: patientImageUrl(row.id),
+    }))
   })
+}
+
+/// Rasmning oʻzi. RLS tufayli boshqa klinikaning rasmi topilmaydi
+export async function imageFile(
+  deps: PatientDeps,
+  clinicId: string,
+  imageId: string,
+): Promise<{ body: Buffer; contentType: string }> {
+  const image = await withClinic(deps.db, clinicId, (tx) => repo.findImage(tx, imageId))
+  if (!image) throw errors.notFound()
+
+  const file = await deps.storage.get(image.key)
+  if (!file) throw errors.notFound()
+  return file
 }
 
 export async function uploadImage(
@@ -226,7 +241,7 @@ export async function uploadImage(
       entityId: id,
       meta: { patientId },
     })
-    return { id: image.id, caption: image.caption, url: await deps.storage.signedUrl(key) }
+    return { id: image.id, caption: image.caption, url: patientImageUrl(id) }
   })
 }
 

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 6.5** — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: bosqich 6 tugadi** — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -928,11 +928,11 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
       (Sozlamalar → Klinika) ham, panelda ham. Koʻrinadi: kabinet yon menyusi,
       navbat sahifasi, kutish xonasi ekrani, paneldagi roʻyxat va kartochka.
       8 ta test
-- [ ] **6.5 Bemor rasmlari serverda koʻrinmaydi** — imzolangan havola
-      `http://minio:9000` ga koʻrsatadi, bu Docker tarmogʻi ichidagi nom.
-      MinIO tashqariga ochilmagan va Caddy da unga yoʻl yoʻq, shuning uchun
-      brauzer rasmni ololmaydi. Yechim logotipdagidek: rasm API orqali
-      beriladi, sessiya va klinika oʻsha yerda tekshiriladi
+- [x] **6.5 Bemor rasmlari serverda koʻrinmaydi** — rasm endi
+      `GET /api/images/:id/file` orqali beriladi: sessiya va klinika har
+      soʻrovda tekshiriladi. `signedUrl` butunlay olib tashlandi — u
+      serverda ishlamaydigan havola yasardi va xato qaytadan kirib
+      qolishi mumkin edi
 
 > **Ochiq roʻyxatdan oʻtish qoladi _(qaror 10/09/2026)_**
 >

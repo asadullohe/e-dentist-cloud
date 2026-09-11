@@ -156,3 +156,12 @@ export function debtOf(p: { charges?: number; paid?: number } | null | undefined
 export function clinicLogoUrl(queueCode: string): string {
   return `/api/n/${encodeURIComponent(queueCode)}/logo`
 }
+
+/// Bemor rasmining manzili.
+///
+/// Logotipdagi sabab bilan bir xil: imzolangan havola serverdagi MinIO ga
+/// koʻrsatadi va brauzerga koʻrinmaydi. Farqi — bu yerda rasm maxfiy,
+/// shuning uchun manzil sessiya va klinika tekshiruvidan oʻtadi
+export function patientImageUrl(imageId: string): string {
+  return `/api/images/${encodeURIComponent(imageId)}/file`
+}

@@ -10,11 +10,10 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
-/// Bemor rasmlari ochiq URL orqali berilmaydi — faqat qisqa muddatli
-/// imzolangan havola (tz.md 12-boʻlim)
-const SIGNED_URL_TTL = 5 * 60
+/// Rasm ochiq URL orqali berilmaydi. Imzolangan havola ham ishlatilmaydi:
+/// u serverda `minio:9000` manziliga koʻrsatadi va brauzerga koʻrinmaydi.
+/// Har rasm API orqali, sessiya tekshiruvi bilan beriladi (6.5)
 
 export interface StorageConfig {
   endpoint: string
@@ -31,8 +30,6 @@ export interface Storage {
   /// imzolangan havola MinIO manziliga koʻrsatadi, u esa serverda Docker
   /// tarmogʻi ichida va brauzerga koʻrinmaydi
   get(key: string): Promise<{ body: Buffer; contentType: string } | null>
-  /// Qisqa muddatli havola
-  signedUrl(key: string): Promise<string>
   remove(key: string): Promise<void>
 }
 
@@ -92,12 +89,6 @@ export function createStorage(config: StorageConfig): Storage {
           ContentType: contentType,
         }),
       )
-    },
-
-    signedUrl(key) {
-      return getSignedUrl(client, new GetObjectCommand({ Bucket: config.bucket, Key: key }), {
-        expiresIn: SIGNED_URL_TTL,
-      })
     },
 
     async remove(key) {
