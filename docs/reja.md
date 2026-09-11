@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: bosqich 6 tugadi** — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Reja toʻliq bajarildi** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -881,7 +881,7 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > Loglar 10 MB × 3 fayl bilan chegaralandi — 40 GB diskda cheklanmagan
 > log bir necha oyda hammasini yeb qoʻyardi. Postgres endi sekin
 > soʻrovlarni (>500 ms), ulanish va qulflarni yozadi.
-- [~] **5.14 Birinchi mijoz** — haqiqiy klinikani joylashtirish _(boshlandi 10/09/2026)_
+- [x] **5.14 Birinchi mijoz** — haqiqiy klinika joylashtirildi _(11/09/2026)_
 
 ---
 
