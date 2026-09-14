@@ -1,14 +1,14 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { fetchDebtors } from './api'
+import { type DebtorsQuery, fetchDebtors } from './api'
 
 export const DEBTOR_KEYS = {
-  list: (page: number) => ['debtors', page] as const,
+  list: (query: DebtorsQuery) => ['debtors', query] as const,
 }
 
-export function useDebtors(page: number) {
+export function useDebtors(query: DebtorsQuery) {
   return useQuery({
-    queryKey: DEBTOR_KEYS.list(page),
-    queryFn: () => fetchDebtors(page),
+    queryKey: DEBTOR_KEYS.list(query),
+    queryFn: () => fetchDebtors(query),
     placeholderData: keepPreviousData,
   })
 }

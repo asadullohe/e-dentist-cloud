@@ -25,9 +25,14 @@ export const paymentCreateSchema = z.object({
 
 export const paymentUpdateSchema = paymentCreateSchema.omit({ patientId: true }).partial()
 
+/// Saralash faqat summalar boʻyicha: ism sahifalashdan keyin olinadi
+export const DEBTOR_SORT = ['debt', 'charges', 'paid'] as const
+
 export const debtorsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
+  sort: z.enum(DEBTOR_SORT).default('debt'),
+  dir: z.enum(['asc', 'desc']).default('desc'),
 })
 
 export type PaymentCreateInput = z.infer<typeof paymentCreateSchema>

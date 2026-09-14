@@ -15,3 +15,5 @@ export interface DebtorsPage {
   page: number
   pageSize: number
 }
+
+export type DebtorSort = 'debt' | 'charges' | 'paid'

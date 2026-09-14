@@ -161,7 +161,12 @@ export function debtors(deps: PaymentDeps, clinicId: string, input: DebtorsInput
       const debt = charged - paidSum
       if (debt > 0) all.push({ patientId, charges: charged, paid: paidSum, debt })
     }
-    all.sort((a, b) => b.debt - a.debt)
+    const sign = input.dir === 'asc' ? 1 : -1
+    // Ikkinchi kalit — bemor id si: teng summalarda sahifalar orasida qator
+    // sakrab yurmasin
+    all.sort(
+      (a, b) => sign * (a[input.sort] - b[input.sort]) || (a.patientId < b.patientId ? -1 : 1),
+    )
 
     const totalDebt = all.reduce((sum, row) => sum + row.debt, 0)
     const page = all.slice((input.page - 1) * input.pageSize, input.page * input.pageSize)
