@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 7.6** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: 7.7** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -989,9 +989,12 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       shablon, `strings.ts` jonli eksportlar beradi. Til tanlash kabinet va panel
       tepasida. 6 ta test. Import vaqtida muzlab qoladigan joylar tuzatildi:
       navigatsiya konfiguratsiyalari funksiya boʻldi, zod xato matnlari `{ error: () => … }`
-- [ ] **7.6 Server tili** — soʻrovdagi `Accept-Language` ga qarab xato matnlari, xat
-      va Excel sarlavhalari. zod sxemalari serverda ham matnni import vaqtida
-      ushlaydi — ular ham funksiyaga oʻtadi
+- [x] **7.6 Server tili** — `Accept-Language` ga qarab xato matnlari, xat va
+      Excel sarlavhalari. Til AsyncLocalStorage da (parallel soʻrovlar
+      aralashmaydi), shared unga resolver orqali qaraydi. Server zod
+      sxemalari `{ error: () => … }` ga oʻtdi (61 joy). Kabinet va panel
+      sarlavhani ilova tilidan qoʻyadi. Import ruscha shablon sarlavhalarini
+      ham taniydi. 7 + 4 test
 - [ ] **7.7 Ruscha tarjima** — `ru.ts` toʻldiriladi: 62 toʻplam, ~950 qator. Tip
       tekshiruvi kalit tushib qolganini koʻrsatadi
 

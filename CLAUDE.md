@@ -25,7 +25,8 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   oʻzbekcha. Matnlar `packages/shared/src/locales/uz.ts` (asosiy) va `ru.ts` da;
   ilova ularni `strings.ts` dagi jonli eksportlar orqali oʻqiydi (`AUTH_TEXT.login`
   joriy tilga qarab qaytadi). Tarjima qilinmagan kalit oʻzbekchaga qaytadi.
-  Server hozircha oʻzbekcha javob beradi — soʻrov tili keyingi task
+  Server soʻrovning `Accept-Language` sarlavhasiga qarab javob beradi (xato
+  matnlari, xat, Excel) — til AsyncLocalStorage da, global emas
 - **Filial yoʻq**: bitta klinika = bitta joy
 - Rollar **5 ta** tayyor shablon: Egasi · Shifokor · Qabulxona · Texnik · Kuzatuvchi.
   Klinika ruxsatlarni oʻzgartira oladi, lekin 1-versiyada yangi rol yarata olmaydi

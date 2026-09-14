@@ -101,7 +101,7 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | Fayllar | MinIO (S3 mos) | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
 | Excel | `write-excel-file` + `read-excel-file` | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi. **SheetJS oʻrniga:** uning npm dagi nusxasi (`xlsx@0.18.5`) tashlab qoʻyilgan va ikkita yuqori darajali zaifligi bor — prototype pollution va ReDoS, tuzatishsiz. Biz foydalanuvchi yuklagan faylni tahlil qilamiz, bu esa aynan oʻsha zaifliklar xavfli boʻlgan joy. Tanlangan kutubxonada ogohlantirish yoʻq va bogʻliqligi bitta |
-| Matnlar | `packages/shared/src/locales/` — `uz.ts` asosiy, `ru.ts` tarjima | Ilova matnni `strings.ts` dagi jonli eksportlar orqali oʻqiydi, til almashganda qayta chiziladi. Tarjima qilinmagan kalit oʻzbekchaga qaytadi. Server hozircha oʻzbekcha _(14/09/2026)_ |
+| Matnlar | `packages/shared/src/locales/` — `uz.ts` asosiy, `ru.ts` tarjima | Ilova matnni `strings.ts` dagi jonli eksportlar orqali oʻqiydi, til almashganda qayta chiziladi. Tarjima qilinmagan kalit oʻzbekchaga qaytadi. Server `Accept-Language` ga qarab javob beradi — kabinet uni ilova tilidan qoʻyadi _(14/09/2026)_ |
 | Deploy | Docker Compose | Bitta `docker compose up`. Kubernetes bu hajmda ortiqcha |
 | Format va lint | Biome | Prettier va ESLint oʻrniga bitta asbob: bitta konfiguratsiya fayli, sezilarli darajada tez. Modul chegarasini `noRestrictedImports` bilan majburlab boʻladi |
 
@@ -486,7 +486,7 @@ Javob shakli hamma joyda bir xil — mavjud ilovadagi `{ok, data|error}` qoidasi
 { "ok": false, "error": { "code": "not_found", "message": "Bemor topilmadi" } }
 ```
 
-Xato matnlari **oʻzbekcha** va foydalanuvchi tushunadigan tilda. Texnik tafsilot logga yoziladi, javobga emas.
+Xato matnlari **soʻrov tilida** (`Accept-Language`: uz yoki ru, sukut — oʻzbekcha) va foydalanuvchi tushunadigan tilda. Texnik tafsilot logga yoziladi, javobga emas.
 
 ## 10. Kabinet
 
