@@ -29,10 +29,20 @@ import {
 import { useCreateStaff } from './hooks'
 
 const schema = z.object({
-  email: z.string().trim().email(AUTH_TEXT.email_invalid),
-  fullName: z.string().trim().min(3, AUTH_TEXT.full_name_too_short).max(120),
+  email: z
+    .string()
+    .trim()
+    .email({ error: () => AUTH_TEXT.email_invalid }),
+  fullName: z
+    .string()
+    .trim()
+    .min(3, { error: () => AUTH_TEXT.full_name_too_short })
+    .max(120),
   roleId: z.string().uuid(),
-  password: z.string().min(8, AUTH_TEXT.password_too_short).max(200),
+  password: z
+    .string()
+    .min(8, { error: () => AUTH_TEXT.password_too_short })
+    .max(200),
 })
 
 type Values = z.infer<typeof schema>

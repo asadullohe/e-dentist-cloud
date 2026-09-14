@@ -5,17 +5,24 @@ export const paymentSchema = z.object({
   date: z
     .string()
     .trim()
-    .min(1, PAYMENT_TEXT.date_required)
-    .refine((value) => parseDisplayDate(value) !== null, VALIDATION_TEXT.date_invalid)
-    .refine((value) => {
-      const iso = parseDisplayDate(value)
-      return iso === null || new Date(`${iso}T00:00:00Z`) <= new Date()
-    }, VALIDATION_TEXT.date_in_future),
+    .min(1, { error: () => PAYMENT_TEXT.date_required })
+    .refine((value) => parseDisplayDate(value) !== null, {
+      error: () => VALIDATION_TEXT.date_invalid,
+    })
+    .refine(
+      (value) => {
+        const iso = parseDisplayDate(value)
+        return iso === null || new Date(`${iso}T00:00:00Z`) <= new Date()
+      },
+      { error: () => VALIDATION_TEXT.date_in_future },
+    ),
   /// Maskalangan matn: «200 000»
   amount: z
     .string()
     .trim()
-    .refine((value) => Number(value.replace(/\D/g, '')) > 0, PAYMENT_TEXT.amount_positive),
+    .refine((value) => Number(value.replace(/\D/g, '')) > 0, {
+      error: () => PAYMENT_TEXT.amount_positive,
+    }),
   note: z.string().trim().max(500),
 })
 

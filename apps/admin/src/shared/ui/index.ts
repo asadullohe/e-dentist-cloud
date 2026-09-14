@@ -21,6 +21,7 @@ export {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './dropdown-menu'
+export { Flag } from './flag'
 export { Input } from './input'
 export { Label } from './label'
 export { Skeleton } from './skeleton'

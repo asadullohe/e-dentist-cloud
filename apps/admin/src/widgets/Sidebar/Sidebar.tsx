@@ -13,7 +13,8 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui'
 
-const NAV = [
+/// Funksiya, konstanta emas — matnlar joriy tilda oʻqilishi uchun
+const nav = () => [
   { to: '/', end: true, label: ADMIN_UI.clinics, icon: BuildingIcon },
   { to: '/statistika', end: false, label: ADMIN_UI.stats, icon: ChartColumnIcon },
 ]
@@ -56,7 +57,7 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-2">
-        {NAV.map(({ to, end, label, icon: Icon }) => (
+        {nav().map(({ to, end, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

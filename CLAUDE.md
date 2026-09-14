@@ -21,7 +21,11 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 - Oflayn ilovalar (`e-dentist` repo) — **alohida mahsulot**, maʼlumot koʻchmaydi
 - Klinika **oʻzi roʻyxatdan oʻtadi** + 14 kunlik sinov
 - Toʻlov **qoʻlda**, Telegram orqali. Payme/Click — 2-bosqich
-- Faqat **oʻzbek tili**, lekin barcha matnlar `packages/shared/strings.ts` da
+- **Oʻzbek va rus tillari** _(qaror 14/09/2026, avval faqat oʻzbek edi)_. Boshlangʻich til
+  oʻzbekcha. Matnlar `packages/shared/src/locales/uz.ts` (asosiy) va `ru.ts` da;
+  ilova ularni `strings.ts` dagi jonli eksportlar orqali oʻqiydi (`AUTH_TEXT.login`
+  joriy tilga qarab qaytadi). Tarjima qilinmagan kalit oʻzbekchaga qaytadi.
+  Server hozircha oʻzbekcha javob beradi — soʻrov tili keyingi task
 - **Filial yoʻq**: bitta klinika = bitta joy
 - Rollar **5 ta** tayyor shablon: Egasi · Shifokor · Qabulxona · Texnik · Kuzatuvchi.
   Klinika ruxsatlarni oʻzgartira oladi, lekin 1-versiyada yangi rol yarata olmaydi
@@ -60,7 +64,10 @@ faqat oʻsha modulning `service.ts` iga murojaat qiladi.
 **Kodda hamma narsa ingliz tilida:** fayl nomlari, funksiyalar, oʻzgaruvchilar,
 tiplar, enum qiymatlari, baza ustunlari. Oʻzbekcha faqat ikki joyda:
 
-- **foydalanuvchi koʻradigan matn** — `packages/shared/src/strings.ts` da
+- **foydalanuvchi koʻradigan matn** — `packages/shared/src/locales/uz.ts` da (ruschasi `ru.ts`).
+  Qiymatni **import vaqtida** ushlab qolmang — modul darajasidagi massiv yoki zod
+  xato matni til almashganda eskisida qoladi. Massivlar funksiya boʻlsin
+  (`navSections()`), zod da `{ error: () => AUTH_TEXT.x }`
 - **izohlar** — nima uchun shunday qilinganini tushuntiradi
 
 ```ts

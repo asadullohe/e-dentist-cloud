@@ -7,17 +7,26 @@ export const visitSchema = z.object({
   date: z
     .string()
     .trim()
-    .min(1, VISIT_TEXT.date_required)
-    .refine((value) => parseDisplayDate(value) !== null, VALIDATION_TEXT.date_invalid)
-    .refine((value) => {
-      const iso = parseDisplayDate(value)
-      return iso === null || new Date(`${iso}T00:00:00Z`) <= new Date()
-    }, VALIDATION_TEXT.date_in_future),
-  treatment: z.string().trim().min(2, VISIT_TEXT.treatment_required).max(300),
+    .min(1, { error: () => VISIT_TEXT.date_required })
+    .refine((value) => parseDisplayDate(value) !== null, {
+      error: () => VALIDATION_TEXT.date_invalid,
+    })
+    .refine(
+      (value) => {
+        const iso = parseDisplayDate(value)
+        return iso === null || new Date(`${iso}T00:00:00Z`) <= new Date()
+      },
+      { error: () => VALIDATION_TEXT.date_in_future },
+    ),
+  treatment: z
+    .string()
+    .trim()
+    .min(2, { error: () => VISIT_TEXT.treatment_required })
+    .max(300),
   tooth: z
     .string()
     .trim()
-    .refine((value) => !value || isToothNo(value), VISIT_TEXT.tooth_invalid),
+    .refine((value) => !value || isToothNo(value), { error: () => VISIT_TEXT.tooth_invalid }),
   /// Maskalangan matn: «250 000»
   price: z.string().trim(),
   note: z.string().trim().max(2000),

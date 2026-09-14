@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { BrowserRouter } from 'react-router-dom'
+import { LocaleProvider } from '@/shared/lib'
 import { Toaster } from '@/shared/ui'
 
 const queryClient = new QueryClient({
@@ -18,7 +19,10 @@ const queryClient = new QueryClient({
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      {/* Til almashganda butun daraxt qayta yaratiladi — router ham */}
+      <LocaleProvider>
+        <BrowserRouter>{children}</BrowserRouter>
+      </LocaleProvider>
       <Toaster />
     </QueryClientProvider>
   )

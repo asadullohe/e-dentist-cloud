@@ -17,11 +17,13 @@ interface Row {
 }
 
 /// Ranglar `--chart-1` va `--chart-2` dan olinadi: tungi rejimda ular
-/// oʻzi almashadi, komponentga hech narsa qilish kerak emas
-const SERIES = [
-  { key: 'registered', label: ADMIN_UI.registered_month, color: 'var(--chart-1)' },
-  { key: 'extended', label: ADMIN_UI.extended_month, color: 'var(--chart-2)' },
-] as const
+/// oʻzi almashadi, komponentga hech narsa qilish kerak emas.
+/// Funksiya — nomlar joriy tilda oʻqilishi uchun
+const series = () =>
+  [
+    { key: 'registered', label: ADMIN_UI.registered_month, color: 'var(--chart-1)' },
+    { key: 'extended', label: ADMIN_UI.extended_month, color: 'var(--chart-2)' },
+  ] as const
 
 function ChartTooltip({ active, payload, label }: TooltipContentProps) {
   if (!active || !payload?.length) return null
@@ -36,7 +38,7 @@ function ChartTooltip({ active, payload, label }: TooltipContentProps) {
             aria-hidden="true"
           />
           <span className="text-muted-foreground">
-            {SERIES.find((s) => s.key === item.name)?.label ?? item.name}
+            {series().find((s) => s.key === item.name)?.label ?? item.name}
           </span>
           <span className="ml-auto font-medium tabular-nums">{item.value}</span>
         </div>
@@ -51,7 +53,7 @@ export function MonthsChart({ months }: { months: Row[] }) {
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-4">
-        {SERIES.map((series) => (
+        {series().map((series) => (
           <div key={series.key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span
               className="size-2 rounded-full"
@@ -86,7 +88,7 @@ export function MonthsChart({ months }: { months: Row[] }) {
             cursor={{ fill: 'var(--muted)' }}
             content={(props) => <ChartTooltip {...props} />}
           />
-          {SERIES.map((series) => (
+          {series().map((series) => (
             <Bar
               key={series.key}
               dataKey={series.key}

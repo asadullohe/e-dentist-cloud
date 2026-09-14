@@ -12,40 +12,7 @@
 //    (ajratgich sifatida uzilmas boʻshliq qaytaradi), server va brauzer esa
 //    bir xil matn chiqarishi shart.
 
-import { CURRENCY, EMPTY_MARK } from './strings.js'
-
-export const MONTHS = [
-  'yanvar',
-  'fevral',
-  'mart',
-  'aprel',
-  'may',
-  'iyun',
-  'iyul',
-  'avgust',
-  'sentabr',
-  'oktabr',
-  'noyabr',
-  'dekabr',
-] as const
-
-/// Grafik oʻqi uchun qisqartma
-export const MONTHS_SHORT = [
-  'yan',
-  'fev',
-  'mar',
-  'apr',
-  'may',
-  'iyn',
-  'iyl',
-  'avg',
-  'sen',
-  'okt',
-  'noy',
-  'dek',
-] as const
-
-export const WEEKDAYS = ['Du', 'Se', 'Chor', 'Pay', 'Ju', 'Shan', 'Yak'] as const
+import { EMPTY_MARK, MONTHS, strings } from './strings.js'
 
 const pad2 = (n: number): string => String(n).padStart(2, '0')
 
@@ -55,7 +22,7 @@ const groupDigits = (n: number): string => String(n).replace(/\B(?=(\d{3})+(?!\d
 // Pul har doim butun son (soʻm), kasr qismi yoʻq
 export function formatSom(n: number | null | undefined): string {
   const v = Math.round(Number(n) || 0)
-  return `${groupDigits(v)} ${CURRENCY}`
+  return `${groupDigits(v)} ${strings().CURRENCY}`
 }
 
 // Bugungi sana YYYY-MM-DD koʻrinishida — baza va API uchun.

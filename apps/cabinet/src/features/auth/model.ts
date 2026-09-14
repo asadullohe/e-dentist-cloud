@@ -7,24 +7,37 @@ import { z } from 'zod'
 const email = z
   .string()
   .trim()
-  .refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value), AUTH_TEXT.email_invalid)
+  .refine((value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value), {
+    error: () => AUTH_TEXT.email_invalid,
+  })
 
 export const loginSchema = z.object({
   email,
   // Kirishda uzunlik tekshirilmaydi: eski parol qoidalari boshqacha
   // boʻlishi mumkin, «parol qisqa» degan xabar esa bu yerda maʼnosiz
-  password: z.string().min(1, AUTH_TEXT.password_too_short),
+  password: z.string().min(1, { error: () => AUTH_TEXT.password_too_short }),
 })
 
 export const registerSchema = z.object({
-  clinicName: z.string().trim().min(2, AUTH_TEXT.clinic_name_too_short),
+  clinicName: z
+    .string()
+    .trim()
+    .min(2, { error: () => AUTH_TEXT.clinic_name_too_short }),
   phone: z
     .string()
     .trim()
-    .refine((value) => !value || phoneDigits(value).length === 9, AUTH_TEXT.phone_invalid),
-  fullName: z.string().trim().min(3, AUTH_TEXT.full_name_too_short),
+    .refine((value) => !value || phoneDigits(value).length === 9, {
+      error: () => AUTH_TEXT.phone_invalid,
+    }),
+  fullName: z
+    .string()
+    .trim()
+    .min(3, { error: () => AUTH_TEXT.full_name_too_short }),
   email,
-  password: z.string().min(8, AUTH_TEXT.password_too_short).max(200, AUTH_TEXT.password_too_long),
+  password: z
+    .string()
+    .min(8, { error: () => AUTH_TEXT.password_too_short })
+    .max(200, { error: () => AUTH_TEXT.password_too_long }),
 })
 
 /// Taklifnoma: pochta havoladan keladi, shuning uchun bu yerda yoʻq.
@@ -32,12 +45,18 @@ export const registerSchema = z.object({
 /// kabinetiga kira olmay qoladi va yangi havola soʻrashga toʻgʻri keladi
 export const inviteSchema = z
   .object({
-    fullName: z.string().trim().min(3, AUTH_TEXT.full_name_too_short),
-    password: z.string().min(8, AUTH_TEXT.password_too_short).max(200, AUTH_TEXT.password_too_long),
+    fullName: z
+      .string()
+      .trim()
+      .min(3, { error: () => AUTH_TEXT.full_name_too_short }),
+    password: z
+      .string()
+      .min(8, { error: () => AUTH_TEXT.password_too_short })
+      .max(200, { error: () => AUTH_TEXT.password_too_long }),
     passwordAgain: z.string(),
   })
   .refine((values) => values.password === values.passwordAgain, {
-    message: INVITE_UI.password_mismatch,
+    error: () => INVITE_UI.password_mismatch,
     path: ['passwordAgain'],
   })
 

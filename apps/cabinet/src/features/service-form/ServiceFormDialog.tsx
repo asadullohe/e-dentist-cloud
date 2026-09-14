@@ -30,7 +30,11 @@ import {
 import { useSaveService } from './hooks'
 
 const schema = z.object({
-  name: z.string().trim().min(2, SERVICE_TEXT.name_required).max(200),
+  name: z
+    .string()
+    .trim()
+    .min(2, { error: () => SERVICE_TEXT.name_required })
+    .max(200),
   /// Maskalangan matn: «250 000»
   price: z.string().trim(),
 })

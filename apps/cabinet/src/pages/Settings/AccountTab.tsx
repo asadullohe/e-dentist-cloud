@@ -19,8 +19,11 @@ import {
 } from '@/shared/ui'
 
 const schema = z.object({
-  currentPassword: z.string().min(1, AUTH_TEXT.password_too_short),
-  newPassword: z.string().min(8, AUTH_TEXT.password_too_short).max(200),
+  currentPassword: z.string().min(1, { error: () => AUTH_TEXT.password_too_short }),
+  newPassword: z
+    .string()
+    .min(8, { error: () => AUTH_TEXT.password_too_short })
+    .max(200),
 })
 
 type Values = z.infer<typeof schema>

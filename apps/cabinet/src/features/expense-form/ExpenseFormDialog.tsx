@@ -46,13 +46,19 @@ const schema = z.object({
   date: z
     .string()
     .trim()
-    .refine((value) => parseDisplayDate(value) !== null, VALIDATION_TEXT.date_invalid),
+    .refine((value) => parseDisplayDate(value) !== null, {
+      error: () => VALIDATION_TEXT.date_invalid,
+    }),
   category: z.enum(CATEGORIES),
-  description: z.string().trim().min(2, EXPENSE_TEXT.description_required).max(300),
-  /// Maskalangan matn: «250 000»
-  amount: z
+  description: z
     .string()
-    .refine((value) => Number(moneyDigits(value)) > 0, EXPENSE_TEXT.amount_required),
+    .trim()
+    .min(2, { error: () => EXPENSE_TEXT.description_required })
+    .max(300),
+  /// Maskalangan matn: «250 000»
+  amount: z.string().refine((value) => Number(moneyDigits(value)) > 0, {
+    error: () => EXPENSE_TEXT.amount_required,
+  }),
 })
 
 type Values = z.infer<typeof schema>
