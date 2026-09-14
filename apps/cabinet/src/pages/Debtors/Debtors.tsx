@@ -1,5 +1,6 @@
 import { DEBTORS_UI, formatSom } from '@e-dentist/shared'
 import {
+  type ColumnFiltersState,
   getCoreRowModel,
   type PaginationState,
   type SortingState,
@@ -19,9 +20,11 @@ export function Debtors() {
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
   const [sorting, setSorting] = useState<SortingState>([{ id: 'debt', desc: true }])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const sort = sorting[0]
   const { data, isPending } = useDebtors({
+    q: columnFilters.find((f) => f.id === 'fio')?.value as string | undefined,
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     sort: (sort?.id as DebtorSort | undefined) ?? 'debt',
@@ -32,12 +35,17 @@ export function Debtors() {
     data: data?.items ?? [],
     columns: debtorColumns(),
     pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
-    state: { pagination, sorting, columnVisibility },
+    state: { pagination, sorting, columnVisibility, columnFilters },
     manualPagination: true,
     manualSorting: true,
+    manualFiltering: true,
     onPaginationChange: setPagination,
     onSortingChange: (updater) => {
       setSorting(updater)
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    },
+    onColumnFiltersChange: (updater) => {
+      setColumnFilters(updater)
       setPagination((prev) => ({ ...prev, pageIndex: 0 }))
     },
     onColumnVisibilityChange: setColumnVisibility,

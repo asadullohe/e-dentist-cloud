@@ -1,6 +1,8 @@
 import { CARD_UI, formatSom } from '@e-dentist/shared'
 import {
+  type ColumnFiltersState,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   type PaginationState,
@@ -37,6 +39,7 @@ export function VisitsTab({ patientId }: { patientId: string }) {
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
 
   const table = useReactTable({
@@ -48,12 +51,14 @@ export function VisitsTab({ patientId }: { patientId: string }) {
       },
       onRemove: setDeleting,
     }),
-    state: { sorting, columnVisibility, pagination },
+    state: { sorting, columnVisibility, columnFilters, pagination },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
 

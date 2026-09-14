@@ -22,7 +22,7 @@ export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient
   return [
     {
       accessorKey: 'fio',
-      meta: { title: PATIENT_UI.col_fio } satisfies ColumnMeta,
+      meta: { title: PATIENT_UI.col_fio, filter: { type: 'text' } } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={PATIENT_UI.col_fio} />,
       enableHiding: false,
       cell: ({ row }) => (
@@ -38,7 +38,11 @@ export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient
     },
     {
       accessorKey: 'phone',
-      meta: { title: PATIENT_UI.col_phone, className: 'hidden sm:table-cell' } satisfies ColumnMeta,
+      meta: {
+        title: PATIENT_UI.col_phone,
+        className: 'hidden sm:table-cell',
+        filter: { type: 'text' },
+      } satisfies ColumnMeta,
       header: PATIENT_UI.col_phone,
       enableSorting: false,
       cell: ({ row }) => (row.original.phone ? formatUzPhone(row.original.phone) : '—'),
@@ -66,6 +70,7 @@ export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient
       meta: {
         title: PATIENT_UI.col_address,
         className: 'hidden lg:table-cell',
+        filter: { type: 'text' },
       } satisfies ColumnMeta,
       header: PATIENT_UI.col_address,
       enableSorting: false,

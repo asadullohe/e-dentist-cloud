@@ -35,17 +35,35 @@ function searchWhere(query: string | undefined): Prisma.PatientWhereInput {
   return { OR: or }
 }
 
+/// Ustun filtrlari: har biri oʻz ustunida, umumiy qidiruv bilan AND
+function columnWhere(input: { fio?: string; phone?: string; address?: string }) {
+  const and: Prisma.PatientWhereInput[] = []
+  if (input.fio?.trim()) and.push({ fioSearch: { contains: searchKey(input.fio) } })
+  if (input.phone?.trim()) {
+    const digits = phoneDigits(input.phone)
+    // Raqam yozilmagan boʻlsa (masalan «+998») hech narsa filtrlanmaydi
+    if (digits) and.push({ phone: { contains: digits } })
+  }
+  if (input.address?.trim()) {
+    and.push({ address: { contains: input.address.trim(), mode: 'insensitive' } })
+  }
+  return and
+}
+
 export async function list(
   tx: ClinicTx,
   input: {
     q?: string
+    fio?: string
+    phone?: string
+    address?: string
     page: number
     pageSize: number
     sort: 'fio' | 'birthDate' | 'createdAt'
     dir: 'asc' | 'desc'
   },
 ) {
-  const where = searchWhere(input.q)
+  const where: Prisma.PatientWhereInput = { AND: [searchWhere(input.q), ...columnWhere(input)] }
   const [items, total] = await Promise.all([
     tx.patient.findMany({
       where,
@@ -90,6 +108,13 @@ export function listAll(tx: ClinicTx) {
     select: { id: true, fio: true, phone: true, birthDate: true, address: true, note: true },
     orderBy: { fio: 'asc' },
   })
+}
+
+/// Qidiruvga mos bemorlar id si — boshqa modul oʻz roʻyxatini shu bilan
+/// filtrlaydi (qarzdorlar). Klinikada bemorlar mingdan oshmaydi
+export async function searchIds(tx: ClinicTx, query: string): Promise<Set<string>> {
+  const rows = await tx.patient.findMany({ where: searchWhere(query), select: { id: true } })
+  return new Set(rows.map((row) => row.id))
 }
 
 export function findByIds(tx: ClinicTx, ids: string[]) {

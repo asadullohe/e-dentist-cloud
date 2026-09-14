@@ -847,6 +847,7 @@ export const ru: DeepPartial<Strings> = {
     no_results: 'Ничего не найдено',
     filter_search: 'Поиск…',
     filter_clear: 'Сбросить фильтр',
+    filter_all: 'Все',
     selected: (n: number) => `Выбрано: ${n}`,
   },
 

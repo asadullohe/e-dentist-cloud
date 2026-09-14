@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  type FacetOption,
 } from '@/shared/ui'
 
 interface Actions {
@@ -42,6 +43,8 @@ interface Actions {
   onReturn: (order: LabOrder) => void
   onEdit: (order: LabOrder) => void
   onRemove: (order: LabOrder) => void
+  /// thead filtri uchun texniklar roʻyxati (faqat `lab.write` da bor)
+  techOptions: readonly FacetOption[]
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
@@ -49,17 +52,25 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
   const columns: ColumnDef<LabOrder>[] = [
     {
       accessorKey: 'fio',
-      meta: { title: LAB_UI.patient } satisfies ColumnMeta,
+      meta: { title: LAB_UI.patient, filter: { type: 'text' } } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={LAB_UI.patient} />,
       enableHiding: false,
+      filterFn: 'includesString',
       cell: ({ row }) => <span className="font-medium">{row.original.fio}</span>,
     },
     {
       id: 'work',
-      accessorFn: (order) => LAB_WORK_TYPE_LABELS[order.workType],
-      meta: { title: LAB_UI.work_type } satisfies ColumnMeta,
+      accessorFn: (order) => order.workType,
+      meta: {
+        title: LAB_UI.work_type,
+        filter: {
+          type: 'select',
+          options: Object.entries(LAB_WORK_TYPE_LABELS).map(([value, label]) => ({ value, label })),
+        },
+      } satisfies ColumnMeta,
       header: LAB_UI.work_type,
       enableSorting: false,
+      filterFn: 'equalsString',
       cell: ({ row }) => {
         const o = row.original
         return (
@@ -84,10 +95,14 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
     {
       id: 'tech',
       accessorFn: (order) => order.techId ?? '',
-      meta: { title: LAB_UI.tech, className: 'hidden lg:table-cell' } satisfies ColumnMeta,
+      meta: {
+        title: LAB_UI.tech,
+        className: 'hidden lg:table-cell',
+        filter: a.techOptions.length ? { type: 'select', options: a.techOptions } : undefined,
+      } satisfies ColumnMeta,
       header: LAB_UI.tech,
       enableSorting: false,
-      filterFn: 'arrIncludesSome',
+      filterFn: 'equalsString',
       cell: ({ row }) =>
         row.original.techName ?? <span className="text-muted-foreground">{LAB_UI.tech_none}</span>,
     },
@@ -105,10 +120,16 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
     },
     {
       accessorKey: 'status',
-      meta: { title: LAB_UI.status } satisfies ColumnMeta,
+      meta: {
+        title: LAB_UI.status,
+        filter: {
+          type: 'select',
+          options: Object.entries(LAB_STATUS_LABELS).map(([value, label]) => ({ value, label })),
+        },
+      } satisfies ColumnMeta,
       header: LAB_UI.status,
       enableSorting: false,
-      filterFn: 'arrIncludesSome',
+      filterFn: 'equalsString',
       cell: ({ row }) => {
         const o = row.original
         return (

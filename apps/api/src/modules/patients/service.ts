@@ -76,6 +76,11 @@ export function findByIds(tx: ClinicTx, ids: string[]) {
   return repo.findByIds(tx, ids)
 }
 
+/// Boshqa modullar uchun: ism yoki telefon boʻyicha qidiruvga mos id lar
+export function searchIds(tx: ClinicTx, query: string) {
+  return repo.searchIds(tx, query)
+}
+
 /// Boshqa modullar uchun (reports): oraliqda qoʻshilgan bemorlar soni
 export function countCreatedTx(tx: ClinicTx, from: Date, to: Date): Promise<number> {
   return repo.countCreatedBetween(tx, from, to)

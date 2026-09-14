@@ -20,6 +20,10 @@ export type PatientSort = 'fio' | 'birthDate' | 'createdAt'
 
 export interface PatientQuery {
   q?: string
+  /// Ustun filtrlari (jadval sarlavhasi ostidagi maydonlar)
+  fio?: string
+  phone?: string
+  address?: string
   page?: number
   pageSize?: number
   sort?: PatientSort

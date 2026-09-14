@@ -30,9 +30,10 @@ export function paymentColumns({ onEdit, onRemove }: Actions): ColumnDef<Payment
     },
     {
       accessorKey: 'note',
-      meta: { title: PAYMENT_UI.note } satisfies ColumnMeta,
+      meta: { title: PAYMENT_UI.note, filter: { type: 'text' } } satisfies ColumnMeta,
       header: PAYMENT_UI.note,
       enableSorting: false,
+      filterFn: 'includesString',
       enableHiding: false,
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.note ?? '—'}</span>,
     },

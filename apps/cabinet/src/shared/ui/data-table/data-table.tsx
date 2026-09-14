@@ -3,11 +3,15 @@ import { cn } from 'cn'
 import { Card } from '../card'
 import { Skeleton } from '../skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../table'
+import { type ColumnFilterMeta, DataTableFilterRow } from './filter-row'
 
-/// Ustun `meta`: ustunlar menyusidagi nomi va tor ekranda yashirish sinfi
+/// Ustun `meta`: ustunlar menyusidagi nomi, katak sinfi va thead dagi filtr
 export interface ColumnMeta {
   title: string
   className?: string
+  /// Berilsa sarlavha ostida filtr qatori chiqadi (matn yoki roʻyxat).
+  /// Server sahifalaydigan jadvalda `manualFiltering` + `columnFilters` soʻrovga ketadi
+  filter?: ColumnFilterMeta
 }
 
 interface Props<TData> {
@@ -66,6 +70,7 @@ export function DataTable<TData>({
                 ))}
               </TableRow>
             ))}
+            <DataTableFilterRow table={table} />
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.length > 0 ? (

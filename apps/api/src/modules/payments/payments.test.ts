@@ -134,6 +134,15 @@ describe('qarzdorlar', () => {
     expect(row).toMatchObject({ charges: 500_000, paid: 200_000, debt: 300_000 })
     expect(row).toHaveProperty('phone')
   })
+
+  it('ism boʻyicha filtr sahifalashdan oldin ishlaydi', async () => {
+    const r = await call('GET', '/api/debtors?q=tolovchi')
+    const data = r.json().data
+    expect(data.items.map((x: { fio: string }) => x.fio)).toEqual(['Toʻlovchi Bemor'])
+    expect(data.total).toBe(1)
+    // Jami qarz ham filtrlangan roʻyxat boʻyicha
+    expect(data.totalDebt).toBe(300_000)
+  })
 })
 
 describe('koʻp ijarachilik', () => {

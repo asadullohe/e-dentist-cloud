@@ -32,6 +32,8 @@ export const paymentUpdateSchema = paymentCreateSchema.omit({ patientId: true })
 export const DEBTOR_SORT = ['debt', 'charges', 'paid'] as const
 
 export const debtorsSchema = z.object({
+  /// Ism yoki telefon boʻyicha — sahifalashdan oldin
+  q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
   sort: z.enum(DEBTOR_SORT).default('debt'),

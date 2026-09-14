@@ -8,7 +8,8 @@ export function debtorColumns(): ColumnDef<Debtor>[] {
   return [
     {
       accessorKey: 'fio',
-      meta: { title: DEBTORS_UI.patient } satisfies ColumnMeta,
+      // Filtr serverda: ism yoki telefon boʻyicha (Debtors.tsx `q` ga uzatadi)
+      meta: { title: DEBTORS_UI.patient, filter: { type: 'text' } } satisfies ColumnMeta,
       header: DEBTORS_UI.patient,
       // Ism serverda sahifalashdan keyin olinadi — u boʻyicha saralab boʻlmaydi
       enableSorting: false,

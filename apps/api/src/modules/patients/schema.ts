@@ -42,6 +42,10 @@ export const PATIENT_SORT = ['fio', 'birthDate', 'createdAt'] as const
 
 export const patientListSchema = z.object({
   q: z.string().trim().max(100).optional(),
+  // Ustun filtrlari (jadval sarlavhasi ostidagi maydonlar) — `q` bilan birga AND
+  fio: z.string().trim().max(100).optional(),
+  phone: z.string().trim().max(30).optional(),
+  address: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(PATIENT_SORT).default('fio'),

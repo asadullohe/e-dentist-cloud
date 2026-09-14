@@ -1,4 +1,4 @@
-import { CARD_UI, LAB_STATUS_LABELS, LAB_UI } from '@e-dentist/shared'
+import { CARD_UI, LAB_UI } from '@e-dentist/shared'
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -13,7 +13,7 @@ import {
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { type LabOrder, type LabStatus, useLabOrders } from '@/entities/lab-order'
+import { type LabOrder, useLabOrders } from '@/entities/lab-order'
 import { useHasPermission } from '@/entities/session'
 import { useStaffNames } from '@/entities/staff'
 import {
@@ -33,13 +33,10 @@ import {
   AlertDialogTitle,
   Button,
   DataTable,
-  DataTableFacetedFilter,
   DataTablePagination,
   DataTableViewOptions,
 } from '@/shared/ui'
 import { labColumns } from './columns'
-
-const STATUSES = Object.keys(LAB_STATUS_LABELS) as LabStatus[]
 
 /// Qator foni holatga qarab: topshirilgan — yashil, muddati oʻtgan — qizil,
 /// tayyor — sariq. Jadvalda koʻz bilan ajratish uchun
@@ -88,6 +85,10 @@ export function Lab() {
         setFormOpen(true)
       },
       onRemove: setDeleting,
+      techOptions:
+        canWrite && staff
+          ? staff.map((person) => ({ value: person.id, label: person.fullName ?? person.id }))
+          : [],
     }),
     state: { sorting, columnFilters, columnVisibility, pagination },
     onSortingChange: setSorting,
@@ -99,16 +100,6 @@ export function Lab() {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
-
-  const filterValue = (id: string) =>
-    (table.getColumn(id)?.getFilterValue() as string[] | undefined) ?? []
-  const setFilter = (id: string, values: string[]) =>
-    table.getColumn(id)?.setFilterValue(values.length ? values : undefined)
-
-  const statusCounts = new Map<string, number>()
-  for (const order of orders ?? []) {
-    statusCounts.set(order.status, (statusCounts.get(order.status) ?? 0) + 1)
-  }
 
   return (
     <>
@@ -128,25 +119,8 @@ export function Lab() {
         )}
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <DataTableFacetedFilter
-          title={LAB_UI.status}
-          options={STATUSES.map((key) => ({ value: key, label: LAB_STATUS_LABELS[key] }))}
-          selected={filterValue('status')}
-          onChange={(values) => setFilter('status', values)}
-          counts={statusCounts}
-        />
-        {canWrite && staff && (
-          <DataTableFacetedFilter
-            title={LAB_UI.tech}
-            options={staff.map((person) => ({
-              value: person.id,
-              label: person.fullName ?? person.id,
-            }))}
-            selected={filterValue('tech')}
-            onChange={(values) => setFilter('tech', values)}
-          />
-        )}
+      {/* Holat, texnik, ish turi va bemor filtrlari — jadval sarlavhasi ostida */}
+      <div className="mb-3 flex items-center justify-end gap-2">
         <DataTableViewOptions table={table} />
       </div>
 

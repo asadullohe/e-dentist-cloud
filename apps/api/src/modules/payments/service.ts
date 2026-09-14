@@ -153,10 +153,15 @@ export interface Debtor {
 /// soni mingdan oshmaydi, bu hajmda farq sezilmaydi
 export function debtors(deps: PaymentDeps, clinicId: string, input: DebtorsInput) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    const [charges, paid] = await Promise.all([visits.chargeTotals(tx), repo.paidTotals(tx)])
+    const [charges, paid, matching] = await Promise.all([
+      visits.chargeTotals(tx),
+      repo.paidTotals(tx),
+      input.q ? patients.searchIds(tx, input.q) : null,
+    ])
 
     const all: Omit<Debtor, 'fio' | 'phone'>[] = []
     for (const [patientId, charged] of charges) {
+      if (matching && !matching.has(patientId)) continue
       const paidSum = paid.get(patientId) ?? 0
       const debt = charged - paidSum
       if (debt > 0) all.push({ patientId, charges: charged, paid: paidSum, debt })

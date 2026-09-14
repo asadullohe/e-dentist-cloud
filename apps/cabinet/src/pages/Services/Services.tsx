@@ -1,5 +1,6 @@
-import { CARD_UI, SERVICE_UI, TABLE_UI } from '@e-dentist/shared'
+import { CARD_UI, SERVICE_UI } from '@e-dentist/shared'
 import {
+  type ColumnFiltersState,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -8,7 +9,7 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table'
-import { PlusIcon, SearchIcon, XIcon } from 'lucide-react'
+import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type Service, useServices } from '@/entities/service'
 import { ServiceFormDialog, useDeleteService } from '@/features/service-form'
@@ -24,7 +25,6 @@ import {
   Button,
   DataTable,
   DataTablePagination,
-  Input,
 } from '@/shared/ui'
 import { serviceColumns } from './columns'
 
@@ -35,8 +35,8 @@ export function Services() {
   const [editing, setEditing] = useState<Service | undefined>(undefined)
   const [deleting, setDeleting] = useState<Service | null>(null)
 
-  // Narxnoma toʻliq keladi — qidiruv, saralash va sahifalash mijozda
-  const [search, setSearch] = useState('')
+  // Narxnoma toʻliq keladi — qidiruv (thead filtri), saralash va sahifalash mijozda
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }])
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
 
@@ -49,21 +49,18 @@ export function Services() {
       },
       onRemove: setDeleting,
     }),
-    state: { sorting, pagination, globalFilter: search },
+    state: { sorting, pagination, columnFilters },
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
-    onGlobalFilterChange: setSearch,
-    globalFilterFn: 'includesString',
+    onColumnFiltersChange: (updater) => {
+      setColumnFilters(updater)
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
-
-  function onSearch(value: string) {
-    setSearch(value)
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
-  }
 
   return (
     <>
@@ -81,28 +78,10 @@ export function Services() {
         </Button>
       </div>
 
-      <div className="mb-3 flex items-center gap-2">
-        <div className="relative w-full max-w-xs">
-          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <Input
-            value={search}
-            onChange={(event) => onSearch(event.target.value)}
-            placeholder={SERVICE_UI.search}
-            className="h-8 pl-8"
-          />
-        </div>
-        {search && (
-          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => onSearch('')}>
-            {TABLE_UI.reset}
-            <XIcon />
-          </Button>
-        )}
-      </div>
-
       <DataTable
         table={table}
         loading={isPending && !services}
-        emptyText={search ? SERVICE_UI.nothing_found : SERVICE_UI.empty}
+        emptyText={columnFilters.length ? SERVICE_UI.nothing_found : SERVICE_UI.empty}
       />
 
       <div className="mt-3">

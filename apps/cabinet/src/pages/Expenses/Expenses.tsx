@@ -19,7 +19,7 @@ import {
 } from '@tanstack/react-table'
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
-import { type Expense, type ExpenseCategory, useExpenses } from '@/entities/expense'
+import { type Expense, useExpenses } from '@/entities/expense'
 import { ExpenseFormDialog, useDeleteExpense } from '@/features/expense-form'
 import {
   AlertDialog,
@@ -34,7 +34,6 @@ import {
   Button,
   Card,
   DataTable,
-  DataTableFacetedFilter,
   DataTablePagination,
   DataTableViewOptions,
 } from '@/shared/ui'
@@ -83,15 +82,6 @@ export function Expenses() {
     getPaginationRowModel: getPaginationRowModel(),
   })
 
-  const categoryFilter =
-    (table.getColumn('category')?.getFilterValue() as string[] | undefined) ?? []
-  const categoryOptions = (Object.keys(EXPENSE_CATEGORY_LABELS) as ExpenseCategory[]).map(
-    (category) => ({ value: category, label: EXPENSE_CATEGORY_LABELS[category] }),
-  )
-  const categoryCounts = new Map<string, number>()
-  for (const item of data?.items ?? []) {
-    categoryCounts.set(item.category, (categoryCounts.get(item.category) ?? 0) + 1)
-  }
   const { mutateAsync: remove } = useDeleteExpense()
 
   // Shu oyda — bugun, oʻtgan oyda — oyning birinchi kuni. Xarajat kelajakda
@@ -160,16 +150,8 @@ export function Expenses() {
         </div>
       )}
 
-      <div className="mb-3 flex items-center gap-2">
-        <DataTableFacetedFilter
-          title={EXPENSE_UI.category}
-          options={categoryOptions}
-          selected={categoryFilter}
-          onChange={(values) =>
-            table.getColumn('category')?.setFilterValue(values.length ? values : undefined)
-          }
-          counts={categoryCounts}
-        />
+      {/* Turkum va izoh filtrlari — jadval sarlavhasi ostida */}
+      <div className="mb-3 flex items-center justify-end gap-2">
         <DataTableViewOptions table={table} />
       </div>
 

@@ -22,9 +22,13 @@ export function serviceColumns({ onEdit, onRemove }: Actions): ColumnDef<Service
   return [
     {
       accessorKey: 'name',
-      meta: { title: SERVICE_UI.name } satisfies ColumnMeta,
+      meta: {
+        title: SERVICE_UI.name,
+        filter: { type: 'text', placeholder: SERVICE_UI.search },
+      } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={SERVICE_UI.name} />,
       enableHiding: false,
+      filterFn: 'includesString',
       cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
     },
     {

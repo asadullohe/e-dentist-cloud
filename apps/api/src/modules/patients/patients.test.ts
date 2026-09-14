@@ -87,6 +87,35 @@ describe('qidiruv', () => {
     expect(r.json().data.items).toHaveLength(1)
     expect(r.json().data.items[0].fio).toBe('Karimov Aziz')
   })
+
+  // Jadval sarlavhasi ostidagi maydonlar: har biri oʻz ustunida, birga AND
+  it('ustun filtrlari: ism, telefon, manzil', async () => {
+    const created = await post('/api/patients', {
+      fio: 'Manzilli Bemor',
+      phone: '907778899',
+      address: 'Toshkent, Chilonzor',
+    })
+
+    const byFio = await get('/api/patients?fio=manzilli')
+    expect(byFio.json().data.items.map((p: { fio: string }) => p.fio)).toEqual(['Manzilli Bemor'])
+
+    const byPhone = await get('/api/patients?phone=7778899')
+    expect(byPhone.json().data.items).toHaveLength(1)
+
+    const byAddress = await get(`/api/patients?address=${encodeURIComponent('chilonzor')}`)
+    expect(byAddress.json().data.items[0].fio).toBe('Manzilli Bemor')
+
+    // Birga: ism mos, manzil mos emas — boʻsh
+    const both = await get(`/api/patients?fio=manzilli&address=${encodeURIComponent('Samarqand')}`)
+    expect(both.json().data.items).toHaveLength(0)
+
+    // Keyingi testlar bemorlar sonini sanaydi — oʻzimiz qoʻshganini olib tashlaymiz
+    await h.app.inject({
+      method: 'DELETE',
+      url: `/api/patients/${created.json().data.id}`,
+      headers: { cookie: h.cookie },
+    })
+  })
 })
 
 describe('roʻyxat va sahifalash', () => {

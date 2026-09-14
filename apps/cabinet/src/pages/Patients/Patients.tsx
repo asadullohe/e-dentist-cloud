@@ -67,8 +67,14 @@ export function Patients() {
   const [removing, setRemoving] = useState<Patient | null>(null)
 
   const sort = sorting[0]
+  // thead dagi ustun filtrlari — server sahifalagani uchun soʻrovga ketadi
+  const filterOf = (id: string) =>
+    columnFilters.find((f) => f.id === id)?.value as string | undefined
   const { data, isPending } = usePatients({
     q: debouncedSearch || undefined,
+    fio: filterOf('fio'),
+    phone: filterOf('phone'),
+    address: filterOf('address'),
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     sort: (sort?.id as PatientSort | undefined) ?? 'fio',
@@ -83,13 +89,17 @@ export function Patients() {
     state: { pagination, sorting, columnVisibility, columnFilters },
     manualPagination: true,
     manualSorting: true,
+    manualFiltering: true,
     onPaginationChange: setPagination,
     onSortingChange: (updater) => {
       setSorting(updater)
       setPagination((prev) => ({ ...prev, pageIndex: 0 }))
     },
     onColumnVisibilityChange: setColumnVisibility,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      setColumnFilters(updater)
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    },
     getCoreRowModel: getCoreRowModel(),
   })
 
@@ -172,7 +182,9 @@ export function Patients() {
         table={table}
         loading={isPending && !data}
         refreshing={isPending}
-        emptyText={debouncedSearch ? PATIENT_UI.nothing_found : PATIENT_UI.empty}
+        emptyText={
+          debouncedSearch || columnFilters.length ? PATIENT_UI.nothing_found : PATIENT_UI.empty
+        }
         onRowClick={(patient) => navigate(`/patients/${patient.id}`)}
       />
 

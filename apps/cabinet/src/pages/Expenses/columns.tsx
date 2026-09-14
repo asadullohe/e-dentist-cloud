@@ -40,20 +40,27 @@ export function expenseColumns({ onEdit, onRemove }: Actions): ColumnDef<Expense
       accessorKey: 'category',
       meta: {
         title: EXPENSE_UI.category,
-        className: 'hidden w-40 sm:table-cell',
+        className: 'hidden w-44 sm:table-cell',
+        filter: {
+          type: 'select',
+          options: Object.entries(EXPENSE_CATEGORY_LABELS).map(([value, label]) => ({
+            value,
+            label,
+          })),
+        },
       } satisfies ColumnMeta,
       header: EXPENSE_UI.category,
       enableSorting: false,
-      // Toolbar filtri massiv beradi: qator shu toifalardan birida boʻlsa oʻtadi
-      filterFn: 'arrIncludesSome',
+      filterFn: 'equalsString',
       cell: ({ row }) => (
         <Badge variant="secondary">{EXPENSE_CATEGORY_LABELS[row.original.category]}</Badge>
       ),
     },
     {
       accessorKey: 'description',
-      meta: { title: EXPENSE_UI.description } satisfies ColumnMeta,
+      meta: { title: EXPENSE_UI.description, filter: { type: 'text' } } satisfies ColumnMeta,
       header: EXPENSE_UI.description,
+      filterFn: 'includesString',
       enableSorting: false,
       enableHiding: false,
       cell: ({ row }) => (

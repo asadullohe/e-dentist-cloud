@@ -30,9 +30,10 @@ export function visitColumns({ onEdit, onRemove }: Actions): ColumnDef<Visit>[] 
     },
     {
       accessorKey: 'treatment',
-      meta: { title: CARD_UI.treatment } satisfies ColumnMeta,
+      meta: { title: CARD_UI.treatment, filter: { type: 'text' } } satisfies ColumnMeta,
       header: CARD_UI.treatment,
       enableSorting: false,
+      filterFn: 'includesString',
       enableHiding: false,
       cell: ({ row }) => (
         <div>
