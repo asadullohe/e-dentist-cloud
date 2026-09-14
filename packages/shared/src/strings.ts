@@ -121,6 +121,7 @@ export const CURRENCY = uz.CURRENCY
 export const ROLE_LABELS = live('ROLE_LABELS')
 export const AUTH_TEXT = live('AUTH_TEXT')
 export const UI_TEXT = live('UI_TEXT')
+export const HOME_UI = live('HOME_UI')
 export const SECTION_LABELS = live('SECTION_LABELS')
 export const PATIENT_TEXT = live('PATIENT_TEXT')
 export const PATIENT_UI = live('PATIENT_UI')

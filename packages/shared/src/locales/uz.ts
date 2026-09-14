@@ -108,8 +108,23 @@ export const UI_TEXT = {
   pick_date: 'Kalendardan tanlash',
   close: 'Yopish',
   welcome: 'Xush kelibsiz',
-  dashboard_hint:
-    'Kabinet tayyor. Bemorlar, tashriflar va tish xaritasi keyingi bosqichda qoʻshiladi.',
+} as const
+
+// Bosh sahifa: bugungi holat bir qarashda
+export const HOME_UI = {
+  today_appointments: 'Bugungi qabullar',
+  arrived: (n: number) => `${n} ta keldi`,
+  patients: 'Bemorlar',
+  new_this_month: (n: number) => `shu oy ${n} ta yangi`,
+  month_income: 'Shu oy tushum',
+  month_visits: (n: number) => `${n} ta tashrif`,
+  debt: 'Qarzdorlik',
+  debtors: (n: number) => `${n} ta bemor`,
+  no_appointments: 'Bugunga qabul yoʻq',
+  open_schedule: 'Jadval',
+  top_debtors: 'Eng katta qarzdorlar',
+  no_debtors: 'Qarzdorlar yoʻq',
+  all_debtors: 'Barchasi',
 } as const
 
 // Yon menyu boʻlimlarining nomlari
