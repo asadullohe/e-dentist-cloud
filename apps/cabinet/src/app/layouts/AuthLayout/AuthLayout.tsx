@@ -1,5 +1,6 @@
 import { UI_TEXT } from '@e-dentist/shared'
 import type { ReactNode } from 'react'
+import { Card } from '@/shared/ui'
 
 interface AuthLayoutProps {
   children: ReactNode
@@ -9,16 +10,18 @@ interface AuthLayoutProps {
   centered?: boolean
 }
 
+/// Kirish, roʻyxat, taklifnoma: panel bilan bir xil — logotip, karta, neytral fon
 export function AuthLayout({ children, footer, centered = false }: AuthLayoutProps) {
   return (
-    <div className="from-primary/10 flex min-h-full items-center justify-center bg-gradient-to-b via-background to-background p-6">
-      <div className="bg-card w-full max-w-md rounded-xl border p-8 text-center shadow-sm">
-        <div className="font-display text-primary text-2xl font-bold tracking-tight">
-          {UI_TEXT.brand}
+    <div className="bg-muted/40 flex min-h-dvh items-center justify-center p-6">
+      <Card className="w-full max-w-md gap-0 p-8">
+        <div className="flex flex-col items-center gap-3">
+          <img src="/logo.png" alt="" className="size-14 rounded-2xl" />
+          <div className="text-lg font-semibold tracking-tight">{UI_TEXT.brand}</div>
         </div>
-        <div className={centered ? 'mt-4' : 'mt-5 text-left'}>{children}</div>
-        {footer && <div className="text-muted-foreground mt-4 text-sm">{footer}</div>}
-      </div>
+        <div className={centered ? 'mt-4 text-center' : 'mt-6'}>{children}</div>
+        {footer && <div className="text-muted-foreground mt-5 text-center text-sm">{footer}</div>}
+      </Card>
     </div>
   )
 }
