@@ -4,6 +4,7 @@ import {
   formatSom,
   formatUzPhone,
   HOME_UI,
+  SECTION_LABELS,
   todayISO,
   UI_TEXT,
 } from '@e-dentist/shared'
@@ -251,12 +252,13 @@ export function Dashboard() {
 
   return (
     <>
+      {/* Sarlavha — yon menyudagi nom bilan bir xil: foydalanuvchi qayerda
+          turganini darhol bilsin. Salomlashish — pastda */}
       <div className="mb-4">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {UI_TEXT.welcome}, {session?.user.fullName}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{SECTION_LABELS.home}</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          {session?.clinic?.name} · {formatDate(today)}
+          {UI_TEXT.welcome}, {session?.user.fullName} · {session?.clinic?.name} ·{' '}
+          {formatDate(today)}
         </p>
       </div>
 
