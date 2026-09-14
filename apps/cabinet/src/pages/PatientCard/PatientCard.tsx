@@ -2,8 +2,6 @@ import {
   age,
   BRIDGE_UI,
   CARD_UI,
-  formatDate,
-  formatSom,
   formatUzPhone,
   IMAGE_UI,
   LAB_UI,
@@ -26,11 +24,9 @@ import { Link, Outlet, useParams } from 'react-router-dom'
 import { usePatient } from '@/entities/patient'
 import { useHasPermission } from '@/entities/session'
 import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
-import { useVisits, type Visit } from '@/entities/visit'
 import { BridgeFormDialog, useDeleteBridge } from '@/features/bridge-form'
 import { PatientFormDialog } from '@/features/patient-form'
 import { ToothEditDialog } from '@/features/tooth-edit'
-import { useDeleteVisit, VisitFormDialog } from '@/features/visit-form'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,133 +39,16 @@ import {
   Button,
   Card,
   ContentSection,
-  EmptyState,
   Separator,
   SideNav,
   type SideNavItem,
   SideNavLayout,
   Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@/shared/ui'
 import { ImagesTab } from './ImagesTab'
 import { LabTab } from './LabTab'
 import { PaymentsTab } from './PaymentsTab'
-
-function VisitsTab({ patientId }: { patientId: string }) {
-  const { data: visits, isPending } = useVisits(patientId)
-  const { mutateAsync: removeVisit } = useDeleteVisit()
-  const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<Visit | undefined>(undefined)
-  const [deleting, setDeleting] = useState<Visit | null>(null)
-
-  const total = visits?.reduce((sum, visit) => sum + visit.price, 0) ?? 0
-
-  function openNew() {
-    setEditing(undefined)
-    setFormOpen(true)
-  }
-
-  function openEdit(visit: Visit) {
-    setEditing(visit)
-    setFormOpen(true)
-  }
-
-  return (
-    <>
-      <div className="mb-3 flex items-center justify-between">
-        <div className="text-muted-foreground text-sm">
-          {CARD_UI.total}: <span className="text-foreground font-semibold">{formatSom(total)}</span>
-        </div>
-        <Button size="sm" onClick={openNew}>
-          <PlusIcon />
-          {CARD_UI.add_visit}
-        </Button>
-      </div>
-
-      <Card className="overflow-hidden py-0">
-        {isPending ? (
-          <div className="space-y-2 p-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        ) : visits?.length === 0 ? (
-          <EmptyState icon={CalendarIcon} text={CARD_UI.no_visits} />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-28">{CARD_UI.date}</TableHead>
-                <TableHead>{CARD_UI.treatment}</TableHead>
-                <TableHead className="w-16">{CARD_UI.tooth}</TableHead>
-                <TableHead className="w-36 text-right">{CARD_UI.price}</TableHead>
-                <TableHead className="w-24" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visits?.map((visit) => (
-                <TableRow key={visit.id}>
-                  <TableCell className="tabular-nums">
-                    {formatDate(visit.date.slice(0, 10))}
-                  </TableCell>
-                  <TableCell>
-                    {visit.treatment}
-                    {visit.note && (
-                      <div className="text-muted-foreground text-xs">{visit.note}</div>
-                    )}
-                  </TableCell>
-                  <TableCell className="tabular-nums">{visit.tooth ?? '—'}</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatSom(visit.price)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(visit)}>
-                      <PencilIcon />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setDeleting(visit)}>
-                      <Trash2Icon />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Card>
-
-      <VisitFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        patientId={patientId}
-        visit={editing}
-      />
-
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{CARD_UI.delete_visit_title}</AlertDialogTitle>
-            <AlertDialogDescription>{CARD_UI.delete_visit_text}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (deleting) await removeVisit(deleting.id)
-                setDeleting(null)
-              }}
-            >
-              {CARD_UI.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  )
-}
+import { VisitsTab } from './VisitsTab'
 
 function ChartTab({ patientId }: { patientId: string }) {
   const { data: chart, isPending } = useToothChart(patientId)

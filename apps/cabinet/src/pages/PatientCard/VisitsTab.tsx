@@ -1,4 +1,4 @@
-import { CARD_UI, formatSom, PAYMENT_UI } from '@e-dentist/shared'
+import { CARD_UI, formatSom } from '@e-dentist/shared'
 import {
   getCoreRowModel,
   getPaginationRowModel,
@@ -8,11 +8,10 @@ import {
   useReactTable,
   type VisibilityState,
 } from '@tanstack/react-table'
-import { cn } from 'cn'
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
-import { type Payment, useBalance, usePayments } from '@/entities/payment'
-import { PaymentFormDialog, useDeletePayment } from '@/features/payment-form'
+import { useVisits, type Visit } from '@/entities/visit'
+import { useDeleteVisit, VisitFormDialog } from '@/features/visit-form'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,36 +25,25 @@ import {
   DataTable,
   DataTablePagination,
 } from '@/shared/ui'
-import { paymentColumns } from './paymentColumns'
+import { visitColumns } from './visitColumns'
 
-function BalanceRow({ label, value, tone }: { label: string; value: number; tone?: string }) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-muted-foreground text-xs">{label}</span>
-      <span className={cn('font-semibold tabular-nums', tone)}>{formatSom(value)}</span>
-    </div>
-  )
-}
-
-export function PaymentsTab({ patientId }: { patientId: string }) {
-  // Bitta bemorning toʻlovlari toʻliq keladi — saralash va sahifalash mijozda
-  const { data: payments, isPending } = usePayments(patientId)
-  const { data: balance } = useBalance(patientId)
-  const { mutateAsync: remove } = useDeletePayment()
-
+export function VisitsTab({ patientId }: { patientId: string }) {
+  // Bitta bemorning tashriflari toʻliq keladi — saralash va sahifalash mijozda
+  const { data: visits, isPending } = useVisits(patientId)
+  const { mutateAsync: removeVisit } = useDeleteVisit()
   const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<Payment | undefined>(undefined)
-  const [deleting, setDeleting] = useState<Payment | null>(null)
+  const [editing, setEditing] = useState<Visit | undefined>(undefined)
+  const [deleting, setDeleting] = useState<Visit | null>(null)
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
 
   const table = useReactTable({
-    data: payments ?? [],
-    columns: paymentColumns({
-      onEdit: (payment) => {
-        setEditing(payment)
+    data: visits ?? [],
+    columns: visitColumns({
+      onEdit: (visit) => {
+        setEditing(visit)
         setFormOpen(true)
       },
       onRemove: setDeleting,
@@ -69,20 +57,14 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
     getPaginationRowModel: getPaginationRowModel(),
   })
 
-  const debt = balance?.debt ?? 0
+  // Jami — barcha tashriflar boʻyicha, sahifadagilar emas
+  const total = visits?.reduce((sum, visit) => sum + visit.price, 0) ?? 0
 
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-6">
-          <BalanceRow label={PAYMENT_UI.charges} value={balance?.charges ?? 0} />
-          <BalanceRow label={PAYMENT_UI.paid} value={balance?.paid ?? 0} />
-          <BalanceRow
-            // Manfiy qarz — bemor oldindan toʻlagan, bu yaxshi holat
-            label={debt < 0 ? PAYMENT_UI.prepaid : PAYMENT_UI.debt}
-            value={Math.abs(debt)}
-            tone={debt > 0 ? 'text-destructive' : debt < 0 ? 'text-ok' : undefined}
-          />
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-muted-foreground text-sm">
+          {CARD_UI.total}: <span className="text-foreground font-semibold">{formatSom(total)}</span>
         </div>
         <Button
           size="sm"
@@ -92,36 +74,36 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
           }}
         >
           <PlusIcon />
-          {PAYMENT_UI.add}
+          {CARD_UI.add_visit}
         </Button>
       </div>
 
-      <DataTable table={table} loading={isPending && !payments} emptyText={PAYMENT_UI.empty} />
+      <DataTable table={table} loading={isPending && !visits} emptyText={CARD_UI.no_visits} />
 
-      {(payments?.length ?? 0) > 0 && (
+      {(visits?.length ?? 0) > 0 && (
         <div className="mt-3">
           <DataTablePagination table={table} />
         </div>
       )}
 
-      <PaymentFormDialog
+      <VisitFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         patientId={patientId}
-        payment={editing}
+        visit={editing}
       />
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{PAYMENT_UI.delete_title}</AlertDialogTitle>
-            <AlertDialogDescription>{PAYMENT_UI.delete_text}</AlertDialogDescription>
+            <AlertDialogTitle>{CARD_UI.delete_visit_title}</AlertDialogTitle>
+            <AlertDialogDescription>{CARD_UI.delete_visit_text}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
-                if (deleting) await remove(deleting.id)
+                if (deleting) await removeVisit(deleting.id)
                 setDeleting(null)
               }}
             >
