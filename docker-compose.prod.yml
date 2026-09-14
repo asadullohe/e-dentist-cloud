@@ -4,7 +4,7 @@
 #   docker compose -f docker-compose.prod.yml logs -f api
 #
 # Lokal fayldan ikkita muhim farqi bor:
-#   1. Bazaning, Redis va MinIO ning portlari tashqariga chiqarilmagan —
+#   1. Bazaning, Redis va fayl omborining portlari tashqariga chiqarilmagan —
 #      ularga faqat konteyner tarmogʻi ichidan yetish mumkin. Tashqi
 #      dunyoga ochiq yagona joy — Caddy (80/443)
 #   2. Migratsiya alohida konteynerda va API dan oldin bajariladi
@@ -72,8 +72,9 @@ services:
       timeout: 3s
       retries: 12
 
+  # MinIO — koʻchish davrida (reja 8.3) Garage bilan yonma-yon turadi.
+  # Rasmlar Garage ga koʻchirilib API oʻtkazilgach bu xizmat olib tashlanadi
   minio:
-    # Nega quay.io va aynan shu teg — docker-compose.yml dagi izohga qarang
     image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: unless-stopped
     logging: *logging
@@ -88,6 +89,45 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
+
+  # Fayl ombori (S3 mos) — MinIO oʻrniga, docker-compose.yml dagi izohlarga
+  # qarang. Sozlash `garage-init` da
+  garage:
+    image: dxflrs/garage:v2.4.1
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
+    volumes:
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+      - garagemeta:/var/lib/garage/meta
+      - garagedata:/var/lib/garage/data
+    healthcheck:
+      test: ["CMD", "/garage", "health", "-q"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 10s
+
+  # Rasm GHCR dan (deploy.yml quradi) — serverda qurish yoʻq.
+  # Koʻchish davrida Garage kaliti alohida (GARAGE_ACCESS_KEY), keyin
+  # S3_* ning oʻzi
+  garage-init:
+    image: ${IMAGE_GARAGE_INIT:-e-dentist/garage-init}:${TAG:-latest}
+    build: docker/garage
+    restart: "no"
+    depends_on:
+      garage:
+        condition: service_started
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
+      GARAGE_CAPACITY: ${GARAGE_CAPACITY:-60G}
+      S3_ACCESS_KEY: ${GARAGE_ACCESS_KEY:-${S3_ACCESS_KEY}}
+      S3_SECRET_KEY: ${GARAGE_SECRET_KEY:-${S3_SECRET_KEY}}
+      S3_BUCKET: ${S3_BUCKET}
+    volumes:
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+      - garagemeta:/var/lib/garage/meta:ro
 
   # Bir martalik: migratsiyani bajaradi va toʻxtaydi. API undan keyin
   # koʻtariladi — eski kod yangi sxemani koʻrib qolmasin
@@ -121,6 +161,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET}
       CABINET_URL: ${CABINET_URL}
       S3_ENDPOINT: ${S3_ENDPOINT}
+      S3_REGION: ${S3_REGION:-garage}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_BUCKET: ${S3_BUCKET}
@@ -138,6 +179,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      # garage ga bogʻliqlik koʻchish tugagach qoʻshiladi — hozir Garage
+      # koʻtarilmasa ham API ishlayveradi
       migrate:
         condition: service_completed_successfully
     healthcheck:
@@ -186,6 +229,8 @@ volumes:
   pgdata:
   redisdata:
   miniodata:
+  garagemeta:
+  garagedata:
   caddydata:
   caddyconfig:
   kumadata:

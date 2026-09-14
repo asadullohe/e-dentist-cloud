@@ -27,6 +27,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_API: ghcr.io/${{ github.repository }}-api
   IMAGE_WEB: ghcr.io/${{ github.repository }}-web
+  IMAGE_GARAGE_INIT: ghcr.io/${{ github.repository }}-garage-init
 
 jobs:
   # Sinovdan oʻtmagan kod serverga chiqmaydi
@@ -78,6 +79,17 @@ jobs:
           tags: |
             ${{ env.IMAGE_WEB }}:${{ steps.tag.outputs.value }}
             ${{ env.IMAGE_WEB }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Garage sozlash tasviri
+        uses: docker/build-push-action@v6
+        with:
+          context: docker/garage
+          push: true
+          tags: |
+            ${{ env.IMAGE_GARAGE_INIT }}:${{ steps.tag.outputs.value }}
+            ${{ env.IMAGE_GARAGE_INIT }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

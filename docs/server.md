@@ -193,6 +193,76 @@ Chiqarilgan har bir versiya GHCR da commit sha si bilan saqlanadi.
 > oʻchirish, nom almashtirish) kiritilsa, avval eski kod ham ishlaydigan
 > qilib chiqariladi, keyingi chiqarishda esa eskisi olib tashlanadi.
 
+## MinIO dan Garage ga koʻchish (reja 8.3)
+
+Nega — `docs/reja.md`, 8-bosqich. Tartib: Garage MinIO yonida koʻtariladi,
+rasmlar koʻchiriladi, API oʻtkaziladi, keyin MinIO olib tashlanadi. Sayt
+faqat API qayta ishga tushganda ~20 soniya uzilib turadi.
+
+### 1. Kalitlar — push dan OLDIN
+
+Garage bitta `.env` dagi kalitni import qiladi; ular boʻlmasa konteyner
+koʻtarilmaydi. Serverda:
+
+```bash
+cd /opt/e-dentist
+cat >> .env <<EOF
+
+# Garage (reja 8.3). Kalit shakli: GK + 24 hex / 64 hex
+GARAGE_RPC_SECRET=$(openssl rand -hex 32)
+GARAGE_ACCESS_KEY=GK$(openssl rand -hex 12)
+GARAGE_SECRET_KEY=$(openssl rand -hex 32)
+GARAGE_CAPACITY=60G
+IMAGE_GARAGE_INIT=ghcr.io/<foydalanuvchi>/<repo>-garage-init
+EOF
+```
+
+`IMAGE_GARAGE_INIT` — `IMAGE_API` bilan bir xil qolip, oxiri `-garage-init`.
+
+### 2. Chiqarish
+
+Keyingi `master` push (yoki Actions da qoʻlda) Garage ni MinIO yonida
+koʻtaradi. Tekshirish:
+
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+
+`garage` — healthy, `garage-init` — Exited (0), `api` — avvalgidek MinIO da.
+
+### 3. Rasmlarni koʻchirish
+
+```bash
+bash deploy/garage-migrate.sh
+```
+
+Ikkala ombordagi obyektlar soni solishtiriladi; farq boʻlsa skript
+toʻxtaydi — qayta ishga tushirish xavfsiz (faqat yangi fayllar koʻchadi).
+
+### 4. API ni oʻtkazish
+
+```bash
+bash deploy/garage-switch.sh
+```
+
+`.env` da `S3_*` Garage ga koʻrsatiladi (eskisi `.env.minio-<sana>` da),
+`api` qayta ishga tushadi. Keyin kabinetda bemor rasmi va klinika logotipi
+ochilishini koʻring. Orqaga qaytish: `cp .env.minio-<sana> .env` va
+`docker compose -f docker-compose.prod.yml up -d api`.
+
+### 5. MinIO ni olib tashlash
+
+Keyingi push compose dan `minio` ni olib tashlaydi (`--remove-orphans`
+konteynerni toʻxtatadi). Maʼlumot volume i qoladi — bir hafta ishlab
+koʻrgach:
+
+```bash
+docker volume rm e-dentist_miniodata
+```
+
+`.env` dagi `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` qatorlari ham shunda
+oʻchiriladi.
+
 ## Zaxira
 
 Kunlik `pg_dump` va bemor rasmlari nusxasi `/opt/e-dentist/backups` da:
