@@ -6,7 +6,6 @@ import {
   LAB_TEXT,
   LAB_UI,
   LAB_WORK_TYPE_LABELS,
-  maskDisplayDate,
   moneyDigits,
   parseDisplayDate,
   UI_TEXT,
@@ -19,6 +18,7 @@ import { useStaffNames } from '@/entities/staff'
 import { ApiError } from '@/shared/api'
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -205,13 +205,7 @@ export function LabFormDialog({
 
             <div className="space-y-1.5">
               <Label htmlFor="lab-due">{LAB_UI.due}</Label>
-              <Input
-                id="lab-due"
-                inputMode="numeric"
-                placeholder="15/12/2026"
-                value={due}
-                onChange={(event) => setDue(maskDisplayDate(event.target.value))}
-              />
+              <DatePicker id="lab-due" value={due} onChange={setDue} />
             </div>
 
             <div className="space-y-1.5">

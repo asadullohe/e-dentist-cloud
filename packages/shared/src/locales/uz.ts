@@ -103,6 +103,9 @@ export const UI_TEXT = {
   language: 'Til',
   theme_light: 'Yorugʻ rejim',
   theme_dark: 'Tungi rejim',
+  // Sana maydoni: qoʻlda yoziladi yoki kalendardan tanlanadi
+  date_placeholder: 'KK/OO/YYYY',
+  pick_date: 'Kalendardan tanlash',
   close: 'Yopish',
   welcome: 'Xush kelibsiz',
   dashboard_hint:

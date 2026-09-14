@@ -3,7 +3,6 @@ import {
   formatDate,
   formatMoney,
   formatSom,
-  maskDisplayDate,
   moneyDigits,
   parseDisplayDate,
   SERVICE_UI,
@@ -17,6 +16,7 @@ import type { Visit } from '@/entities/visit'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -114,12 +114,7 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
                   <FormItem>
                     <FormLabel>{CARD_UI.date}</FormLabel>
                     <FormControl>
-                      <Input
-                        inputMode="numeric"
-                        placeholder="01/09/2026"
-                        {...field}
-                        onChange={(event) => field.onChange(maskDisplayDate(event.target.value))}
-                      />
+                      <DatePicker {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

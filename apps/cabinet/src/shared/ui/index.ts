@@ -35,6 +35,7 @@ export {
   DataTableViewOptions,
   type FacetOption,
 } from './data-table'
+export { DatePicker } from './date-picker'
 export {
   Dialog,
   DialogContent,

@@ -1,10 +1,4 @@
-import {
-  formatDate,
-  formatUzPhone,
-  maskDisplayDate,
-  PATIENT_UI,
-  parseDisplayDate,
-} from '@e-dentist/shared'
+import { formatDate, formatUzPhone, PATIENT_UI, parseDisplayDate } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -12,6 +6,7 @@ import type { Patient } from '@/entities/patient'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -129,12 +124,8 @@ export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDi
                   <FormItem>
                     <FormLabel>{PATIENT_UI.birth_date}</FormLabel>
                     <FormControl>
-                      <Input
-                        inputMode="numeric"
-                        placeholder={PATIENT_UI.date_placeholder}
-                        {...field}
-                        onChange={(event) => field.onChange(maskDisplayDate(event.target.value))}
-                      />
+                      {/* Yil roʻyxati 1920 dan shu yilgacha — 100 yoshli bemor ham boʻladi */}
+                      <DatePicker {...field} yearRange={[1920, new Date().getFullYear()]} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

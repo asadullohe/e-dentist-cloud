@@ -2,7 +2,6 @@ import {
   APPOINTMENT_STATUS_LABELS,
   CARD_UI,
   formatDate,
-  maskDisplayDate,
   parseDisplayDate,
   SCHEDULE_UI,
   UI_TEXT,
@@ -13,6 +12,7 @@ import { PatientPicker } from '@/entities/patient'
 import { ApiError } from '@/shared/api'
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -123,13 +123,7 @@ export function AppointmentFormDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="appointment-date">{SCHEDULE_UI.date}</Label>
-              <Input
-                id="appointment-date"
-                inputMode="numeric"
-                placeholder="15/09/2026"
-                value={date}
-                onChange={(event) => setDate(maskDisplayDate(event.target.value))}
-              />
+              <DatePicker id="appointment-date" value={date} onChange={setDate} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="appointment-time">{SCHEDULE_UI.time}</Label>

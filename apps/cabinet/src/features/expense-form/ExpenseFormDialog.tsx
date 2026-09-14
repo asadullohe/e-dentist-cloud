@@ -5,7 +5,6 @@ import {
   EXPENSE_UI,
   formatDate,
   formatMoney,
-  maskDisplayDate,
   moneyDigits,
   parseDisplayDate,
   UI_TEXT,
@@ -19,6 +18,7 @@ import type { Expense, ExpenseCategory } from '@/entities/expense'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -130,12 +130,7 @@ export function ExpenseFormDialog({
                   <FormItem>
                     <FormLabel>{EXPENSE_UI.date}</FormLabel>
                     <FormControl>
-                      <Input
-                        inputMode="numeric"
-                        placeholder="15/09/2026"
-                        {...field}
-                        onChange={(event) => field.onChange(maskDisplayDate(event.target.value))}
-                      />
+                      <DatePicker {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

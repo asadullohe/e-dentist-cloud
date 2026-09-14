@@ -2,7 +2,6 @@ import {
   CARD_UI,
   formatDate,
   formatMoney,
-  maskDisplayDate,
   moneyDigits,
   PAYMENT_UI,
   parseDisplayDate,
@@ -15,6 +14,7 @@ import type { Payment } from '@/entities/payment'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -103,12 +103,7 @@ export function PaymentFormDialog({
                 <FormItem>
                   <FormLabel>{PAYMENT_UI.date}</FormLabel>
                   <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      placeholder="02/09/2026"
-                      {...field}
-                      onChange={(event) => field.onChange(maskDisplayDate(event.target.value))}
-                    />
+                    <DatePicker {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
