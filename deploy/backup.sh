@@ -54,11 +54,12 @@ echo "[$(date +%H:%M:%S)] dump tayyor: $(du -h "$DUMP_FILE" | cut -f1)"
 echo "[$(date +%H:%M:%S)] rasmlar nusxalanmoqda"
 # `mc mirror` faqat oʻzgargan fayllarni koʻchiradi. Alias muhit
 # oʻzgaruvchisi orqali beriladi — konfiguratsiya fayli kerak emas.
-# Rasm quay.io dan: Docker Hub dagi `minio/mc` olib tashlangan (docker-compose.yml)
+# `mc` MinIO ning mijozi, lekin istalgan S3 bilan ishlaydi — Garage bilan
+# ham. Rasm quay.io dan: Docker Hub dagi `minio/mc` olib tashlangan
 NETWORK="$(compose ps --format '{{.Name}}' | head -1 | xargs -r docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}')"
 docker run --rm \
   --network "$NETWORK" \
-  -e "MC_HOST_ed=http://$MINIO_ROOT_USER:$MINIO_ROOT_PASSWORD@minio:9000" \
+  -e "MC_HOST_ed=http://$S3_ACCESS_KEY:$S3_SECRET_KEY@garage:3900" \
   -v "$FILES_DIR:/backup" \
   quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z mirror --overwrite --quiet "ed/$S3_BUCKET" /backup
 echo "[$(date +%H:%M:%S)] rasmlar tayyor: $(du -sh "$FILES_DIR" | cut -f1)"

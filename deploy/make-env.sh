@@ -32,7 +32,10 @@ read -rp "Pochtangiz (Let's Encrypt shu manzilga yozadi): " ACME_EMAIL
 
 PG_PASSWORD="$(openssl rand -hex 24)"
 APP_PASSWORD="$(openssl rand -hex 24)"
-MINIO_PASSWORD="$(openssl rand -hex 24)"
+# Garage kalit shakli: GK + 24 hex / 64 hex
+S3_KEY="GK$(openssl rand -hex 12)"
+S3_SECRET="$(openssl rand -hex 32)"
+GARAGE_RPC="$(openssl rand -hex 32)"
 SESSION="$(openssl rand -hex 32)"
 
 cat > "$ENV_FILE" <<ENV
@@ -53,11 +56,13 @@ DATABASE_URL=postgresql://edentist:$PG_PASSWORD@postgres:5432/edentist
 APP_DATABASE_URL=postgresql://edentist_app:$APP_PASSWORD@postgres:5432/edentist
 REDIS_URL=redis://redis:6379
 
-MINIO_ROOT_USER=edentist
-MINIO_ROOT_PASSWORD=$MINIO_PASSWORD
-S3_ENDPOINT=http://minio:9000
-S3_ACCESS_KEY=edentist
-S3_SECRET_KEY=$MINIO_PASSWORD
+# Fayl ombori — Garage (S3 mos). garage-init shu kalitni import qiladi
+GARAGE_RPC_SECRET=$GARAGE_RPC
+GARAGE_CAPACITY=60G
+S3_ENDPOINT=http://garage:3900
+S3_REGION=garage
+S3_ACCESS_KEY=$S3_KEY
+S3_SECRET_KEY=$S3_SECRET
 S3_BUCKET=edentist-files
 
 TZ=Asia/Tashkent

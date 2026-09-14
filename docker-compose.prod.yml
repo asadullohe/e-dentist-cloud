@@ -72,26 +72,8 @@ services:
       timeout: 3s
       retries: 12
 
-  # MinIO — koʻchish davrida (reja 8.3) Garage bilan yonma-yon turadi.
-  # Rasmlar Garage ga koʻchirilib API oʻtkazilgach bu xizmat olib tashlanadi
-  minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
-    restart: unless-stopped
-    logging: *logging
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-    volumes:
-      - miniodata:/data
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-
-  # Fayl ombori (S3 mos) — MinIO oʻrniga, docker-compose.yml dagi izohlarga
-  # qarang. Sozlash `garage-init` da
+  # Fayl ombori (S3 mos). Nega Garage — docs/reja.md 8-bosqich.
+  # Sozlash `garage-init` da
   garage:
     image: dxflrs/garage:v2.4.1
     restart: unless-stopped
@@ -110,8 +92,8 @@ services:
       start_period: 10s
 
   # Rasm GHCR dan (deploy.yml quradi) — serverda qurish yoʻq.
-  # Koʻchish davrida Garage kaliti alohida (GARAGE_ACCESS_KEY), keyin
-  # S3_* ning oʻzi
+  # GARAGE_ACCESS_KEY — koʻchish davridan qolgan: bor boʻlsa oʻsha, yoʻq
+  # boʻlsa S3_* (ikkalasi bir xil kalit)
   garage-init:
     image: ${IMAGE_GARAGE_INIT:-e-dentist/garage-init}:${TAG:-latest}
     build: docker/garage
@@ -177,10 +159,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
+      garage:
         condition: service_healthy
-      # garage ga bogʻliqlik koʻchish tugagach qoʻshiladi — hozir Garage
-      # koʻtarilmasa ham API ishlayveradi
+      garage-init:
+        condition: service_completed_successfully
       migrate:
         condition: service_completed_successfully
     healthcheck:
@@ -228,7 +210,6 @@ services:
 volumes:
   pgdata:
   redisdata:
-  miniodata:
   garagemeta:
   garagedata:
   caddydata:
