@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { APPOINTMENT_KEYS } from '@/entities/appointment'
+import { APPOINTMENT_KEYS, type AppointmentStatus } from '@/entities/appointment'
 import * as api from './api'
 
 export function useSaveAppointment(id: string | null) {
@@ -7,6 +7,16 @@ export function useSaveAppointment(id: string | null) {
   return useMutation({
     mutationFn: (payload: api.AppointmentPayload) =>
       id ? api.updateAppointment(id, payload) : api.createAppointment(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+  })
+}
+
+/// Roʻyxatdan turib holatni almashtirish: keldi, yakunlandi, kelmadi…
+export function useSetAppointmentStatus() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: AppointmentStatus }) =>
+      api.updateAppointment(id, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
   })
 }

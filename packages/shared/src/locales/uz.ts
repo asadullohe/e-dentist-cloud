@@ -697,6 +697,7 @@ export const QUEUE_CABINET_UI = {
   done: 'Yakunlandi',
   new_patient: 'Kartotekada yoʻq',
   link: 'Kartochka',
+  empty_column: 'Boʻsh',
   screen_link: 'Kutish xonasi ekrani',
   page_link: 'Bemor sahifasi',
   code_hint: 'Eshikdagi QR shu manzilga olib boradi',
@@ -1023,6 +1024,9 @@ export const SCHEDULE_UI = {
   delete_title: 'Qabul oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
   month_total: (n: number) => `${n} ta qabul`,
+  day_total: (n: number) => `${n} ta`,
+  set_status: 'Holatni oʻzgartirish',
+  open_card: 'Kartochka',
   date_unreadable: 'Sanani oʻqib boʻlmadi',
 } as const
 

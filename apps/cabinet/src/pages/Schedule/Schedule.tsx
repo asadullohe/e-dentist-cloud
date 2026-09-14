@@ -1,25 +1,35 @@
 import {
   APPOINTMENT_STATUS_LABELS,
   CARD_UI,
+  EXPENSE_UI,
   formatDate,
   formatUzPhone,
   MONTHS,
   SCHEDULE_UI,
   todayISO,
+  UI_TEXT,
   WEEKDAYS,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
 import {
   CalendarIcon,
+  CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
+  UserIcon,
 } from 'lucide-react'
 import { useState } from 'react'
-import { type Appointment, useAppointments } from '@/entities/appointment'
-import { AppointmentFormDialog, useDeleteAppointment } from '@/features/appointment-form'
+import { Link } from 'react-router-dom'
+import { type Appointment, type AppointmentStatus, useAppointments } from '@/entities/appointment'
+import {
+  AppointmentFormDialog,
+  useDeleteAppointment,
+  useSetAppointmentStatus,
+} from '@/features/appointment-form'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +42,15 @@ import {
   Badge,
   Button,
   Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
   EmptyState,
   Skeleton,
 } from '@/shared/ui'
@@ -42,12 +61,23 @@ const isoOf = (year: number, month: number, day: number) => `${year}-${pad(month
 /// Dushanbadan boshlanadigan hafta: getDay() da yakshanba 0, bizda oxirgi
 const mondayFirst = (date: Date) => (date.getDay() + 6) % 7
 
-function statusTone(status: string): string {
-  if (status === 'done') return 'bg-ok/15 text-ok border-ok/30'
+const STATUSES: AppointmentStatus[] = ['scheduled', 'arrived', 'done', 'no_show', 'cancelled']
+
+/// Holat belgisi: keldi — sariq, yakunlandi — yashil, kelmadi/bekor — qizil
+function statusBadge(status: AppointmentStatus): string {
+  if (status === 'done') return 'border-ok/30 bg-ok/10 text-ok'
+  if (status === 'arrived') return 'border-warn/40 bg-warn/15 text-foreground'
   if (status === 'no_show' || status === 'cancelled')
-    return 'bg-destructive/10 text-destructive border-destructive/30'
-  if (status === 'arrived') return 'bg-warn/15 text-warn border-warn/30'
+    return 'border-destructive/30 bg-destructive/10 text-destructive'
   return ''
+}
+
+const timeOf = (iso: string) =>
+  new Date(iso).toLocaleTimeString('uz', { hour: '2-digit', minute: '2-digit' })
+
+function monthTitle(year: number, month: number): string {
+  const name = MONTHS[month] ?? ''
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${year}`
 }
 
 export function Schedule() {
@@ -62,6 +92,7 @@ export function Schedule() {
   const [deleting, setDeleting] = useState<Appointment | null>(null)
 
   const { mutateAsync: remove } = useDeleteAppointment()
+  const { mutate: setStatus } = useSetAppointmentStatus()
 
   const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate()
   const from = isoOf(cursor.year, cursor.month, 1)
@@ -94,144 +125,212 @@ export function Schedule() {
     setCursor({ year: date.getFullYear(), month: date.getMonth() })
   }
 
-  const dayList = byDay.get(selected) ?? []
+  function goToday() {
+    const now = new Date()
+    setCursor({ year: now.getFullYear(), month: now.getMonth() })
+    setSelected(today)
+  }
+
+  const dayList = [...(byDay.get(selected) ?? [])].sort((a, b) => a.at.localeCompare(b.at))
+  const isCurrentMonth = selected.slice(0, 7) === `${cursor.year}-${pad(cursor.month + 1)}`
+
+  function openNew() {
+    setEditing(undefined)
+    setFormOpen(true)
+  }
+
+  function openEdit(item: Appointment) {
+    setEditing(item)
+    setFormOpen(true)
+  }
 
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditing(undefined)
-            setFormOpen(true)
-          }}
-        >
+        <Button size="sm" onClick={openNew}>
           <PlusIcon />
           {SCHEDULE_UI.add}
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-        <Card className="p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <Button variant="ghost" size="icon" onClick={() => shift(-1)}>
-              <ChevronLeftIcon />
-            </Button>
-            <div className="text-center">
-              <div className="font-semibold">
-                {MONTHS[cursor.month]?.replace(/^./, (c) => c.toUpperCase())} {cursor.year}
-              </div>
-              <div className="text-muted-foreground text-xs">
+      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+        <Card className="gap-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{monthTitle(cursor.year, cursor.month)}</CardTitle>
+              <p className="text-muted-foreground mt-0.5 text-xs">
                 {SCHEDULE_UI.month_total(appointments?.length ?? 0)}
-              </div>
+              </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => shift(1)}>
-              <ChevronRightIcon />
-            </Button>
-          </div>
+            <div className="flex items-center gap-1">
+              {(selected !== today || !isCurrentMonth) && (
+                <Button variant="outline" size="sm" onClick={goToday}>
+                  {SCHEDULE_UI.today}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                aria-label={EXPENSE_UI.prev_month}
+                onClick={() => shift(-1)}
+              >
+                <ChevronLeftIcon />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                aria-label={EXPENSE_UI.next_month}
+                onClick={() => shift(1)}
+              >
+                <ChevronRightIcon />
+              </Button>
+            </div>
+          </CardHeader>
 
-          <div className="text-muted-foreground grid grid-cols-7 gap-1 text-center text-xs">
-            {WEEKDAYS.map((day) => (
-              <div key={day} className="py-1">
-                {day}
-              </div>
-            ))}
-          </div>
+          <CardContent>
+            <div className="text-muted-foreground grid grid-cols-7 gap-1 text-center text-xs font-medium">
+              {WEEKDAYS.map((day) => (
+                <div key={day} className="py-1">
+                  {day}
+                </div>
+              ))}
+            </div>
 
-          {isPending ? (
-            <Skeleton className="mt-1 h-56 w-full" />
-          ) : (
-            <div className="mt-1 grid grid-cols-7 gap-1">
-              {cells.map(({ key, day }) => {
-                if (day === null) return <div key={key} />
-                const iso = key
-                const count = byDay.get(iso)?.length ?? 0
-                return (
-                  <button
-                    key={iso}
-                    type="button"
-                    onClick={() => setSelected(iso)}
-                    className={cn(
-                      'flex aspect-square flex-col items-center justify-center rounded-md border text-sm transition-colors',
-                      selected === iso
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'hover:bg-accent border-transparent',
-                      iso === today && selected !== iso && 'border-primary/40 font-semibold',
-                    )}
-                  >
-                    <span className="tabular-nums">{day}</span>
-                    {count > 0 && (
+            {isPending && !appointments ? (
+              <Skeleton className="mt-1 h-72 w-full" />
+            ) : (
+              <div className="mt-1 grid grid-cols-7 gap-1">
+                {cells.map(({ key, day }) => {
+                  if (day === null) return <div key={key} />
+                  const count = byDay.get(key)?.length ?? 0
+                  const isSelected = selected === key
+                  const isToday = key === today
+                  return (
+                    // Katak: raqam tepada, qabullar soni pastda. Bugun — toʻq
+                    // doira, tanlangan kun — koʻk hoshiya
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setSelected(key)}
+                      aria-pressed={isSelected}
+                      className={cn(
+                        'flex min-h-14 flex-col items-start gap-1 rounded-md border p-1.5 text-left text-sm transition-colors sm:min-h-16',
+                        isSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'hover:bg-accent border-transparent',
+                      )}
+                    >
                       <span
                         className={cn(
-                          'mt-0.5 size-1.5 rounded-full',
-                          selected === iso ? 'bg-primary-foreground' : 'bg-primary',
+                          'flex size-6 items-center justify-center rounded-full tabular-nums',
+                          isToday && 'bg-primary text-primary-foreground font-semibold',
                         )}
-                      />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          )}
+                      >
+                        {day}
+                      </span>
+                      {count > 0 && (
+                        <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[11px] leading-none font-medium tabular-nums">
+                          {SCHEDULE_UI.day_total(count)}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </CardContent>
         </Card>
 
-        <Card className="p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <div className="font-semibold">{formatDate(selected)}</div>
+        <Card className="gap-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>{formatDate(selected)}</CardTitle>
+              <p className="text-muted-foreground mt-0.5 text-xs">
+                {SCHEDULE_UI.day_total(dayList.length)}
+              </p>
+            </div>
             {selected === today && <Badge variant="secondary">{SCHEDULE_UI.today}</Badge>}
-          </div>
-
-          {dayList.length === 0 ? (
-            <EmptyState icon={CalendarIcon} text={SCHEDULE_UI.empty_day} />
-          ) : (
-            <ul className="space-y-2">
-              {dayList.map((item) => (
-                <li
-                  key={item.id}
-                  className={cn('rounded-md border px-2.5 py-2', statusTone(item.status))}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-baseline gap-2">
-                        <span className="font-semibold tabular-nums">
-                          {new Date(item.at).toLocaleTimeString('uz', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
-                        <span className="truncate text-sm">{item.fio}</span>
-                      </div>
+          </CardHeader>
+          <CardContent>
+            {dayList.length === 0 ? (
+              <EmptyState icon={CalendarIcon} text={SCHEDULE_UI.empty_day} />
+            ) : (
+              <ul className="space-y-2">
+                {dayList.map((item) => (
+                  <li key={item.id} className="flex items-start gap-3 rounded-md border p-2.5">
+                    <span className="w-11 shrink-0 pt-0.5 font-semibold tabular-nums">
+                      {timeOf(item.at)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to={`/patients/${item.patientId}`}
+                        className="block truncate font-medium hover:underline"
+                      >
+                        {item.fio}
+                      </Link>
                       {item.phone && (
                         <div className="text-muted-foreground text-xs">
                           {formatUzPhone(item.phone)}
                         </div>
                       )}
-                      <div className="text-xs">{APPOINTMENT_STATUS_LABELS[item.status]}</div>
                       {item.note && (
-                        <div className="text-muted-foreground text-xs">{item.note}</div>
+                        <div className="text-muted-foreground mt-0.5 text-xs">{item.note}</div>
                       )}
-                    </div>
-                    <div className="flex shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setEditing(item)
-                          setFormOpen(true)
-                        }}
+                      <Badge
+                        variant="outline"
+                        className={cn('mt-1.5 text-[11px]', statusBadge(item.status))}
                       >
-                        <PencilIcon />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleting(item)}>
-                        <Trash2Icon />
-                      </Button>
+                        {APPOINTMENT_STATUS_LABELS[item.status]}
+                      </Badge>
                     </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="-mr-1 size-8 shrink-0 data-[state=open]:bg-muted"
+                          aria-label={SCHEDULE_UI.set_status}
+                        >
+                          <MoreHorizontalIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuLabel>{SCHEDULE_UI.set_status}</DropdownMenuLabel>
+                        {STATUSES.map((status) => (
+                          <DropdownMenuItem
+                            key={status}
+                            disabled={status === item.status}
+                            onClick={() => setStatus({ id: item.id, status })}
+                          >
+                            <span className="flex-1">{APPOINTMENT_STATUS_LABELS[status]}</span>
+                            {status === item.status && <CheckIcon className="size-4" />}
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link to={`/patients/${item.patientId}`}>
+                            <UserIcon />
+                            {SCHEDULE_UI.open_card}
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(item)}>
+                          <PencilIcon />
+                          {UI_TEXT.edit}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={() => setDeleting(item)}>
+                          <Trash2Icon />
+                          {UI_TEXT.remove}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
         </Card>
       </div>
 

@@ -1,2 +1,2 @@
 export { AppointmentFormDialog } from './AppointmentFormDialog'
-export { useDeleteAppointment, useSaveAppointment } from './hooks'
+export { useDeleteAppointment, useSaveAppointment, useSetAppointmentStatus } from './hooks'
