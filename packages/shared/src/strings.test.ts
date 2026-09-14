@@ -1,7 +1,18 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { AUDIT_LABELS, getLocale, setLocale, strings, UI_TEXT } from './strings.js'
+import {
+  AUDIT_LABELS,
+  getLocale,
+  parseAcceptLanguage,
+  setLocale,
+  setLocaleResolver,
+  strings,
+  UI_TEXT,
+} from './strings.js'
 
-afterEach(() => setLocale('uz'))
+afterEach(() => {
+  setLocale('uz')
+  setLocaleResolver(() => undefined)
+})
 
 describe('tillar', () => {
   it('sukut boʻyicha oʻzbekcha', () => {
@@ -36,6 +47,34 @@ describe('tillar', () => {
   it('aniq til soʻralganda joriy til oʻzgarmaydi', () => {
     expect(strings('ru').UI_TEXT.login).toBe('Войти')
     expect(getLocale()).toBe('uz')
+  })
+})
+
+describe('server tili', () => {
+  it('resolver berilsa til oʻsha yerdan olinadi', () => {
+    setLocaleResolver(() => 'ru')
+    expect(getLocale()).toBe('ru')
+    expect(UI_TEXT.login).toBe('Войти')
+    expect(strings().UI_TEXT.login).toBe('Войти')
+  })
+
+  it('resolver undefined qaytarsa oddiy til ishlaydi', () => {
+    setLocaleResolver(() => undefined)
+    setLocale('ru')
+    expect(getLocale()).toBe('ru')
+  })
+
+  it('Accept-Language dan til tanlanadi', () => {
+    expect(parseAcceptLanguage('ru-RU,ru;q=0.9,en;q=0.8')).toBe('ru')
+    expect(parseAcceptLanguage('uz-Latn-UZ,ru;q=0.5')).toBe('uz')
+    // Ogʻirlik tartibga ustun: ru 0.9, uz 1 boʻlsa uz
+    expect(parseAcceptLanguage('ru;q=0.9,uz')).toBe('uz')
+    // Mos til yoʻq — oʻzbekcha
+    expect(parseAcceptLanguage('en-US,en;q=0.9')).toBe('uz')
+    expect(parseAcceptLanguage('')).toBe('uz')
+    expect(parseAcceptLanguage(undefined)).toBe('uz')
+    // q=0 — rad etilgan til
+    expect(parseAcceptLanguage('ru;q=0,en')).toBe('uz')
   })
 })
 

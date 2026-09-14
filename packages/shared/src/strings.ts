@@ -13,8 +13,9 @@
 // joylarda qiymat funksiya ichida oʻqilishi kerak — `() => …` yoki zod da
 // `{ error: () => … }`.
 //
-// Serverda til hozircha oʻzbekcha: `strings()` sukut boʻyicha `uz`
-// qaytaradi. Soʻrov tiliga qarab javob berish alohida task (reja 7.6).
+// Brauzerda til bitta: `setLocale()` bilan almashadi. Serverda har soʻrov
+// oʻz tilida — u `setLocaleResolver()` orqali tilni soʻrov kontekstidan
+// (AsyncLocalStorage) oʻqiydi; bu fayl Node ga bogʻlanmaydi.
 
 import { ru } from './locales/ru.js'
 import * as uz from './locales/uz.js'
@@ -76,27 +77,58 @@ const catalogs: Record<Locale, Strings> = {
 
 let current: Locale = DEFAULT_LOCALE
 
+/// Tilni tashqaridan aniqlash — server soʻrov kontekstidan oʻqiydi.
+/// `undefined` qaytarsa `setLocale()` bilan qoʻyilgan til ishlaydi
+let resolver: () => Locale | undefined = () => undefined
+
 export function getLocale(): Locale {
-  return current
+  return resolver() ?? current
 }
 
 export function setLocale(locale: Locale): void {
   current = locale
 }
 
+export function setLocaleResolver(resolve: () => Locale | undefined): void {
+  resolver = resolve
+}
+
 export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && (LOCALES as readonly string[]).includes(value)
 }
 
+/// `Accept-Language` sarlavhasidan qoʻllab-quvvatlanadigan tilni tanlaydi:
+/// «ru-RU,ru;q=0.9,en;q=0.8» → ru, «uz-Latn» → uz. Mos til boʻlmasa —
+/// sukut boʻyicha oʻzbekcha. Kabinet sarlavhani ilova tilidan qoʻyadi,
+/// shuning uchun brauzer tili emas, foydalanuvchi tanlovi ustun
+export function parseAcceptLanguage(header: string | undefined | null): Locale {
+  if (!header) return DEFAULT_LOCALE
+  const ranked = header
+    .split(',')
+    .map((part, index) => {
+      const [tag = '', ...params] = part.trim().split(';')
+      const q = params.map((param) => param.trim()).find((param) => param.startsWith('q='))
+      const weight = q ? Number(q.slice(2)) : 1
+      return { tag: tag.toLowerCase(), weight: Number.isNaN(weight) ? 0 : weight, index }
+    })
+    .filter((item) => item.tag && item.weight > 0)
+    .sort((a, b) => b.weight - a.weight || a.index - b.index)
+  for (const { tag } of ranked) {
+    const base = tag.split('-')[0]
+    if (isLocale(base)) return base
+  }
+  return DEFAULT_LOCALE
+}
+
 /// Aniq tildagi matnlar — server soʻrov tiliga qarab ishlatadi
-export function strings(locale: Locale = current): Strings {
+export function strings(locale: Locale = getLocale()): Strings {
   return catalogs[locale]
 }
 
 /// Joriy tilga qarab oʻqiladigan toʻplam. Nishon obyekt boʻsh — hamma
 /// oʻqish `get` orqali joriy katalogga boradi
 function live<K extends keyof Strings>(key: K): Strings[K] {
-  const source = () => catalogs[current][key] as unknown as Record<PropertyKey, unknown>
+  const source = () => catalogs[getLocale()][key] as unknown as Record<PropertyKey, unknown>
   // Massiv toʻplamlar (MONTHS) uchun nishon ham massiv: Array.isArray toʻgʻri ishlasin
   const target = (Array.isArray(catalogs.uz[key]) ? [] : {}) as Record<PropertyKey, unknown>
   return new Proxy(target, {
