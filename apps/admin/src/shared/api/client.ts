@@ -3,7 +3,11 @@
 // Oflayn ilovada bu `window.api.*` edi. Almashtiriladigan yagona qatlam shu.
 // Javob shakli serverdagi bilan bir xil: {ok, data} yoki {ok, error}.
 
-import { ERROR_TEXT, UI_TEXT } from '@e-dentist/shared'
+import { ERROR_TEXT, getLocale, UI_TEXT } from '@e-dentist/shared'
+
+/// Server javobni ilova tilida beradi (xato matnlari, Excel sarlavhalari).
+/// Brauzer tili emas — foydalanuvchi tepa panelda tanlagan til
+const languageHeader = () => ({ 'accept-language': getLocale() })
 
 export class ApiError extends Error {
   readonly code: string
@@ -38,7 +42,10 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     response = await fetch(`/api${path}`, {
       method,
       credentials: 'same-origin',
-      headers: body && !isForm ? { 'content-type': 'application/json' } : undefined,
+      headers: {
+        ...languageHeader(),
+        ...(body && !isForm ? { 'content-type': 'application/json' } : {}),
+      },
       body: isForm ? body : body ? JSON.stringify(body) : undefined,
     })
   } catch {
@@ -72,7 +79,7 @@ export function formError(error: unknown): string {
 export async function downloadFile(path: string): Promise<void> {
   let response: Response
   try {
-    response = await fetch(`/api${path}`, { credentials: 'same-origin' })
+    response = await fetch(`/api${path}`, { credentials: 'same-origin', headers: languageHeader() })
   } catch {
     throw new ApiError('network', UI_TEXT.offline)
   }
