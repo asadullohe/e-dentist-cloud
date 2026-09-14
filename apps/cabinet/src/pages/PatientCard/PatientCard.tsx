@@ -10,9 +10,19 @@ import {
   PAYMENT_UI,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
-import { ArrowLeftIcon, CalendarIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  CreditCardIcon,
+  FlaskConicalIcon,
+  ImageIcon,
+  LayoutGridIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Outlet, useParams } from 'react-router-dom'
 import { usePatient } from '@/entities/patient'
 import { useHasPermission } from '@/entities/session'
 import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
@@ -32,7 +42,12 @@ import {
   AlertDialogTitle,
   Button,
   Card,
+  ContentSection,
   EmptyState,
+  Separator,
+  SideNav,
+  type SideNavItem,
+  SideNavLayout,
   Skeleton,
   Table,
   TableBody,
@@ -40,10 +55,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
 } from '@/shared/ui'
 import { ImagesTab } from './ImagesTab'
 import { LabTab } from './LabTab'
@@ -248,6 +259,66 @@ function ChartTab({ patientId }: { patientId: string }) {
   )
 }
 
+/// Kartochka boʻlimlari. Funksiya — matnlar joriy tilda oʻqilishi uchun
+function cardItems(id: string, canLab: boolean): SideNavItem[] {
+  const base = `/patients/${id}`
+  const items: SideNavItem[] = [
+    { to: base, label: CARD_UI.tab_visits, icon: CalendarIcon },
+    { to: `${base}/tishlar`, label: CARD_UI.tab_chart, icon: LayoutGridIcon },
+    { to: `${base}/tolovlar`, label: PAYMENT_UI.tab, icon: CreditCardIcon },
+    { to: `${base}/rasmlar`, label: IMAGE_UI.tab, icon: ImageIcon },
+  ]
+  if (canLab) items.push({ to: `${base}/texnik`, label: LAB_UI.tab, icon: FlaskConicalIcon })
+  return items
+}
+
+// Boʻlimlar — har biri oʻz manzilida (router.tsx). Bemor id si marshrutdan
+
+export function VisitsSection() {
+  const { id = '' } = useParams()
+  return (
+    <ContentSection title={CARD_UI.tab_visits} desc={CARD_UI.visits_hint} wide>
+      <VisitsTab patientId={id} />
+    </ContentSection>
+  )
+}
+
+export function ChartSection() {
+  const { id = '' } = useParams()
+  return (
+    <ContentSection title={CARD_UI.tab_chart} desc={CARD_UI.chart_hint} wide>
+      <ChartTab patientId={id} />
+    </ContentSection>
+  )
+}
+
+export function PaymentsSection() {
+  const { id = '' } = useParams()
+  return (
+    <ContentSection title={PAYMENT_UI.tab} desc={CARD_UI.payments_hint} wide>
+      <PaymentsTab patientId={id} />
+    </ContentSection>
+  )
+}
+
+export function ImagesSection() {
+  const { id = '' } = useParams()
+  return (
+    <ContentSection title={IMAGE_UI.tab} desc={CARD_UI.images_hint} wide>
+      <ImagesTab patientId={id} />
+    </ContentSection>
+  )
+}
+
+export function LabSection() {
+  const { id = '' } = useParams()
+  return (
+    <ContentSection title={LAB_UI.tab} desc={CARD_UI.lab_hint} wide>
+      <LabTab patientId={id} />
+    </ContentSection>
+  )
+}
+
 export function PatientCard() {
   const { id = '' } = useParams()
   const { data: patient, isPending } = usePatient(id)
@@ -288,32 +359,10 @@ export function PatientCard() {
         </Button>
       </div>
 
-      <Tabs defaultValue="visits">
-        <TabsList>
-          <TabsTrigger value="visits">{CARD_UI.tab_visits}</TabsTrigger>
-          <TabsTrigger value="chart">{CARD_UI.tab_chart}</TabsTrigger>
-          <TabsTrigger value="payments">{PAYMENT_UI.tab}</TabsTrigger>
-          <TabsTrigger value="images">{IMAGE_UI.tab}</TabsTrigger>
-          {hasPermission('lab.write') && <TabsTrigger value="lab">{LAB_UI.tab}</TabsTrigger>}
-        </TabsList>
-        <TabsContent value="visits" className="mt-3">
-          <VisitsTab patientId={id} />
-        </TabsContent>
-        <TabsContent value="chart" className="mt-3">
-          <ChartTab patientId={id} />
-        </TabsContent>
-        <TabsContent value="payments" className="mt-3">
-          <PaymentsTab patientId={id} />
-        </TabsContent>
-        <TabsContent value="images" className="mt-3">
-          <ImagesTab patientId={id} />
-        </TabsContent>
-        {hasPermission('lab.write') && (
-          <TabsContent value="lab" className="mt-3">
-            <LabTab patientId={id} />
-          </TabsContent>
-        )}
-      </Tabs>
+      <Separator className="mb-4" />
+      <SideNavLayout nav={<SideNav items={cardItems(id, hasPermission('lab.write'))} />}>
+        <Outlet />
+      </SideNavLayout>
 
       <PatientFormDialog open={editOpen} onOpenChange={setEditOpen} patient={patient} />
     </>

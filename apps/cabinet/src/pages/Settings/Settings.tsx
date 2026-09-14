@@ -1,50 +1,21 @@
-import { EXPORT_UI, LOGO_UI, QUEUE_CABINET_UI, STAFF_UI } from '@e-dentist/shared'
-import { useHasPermission } from '@/entities/session'
-import { ClinicLogoCard } from '@/features/clinic-logo'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui'
-import { AccountTab } from './AccountTab'
-import { DataTab } from './DataTab'
-import { QueueTab } from './QueueTab'
-import { RolesTab } from './RolesTab'
-import { StaffTab } from './StaffTab'
+import { SETTINGS_UI } from '@e-dentist/shared'
+import { Outlet } from 'react-router-dom'
+import { Separator, SideNavLayout } from '@/shared/ui'
+import { SettingsNav } from './SettingsNav'
 
+/// Sozlamalar — chapda boʻlimlar roʻyxati, oʻngda tanlangan boʻlim.
+/// Har boʻlim oʻz manziliga ega: havolani ulashish va «orqaga» ishlaydi
 export function Settings() {
-  const hasPermission = useHasPermission()
-
   return (
-    <>
-      <h1 className="font-display mb-4 text-2xl font-bold tracking-tight">{STAFF_UI.title}</h1>
-
-      <Tabs defaultValue="account">
-        <TabsList>
-          <TabsTrigger value="account">{STAFF_UI.account_tab}</TabsTrigger>
-          <TabsTrigger value="staff">{STAFF_UI.staff_tab}</TabsTrigger>
-          <TabsTrigger value="roles">{STAFF_UI.roles_tab}</TabsTrigger>
-          <TabsTrigger value="clinic">{LOGO_UI.tab}</TabsTrigger>
-          <TabsTrigger value="queue">{QUEUE_CABINET_UI.settings_tab}</TabsTrigger>
-          {hasPermission('data.export') && <TabsTrigger value="data">{EXPORT_UI.tab}</TabsTrigger>}
-        </TabsList>
-        <TabsContent value="account" className="mt-3">
-          <AccountTab />
-        </TabsContent>
-        <TabsContent value="staff" className="mt-3">
-          <StaffTab />
-        </TabsContent>
-        <TabsContent value="roles" className="mt-3">
-          <RolesTab />
-        </TabsContent>
-        <TabsContent value="clinic" className="mt-3">
-          <ClinicLogoCard />
-        </TabsContent>
-        <TabsContent value="queue" className="mt-3">
-          <QueueTab />
-        </TabsContent>
-        {hasPermission('data.export') && (
-          <TabsContent value="data" className="mt-3">
-            <DataTab />
-          </TabsContent>
-        )}
-      </Tabs>
-    </>
+    <div className="flex min-h-full flex-col">
+      <div className="space-y-0.5">
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{SETTINGS_UI.title}</h1>
+        <p className="text-muted-foreground">{SETTINGS_UI.hint}</p>
+      </div>
+      <Separator className="my-4 lg:my-6" />
+      <SideNavLayout nav={<SettingsNav />}>
+        <Outlet />
+      </SideNavLayout>
+    </div>
   )
 }

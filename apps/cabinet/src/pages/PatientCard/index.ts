@@ -1,1 +1,8 @@
-export { PatientCard } from './PatientCard'
+export {
+  ChartSection,
+  ImagesSection,
+  LabSection,
+  PatientCard,
+  PaymentsSection,
+  VisitsSection,
+} from './PatientCard'

@@ -25,6 +25,7 @@ export {
   CommandItem,
   CommandList,
 } from './command'
+export { ContentSection } from './content-section'
 export {
   Dialog,
   DialogContent,
@@ -66,6 +67,7 @@ export {
 } from './select'
 export { Separator } from './separator'
 export { Sheet, SheetContent, SheetTitle, SheetTrigger } from './sheet'
+export { SideNav, type SideNavItem, SideNavLayout } from './side-nav'
 export { Skeleton } from './skeleton'
 export { Toaster } from './sonner'
 export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table'

@@ -23,8 +23,7 @@ export function DataTab() {
   }
 
   return (
-    <Card className="max-w-2xl p-4">
-      <h2 className="font-display font-semibold">{EXPORT_UI.title}</h2>
+    <Card className="p-4">
       <p className="text-muted-foreground text-sm">{EXPORT_UI.hint}</p>
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}
       <div>

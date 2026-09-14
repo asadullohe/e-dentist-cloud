@@ -7,7 +7,14 @@ import { Expenses } from '@/pages/Expenses'
 import { Invite } from '@/pages/Invite'
 import { Lab } from '@/pages/Lab'
 import { Login } from '@/pages/Login'
-import { PatientCard } from '@/pages/PatientCard'
+import {
+  ChartSection,
+  ImagesSection,
+  LabSection,
+  PatientCard,
+  PaymentsSection,
+  VisitsSection,
+} from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
@@ -16,7 +23,15 @@ import { Register } from '@/pages/Register'
 import { Reports } from '@/pages/Reports'
 import { Schedule } from '@/pages/Schedule'
 import { Services } from '@/pages/Services'
-import { Settings } from '@/pages/Settings'
+import {
+  AccountSection,
+  ClinicSection,
+  DataSection,
+  QueueSection,
+  RolesSection,
+  Settings,
+  StaffSection,
+} from '@/pages/Settings'
 import { VerifyEmail } from '@/pages/VerifyEmail'
 import { AuthLayout } from './layouts/AuthLayout'
 import { CabinetLayout } from './layouts/CabinetLayout'
@@ -64,13 +79,26 @@ export function Router() {
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Home />} />
           <Route path="patients" element={<Patients />} />
-          <Route path="patients/:id" element={<PatientCard />} />
+          <Route path="patients/:id" element={<PatientCard />}>
+            <Route index element={<VisitsSection />} />
+            <Route path="tishlar" element={<ChartSection />} />
+            <Route path="tolovlar" element={<PaymentsSection />} />
+            <Route path="rasmlar" element={<ImagesSection />} />
+            <Route path="texnik" element={<LabSection />} />
+          </Route>
           <Route path="debtors" element={<Debtors />} />
           <Route path="services" element={<Services />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="reports" element={<Reports />} />
-          <Route path="settings" element={<Settings />} />
+          <Route path="settings" element={<Settings />}>
+            <Route index element={<AccountSection />} />
+            <Route path="xodimlar" element={<StaffSection />} />
+            <Route path="rollar" element={<RolesSection />} />
+            <Route path="klinika" element={<ClinicSection />} />
+            <Route path="navbat" element={<QueueSection />} />
+            <Route path="malumot" element={<DataSection />} />
+          </Route>
           <Route path="lab" element={<Lab />} />
           <Route path="queue" element={<QueueBoard />} />
         </Route>
