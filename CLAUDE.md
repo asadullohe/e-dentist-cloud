@@ -137,8 +137,7 @@ kabinet `npm run dev` bilan. Lokalda ham baza konteynerda turadi — notebookga
 toʻgʻridan-toʻgʻri Postgres oʻrnatilmaydi, aks holda «menda ishlayapti» muammosi chiqadi.
 
 Keyin: **Hetzner Cloud**, Ubuntu 24.04, tavsiya CX32 (4 vCPU / 8 GB / 80 GB),
-Falkenstein yoki Helsinki. Konteynerlar: api · postgres · redis · garage · caddy
-(serverda hozircha MinIO — koʻchirish reja 8.3).
+Falkenstein yoki Helsinki. Konteynerlar: api · postgres · redis · garage · caddy.
 
 Domen `e-dentist.uz`: apex va `www` — Netlify'dagi landing (tegilmaydi),
 `kabinet.` va `admin.` — shu server.

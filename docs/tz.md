@@ -98,7 +98,7 @@ _Tanlovlar sizning hozirgi bilimingizga suyanadi — React va Node allaqachon qo
 | UI komponentlari | Tailwind 4 + shadcn/ui | Tayyor, ochiq kodli komponentlar: jadval, oyna, forma, kalendar. Ranglar oflayn ilovaning indigo palitrasiga ulangan — tashqi koʻrinish oʻzgarmaydi |
 | Server holati | TanStack Query | Soʻrovlar keshi, qayta oʻqish, yuklanish holati. Qoʻlbola `useState` + `useEffect` oʻrniga |
 | Forma | react-hook-form + zod | Sxema serverdagi bilan bir xil shaklda, xato matnlari `strings.ts` dan |
-| Fayllar | MinIO (S3 mos) → **Garage** _(qaror 14/09/2026, reja 8-bosqich)_ | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi. MinIO jamoat nashri toʻxtadi (Docker Hub rasmlari oʻchirildi, yangilanish yoʻq); Garage — ochiq kodli, yengil, S3-mos, faol. Kod S3 API orqali ishlaydi, koʻchish — endpoint va kalitlar |
+| Fayllar | **Garage** (S3 mos) _(MinIO oʻrniga, 14/09/2026)_ | Oʻsha serverda turadi — maʼlumot mamlakatdan chiqmaydi. MinIO jamoat nashri toʻxtadi (Docker Hub rasmlari oʻchirildi, yangilanish yoʻq); Garage — ochiq kodli, yengil, S3-mos, faol. Kod S3 API orqali ishlaydi, koʻchish — endpoint va kalitlar |
 | Sessiya | Cookie + Redis | JWT emas: brauzer ilovasi uchun httpOnly cookie xavfsizroq va bekor qilish oson |
 | Excel | `write-excel-file` + `read-excel-file` | Oʻqish ham, yozish ham. Tahlil serverda — brauzerga ishonib boʻlmaydi. **SheetJS oʻrniga:** uning npm dagi nusxasi (`xlsx@0.18.5`) tashlab qoʻyilgan va ikkita yuqori darajali zaifligi bor — prototype pollution va ReDoS, tuzatishsiz. Biz foydalanuvchi yuklagan faylni tahlil qilamiz, bu esa aynan oʻsha zaifliklar xavfli boʻlgan joy. Tanlangan kutubxonada ogohlantirish yoʻq va bogʻliqligi bitta |
 | Matnlar | `packages/shared/src/locales/` — `uz.ts` asosiy, `ru.ts` tarjima | Ilova matnni `strings.ts` dagi jonli eksportlar orqali oʻqiydi, til almashganda qayta chiziladi. Tarjima qilinmagan kalit oʻzbekchaga qaytadi. Server `Accept-Language` ga qarab javob beradi — kabinet uni ilova tilidan qoʻyadi _(14/09/2026)_ |
@@ -209,7 +209,7 @@ Uch qatlamli himoya:
 | `services` | clinic_id, name, price | Narxnoma |
 | `expenses` | clinic_id, date, category, amount |  |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
-| `images` | patient_id, key, caption | `key` — MinIO dagi obyekt nomi |
+| `images` | patient_id, key, caption | `key` — ombordagi (Garage, S3) obyekt nomi |
 | `audit_log` | clinic_id, user_id, action, entity, entity_id, meta, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart. `entity_id` boʻlmasa «qaysi bemor yozuvi» degan savolga javob yoʻq (12-boʻlim talabi) |
 
 Pul **butun songda** saqlanadi (soʻm), sanalar `DATE` tipida. Bu mavjud ilovaning qoidasi — koʻchirishda mos kelishi uchun oʻzgartirilmaydi.
@@ -578,7 +578,7 @@ _Bitta server yetadi. Boshidan ortiqcha murakkablik qurmang._
 |---|---|---|
 | Server | Hetzner Cloud (Yevropa) | Bosqich 5.6 da olinadi. Tavsiya: CX32 — 4 vCPU / 8 GB / 80 GB. Kechikish ~100 ms — CRUD uchun sezilarli, lekin toʻsiq emas |
 | OS | Ubuntu 24.04 LTS |  |
-| Konteynerlar | api · postgres · redis · minio · caddy | Docker Compose, bitta fayl |
+| Konteynerlar | api · postgres · redis · garage · caddy | Docker Compose, bitta fayl |
 | Proxy | Caddy | HTTPS avtomatik, sozlash nginx'dan sodda |
 | Domen | `e-dentist.uz` | Hammasi shu serverda: apex va `www` — landing, `cabinet.` va `admin.` — ilova. DNS Cloudflare orqali (proxy yoqilgan) |
 | Kuzatuv | Uptime Kuma + Postgres loglar | Boshida shu yetadi |

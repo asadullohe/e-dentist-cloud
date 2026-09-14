@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 8.3** — 0 dan 7 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
+**Reja toʻliq bajarildi** — 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -1056,16 +1056,15 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       Lokal MinIO dagi 21 obyekt `mc mirror` bilan koʻchirildi — 8.3 mashqi.
       496 test Garage bilan oʻtdi
 - [x] **8.2 CI** — GitHub Actions Garage bilan (`GARAGE_RPC_SECRET`, GK kalitlar)
-- [ ] **8.3 Serverga koʻchirish** — uzilishsiz: Garage MinIO yonida koʻtariladi,
-      `mc mirror` (yoki `rclone`) bilan bucket koʻchiriladi, API `.env` da yangi
-      endpoint/kalitlar bilan qayta ishga tushadi, rasmlar tekshiriladi, keyin
-      MinIO va uning volume i oʻchiriladi. Oldin toʻliq backup (deploy/backup.sh)
-- [ ] **8.4 Zaxira va kuzatuv** — `deploy/backup.sh` da `mc mirror` Garage
-      aliasi bilan (yoki `rclone`), `backup-check`; Uptime Kuma ga Garage
-      health monitori (`/health`)
-- [ ] **8.5 Hujjatlar** — `tz.md` (Fayllar qatori, konteynerlar roʻyxati),
-      `CLAUDE.md` (konteynerlar), `docs/ish-tartibi.md` dagi lokal ishga
-      tushirish boʻlimi, `.env.example`
+- [x] **8.3 Serverga koʻchirish** — ikki bosqichli: Garage MinIO yonida
+      (`garage-init` rasmi GHCR dan), `deploy/garage-migrate.sh` (`mc mirror` +
+      obyektlar soni), `deploy/garage-switch.sh` (`.env` → Garage, `api` qayta
+      ishga tushadi, ~20 s). API Garage da 14/09/2026. Keyingi push MinIO ni
+      olib tashladi; volume bir hafta turadi (docs/server.md)
+- [x] **8.4 Zaxira va kuzatuv** — `backup.sh` Garage dan (`mc` istalgan S3 bilan
+      ishlaydi); Kuma monitori `http://garage:3903/health` — qoʻlda qoʻshiladi
+- [x] **8.5 Hujjatlar** — tz.md, CLAUDE.md, server.md, birinchi-chiqarish.md,
+      make-env.sh (yangi server Garage bilan), .env.example
 
 ---
 

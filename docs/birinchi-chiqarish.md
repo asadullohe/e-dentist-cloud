@@ -196,7 +196,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml ps
 ```
 
-**Kutilgan natija:** `postgres`, `redis`, `minio`, `api`, `caddy` —
+**Kutilgan natija:** `postgres`, `redis`, `garage`, `api`, `caddy` —
 `Up (healthy)`; `migrate` — `Exited (0)`.
 
 **Xato: `api` qayta-qayta ishga tushyapti** —

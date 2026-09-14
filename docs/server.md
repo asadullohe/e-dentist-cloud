@@ -14,10 +14,11 @@ qaratilgan, Cloudflare proxy ostida. Landing ham shu yerda, Caddy beradi.
 | `api` | Fastify server | Yoʻq |
 | `postgres` | Baza | Yoʻq |
 | `redis` | Sessiya, cheklovlar, navbat hodisalari | Yoʻq |
-| `minio` | Bemor rasmlari | Yoʻq |
+| `garage` | Bemor rasmlari va logotiplar (S3 mos ombor) | Yoʻq |
+| `garage-init` | Bir marta ishlab toʻxtaydi: Garage ga rol, kalit, bucket beradi | — |
 | `migrate` | Bir marta ishlab toʻxtaydi: migratsiyani bajaradi | — |
 
-Bazaning, Redis va MinIO ning portlari **ataylab** tashqariga chiqarilmagan.
+Bazaning, Redis va Garage ning portlari **ataylab** tashqariga chiqarilmagan.
 Ularga faqat konteyner tarmogʻi ichidan yetish mumkin.
 
 ## Serverni tayyorlash (bir marta)
@@ -176,6 +177,7 @@ Parol soʻralganda tokenni qoʻyasiz — shunda u buyruqlar tarixiga tushmaydi.
 ```
 IMAGE_API=ghcr.io/<foydalanuvchi>/<repo>-api
 IMAGE_WEB=ghcr.io/<foydalanuvchi>/<repo>-web
+IMAGE_GARAGE_INIT=ghcr.io/<foydalanuvchi>/<repo>-garage-init
 ```
 
 `TAG` yozilmaydi: uni har chiqarishda Actions beradi, qoʻlda koʻtarsangiz
@@ -193,75 +195,23 @@ Chiqarilgan har bir versiya GHCR da commit sha si bilan saqlanadi.
 > oʻchirish, nom almashtirish) kiritilsa, avval eski kod ham ishlaydigan
 > qilib chiqariladi, keyingi chiqarishda esa eskisi olib tashlanadi.
 
-## MinIO dan Garage ga koʻchish (reja 8.3)
+## MinIO dan Garage ga koʻchish (bajarildi, 14/09/2026)
 
-Nega — `docs/reja.md`, 8-bosqich. Tartib: Garage MinIO yonida koʻtariladi,
-rasmlar koʻchiriladi, API oʻtkaziladi, keyin MinIO olib tashlanadi. Sayt
-faqat API qayta ishga tushganda ~20 soniya uzilib turadi.
+Nega — `docs/reja.md`, 8-bosqich. Qanday oʻtildi: Garage MinIO yonida
+koʻtarildi → `deploy/garage-migrate.sh` (`mc mirror`, obyektlar soni
+solishtirildi) → `deploy/garage-switch.sh` (`.env` da `S3_*` Garage ga,
+`api` qayta ishga tushdi) → keyingi push MinIO ni compose dan olib tashladi.
+Skriptlar qoldi — boshqa S3 omboriga koʻchishda ham shu tartib.
 
-### 1. Kalitlar — push dan OLDIN
-
-Garage bitta `.env` dagi kalitni import qiladi; ular boʻlmasa konteyner
-koʻtarilmaydi. Serverda:
-
-```bash
-cd /opt/e-dentist
-cat >> .env <<EOF
-
-# Garage (reja 8.3). Kalit shakli: GK + 24 hex / 64 hex
-GARAGE_RPC_SECRET=$(openssl rand -hex 32)
-GARAGE_ACCESS_KEY=GK$(openssl rand -hex 12)
-GARAGE_SECRET_KEY=$(openssl rand -hex 32)
-GARAGE_CAPACITY=60G
-IMAGE_GARAGE_INIT=ghcr.io/<foydalanuvchi>/<repo>-garage-init
-EOF
-```
-
-`IMAGE_GARAGE_INIT` — `IMAGE_API` bilan bir xil qolip, oxiri `-garage-init`.
-
-### 2. Chiqarish
-
-Keyingi `master` push (yoki Actions da qoʻlda) Garage ni MinIO yonida
-koʻtaradi. Tekshirish:
-
-```bash
-docker compose -f docker-compose.prod.yml ps
-```
-
-`garage` — healthy, `garage-init` — Exited (0), `api` — avvalgidek MinIO da.
-
-### 3. Rasmlarni koʻchirish
-
-```bash
-bash deploy/garage-migrate.sh
-```
-
-Ikkala ombordagi obyektlar soni solishtiriladi; farq boʻlsa skript
-toʻxtaydi — qayta ishga tushirish xavfsiz (faqat yangi fayllar koʻchadi).
-
-### 4. API ni oʻtkazish
-
-```bash
-bash deploy/garage-switch.sh
-```
-
-`.env` da `S3_*` Garage ga koʻrsatiladi (eskisi `.env.minio-<sana>` da),
-`api` qayta ishga tushadi. Keyin kabinetda bemor rasmi va klinika logotipi
-ochilishini koʻring. Orqaga qaytish: `cp .env.minio-<sana> .env` va
-`docker compose -f docker-compose.prod.yml up -d api`.
-
-### 5. MinIO ni olib tashlash
-
-Keyingi push compose dan `minio` ni olib tashlaydi (`--remove-orphans`
-konteynerni toʻxtatadi). Maʼlumot volume i qoladi — bir hafta ishlab
-koʻrgach:
+Serverda qolgan tozalash (bir hafta ishlab koʻrgach):
 
 ```bash
 docker volume rm e-dentist_miniodata
 ```
 
-`.env` dagi `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` qatorlari ham shunda
-oʻchiriladi.
+va `.env` dagi `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` qatorlari.
+`GARAGE_ACCESS_KEY` / `GARAGE_SECRET_KEY` ham endi shart emas (`S3_*` bilan
+bir xil) — qoldirsa ham boʻladi.
 
 ## Zaxira
 
@@ -270,7 +220,7 @@ Kunlik `pg_dump` va bemor rasmlari nusxasi `/opt/e-dentist/backups` da:
 ```
 backups/
 ├─ db/     edentist-2026-09-09_0320.sql.gz   (30 kun saqlanadi)
-└─ files/  MinIO dagi rasmlarning nusxasi
+└─ files/  Garage dagi rasmlarning nusxasi
 ```
 
 ### Yoqish (bir marta)
@@ -356,6 +306,10 @@ qoʻshing:
 | API | HTTP(s) | `https://cabinet.<domen>/api/health/ready` | 60 s |
 | Kabinet | HTTP(s) | `https://cabinet.<domen>/` | 300 s |
 | Panel | HTTP(s) | `https://admin.<domen>/` | 300 s |
+| Garage | HTTP(s) | `http://garage:3903/health` | 60 s |
+
+Garage manzili konteyner tarmogʻi ichida — Kuma ham oʻsha tarmoqda
+turgani uchun yetadi; tashqaridan ochilmaydi.
 
 `/api/health/ready` oddiy `/api/health` dan farq qiladi: u **bazani va
 Redis ni ham** tekshiradi. Ular yiqilganda API «tirik» boʻlib koʻrinib
@@ -423,4 +377,4 @@ Koʻtargandan keyin:
   loyiha nomi bir xil (`e-dentist`). Bitta mashinada ikkalasini
   koʻtarmang — konteyner nomlari toʻqnashadi
 - `.env` git ga hech qachon tushmaydi
-- Zaxira 5.12 da: kunlik `pg_dump` va MinIO nusxasi
+- Zaxira 5.12 da: kunlik `pg_dump` va Garage nusxasi
