@@ -129,6 +129,7 @@ export const HOME_UI = {
 
 // Yon menyu boʻlimlarining nomlari
 export const SECTION_LABELS = {
+  home: 'Bosh sahifa',
   patients: 'Bemorlar',
   schedule: 'Qabul jadvali',
   lab: 'Texnik ishlari',

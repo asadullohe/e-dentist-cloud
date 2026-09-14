@@ -2,7 +2,7 @@ import { clinicLogoUrl, roleLabel, UI_TEXT } from '@e-dentist/shared'
 import { cn } from 'cn'
 import { ChevronRightIcon, LogOutIcon } from 'lucide-react'
 import { useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
 import { useLogout } from '@/features/auth'
 import { type NavSection, navSections } from '@/shared/config'
@@ -30,7 +30,9 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
   const navigate = useNavigate()
 
   const clinic = session?.clinic ?? null
-  const sections = navSections().filter((section) => hasPermission(section.permission))
+  const sections = navSections().filter(
+    (section) => !section.permission || hasPermission(section.permission),
+  )
   const initial = (session?.user.fullName ?? session?.user.email ?? '?').trim().charAt(0)
 
   async function handleLogout() {
@@ -46,9 +48,13 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
         collapsed ? '-translate-x-full md:translate-x-0' : 'translate-x-0',
       )}
     >
-      <div
+      {/* Klinika nomi — bosh sahifaga havola: odat boʻyicha logotip uyga qaytaradi */}
+      <Link
+        to="/"
+        onClick={onNavigate}
         className={cn(
-          'flex h-14 shrink-0 items-center gap-2.5 border-b px-4',
+          'flex h-14 shrink-0 items-center gap-2.5 border-b px-4 outline-none',
+          'hover:bg-sidebar-accent/60 focus-visible:ring-[3px] focus-visible:ring-ring/50',
           collapsed && 'md:justify-center md:px-2',
         )}
       >
@@ -62,7 +68,7 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
           <div className="truncate text-sm font-semibold">{clinic?.name ?? UI_TEXT.brand}</div>
           <div className="truncate text-xs text-muted-foreground">{UI_TEXT.brand}</div>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
         {sections.map((section) =>
@@ -145,6 +151,8 @@ function NavItem({
   return (
     <NavLink
       to={section.path}
+      // «/» — faqat aynan bosh sahifada faol, boshqa yoʻllarning boshi emas
+      end={section.path === '/'}
       onClick={onNavigate}
       title={collapsed ? section.label : undefined}
       className={({ isActive }) =>

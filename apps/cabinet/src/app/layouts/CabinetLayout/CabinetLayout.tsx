@@ -22,7 +22,9 @@ function initialCollapsed(): boolean {
 }
 
 function pageTitle(pathname: string): string {
-  const section = navSections().find((s) => pathname.startsWith(s.path))
+  const section = navSections().find((s) =>
+    s.path === '/' ? pathname === '/' : pathname.startsWith(s.path),
+  )
   return section?.label ?? UI_TEXT.brand
 }
 

@@ -134,6 +134,7 @@ export const ru: DeepPartial<Strings> = {
   },
 
   SECTION_LABELS: {
+    home: 'Главная',
     patients: 'Пациенты',
     schedule: 'Расписание',
     lab: 'Зуботехнические работы',

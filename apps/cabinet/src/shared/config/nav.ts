@@ -5,6 +5,7 @@ import {
   ChartColumnIcon,
   CreditCardIcon,
   FlaskConicalIcon,
+  HouseIcon,
   type LucideIcon,
   ReceiptIcon,
   SettingsIcon,
@@ -17,15 +18,17 @@ export interface NavSection {
   path: string
   label: string
   icon: LucideIcon
-  /// Shu ruxsat boʻlmasa boʻlim menyuda koʻrinmaydi.
+  /// Shu ruxsat boʻlmasa boʻlim menyuda koʻrinmaydi. Berilmasa — hammaga.
   /// Diqqat: bu faqat koʻrinish — haqiqiy himoya serverda
-  permission: Permission
+  permission?: Permission
   /// Yon menyuda ochiladigan ichki havolalar (sozlamalar boʻlimlari)
   children?: readonly SettingsItem[]
 }
 
 /// Funksiya, konstanta emas — matnlar joriy tilda oʻqilishi uchun
 export const navSections = (): readonly NavSection[] => [
+  // Bosh sahifa — kirgan har kimga; qolgan boʻlimlar ruxsatga qarab
+  { path: '/', label: SECTION_LABELS.home, icon: HouseIcon },
   {
     path: '/patients',
     label: SECTION_LABELS.patients,
