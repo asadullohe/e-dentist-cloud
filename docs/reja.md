@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Reja toʻliq bajarildi** — 0 dan 7 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
+**Hozirgi task: 8.1** — 0 dan 7 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -1019,6 +1019,53 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 >
 > Navbat sahifasi va kutish xonasi ekrani bemorlar uchun: klinika logotipi,
 > katta raqamlar, qorongʻi fon. Ular kabinet dizayni emas, klinika brendi.
+
+---
+
+## Bosqich 8 — Fayl ombori: MinIO → Garage · ~2 kun
+
+> **Nega** _(qaror 14/09/2026)_
+>
+> MinIO jamoat nashri amalda toʻxtadi: 2025-yil may nashridan boshlab
+> konsol olib tashlandi, keyin Docker Hub dagi `minio/minio` va `minio/mc`
+> rasmlari oʻchirildi (14/09/2026 da CI shundan yiqildi), yangi nashrlar
+> chiqmayapti — kompaniya pullik AIStor ga oʻtdi. Biz quay.io dagi
+> RELEASE.2025-09-07 ga qotirib turibmiz. Bu vaqtinchalik chora: zaiflik
+> topilsa tuzatish kelmaydi, quay.io dagi rasm ham bir kun yoʻqolishi
+> mumkin. Omborda bemorlarning rentgen rasmlari — tibbiy maʼlumot.
+>
+> **Garage** (Deuxfleurs): ochiq kodli (AGPL), S3-mos, aynan bitta-ikkita
+> serverli oʻz-oʻzini hosting uchun yaratilgan, bitta yengil binar
+> (Rust, ~50 MB xotira), faol rivojlanadi, Docker Hub da muntazam
+> nashrlar. Bizga kerak boʻlgan hamma narsa bor: PutObject, GetObject,
+> DeleteObject, HeadBucket/CreateBucket, path-style manzil. Imzolangan
+> havolalar ishlatilmaydi (6.5 dan beri rasm API orqali beriladi) —
+> koʻchish faqat `S3_ENDPOINT` va kalitlarni almashtirish.
+>
+> Koʻrilgan boshqa yoʻllar: SeaweedFS — katta klasterlar uchun, bizga
+> ortiqcha; RustFS — juda yangi, tarixi yoʻq; oddiy fayl tizimi — S3
+> qatlamini yoʻqotadi, keyin Oʻzbekistondagi bulut omboriga koʻchish
+> qiyinlashadi («koʻchma joylashtirish» talabi, CLAUDE.md).
+
+- [ ] **8.1 Lokalda Garage** — `docker-compose.yml` da `minio` oʻrniga `garage`
+      (`dxflrs/garage`, teg qotiriladi); birinchi ishga tushirishda layout, kalit
+      va bucket yaratadigan `init` skripti (MinIO da bu avtomatik edi, Garage da
+      `garage layout assign` + `garage key create` + `garage bucket create`
+      kerak). `storage.test.ts` va `logo.test.ts` Garage bilan oʻtishi shart;
+      `ensureBucket` — kalitga `allow_create_bucket` berilmasa bucket init da
+      yaratiladi, kodda 403 chidamli boʻlsin
+- [ ] **8.2 CI** — GitHub Actions ham Garage bilan; MinIO ga tegishli izohlar
+      va `docker-compose.yml` dagi quay.io eslatmasi olib tashlanadi
+- [ ] **8.3 Serverga koʻchirish** — uzilishsiz: Garage MinIO yonida koʻtariladi,
+      `mc mirror` (yoki `rclone`) bilan bucket koʻchiriladi, API `.env` da yangi
+      endpoint/kalitlar bilan qayta ishga tushadi, rasmlar tekshiriladi, keyin
+      MinIO va uning volume i oʻchiriladi. Oldin toʻliq backup (deploy/backup.sh)
+- [ ] **8.4 Zaxira va kuzatuv** — `deploy/backup.sh` da `mc mirror` Garage
+      aliasi bilan (yoki `rclone`), `backup-check`; Uptime Kuma ga Garage
+      health monitori (`/health`)
+- [ ] **8.5 Hujjatlar** — `tz.md` (Fayllar qatori, konteynerlar roʻyxati),
+      `CLAUDE.md` (konteynerlar), `docs/ish-tartibi.md` dagi lokal ishga
+      tushirish boʻlimi, `.env.example`
 
 ---
 
