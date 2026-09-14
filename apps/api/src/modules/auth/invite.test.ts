@@ -104,12 +104,14 @@ describe('panelidan klinika ochish', () => {
   })
 
   it('band pochtaga klinika ochmaydi va boʻsh klinika qoldirmaydi', async () => {
-    const before = await h.ownerDb.clinic.count()
+    // Umumiy son emas — test fayllari parallel ishlaydi va boshqa fayl shu
+    // orada oʻz klinikasini ochib qoʻyishi mumkin. Faqat shu nom tekshiriladi
+    const name = `Band pochta ${Date.now()}`
 
-    const { res } = await createClinic(h.email)
+    const { res } = await createClinic(h.email, name)
 
     expect(res.statusCode).toBe(409)
-    expect(await h.ownerDb.clinic.count()).toBe(before)
+    expect(await h.ownerDb.clinic.count({ where: { name } })).toBe(0)
   })
 
   it('admin boʻlmagan hisob klinika ocholmaydi', async () => {
