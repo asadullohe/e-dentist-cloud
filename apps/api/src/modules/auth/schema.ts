@@ -8,23 +8,31 @@ const email = z
   .string()
   .trim()
   .toLowerCase()
-  .min(1, AUTH_TEXT.email_invalid)
-  .max(200, AUTH_TEXT.email_invalid)
-  .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), AUTH_TEXT.email_invalid)
+  .min(1, { error: () => AUTH_TEXT.email_invalid })
+  .max(200, { error: () => AUTH_TEXT.email_invalid })
+  .refine((v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v), { error: () => AUTH_TEXT.email_invalid })
 
 const password = z
   .string()
-  .min(8, AUTH_TEXT.password_too_short)
-  .max(200, AUTH_TEXT.password_too_long)
+  .min(8, { error: () => AUTH_TEXT.password_too_short })
+  .max(200, { error: () => AUTH_TEXT.password_too_long })
 
 export const registerSchema = z.object({
-  clinicName: z.string().trim().min(2, AUTH_TEXT.clinic_name_too_short).max(120),
+  clinicName: z
+    .string()
+    .trim()
+    .min(2, { error: () => AUTH_TEXT.clinic_name_too_short })
+    .max(120),
   phone: z
     .string()
     .trim()
     .optional()
-    .refine((v) => !v || phoneDigits(v).length === 9, AUTH_TEXT.phone_invalid),
-  fullName: z.string().trim().min(3, AUTH_TEXT.full_name_too_short).max(120),
+    .refine((v) => !v || phoneDigits(v).length === 9, { error: () => AUTH_TEXT.phone_invalid }),
+  fullName: z
+    .string()
+    .trim()
+    .min(3, { error: () => AUTH_TEXT.full_name_too_short })
+    .max(120),
   email,
   password: password,
 })
@@ -42,21 +50,32 @@ export const loginSchema = z.object({
 
 export const staffCreateSchema = z.object({
   email,
-  fullName: z.string().trim().min(3, STAFF_TEXT.name_required).max(120),
-  roleId: z.string().uuid(STAFF_TEXT.role_required),
+  fullName: z
+    .string()
+    .trim()
+    .min(3, { error: () => STAFF_TEXT.name_required })
+    .max(120),
+  roleId: z.string().uuid({ error: () => STAFF_TEXT.role_required }),
   // Parolni egasi belgilaydi va xodimga aytadi; xodim keyin oʻzgartiradi
   password,
 })
 
 export const staffUpdateSchema = z.object({
-  roleId: z.string().uuid(STAFF_TEXT.role_not_found).optional(),
+  roleId: z
+    .string()
+    .uuid({ error: () => STAFF_TEXT.role_not_found })
+    .optional(),
   status: z.enum(['active', 'disabled']).optional(),
 })
 
 /// Taklifnomani qabul qilish: kalit havoladan, ism va parol odamdan
 export const inviteAcceptSchema = z.object({
   token: z.string().min(10),
-  fullName: z.string().trim().min(3, AUTH_TEXT.full_name_too_short).max(120),
+  fullName: z
+    .string()
+    .trim()
+    .min(3, { error: () => AUTH_TEXT.full_name_too_short })
+    .max(120),
   password,
 })
 

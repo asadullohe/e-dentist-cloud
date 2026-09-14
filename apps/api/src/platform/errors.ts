@@ -19,7 +19,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
 interface ErrorOptions {
   // Foydalanuvchiga koʻrsatiladigan matn. Berilmasa strings.ts dagi umumiy matn
   message?: string
-  // Forma tekshiruvida: maydon nomi → oʻzbekcha xato
+  // Forma tekshiruvida: maydon nomi → soʻrov tilidagi xato
   fields?: Record<string, string>
   // Asl xato — faqat logga tushadi, javobga hech qachon chiqmaydi
   cause?: unknown

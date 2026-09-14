@@ -22,7 +22,8 @@ export interface PatientRow {
   note: string | null
 }
 
-const HEADERS = [
+/// Funksiya, konstanta emas: sarlavhalar soʻrov tilida oʻqilishi uchun
+const headers = () => [
   PATIENT_EXCEL_COLUMNS.id,
   PATIENT_EXCEL_COLUMNS.fio,
   PATIENT_EXCEL_COLUMNS.phone,
@@ -43,7 +44,7 @@ const COLUMN_WIDTHS = [
 ]
 
 function headerRow(): SheetData[number] {
-  return HEADERS.map((value) => ({ value, fontWeight: 'bold' as const }))
+  return headers().map((value) => ({ value, fontWeight: 'bold' as const }))
 }
 
 function patientRow(patient: PatientRow): SheetData[number] {
@@ -132,7 +133,9 @@ export function buildErrorReport(rows: ErrorRow[]): Promise<Buffer> {
   const header = [
     { value: IMPORT_UI.row_column, fontWeight: 'bold' as const },
     { value: IMPORT_UI.error_column, fontWeight: 'bold' as const },
-    ...HEADERS.slice(1).map((value) => ({ value, fontWeight: 'bold' as const })),
+    ...headers()
+      .slice(1)
+      .map((value) => ({ value, fontWeight: 'bold' as const })),
   ]
 
   const body: SheetData = rows.map((row) => [

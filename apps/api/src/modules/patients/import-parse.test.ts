@@ -32,6 +32,13 @@ describe('ustunlarni tanish', () => {
     expect(detectColumns(["Tug'ilgan sana", 'F.I.O.']).columns.birthDate).toBe(0)
   })
 
+  // Shablon ruscha kabinetdan yuklab olingan boʻlishi mumkin
+  it('boshqa tildagi shablon sarlavhalarini ham tanaydi', () => {
+    const { columns, missing } = detectColumns(['Ф.И.О.', 'Телефон', 'Дата рождения'])
+    expect(missing).toBeUndefined()
+    expect(columns).toMatchObject({ fio: 0, phone: 1, birthDate: 2 })
+  })
+
   it('F.I.O. ustuni yoʻq boʻlsa aniq xato', () => {
     const { missing } = detectColumns(['Telefon', 'Manzil'])
     expect(missing).toBe('F.I.O.')

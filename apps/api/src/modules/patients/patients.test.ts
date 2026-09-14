@@ -5,6 +5,7 @@ import {
   removeClinic,
   startHarness,
 } from '../../test-support/harness.js'
+import { sheetRows } from '../../test-support/sheets.js'
 
 let h: Harness
 /// Ikkinchi klinika — koʻp ijarachilik tekshiruvi uchun
@@ -16,19 +17,6 @@ async function post(url: string, payload: object) {
 }
 async function get(url: string) {
   return await h.app.inject({ method: 'GET', url, headers: { cookie: h.cookie } })
-}
-
-/// Oqimdan oʻqilganda read-excel-file barcha varaqlarni
-/// [{sheet, data}] koʻrinishida qaytaradi va `sheet` sozlamasini
-/// eʼtiborsiz qoldiradi — kerakli varaqni oʻzimiz tanlaymiz
-async function sheetRows(body: Buffer, index = 1) {
-  const { Readable } = await import('node:stream')
-  const readXlsxFile = (await import('read-excel-file/node')).default
-  const sheets = (await readXlsxFile(Readable.from(body))) as unknown as {
-    sheet: string
-    data: unknown[][]
-  }[]
-  return sheets[index - 1]?.data ?? []
 }
 
 beforeAll(async () => {

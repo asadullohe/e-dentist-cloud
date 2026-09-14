@@ -31,23 +31,32 @@ export const RETURN_REASONS = ['fit', 'shade', 'broken', 'other'] as const
 const dueDate = z
   .string()
   .trim()
-  .min(1, LAB_TEXT.due_required)
+  .min(1, { error: () => LAB_TEXT.due_required })
   .refine((value) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)), {
-    message: VALIDATION_TEXT.date_invalid,
+    error: () => VALIDATION_TEXT.date_invalid,
   })
 
 export const labCreateSchema = z.object({
   patientId: z.string().uuid(),
   techId: z.string().uuid().nullish(),
   teeth: z
-    .array(z.coerce.number().int().refine(isToothNo, LAB_TEXT.tooth_invalid))
-    .min(1, LAB_TEXT.teeth_required),
+    .array(
+      z.coerce
+        .number()
+        .int()
+        .refine(isToothNo, { error: () => LAB_TEXT.tooth_invalid }),
+    )
+    .min(1, { error: () => LAB_TEXT.teeth_required }),
   workType: z.enum(WORK_TYPES),
   material: z.enum(MATERIALS),
-  shade: z.enum(VITA_SHADES, { message: LAB_TEXT.shade_invalid }).nullish(),
+  shade: z.enum(VITA_SHADES, { error: () => LAB_TEXT.shade_invalid }).nullish(),
   dueDate,
   /// Soʻm, butun son
-  techPrice: z.coerce.number().int().min(0, LAB_TEXT.price_negative).default(0),
+  techPrice: z.coerce
+    .number()
+    .int()
+    .min(0, { error: () => LAB_TEXT.price_negative })
+    .default(0),
   note: z.string().trim().max(2000).nullish(),
 })
 
@@ -58,7 +67,7 @@ export const labStatusSchema = z.object({
 })
 
 export const labReturnSchema = z.object({
-  reason: z.enum(RETURN_REASONS, { message: LAB_TEXT.reason_required }),
+  reason: z.enum(RETURN_REASONS, { error: () => LAB_TEXT.reason_required }),
   note: z.string().trim().max(2000).nullish(),
 })
 

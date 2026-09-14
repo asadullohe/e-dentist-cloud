@@ -7,18 +7,28 @@ const OLDEST_YEAR = 1900
 const birthDate = z
   .string()
   .trim()
-  .refine((value) => ISO_DATE.test(value), VALIDATION_TEXT.date_invalid)
-  .refine((value) => !Number.isNaN(Date.parse(value)), VALIDATION_TEXT.date_invalid)
-  .refine((value) => new Date(value) <= new Date(), VALIDATION_TEXT.date_in_future)
-  .refine((value) => new Date(value).getUTCFullYear() >= OLDEST_YEAR, VALIDATION_TEXT.date_too_old)
+  .refine((value) => ISO_DATE.test(value), { error: () => VALIDATION_TEXT.date_invalid })
+  .refine((value) => !Number.isNaN(Date.parse(value)), {
+    error: () => VALIDATION_TEXT.date_invalid,
+  })
+  .refine((value) => new Date(value) <= new Date(), { error: () => VALIDATION_TEXT.date_in_future })
+  .refine((value) => new Date(value).getUTCFullYear() >= OLDEST_YEAR, {
+    error: () => VALIDATION_TEXT.date_too_old,
+  })
 
 export const patientCreateSchema = z.object({
-  fio: z.string().trim().min(3, VALIDATION_TEXT.fio_too_short).max(200),
+  fio: z
+    .string()
+    .trim()
+    .min(3, { error: () => VALIDATION_TEXT.fio_too_short })
+    .max(200),
   // Telefon majburiy emas, lekin kiritilgan boʻlsa toʻliq boʻlishi kerak
   phone: z
     .string()
     .trim()
-    .refine((value) => !value || phoneDigits(value).length === 9, VALIDATION_TEXT.phone_incomplete)
+    .refine((value) => !value || phoneDigits(value).length === 9, {
+      error: () => VALIDATION_TEXT.phone_incomplete,
+    })
     .optional(),
   birthDate: birthDate.optional(),
   address: z.string().trim().max(300).optional(),

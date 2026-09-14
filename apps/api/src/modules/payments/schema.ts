@@ -7,19 +7,22 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const paymentDate = z
   .string()
   .trim()
-  .min(1, PAYMENT_TEXT.date_required)
+  .min(1, { error: () => PAYMENT_TEXT.date_required })
   .refine((value) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)), {
-    message: VALIDATION_TEXT.date_invalid,
+    error: () => VALIDATION_TEXT.date_invalid,
   })
   .refine((value) => new Date(`${value}T00:00:00Z`) <= new Date(), {
-    message: VALIDATION_TEXT.date_in_future,
+    error: () => VALIDATION_TEXT.date_in_future,
   })
 
 export const paymentCreateSchema = z.object({
   patientId: z.string().uuid(),
   date: paymentDate,
   /// Soʻm, butun son
-  amount: z.coerce.number().int().positive(PAYMENT_TEXT.amount_positive),
+  amount: z.coerce
+    .number()
+    .int()
+    .positive({ error: () => PAYMENT_TEXT.amount_positive }),
   note: z.string().trim().max(500).nullish(),
 })
 

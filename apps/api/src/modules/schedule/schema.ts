@@ -8,22 +8,30 @@ const isoDate = z
   .string()
   .trim()
   .refine((value) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)), {
-    message: VALIDATION_TEXT.date_invalid,
+    error: () => VALIDATION_TEXT.date_invalid,
   })
 
 export const appointmentCreateSchema = z.object({
-  patientId: z.string().uuid(APPOINTMENT_TEXT.patient_required),
+  patientId: z.string().uuid({ error: () => APPOINTMENT_TEXT.patient_required }),
   date: isoDate,
   /// Soat:daqiqa, mahalliy vaqt
-  time: z.string().trim().min(1, APPOINTMENT_TEXT.time_required).regex(TIME, {
-    message: APPOINTMENT_TEXT.time_invalid,
-  }),
+  time: z
+    .string()
+    .trim()
+    .min(1, { error: () => APPOINTMENT_TEXT.time_required })
+    .regex(TIME, {
+      error: () => APPOINTMENT_TEXT.time_invalid,
+    }),
   note: z.string().trim().max(500).nullish(),
 })
 
 export const appointmentUpdateSchema = z.object({
   date: isoDate.optional(),
-  time: z.string().trim().regex(TIME, { message: APPOINTMENT_TEXT.time_invalid }).optional(),
+  time: z
+    .string()
+    .trim()
+    .regex(TIME, { error: () => APPOINTMENT_TEXT.time_invalid })
+    .optional(),
   status: z.enum(['scheduled', 'arrived', 'no_show', 'done', 'cancelled']).optional(),
   note: z.string().trim().max(500).nullish(),
 })

@@ -10,25 +10,35 @@ const CATEGORIES = Object.keys(EXPENSE_CATEGORY_LABELS) as [string, ...string[]]
 const expenseDate = z
   .string()
   .trim()
-  .min(1, EXPENSE_TEXT.date_required)
+  .min(1, { error: () => EXPENSE_TEXT.date_required })
   .refine((value) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)), {
-    message: VALIDATION_TEXT.date_invalid,
+    error: () => VALIDATION_TEXT.date_invalid,
   })
   .refine((value) => new Date(`${value}T00:00:00Z`) <= new Date(), {
-    message: VALIDATION_TEXT.date_in_future,
+    error: () => VALIDATION_TEXT.date_in_future,
   })
 
 export const expenseListSchema = z.object({
   /// YYYY-MM. Sahifa doim bitta oyni koʻrsatadi
-  month: z.string().trim().regex(ISO_MONTH, EXPENSE_TEXT.month_invalid),
+  month: z
+    .string()
+    .trim()
+    .regex(ISO_MONTH, { error: () => EXPENSE_TEXT.month_invalid }),
 })
 
 export const expenseCreateSchema = z.object({
   date: expenseDate,
-  category: z.enum(CATEGORIES, { message: EXPENSE_TEXT.category_invalid }).default('other'),
-  description: z.string().trim().min(2, EXPENSE_TEXT.description_required).max(300),
+  category: z.enum(CATEGORIES, { error: () => EXPENSE_TEXT.category_invalid }).default('other'),
+  description: z
+    .string()
+    .trim()
+    .min(2, { error: () => EXPENSE_TEXT.description_required })
+    .max(300),
   /// Soʻm, butun son
-  amount: z.coerce.number().int().positive(EXPENSE_TEXT.amount_required),
+  amount: z.coerce
+    .number()
+    .int()
+    .positive({ error: () => EXPENSE_TEXT.amount_required }),
 })
 
 export const expenseUpdateSchema = expenseCreateSchema.partial()

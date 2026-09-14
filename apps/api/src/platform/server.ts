@@ -28,6 +28,7 @@ import type { Db } from './db.js'
 import { AppError, errors } from './errors.js'
 import { anyPermissionGuard, permissionGuard, sessionHook } from './guards.js'
 import type { ImportStore } from './importStore.js'
+import { localeHook } from './locale.js'
 import type { Mailer } from './mailer.js'
 import type { Notifier } from './notify.js'
 import type { RateLimiter } from './rateLimit.js'
@@ -112,6 +113,9 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     reply.status(404).send(errorResponse(errors.notFound()))
   })
 
+  // Til — eng birinchi ilgak: sessiya va validatsiya xatolari ham soʻrov
+  // tilida chiqsin
+  app.addHook('onRequest', localeHook)
   app.register(cookie)
   // Bemor rasmlari uchun. Chegara shu yerda ham qoʻyiladi: katta fayl
   // butunlay oʻqilguncha kutib oʻtirilmaydi

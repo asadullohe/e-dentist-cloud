@@ -3,7 +3,14 @@
 // Bu yerdagi hamma narsa sof funksiya: bazaga ham, tarmoqqa ham tegmaydi.
 // Shuning uchun tuzoqlarni test bilan qulflab qoʻyish oson.
 
-import { IMPORT_TEXT, normalizePhone, PATIENT_EXCEL_COLUMNS, phoneDigits } from '@e-dentist/shared'
+import {
+  IMPORT_TEXT,
+  LOCALES,
+  normalizePhone,
+  PATIENT_EXCEL_COLUMNS,
+  phoneDigits,
+  strings,
+} from '@e-dentist/shared'
 
 export type CellValue = string | number | Date | boolean | null
 
@@ -43,7 +50,12 @@ export function detectColumns(header: CellValue[]): ColumnResult {
   const columns: ColumnMap = {}
 
   for (const [field, aliases] of Object.entries(ALIASES) as [keyof ColumnMap, string[]][]) {
-    const index = keys.findIndex((key) => aliases.includes(key))
+    // Shablon qaysi tilda yuklab olingan boʻlsa, oʻsha tildagi sarlavha
+    // ham taniladi — ruscha shablon oʻzbek kabinetga qaytib kelishi mumkin
+    const localized = LOCALES.map((locale) =>
+      headerKey(strings(locale).PATIENT_EXCEL_COLUMNS[field]),
+    )
+    const index = keys.findIndex((key) => aliases.includes(key) || localized.includes(key))
     if (index >= 0) columns[field] = index
   }
 

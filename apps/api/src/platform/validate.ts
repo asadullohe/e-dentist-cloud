@@ -1,5 +1,5 @@
 // Zod sxemasi orqali kirish maʼlumotini tekshiradi va xatolarni loyihaning
-// javob shakliga keltiradi: maydon nomi → oʻzbekcha xato matni.
+// javob shakliga keltiradi: maydon nomi → soʻrov tilidagi xato matni.
 
 import type { ZodType } from 'zod'
 import { errors } from './errors.js'
