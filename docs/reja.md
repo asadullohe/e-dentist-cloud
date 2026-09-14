@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 7.2** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: 7.6** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -972,14 +972,16 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 - [x] **7.1 Tokenlar va qobiq** — palitra, shrift, radius; och va yigʻiladigan yon
       menyu (klinika logotipi bilan), tepa panel; emoji oʻrniga lucide — menyuda
       ham, boʻsh holatlarda ham
-- [~] **7.2 Sahifalar** — 18 sahifani birma-bir: sarlavhalar, jadvallar,
-      kartochkalar, formalar. Har sahifa alohida tasdiqlanadi.
-      Qilindi: Sozlamalar va bemor kartochkasi yon menyuli tartibda (har boʻlim
-      oʻz manzilida); data-table (TanStack Table): Bemorlar, Xarajatlar, Texnik
-      ishlari, Qarzdorlar, Xizmatlar, Tashriflar, Toʻlovlar. Qoldi: formalar va
-      qolgan sahifalarni birma-bir koʻrib chiqish
-- [ ] **7.3 Maxsus qismlar** — kalendar, navbat taxtasi, bemor kartochkasi va tish
-      xaritasi. Tish holat ranglari tibbiy maʼno beradi — palitra bilan almashmaydi
+- [x] **7.2 Sahifalar** — 18 sahifa koʻrib chiqildi. Sozlamalar va bemor
+      kartochkasi yon menyuli tartibda (har boʻlim oʻz manzilida); data-table
+      (TanStack Table): Bemorlar, Xarajatlar, Texnik ishlari, Qarzdorlar,
+      Xizmatlar, Tashriflar, Toʻlovlar — qator bosilsa kartochka ochiladi;
+      sana maydonlari kalendardan; Bosh sahifa haqiqiy koʻrinish (bugungi
+      qabullar, bemorlar, tushum, qarzdorlik); Hisobotlar recharts bilan;
+      kirish sahifalari logotip bilan; sinov banneri tepa panelda
+- [x] **7.3 Maxsus qismlar** — kalendar kataklari va roʻyxatdan holat
+      almashtirish; navbat taxtasi holat ustunlari bilan; tish xaritasi ikki
+      rejimda tekshirildi — tibbiy ranglar oʻzgarmadi, tegilmadi
 
 - [x] **7.4 Tema** — kabinetda yorugʻ/tungi rejim tugmasi (panelda bor edi), tanlov
       brauzerda saqlanadi
