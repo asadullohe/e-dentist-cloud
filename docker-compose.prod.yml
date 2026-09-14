@@ -73,7 +73,8 @@ services:
       retries: 12
 
   minio:
-    image: minio/minio:latest
+    # Nega quay.io va aynan shu teg — docker-compose.yml dagi izohga qarang
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: unless-stopped
     logging: *logging
     command: server /data --console-address ":9001"
