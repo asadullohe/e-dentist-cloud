@@ -19,7 +19,6 @@ import {
   Trash2Icon,
   TruckIcon,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import type { LabOrder } from '@/entities/lab-order'
 import {
   Badge,
@@ -53,14 +52,7 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
       meta: { title: LAB_UI.patient } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={LAB_UI.patient} />,
       enableHiding: false,
-      cell: ({ row }) => (
-        <Link
-          to={`/patients/${row.original.patientId}/texnik`}
-          className="font-medium hover:text-primary hover:underline"
-        >
-          {row.original.fio}
-        </Link>
-      ),
+      cell: ({ row }) => <span className="font-medium">{row.original.fio}</span>,
     },
     {
       id: 'work',

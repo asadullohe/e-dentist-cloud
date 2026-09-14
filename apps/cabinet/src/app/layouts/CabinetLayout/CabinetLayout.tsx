@@ -63,9 +63,12 @@ export function CabinetLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Header title={pageTitle(pathname)} onToggleMenu={toggle} />
+        <Header
+          title={pageTitle(pathname)}
+          onToggleMenu={toggle}
+          notice={<TrialBanner subscription={session?.subscription ?? null} />}
+        />
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 md:px-6 md:py-6">
-          <TrialBanner subscription={session?.subscription ?? null} />
           <Outlet />
         </main>
       </div>

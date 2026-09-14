@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table'
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { type LabOrder, type LabStatus, useLabOrders } from '@/entities/lab-order'
 import { useHasPermission } from '@/entities/session'
 import { useStaffNames } from '@/entities/staff'
@@ -50,9 +51,12 @@ function rowTone(order: LabOrder): string | undefined {
 }
 
 export function Lab() {
+  const navigate = useNavigate()
   const hasPermission = useHasPermission()
   const canWrite = hasPermission('lab.write')
   const canSeePrice = hasPermission('lab.cost')
+  // Texnikda patients.read yoʻq — unga kartochka ochilmaydi, qator bosilmaydi
+  const canOpenPatient = hasPermission('patients.read')
 
   // Roʻyxat toʻliq keladi (texnik faqat oʻzinikini koʻradi — server
   // cheklaydi), shuning uchun filtr, saralash va sahifalash mijozda
@@ -151,6 +155,9 @@ export function Lab() {
         loading={isPending && !orders}
         emptyText={LAB_UI.empty}
         rowClassName={rowTone}
+        onRowClick={
+          canOpenPatient ? (order) => navigate(`/patients/${order.patientId}/texnik`) : undefined
+        }
       />
 
       <div className="mt-3">

@@ -1,7 +1,6 @@
 import { age, formatDate, formatUzPhone, PATIENT_UI, TABLE_UI, UI_TEXT } from '@e-dentist/shared'
 import type { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import type { Patient } from '@/entities/patient'
 import {
   Button,
@@ -28,9 +27,7 @@ export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient
       enableHiding: false,
       cell: ({ row }) => (
         <div className="font-medium">
-          <Link to={`/patients/${row.original.id}`} className="hover:text-primary hover:underline">
-            {row.original.fio}
-          </Link>
+          {row.original.fio}
           {row.original.phone && (
             <span className="text-muted-foreground block text-xs sm:hidden">
               {formatUzPhone(row.original.phone)}

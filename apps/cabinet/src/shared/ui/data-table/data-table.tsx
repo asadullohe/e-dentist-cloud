@@ -17,6 +17,18 @@ interface Props<TData> {
   refreshing?: boolean
   emptyText: string
   rowClassName?: (row: TData) => string | undefined
+  /// Qator bosilganda — masalan, kartochkaga oʻtish. Qator ichidagi tugma
+  /// va havolalar oʻz ishini qiladi, qatorga oʻtmaydi
+  onRowClick?: (row: TData) => void
+}
+
+/// Bosilgan joy tugma, havola yoki forma elementi boʻlsa — bu qator emas,
+/// oʻsha elementning oʻzi
+function insideControl(target: EventTarget | null): boolean {
+  return (
+    target instanceof Element &&
+    target.closest('button, a, input, select, textarea, [role="menu"]') !== null
+  )
 }
 
 /// Jadvalning oʻzi: sarlavha, qatorlar, boʻsh holat. Ustunlar va holat —
@@ -27,6 +39,7 @@ export function DataTable<TData>({
   refreshing = false,
   emptyText,
   rowClassName,
+  onRowClick,
 }: Props<TData>) {
   const meta = (column: { columnDef: { meta?: unknown } }) =>
     column.columnDef.meta as ColumnMeta | undefined
@@ -59,7 +72,28 @@ export function DataTable<TData>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  className={cn(refreshing && 'opacity-60', rowClassName?.(row.original))}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  className={cn(
+                    onRowClick &&
+                      'cursor-pointer focus-visible:bg-muted/50 focus-visible:outline-none',
+                    refreshing && 'opacity-60',
+                    rowClassName?.(row.original),
+                  )}
+                  onClick={
+                    onRowClick &&
+                    ((event) => {
+                      if (!insideControl(event.target)) onRowClick(row.original)
+                    })
+                  }
+                  onKeyDown={
+                    onRowClick &&
+                    ((event) => {
+                      // Klaviatura: qator fokusda turganda Enter — bosish bilan teng
+                      if (event.key === 'Enter' && event.target === event.currentTarget) {
+                        onRowClick(row.original)
+                      }
+                    })
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className={meta(cell.column)?.className}>

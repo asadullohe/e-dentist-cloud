@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-table'
 import { FileDownIcon, PlusIcon, SearchIcon, SheetIcon, UploadIcon, XIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { PatientImportDialog } from '@/features/patient-import'
@@ -34,6 +35,7 @@ import { patientColumns } from './columns'
 type Download = 'template' | 'export' | null
 
 export function Patients() {
+  const navigate = useNavigate()
   const [busy, setBusy] = useState<Download>(null)
   const [importOpen, setImportOpen] = useState(false)
   const [downloadError, setDownloadError] = useState('')
@@ -171,6 +173,7 @@ export function Patients() {
         loading={isPending && !data}
         refreshing={isPending}
         emptyText={debouncedSearch ? PATIENT_UI.nothing_found : PATIENT_UI.empty}
+        onRowClick={(patient) => navigate(`/patients/${patient.id}`)}
       />
 
       <div className="mt-3">

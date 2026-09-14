@@ -7,11 +7,13 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { type DebtorSort, useDebtors } from '@/entities/debtor'
 import { DataTable, DataTablePagination, DataTableViewOptions } from '@/shared/ui'
 import { debtorColumns } from './columns'
 
 export function Debtors() {
+  const navigate = useNavigate()
   // Roʻyxat serverda hisoblanadi va sahifalanadi — holat mijozda,
   // sahifa va saralash soʻrovga ketadi
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
@@ -64,6 +66,7 @@ export function Debtors() {
         loading={isPending && !data}
         refreshing={isPending}
         emptyText={DEBTORS_UI.empty}
+        onRowClick={(debtor) => navigate(`/patients/${debtor.patientId}/tolovlar`)}
       />
 
       <div className="mt-3">

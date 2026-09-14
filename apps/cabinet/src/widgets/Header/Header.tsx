@@ -1,5 +1,6 @@
 import { LOCALE_LABELS, LOCALES, UI_TEXT } from '@e-dentist/shared'
 import { CheckIcon, MoonIcon, PanelLeftIcon, SunIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useLocale, useTheme } from '@/shared/lib'
 import {
   Button,
@@ -13,11 +14,13 @@ import {
 interface Props {
   title: string
   onToggleMenu: () => void
+  /// Sinov muddati / obuna holati — tepa panelning oʻng tomonida
+  notice?: ReactNode
 }
 
 /// Tepa panel. Katta ekranda sahifa nomi kontent ichida — bu yerda
 /// takrorlanmaydi; telefonda yon menyu yopiq, shuning uchun nom shu yerda
-export function Header({ title, onToggleMenu }: Props) {
+export function Header({ title, onToggleMenu, notice }: Props) {
   const { theme, toggle } = useTheme()
   const { locale, setLocale } = useLocale()
 
@@ -28,7 +31,8 @@ export function Header({ title, onToggleMenu }: Props) {
       </Button>
       <h1 className="truncate text-sm font-medium md:hidden">{title}</h1>
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex min-w-0 items-center gap-1">
+        {notice}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             {/* Joriy tilning bayrogʻi va kodi — belgi emas, koʻrinib turadi */}

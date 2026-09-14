@@ -1,6 +1,5 @@
 import { DEBTORS_UI, formatSom, formatUzPhone, PAYMENT_UI } from '@e-dentist/shared'
 import type { ColumnDef } from '@tanstack/react-table'
-import { Link } from 'react-router-dom'
 import type { Debtor } from '@/entities/debtor'
 import { type ColumnMeta, DataTableColumnHeader } from '@/shared/ui'
 
@@ -16,12 +15,7 @@ export function debtorColumns(): ColumnDef<Debtor>[] {
       enableHiding: false,
       cell: ({ row }) => (
         <div className="font-medium">
-          <Link
-            to={`/patients/${row.original.patientId}/tolovlar`}
-            className="hover:text-primary hover:underline"
-          >
-            {row.original.fio}
-          </Link>
+          {row.original.fio}
           {row.original.phone && (
             <span className="text-muted-foreground block text-xs sm:hidden">
               {formatUzPhone(row.original.phone)}
