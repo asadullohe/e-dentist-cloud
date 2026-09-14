@@ -108,7 +108,7 @@ export function Expenses() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">{EXPENSE_UI.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{EXPENSE_UI.title}</h1>
           <p className="text-muted-foreground text-sm">{EXPENSE_UI.subtitle}</p>
         </div>
         <Button size="sm" onClick={openNew}>
@@ -126,9 +126,7 @@ export function Expenses() {
         >
           <ChevronLeftIcon />
         </Button>
-        <span className="font-display min-w-36 text-center font-semibold">
-          {formatMonth(month)}
-        </span>
+        <span className="min-w-36 text-center font-semibold">{formatMonth(month)}</span>
         <Button
           variant="ghost"
           size="icon"
@@ -156,9 +154,7 @@ export function Expenses() {
               <div className="text-muted-foreground text-xs">
                 {EXPENSE_CATEGORY_LABELS[row.category]}
               </div>
-              <div className="font-display text-lg font-bold tabular-nums">
-                {formatSom(row.total)}
-              </div>
+              <div className="text-lg font-semibold tabular-nums">{formatSom(row.total)}</div>
             </Card>
           ))}
         </div>

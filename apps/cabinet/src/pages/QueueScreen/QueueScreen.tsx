@@ -31,9 +31,7 @@ export function QueueScreen() {
             className="size-[7vh] rounded-lg bg-white/10 object-contain"
           />
         )}
-        <h1 className="font-display text-center text-[4vh] font-bold tracking-tight">
-          {data?.clinicName}
-        </h1>
+        <h1 className="text-center text-[4vh] font-bold tracking-tight">{data?.clinicName}</h1>
       </div>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-[2vh]">
@@ -43,7 +41,7 @@ export function QueueScreen() {
           <div className="flex flex-wrap items-start justify-center gap-[6vh]">
             {data.called.map((entry) => (
               <div key={entry.number} className="text-center">
-                <div className="font-display text-[22vh] leading-none font-bold tabular-nums">
+                <div className="text-[22vh] leading-none font-bold tabular-nums">
                   {entry.number}
                 </div>
                 <div className="mt-[1vh] text-[2.5vh] text-white/70">{entry.doctorName}</div>
@@ -58,7 +56,7 @@ export function QueueScreen() {
       {data && data.next.length > 0 && (
         <footer className="border-t border-white/15 pt-[2vh] text-center">
           <div className="text-[2.5vh] text-white/60">{QUEUE_UI.screen_next}</div>
-          <div className="font-display mt-[1vh] flex justify-center gap-[4vh] text-[7vh] font-bold tabular-nums text-white/85">
+          <div className="mt-[1vh] flex justify-center gap-[4vh] text-[7vh] font-bold tabular-nums text-white/85">
             {data.next.map((number) => (
               <span key={number}>{number}</span>
             ))}

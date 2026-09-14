@@ -99,7 +99,7 @@ export function Schedule() {
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold tracking-tight">{SCHEDULE_UI.title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
         <Button
           size="sm"
           onClick={() => {
@@ -119,7 +119,7 @@ export function Schedule() {
               <ChevronLeftIcon />
             </Button>
             <div className="text-center">
-              <div className="font-display font-semibold">
+              <div className="font-semibold">
                 {MONTHS[cursor.month]?.replace(/^./, (c) => c.toUpperCase())} {cursor.year}
               </div>
               <div className="text-muted-foreground text-xs">

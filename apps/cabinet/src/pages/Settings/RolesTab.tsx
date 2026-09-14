@@ -48,7 +48,7 @@ function RoleCard({ role }: { role: Role }) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-display font-semibold">{role.name}</h3>
+        <h3 className="font-semibold">{role.name}</h3>
         {role.isOwner && <Badge variant="secondary">{STAFF_UI.owner_locked}</Badge>}
       </div>
 

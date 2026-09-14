@@ -56,7 +56,7 @@ export function AccountTab() {
   return (
     <Card className="max-w-md p-4">
       <div>
-        <h2 className="font-display font-semibold">{session?.user.fullName}</h2>
+        <h2 className="font-semibold">{session?.user.fullName}</h2>
         <p className="text-muted-foreground text-sm">
           {session?.user.email} · {session?.role?.name}
         </p>

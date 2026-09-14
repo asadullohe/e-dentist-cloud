@@ -76,7 +76,7 @@ export function Invite() {
   return (
     <AuthLayout footer={loginLink}>
       <div className="mb-4">
-        <h2 className="font-display text-lg font-semibold">{INVITE_UI.title}</h2>
+        <h2 className="text-lg font-semibold">{INVITE_UI.title}</h2>
         <p className="text-muted-foreground text-sm">{INVITE_UI.hint(invite.clinicName)}</p>
         <p className="text-muted-foreground mt-1 text-sm">{invite.email}</p>
       </div>

@@ -46,7 +46,7 @@ export function Register() {
         }
       >
         <div className="text-4xl">📬</div>
-        <h2 className="font-display mt-2.5 text-lg font-semibold">{UI_TEXT.mail_sent}</h2>
+        <h2 className="mt-2.5 text-lg font-semibold">{UI_TEXT.mail_sent}</h2>
         <p className="text-muted-foreground mt-2 text-sm">{UI_TEXT.mail_sent_hint}</p>
       </AuthLayout>
     )

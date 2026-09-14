@@ -101,9 +101,7 @@ export function Queue() {
           className="mx-auto mb-2 size-16 rounded-lg object-contain"
         />
       )}
-      <h1 className="font-display text-center text-xl font-bold tracking-tight">
-        {board.data?.clinicName}
-      </h1>
+      <h1 className="text-center text-xl font-bold tracking-tight">{board.data?.clinicName}</h1>
       <p className="text-muted-foreground mb-4 text-center text-sm">{QUEUE_UI.title}</p>
 
       {ticket.data && ticketId ? (

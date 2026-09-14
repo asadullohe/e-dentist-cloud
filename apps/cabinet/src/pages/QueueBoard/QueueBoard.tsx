@@ -46,7 +46,7 @@ export function QueueBoard() {
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold tracking-tight">{QUEUE_CABINET_UI.title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{QUEUE_CABINET_UI.title}</h1>
         {code && (
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
@@ -78,7 +78,7 @@ export function QueueBoard() {
               key={entry.id}
               className={cn('gap-2 p-3 sm:flex-row sm:items-center', tone(entry.status))}
             >
-              <div className="font-display w-12 shrink-0 text-2xl font-bold tabular-nums">
+              <div className="w-12 shrink-0 text-2xl font-semibold tabular-nums">
                 {entry.number}
               </div>
 

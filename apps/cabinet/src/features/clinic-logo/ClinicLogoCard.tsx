@@ -43,7 +43,7 @@ export function ClinicLogoCard() {
 
   return (
     <Card className="gap-0 p-4">
-      <h2 className="font-display font-semibold">{LOGO_UI.title}</h2>
+      <h2 className="font-semibold">{LOGO_UI.title}</h2>
       <p className="text-muted-foreground mt-1 text-sm">{LOGO_UI.hint}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-4">

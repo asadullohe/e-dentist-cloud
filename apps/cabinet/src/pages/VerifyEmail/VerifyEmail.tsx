@@ -39,7 +39,7 @@ export function VerifyEmail() {
       {isSuccess && (
         <>
           <div className="text-4xl">✅</div>
-          <h2 className="font-display mt-2.5 text-lg font-semibold">{UI_TEXT.verified}</h2>
+          <h2 className="mt-2.5 text-lg font-semibold">{UI_TEXT.verified}</h2>
           <p className="text-muted-foreground mt-2 text-sm">{UI_TEXT.verified_hint}</p>
         </>
       )}

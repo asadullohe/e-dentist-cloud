@@ -226,7 +226,7 @@ export function PatientCard() {
 
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">{patient?.fio}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{patient?.fio}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {patient?.phone ? formatUzPhone(patient.phone) : CARD_UI.no_phone}
             {years !== null && ` · ${CARD_UI.age_years(years)}`}

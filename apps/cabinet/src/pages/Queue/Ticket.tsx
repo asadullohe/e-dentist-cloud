@@ -17,7 +17,7 @@ export function Ticket({ ticket, onLeave }: { ticket: QueueTicket; onLeave(): vo
       )}
     >
       <div className="text-muted-foreground text-sm">{QUEUE_UI.your_number}</div>
-      <div className="font-display text-6xl font-bold tabular-nums">{ticket.number}</div>
+      <div className="text-6xl font-bold tabular-nums">{ticket.number}</div>
       <div className="text-sm">{ticket.doctorName}</div>
 
       {called ? (
