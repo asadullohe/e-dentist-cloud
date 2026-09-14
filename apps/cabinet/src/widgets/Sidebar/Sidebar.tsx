@@ -1,4 +1,4 @@
-import { clinicLogoUrl, UI_TEXT } from '@e-dentist/shared'
+import { clinicLogoUrl, roleLabel, UI_TEXT } from '@e-dentist/shared'
 import { cn } from 'cn'
 import { ChevronRightIcon, LogOutIcon } from 'lucide-react'
 import { useState } from 'react'
@@ -102,7 +102,9 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
               <div className="truncate text-sm">
                 {session?.user.fullName ?? session?.user.email}
               </div>
-              <div className="truncate text-xs text-muted-foreground">{session?.role?.name}</div>
+              <div className="truncate text-xs text-muted-foreground">
+                {session?.role && roleLabel(session.role)}
+              </div>
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-56">

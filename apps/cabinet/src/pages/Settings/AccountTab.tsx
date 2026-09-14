@@ -1,4 +1,4 @@
-import { AUTH_TEXT, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
+import { AUTH_TEXT, roleLabel, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -58,7 +58,7 @@ export function AccountTab() {
       <div>
         <h2 className="font-semibold">{session?.user.fullName}</h2>
         <p className="text-muted-foreground text-sm">
-          {session?.user.email} · {session?.role?.name}
+          {session?.user.email} · {session?.role && roleLabel(session.role)}
         </p>
       </div>
 

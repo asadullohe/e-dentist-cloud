@@ -3,6 +3,7 @@ import {
   PERMISSION_LABELS,
   PERMISSIONS,
   type Permission,
+  roleLabel,
   STAFF_UI,
   UI_TEXT,
 } from '@e-dentist/shared'
@@ -48,7 +49,7 @@ function RoleCard({ role }: { role: Role }) {
   return (
     <Card className="p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-semibold">{role.name}</h3>
+        <h3 className="font-semibold">{roleLabel(role)}</h3>
         {role.isOwner && <Badge variant="secondary">{STAFF_UI.owner_locked}</Badge>}
       </div>
 

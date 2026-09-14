@@ -1,4 +1,4 @@
-import { formatDateTime, STAFF_UI } from '@e-dentist/shared'
+import { formatDateTime, roleLabel, STAFF_UI } from '@e-dentist/shared'
 import { PlusIcon, UserCheckIcon, UserXIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useSession } from '@/entities/session'
@@ -92,7 +92,7 @@ export function StaffTab() {
                       <SelectContent>
                         {roles?.map((role) => (
                           <SelectItem key={role.id} value={role.id}>
-                            {role.name}
+                            {roleLabel(role)}
                           </SelectItem>
                         ))}
                       </SelectContent>

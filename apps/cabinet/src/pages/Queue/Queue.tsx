@@ -17,7 +17,8 @@ import {
   useQueueTicket,
 } from '@/entities/queue'
 import { ApiError } from '@/shared/api'
-import { Button, Card, Input, Label, Skeleton } from '@/shared/ui'
+import { useLocale } from '@/shared/lib'
+import { Button, Card, Flag, Input, Label, Skeleton } from '@/shared/ui'
 import { Ticket } from './Ticket'
 
 /// Olingan raqam brauzerda saqlanadi: sahifa yopilib qayta ochilsa ham
@@ -35,6 +36,7 @@ function readTicketId(code: string): string | null {
 
 export function Queue() {
   const { code = '' } = useParams()
+  const { locale, setLocale } = useLocale()
   const [ticketId, setTicketId] = useState<string | null>(() => readTicketId(code))
 
   // Navbat oʻzgarishi darhol koʻrinsin
@@ -94,6 +96,19 @@ export function Queue() {
 
   return (
     <main className="mx-auto max-w-md p-4 pb-10">
+      {/* Bemor sahifasi — tilni bir bosishda almashtirish (uz ⇄ ru) */}
+      <div className="mb-2 flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2 px-2"
+          aria-label={UI_TEXT.language}
+          onClick={() => setLocale(locale === 'uz' ? 'ru' : 'uz')}
+        >
+          <Flag locale={locale === 'uz' ? 'ru' : 'uz'} />
+          <span className="text-xs font-medium uppercase">{locale === 'uz' ? 'ru' : 'uz'}</span>
+        </Button>
+      </div>
       {board.data?.hasLogo && (
         <img
           src={clinicLogoUrl(code)}

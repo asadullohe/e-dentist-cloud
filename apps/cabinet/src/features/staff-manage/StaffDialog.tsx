@@ -1,4 +1,4 @@
-import { AUTH_TEXT, CARD_UI, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
+import { AUTH_TEXT, CARD_UI, roleLabel, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -131,7 +131,7 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
                     <SelectContent>
                       {roles?.map((role) => (
                         <SelectItem key={role.id} value={role.id}>
-                          {role.name}
+                          {roleLabel(role)}
                         </SelectItem>
                       ))}
                     </SelectContent>
