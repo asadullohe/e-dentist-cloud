@@ -27,10 +27,15 @@ export const patientCreateSchema = z.object({
 
 export const patientUpdateSchema = patientCreateSchema.partial()
 
+/// Saralash faqat ochiq roʻyxatdagi ustunlar boʻyicha — ixtiyoriy nom emas
+export const PATIENT_SORT = ['fio', 'birthDate', 'createdAt'] as const
+
 export const patientListSchema = z.object({
   q: z.string().trim().max(100).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  sort: z.enum(PATIENT_SORT).default('fio'),
+  dir: z.enum(['asc', 'desc']).default('asc'),
 })
 
 export type PatientCreateInput = z.infer<typeof patientCreateSchema>

@@ -35,13 +35,24 @@ function searchWhere(query: string | undefined): Prisma.PatientWhereInput {
   return { OR: or }
 }
 
-export async function list(tx: ClinicTx, input: { q?: string; page: number; pageSize: number }) {
+export async function list(
+  tx: ClinicTx,
+  input: {
+    q?: string
+    page: number
+    pageSize: number
+    sort: 'fio' | 'birthDate' | 'createdAt'
+    dir: 'asc' | 'desc'
+  },
+) {
   const where = searchWhere(input.q)
   const [items, total] = await Promise.all([
     tx.patient.findMany({
       where,
       select: SELECT,
-      orderBy: { fio: 'asc' },
+      // Ikkinchi kalit — id: bir xil qiymatlarda sahifalar orasida qator
+      // sakrab yurmasin
+      orderBy: [{ [input.sort]: input.dir }, { id: 'asc' }],
       skip: (input.page - 1) * input.pageSize,
       take: input.pageSize,
     }),

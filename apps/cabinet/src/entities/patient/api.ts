@@ -6,6 +6,8 @@ export function fetchPatients(query: PatientQuery): Promise<PatientPage> {
   if (query.q) params.set('q', query.q)
   if (query.page) params.set('page', String(query.page))
   if (query.pageSize) params.set('pageSize', String(query.pageSize))
+  if (query.sort) params.set('sort', query.sort)
+  if (query.dir) params.set('dir', query.dir)
   const search = params.toString()
   return apiRequest<PatientPage>(`/patients${search ? `?${search}` : ''}`)
 }

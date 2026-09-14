@@ -27,6 +27,15 @@ export {
 } from './command'
 export { ContentSection } from './content-section'
 export {
+  type ColumnMeta,
+  DataTable,
+  DataTableColumnHeader,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableViewOptions,
+  type FacetOption,
+} from './data-table'
+export {
   Dialog,
   DialogContent,
   DialogDescription,

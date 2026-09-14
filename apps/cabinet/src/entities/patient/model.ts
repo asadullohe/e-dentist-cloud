@@ -16,8 +16,12 @@ export interface PatientPage {
   pageSize: number
 }
 
+export type PatientSort = 'fio' | 'birthDate' | 'createdAt'
+
 export interface PatientQuery {
   q?: string
   page?: number
   pageSize?: number
+  sort?: PatientSort
+  dir?: 'asc' | 'desc'
 }

@@ -1,24 +1,15 @@
+import { EXCEL_UI, IMPORT_UI, PATIENT_UI, TABLE_UI, UI_TEXT } from '@e-dentist/shared'
 import {
-  age,
-  EXCEL_UI,
-  formatDate,
-  formatUzPhone,
-  IMPORT_UI,
-  PATIENT_UI,
-  UI_TEXT,
-} from '@e-dentist/shared'
-import {
-  FileDownIcon,
-  PencilIcon,
-  PlusIcon,
-  SheetIcon,
-  Trash2Icon,
-  UploadIcon,
-  UsersIcon,
-} from 'lucide-react'
+  type ColumnFiltersState,
+  getCoreRowModel,
+  type PaginationState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from '@tanstack/react-table'
+import { FileDownIcon, PlusIcon, SearchIcon, SheetIcon, UploadIcon, XIcon } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { type Patient, usePatients } from '@/entities/patient'
+import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { PatientImportDialog } from '@/features/patient-import'
 import { ApiError, downloadFile } from '@/shared/api'
@@ -33,19 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
-  Card,
-  EmptyState,
+  DataTable,
+  DataTablePagination,
+  DataTableViewOptions,
   Input,
-  Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from '@/shared/ui'
-
-const PAGE_SIZE = 20
+import { patientColumns } from './columns'
 
 type Download = 'template' | 'export' | null
 
@@ -67,21 +51,50 @@ export function Patients() {
   }
 
   const [search, setSearch] = useState('')
-  const [page, setPage] = useState(1)
   const debouncedSearch = useDebounced(search)
+
+  // Jadval holati mijozda, maʼlumot serverda: sahifa va saralash
+  // parametrlari soʻrovga ketadi (manualPagination / manualSorting)
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'fio', desc: false }])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const [editing, setEditing] = useState<Patient | undefined>(undefined)
   const [formOpen, setFormOpen] = useState(false)
   const [removing, setRemoving] = useState<Patient | null>(null)
 
+  const sort = sorting[0]
   const { data, isPending } = usePatients({
     q: debouncedSearch || undefined,
-    page,
-    pageSize: PAGE_SIZE,
+    page: pagination.pageIndex + 1,
+    pageSize: pagination.pageSize,
+    sort: (sort?.id as PatientSort | undefined) ?? 'fio',
+    dir: sort?.desc ? 'desc' : 'asc',
   })
   const { mutateAsync: remove, isPending: isRemoving } = useDeletePatient()
 
-  const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1
+  const table = useReactTable({
+    data: data?.items ?? [],
+    columns: patientColumns({ onEdit: openEdit, onRemove: setRemoving }),
+    pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
+    state: { pagination, sorting, columnVisibility, columnFilters },
+    manualPagination: true,
+    manualSorting: true,
+    onPaginationChange: setPagination,
+    onSortingChange: (updater) => {
+      setSorting(updater)
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+    },
+    onColumnVisibilityChange: setColumnVisibility,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  function onSearch(value: string) {
+    setSearch(value)
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+  }
 
   function openNew() {
     setEditing(undefined)
@@ -95,8 +108,11 @@ export function Patients() {
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold tracking-tight">{PATIENT_UI.title}</h1>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{PATIENT_UI.title}</h1>
+          {data && <p className="text-muted-foreground text-sm">{PATIENT_UI.total(data.total)}</p>}
+        </div>
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
@@ -120,133 +136,46 @@ export function Patients() {
             <SheetIcon />
             {busy === 'export' ? EXCEL_UI.downloading : EXCEL_UI.export}
           </Button>
-          <Button onClick={openNew}>
+          <Button size="sm" onClick={openNew}>
             <PlusIcon />
             {PATIENT_UI.add}
           </Button>
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <Input
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            setPage(1)
-          }}
-          placeholder={PATIENT_UI.search}
-          className="max-w-sm"
-        />
-        {data && (
-          <span className="text-muted-foreground text-sm">{PATIENT_UI.total(data.total)}</span>
+      <div className="mb-3 flex items-center gap-2">
+        <div className="relative w-full max-w-xs">
+          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+          <Input
+            value={search}
+            onChange={(event) => onSearch(event.target.value)}
+            placeholder={PATIENT_UI.search}
+            className="h-8 pl-8"
+          />
+        </div>
+        {search && (
+          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => onSearch('')}>
+            {TABLE_UI.reset}
+            <XIcon />
+          </Button>
         )}
+        <DataTableViewOptions table={table} />
       </div>
 
       {downloadError && (
         <p className="text-destructive mb-3 text-sm font-medium">{downloadError}</p>
       )}
-      <Card className="gap-0 overflow-hidden p-0">
-        {isPending && !data ? (
-          <div className="space-y-2 p-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        ) : data && data.items.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{PATIENT_UI.col_fio}</TableHead>
-                <TableHead className="hidden sm:table-cell">{PATIENT_UI.col_phone}</TableHead>
-                <TableHead className="hidden md:table-cell">{PATIENT_UI.col_age}</TableHead>
-                <TableHead className="hidden lg:table-cell">{PATIENT_UI.col_address}</TableHead>
-                <TableHead className="w-24" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.items.map((patient) => {
-                const years = patient.birthDate ? age(patient.birthDate.slice(0, 10)) : null
-                return (
-                  <TableRow key={patient.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        to={`/patients/${patient.id}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {patient.fio}
-                      </Link>
-                      {patient.phone && (
-                        <span className="text-muted-foreground block text-xs sm:hidden">
-                          {formatUzPhone(patient.phone)}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {patient.phone ? formatUzPhone(patient.phone) : '—'}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {years === null ? '—' : PATIENT_UI.years(years)}
-                      {patient.birthDate && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          {formatDate(patient.birthDate.slice(0, 10))}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden lg:table-cell">
-                      {patient.address ?? '—'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={PATIENT_UI.edit_title}
-                        onClick={() => openEdit(patient)}
-                      >
-                        <PencilIcon />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={PATIENT_UI.remove}
-                        onClick={() => setRemoving(patient)}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        ) : (
-          <EmptyState
-            icon={UsersIcon}
-            text={debouncedSearch ? PATIENT_UI.nothing_found : PATIENT_UI.empty}
-          />
-        )}
-      </Card>
 
-      {pages > 1 && (
-        <div className="mt-3 flex items-center justify-end gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 1}
-            onClick={() => setPage(page - 1)}
-          >
-            {PATIENT_UI.prev}
-          </Button>
-          <span className="text-muted-foreground text-sm">{PATIENT_UI.page_of(page, pages)}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= pages}
-            onClick={() => setPage(page + 1)}
-          >
-            {PATIENT_UI.next}
-          </Button>
-        </div>
-      )}
+      <DataTable
+        table={table}
+        loading={isPending && !data}
+        refreshing={isPending}
+        emptyText={debouncedSearch ? PATIENT_UI.nothing_found : PATIENT_UI.empty}
+      />
+
+      <div className="mt-3">
+        <DataTablePagination table={table} />
+      </div>
 
       <PatientImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
