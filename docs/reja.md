@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 7.7** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Reja toʻliq bajarildi** — 0 dan 7 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -995,8 +995,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       sxemalari `{ error: () => … }` ga oʻtdi (61 joy). Kabinet va panel
       sarlavhani ilova tilidan qoʻyadi. Import ruscha shablon sarlavhalarini
       ham taniydi. 7 + 4 test
-- [ ] **7.7 Ruscha tarjima** — `ru.ts` toʻldiriladi: 62 toʻplam, ~950 qator. Tip
-      tekshiruvi kalit tushib qolganini koʻrsatadi
+- [x] **7.7 Ruscha tarjima** — `ru.ts` toʻliq: 62 toʻplam. Ruscha koʻplik
+      (`plural`: 1 пациент · 2 пациента · 5 пациентов). Test: uz.ts dagi har
+      kalit ru.ts da ham bor — yangi matn ikkala tilga birga qoʻshiladi. Rol
+      nomlari bazadagi emas, shablon boʻyicha joriy tilda (`roleLabel`).
+      Ochiq navbat sahifasida til tugmasi
 
 > **Nega Proxy, nega `t('kalit')` emas** _(qaror 14/09/2026)_
 >
