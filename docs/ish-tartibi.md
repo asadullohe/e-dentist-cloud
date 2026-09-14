@@ -133,7 +133,7 @@ topilmaydigan boʻlib qoladi.
 |---|---|---|
 | Qachon | Hozirdan bosqich 5 gacha | 5.6 dan boshlab |
 | Baza | Docker `postgres:16`, `localhost:5432` | Konteyner, tashqariga ochilmagan |
-| Fayllar | Docker MinIO, `localhost:9000` | Konteyner, Caddy orqali |
+| Fayllar | Docker Garage (S3), `localhost:9000` | Konteyner, API orqali beriladi |
 | API | `npm run dev`, `localhost:3000` | Konteyner, `cabinet.e-dentist.uz/api` |
 | Kabinet | Vite, `localhost:5173` | Caddy statik fayl sifatida beradi |
 | Pochta | Xat konsolga chiqadi | SMTP |

@@ -18,7 +18,7 @@ maʼlumot koʻchmaydi.
 ## Holat
 
 Loyiha endi boshlanmoqda — hozircha faqat hujjatlar. Birinchi ish:
-**bosqich 0 — lokal muhit** (Docker da postgres, redis, minio).
+**bosqich 0 — lokal muhit** (Docker da postgres, redis, garage).
 
 Keyin **bosqich 1 — poydevor**: monorepo skeleti, Prisma sxema, koʻp ijarachilik
 qatlami (`clinicId` + Postgres RLS + test), `auth` moduli, kabinet skeleti.

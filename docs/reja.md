@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task: 8.1** — 0 dan 7 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
+**Hozirgi task: 8.3** — 0 dan 7 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -1047,15 +1047,15 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > qatlamini yoʻqotadi, keyin Oʻzbekistondagi bulut omboriga koʻchish
 > qiyinlashadi («koʻchma joylashtirish» talabi, CLAUDE.md).
 
-- [ ] **8.1 Lokalda Garage** — `docker-compose.yml` da `minio` oʻrniga `garage`
-      (`dxflrs/garage`, teg qotiriladi); birinchi ishga tushirishda layout, kalit
-      va bucket yaratadigan `init` skripti (MinIO da bu avtomatik edi, Garage da
-      `garage layout assign` + `garage key create` + `garage bucket create`
-      kerak). `storage.test.ts` va `logo.test.ts` Garage bilan oʻtishi shart;
-      `ensureBucket` — kalitga `allow_create_bucket` berilmasa bucket init da
-      yaratiladi, kodda 403 chidamli boʻlsin
-- [ ] **8.2 CI** — GitHub Actions ham Garage bilan; MinIO ga tegishli izohlar
-      va `docker-compose.yml` dagi quay.io eslatmasi olib tashlanadi
+- [x] **8.1 Lokalda Garage** — `docker-compose.yml` da `garage` (dxflrs/garage
+      v2.4.1, teg qotirilgan) + `garage-init` bir martalik konteyner
+      (`docker/garage/`): rasmiy rasmda shell yoʻq, shuning uchun binar alpine ga
+      koʻchirilgan; `init.sh` idempotent — rol, `.env` dagi kalitni import,
+      bucket, ruxsatlar, `--create-bucket` (testlar oʻz bucketini S3 orqali
+      yaratadi). `S3_REGION` sozlamasi (Garage imzo regionini tekshiradi).
+      Lokal MinIO dagi 21 obyekt `mc mirror` bilan koʻchirildi — 8.3 mashqi.
+      496 test Garage bilan oʻtdi
+- [x] **8.2 CI** — GitHub Actions Garage bilan (`GARAGE_RPC_SECRET`, GK kalitlar)
 - [ ] **8.3 Serverga koʻchirish** — uzilishsiz: Garage MinIO yonida koʻtariladi,
       `mc mirror` (yoki `rclone`) bilan bucket koʻchiriladi, API `.env` da yangi
       endpoint/kalitlar bilan qayta ishga tushadi, rasmlar tekshiriladi, keyin

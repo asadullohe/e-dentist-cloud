@@ -39,7 +39,7 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 ## Texnologiyalar
 
 Node 22 + TypeScript + Fastify · PostgreSQL 16 + Prisma · Redis (sessiya) ·
-MinIO (fayllar) · React 19 + Vite + Tailwind 4 + shadcn/ui · TanStack Query ·
+Garage (fayllar, S3 mos) · React 19 + Vite + Tailwind 4 + shadcn/ui · TanStack Query ·
 Docker Compose · Biome (format va lint, Prettier/ESLint emas) · Vitest.
 
 Monorepo, npm workspaces: `apps/api`, `apps/cabinet`, `apps/admin`,
@@ -132,12 +132,13 @@ Almashtiriladigan yagona qatlam — `window.api.*` oʻrniga HTTP soʻrovlar.
 ## Infratuzilma
 
 **Hozircha server yoʻq va kerak emas.** Bosqich 5.6 gacha hamma narsa foydalanuvchining
-notebookida Docker da ishlaydi: `postgres`, `redis`, `minio` konteynerlari, API va
+notebookida Docker da ishlaydi: `postgres`, `redis`, `garage` konteynerlari, API va
 kabinet `npm run dev` bilan. Lokalda ham baza konteynerda turadi — notebookga
 toʻgʻridan-toʻgʻri Postgres oʻrnatilmaydi, aks holda «menda ishlayapti» muammosi chiqadi.
 
 Keyin: **Hetzner Cloud**, Ubuntu 24.04, tavsiya CX32 (4 vCPU / 8 GB / 80 GB),
-Falkenstein yoki Helsinki. Konteynerlar: api · postgres · redis · minio · caddy.
+Falkenstein yoki Helsinki. Konteynerlar: api · postgres · redis · garage · caddy
+(serverda hozircha MinIO — koʻchirish reja 8.3).
 
 Domen `e-dentist.uz`: apex va `www` — Netlify'dagi landing (tegilmaydi),
 `kabinet.` va `admin.` — shu server.
