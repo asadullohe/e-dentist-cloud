@@ -1,6 +1,6 @@
 # Test va tekshiruvlar. Har push va pull request da ishlaydi.
 #
-# Testlar haqiqiy Postgres, Redis va MinIO ga ulanadi — koʻp ijarachilik
+# Testlar haqiqiy Postgres, Redis va Garage ga ulanadi — koʻp ijarachilik
 # himoyasi RLS ga tayanadi, uni soxta baza bilan sinab boʻlmaydi.
 # Shuning uchun lokaldagi oʻsha `docker compose` ishlatiladi: CI va
 # notebook bir xil muhitni koʻtaradi.
@@ -26,11 +26,10 @@ jobs:
       APP_DB_USER: edentist_app
       APP_DB_PASSWORD: ci-app-parol
       REDIS_PORT: 6379
-      MINIO_ROOT_USER: edentist
-      MINIO_ROOT_PASSWORD: ci-minio-parol
-      MINIO_PORT: 9000
-      MINIO_CONSOLE_PORT: 9001
-      MINIO_BUCKET: edentist-test
+      # Garage (S3): kalitlar shakli GK+24 hex / 64 hex — garage-init import qiladi
+      GARAGE_RPC_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      GARAGE_CAPACITY: 5G
+      S3_PORT: 9000
 
       TZ: Asia/Tashkent
       NODE_ENV: test
@@ -39,8 +38,9 @@ jobs:
       REDIS_URL: redis://localhost:6379
       SESSION_SECRET: ci-sessiya-kaliti-uzun-satr
       S3_ENDPOINT: http://localhost:9000
-      S3_ACCESS_KEY: edentist
-      S3_SECRET_KEY: ci-minio-parol
+      S3_REGION: garage
+      S3_ACCESS_KEY: GKc1c1c1c1c1c1c1c1c1c1c1c1
+      S3_SECRET_KEY: c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1
       S3_BUCKET: edentist-test
 
     steps:

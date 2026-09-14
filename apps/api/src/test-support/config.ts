@@ -14,8 +14,14 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
     REDIS_URL: process.env.REDIS_URL ?? 'redis://localhost:6379',
     SESSION_SECRET: 'x'.repeat(16),
     S3_ENDPOINT: process.env.S3_ENDPOINT ?? 'http://localhost:9000',
-    S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? 'edentist',
-    S3_SECRET_KEY: process.env.S3_SECRET_KEY ?? 'lokal_parol_2026',
+    S3_REGION: process.env.S3_REGION ?? 'garage',
+    // Garage kalit shakli: GK + 24 hex / 64 hex — docker-compose dagi
+    // garage-init aynan .env dagi kalitni import qiladi, sukut qiymat
+    // faqat .env boʻlmagan holat uchun
+    S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? 'GK000000000000000000000000',
+    S3_SECRET_KEY:
+      process.env.S3_SECRET_KEY ??
+      '0000000000000000000000000000000000000000000000000000000000000000',
     S3_BUCKET: process.env.S3_BUCKET ?? 'edentist-test',
     SMTP_PORT: 587,
     ...overrides,

@@ -1,0 +1,25 @@
+# Garage — bemor rasmlari uchun S3-mos ombor (MinIO oʻrniga, reja 8-bosqich).
+# Bitta tugun, replikatsiya yoʻq: klinika serveri bitta mashina.
+#
+# Maxfiy qiymatlar bu faylda emas: `rpc_secret` — GARAGE_RPC_SECRET muhit
+# oʻzgaruvchisidan (docker-compose.yml). Fayl konteynerga faqat oʻqish
+# uchun ulanadi.
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+replication_factor = 1
+
+# Konteynerlar orasidagi RPC. `garage` — compose dagi xizmat nomi
+rpc_bind_addr = "[::]:3901"
+rpc_public_addr = "garage:3901"
+
+[s3_api]
+# Mijoz imzosidagi region shu bilan bir xil boʻlishi shart (S3_REGION)
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+root_domain = ".s3.garage"
+
+[admin]
+# /health manzili — kuzatuv uchun (token talab qilmaydi)
+api_bind_addr = "[::]:3903"

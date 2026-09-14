@@ -1,5 +1,5 @@
-// Haqiqiy MinIO bilan ishlaydi — imzolangan havolani soxta obyekt bilan
-// tekshirib boʻlmaydi.
+// Haqiqiy Garage bilan ishlaydi — S3 mijozining xatti-harakatini soxta
+// obyekt bilan tekshirib boʻlmaydi.
 
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -13,6 +13,7 @@ const keys: string[] = []
 beforeAll(async () => {
   storage = createStorage({
     endpoint: config.S3_ENDPOINT,
+    region: config.S3_REGION,
     accessKey: config.S3_ACCESS_KEY,
     secretKey: config.S3_SECRET_KEY,
     bucket: config.S3_BUCKET,

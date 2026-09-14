@@ -1,6 +1,7 @@
-// Fayl saqlagich. MinIO S3 bilan mos, shuning uchun standart S3 mijozi
-// ishlatiladi — provayder almashsa faqat endpoint oʻzgaradi (tz.md 13-boʻlim:
-// joylashtirish koʻchma boʻlishi shart).
+// Fayl saqlagich. Garage S3 bilan mos, shuning uchun standart S3 mijozi
+// ishlatiladi — provayder almashsa faqat endpoint va kalitlar oʻzgaradi
+// (tz.md 13-boʻlim: joylashtirish koʻchma boʻlishi shart). MinIO dan
+// Garage ga oʻtish aynan shunday boʻldi (reja 8-bosqich).
 
 import {
   CreateBucketCommand,
@@ -12,11 +13,13 @@ import {
 } from '@aws-sdk/client-s3'
 
 /// Rasm ochiq URL orqali berilmaydi. Imzolangan havola ham ishlatilmaydi:
-/// u serverda `minio:9000` manziliga koʻrsatadi va brauzerga koʻrinmaydi.
+/// u serverda `garage:3900` manziliga koʻrsatadi va brauzerga koʻrinmaydi.
 /// Har rasm API orqali, sessiya tekshiruvi bilan beriladi (6.5)
 
 export interface StorageConfig {
   endpoint: string
+  /// Garage da imzo regioni sozlamadagi `s3_region` ga teng boʻlishi shart
+  region: string
   accessKey: string
   secretKey: string
   bucket: string
@@ -27,7 +30,7 @@ export interface Storage {
   ensureBucket(): Promise<void>
   put(key: string, body: Buffer, contentType: string): Promise<void>
   /// Faylni serverning oʻzi oʻqiydi. Logotip shu yoʻl bilan beriladi:
-  /// imzolangan havola MinIO manziliga koʻrsatadi, u esa serverda Docker
+  /// imzolangan havola ombor manziliga koʻrsatadi, u esa serverda Docker
   /// tarmogʻi ichida va brauzerga koʻrinmaydi
   get(key: string): Promise<{ body: Buffer; contentType: string } | null>
   remove(key: string): Promise<void>
@@ -42,9 +45,9 @@ function bucketExists(error: unknown): boolean {
 export function createStorage(config: StorageConfig): Storage {
   const client = new S3Client({
     endpoint: config.endpoint,
-    region: 'us-east-1',
+    region: config.region,
     credentials: { accessKeyId: config.accessKey, secretAccessKey: config.secretKey },
-    // MinIO yoʻlga asoslangan manzillarni kutadi: endpoint/bucket/key
+    // Yoʻlga asoslangan manzil: endpoint/bucket/key — subdomen kerak emas
     forcePathStyle: true,
   })
 
@@ -58,7 +61,7 @@ export function createStorage(config: StorageConfig): Storage {
         } catch (error) {
           // Poyga: ikki jarayon bir vaqtda koʻtarilsa (CI da test fayllari
           // parallel yuradi) ikkalasi ham bucket yoʻq deb topadi. Yutqazgan
-          // tomonga MinIO 409 qaytaradi — bucket bor, demak ish allaqachon
+          // tomonga ombor 409 qaytaradi — bucket bor, demak ish allaqachon
           // bajarilgan, xato emas
           if (!bucketExists(error)) throw error
         }

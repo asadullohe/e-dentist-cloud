@@ -48,29 +48,49 @@ services:
       timeout: 3s
       retries: 12
 
-  minio:
-    # Docker Hub dagi `minio/minio` olib tashlangan (2026-yil sentabr): MinIO
-    # jamoat nashrini chiqarishni toʻxtatdi, rasmlar faqat quay.io da qoldi.
-    # Teg — serverda ishlab turgan nusxaning oʻzi (digest bir xil), shuning
-    # uchun almashtirish maʼlumotga tegmaydi. `latest` emas — keyingi nashr yoʻq
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
-    container_name: ed-minio
+  garage:
+    # S3-mos fayl ombori (MinIO oʻrniga — reja 8-bosqich). Teg qotirilgan:
+    # yangilash — ongli qaror, init.sh ham oʻsha nashr bilan sinalgan
+    image: dxflrs/garage:v2.4.1
+    container_name: ed-garage
     restart: unless-stopped
-    command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
     ports:
-      - "${MINIO_PORT}:9000"          # S3 API
-      - "${MINIO_CONSOLE_PORT}:9001"  # brauzerdagi konsol
+      - "${S3_PORT:-9000}:3900"   # S3 API
     volumes:
-      - miniodata:/data
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+      - garagemeta:/var/lib/garage/meta
+      - garagedata:/var/lib/garage/data
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
+      # Tugunga rol berilguncha (garage-init) klaster «sogʻlom» emas —
+      # `up --wait` aynan shuni kutadi
+      test: ["CMD", "/garage", "health", "-q"]
+      interval: 3s
       timeout: 5s
-      retries: 12
+      retries: 40
+      start_period: 10s
+
+  # Bir martalik sozlash: rol, kalit, bucket. Ikkinchi ishga tushirishda
+  # hech narsa qilmaydi. Rasmi lokal quriladi (docker/garage/Dockerfile)
+  garage-init:
+    build: docker/garage
+    container_name: ed-garage-init
+    restart: "no"
+    depends_on:
+      garage:
+        condition: service_started
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET}
+      GARAGE_CAPACITY: ${GARAGE_CAPACITY:-50G}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      S3_BUCKET: ${S3_BUCKET}
+    volumes:
+      - ./docker/garage/garage.toml:/etc/garage.toml:ro
+      - garagemeta:/var/lib/garage/meta:ro
 
 volumes:
   pgdata:
-  miniodata:
+  garagemeta:
+  garagedata:

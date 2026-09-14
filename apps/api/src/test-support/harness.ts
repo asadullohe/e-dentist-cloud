@@ -74,6 +74,7 @@ export async function startHarness(): Promise<Harness> {
 
   const storage = createStorage({
     endpoint: config.S3_ENDPOINT,
+    region: config.S3_REGION,
     accessKey: config.S3_ACCESS_KEY,
     secretKey: config.S3_SECRET_KEY,
     bucket: config.S3_BUCKET,
