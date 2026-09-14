@@ -2,21 +2,24 @@ import {
   CARD_UI,
   EXPENSE_CATEGORY_LABELS,
   EXPENSE_UI,
-  formatDate,
   formatMonth,
   formatSom,
   todayISO,
 } from '@e-dentist/shared'
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  PencilIcon,
-  PlusIcon,
-  ReceiptIcon,
-  Trash2Icon,
-} from 'lucide-react'
+  type ColumnFiltersState,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type PaginationState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from '@tanstack/react-table'
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
-import { type Expense, useExpenses } from '@/entities/expense'
+import { type Expense, type ExpenseCategory, useExpenses } from '@/entities/expense'
 import { ExpenseFormDialog, useDeleteExpense } from '@/features/expense-form'
 import {
   AlertDialog,
@@ -30,15 +33,12 @@ import {
   Badge,
   Button,
   Card,
-  EmptyState,
-  Skeleton,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  DataTable,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableViewOptions,
 } from '@/shared/ui'
+import { expenseColumns } from './columns'
 
 const thisMonth = () => todayISO().slice(0, 7)
 
@@ -55,6 +55,43 @@ export function Expenses() {
   const [deleting, setDeleting] = useState<Expense | null>(null)
 
   const { data, isPending } = useExpenses(month)
+
+  // Bitta oy — maʼlumot toʻliq keladi, shuning uchun saralash, filtr va
+  // sahifalash mijozda
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
+
+  const table = useReactTable({
+    data: data?.items ?? [],
+    columns: expenseColumns({
+      onEdit: (expense) => {
+        setEditing(expense)
+        setFormOpen(true)
+      },
+      onRemove: setDeleting,
+    }),
+    state: { sorting, columnFilters, columnVisibility, pagination },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  })
+
+  const categoryFilter =
+    (table.getColumn('category')?.getFilterValue() as string[] | undefined) ?? []
+  const categoryOptions = (Object.keys(EXPENSE_CATEGORY_LABELS) as ExpenseCategory[]).map(
+    (category) => ({ value: category, label: EXPENSE_CATEGORY_LABELS[category] }),
+  )
+  const categoryCounts = new Map<string, number>()
+  for (const item of data?.items ?? []) {
+    categoryCounts.set(item.category, (categoryCounts.get(item.category) ?? 0) + 1)
+  }
   const { mutateAsync: remove } = useDeleteExpense()
 
   // Shu oyda — bugun, oʻtgan oyda — oyning birinchi kuni. Xarajat kelajakda
@@ -127,68 +164,24 @@ export function Expenses() {
         </div>
       )}
 
-      <Card className="overflow-hidden py-0">
-        {isPending ? (
-          <div className="space-y-2 p-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-          </div>
-        ) : data?.items.length === 0 ? (
-          <EmptyState icon={ReceiptIcon} text={EXPENSE_UI.empty} />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-28">{EXPENSE_UI.date}</TableHead>
-                <TableHead className="hidden w-36 sm:table-cell">{EXPENSE_UI.category}</TableHead>
-                <TableHead>{EXPENSE_UI.description}</TableHead>
-                <TableHead className="w-36 text-right">{EXPENSE_UI.amount}</TableHead>
-                <TableHead className="w-24" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data?.items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="text-muted-foreground">{formatDate(item.date)}</TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    <Badge variant="secondary">{EXPENSE_CATEGORY_LABELS[item.category]}</Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {item.description}
-                    <span className="text-muted-foreground block text-xs sm:hidden">
-                      {EXPENSE_CATEGORY_LABELS[item.category]}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">
-                    {formatSom(item.amount)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={EXPENSE_UI.edit}
-                      onClick={() => {
-                        setEditing(item)
-                        setFormOpen(true)
-                      }}
-                    >
-                      <PencilIcon />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={CARD_UI.delete}
-                      onClick={() => setDeleting(item)}
-                    >
-                      <Trash2Icon />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Card>
+      <div className="mb-3 flex items-center gap-2">
+        <DataTableFacetedFilter
+          title={EXPENSE_UI.category}
+          options={categoryOptions}
+          selected={categoryFilter}
+          onChange={(values) =>
+            table.getColumn('category')?.setFilterValue(values.length ? values : undefined)
+          }
+          counts={categoryCounts}
+        />
+        <DataTableViewOptions table={table} />
+      </div>
+
+      <DataTable table={table} loading={isPending && !data} emptyText={EXPENSE_UI.empty} />
+
+      <div className="mt-3">
+        <DataTablePagination table={table} />
+      </div>
 
       <ExpenseFormDialog
         open={formOpen}

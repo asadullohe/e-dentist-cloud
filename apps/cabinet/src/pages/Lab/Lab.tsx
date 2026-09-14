@@ -1,15 +1,16 @@
+import { CARD_UI, LAB_STATUS_LABELS, LAB_UI } from '@e-dentist/shared'
 import {
-  CARD_UI,
-  formatDate,
-  formatSom,
-  LAB_MATERIAL_LABELS,
-  LAB_RETURN_REASON_LABELS,
-  LAB_STATUS_LABELS,
-  LAB_UI,
-  LAB_WORK_TYPE_LABELS,
-} from '@e-dentist/shared'
-import { cn } from 'cn'
-import { FlaskConicalIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+  type ColumnFiltersState,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type PaginationState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from '@tanstack/react-table'
+import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type LabOrder, type LabStatus, useLabOrders } from '@/entities/lab-order'
 import { useHasPermission } from '@/entities/session'
@@ -29,39 +30,33 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  Badge,
   Button,
-  Card,
-  EmptyState,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Skeleton,
+  DataTable,
+  DataTableFacetedFilter,
+  DataTablePagination,
+  DataTableViewOptions,
 } from '@/shared/ui'
+import { labColumns } from './columns'
 
-const ALL = 'all'
 const STATUSES = Object.keys(LAB_STATUS_LABELS) as LabStatus[]
 
-function statusTone(order: LabOrder): string {
-  if (order.status === 'delivered') return 'bg-ok/15 text-ok border-ok/30'
-  if (order.overdue) return 'bg-destructive/10 text-destructive border-destructive/30'
-  if (order.status === 'ready') return 'bg-warn/15 text-warn border-warn/30'
-  return ''
+/// Qator foni holatga qarab: topshirilgan — yashil, muddati oʻtgan — qizil,
+/// tayyor — sariq. Jadvalda koʻz bilan ajratish uchun
+function rowTone(order: LabOrder): string | undefined {
+  if (order.status === 'delivered') return 'bg-ok/5'
+  if (order.overdue) return 'bg-destructive/5'
+  if (order.status === 'ready') return 'bg-warn/10'
+  return undefined
 }
 
 export function Lab() {
   const hasPermission = useHasPermission()
   const canWrite = hasPermission('lab.write')
+  const canSeePrice = hasPermission('lab.cost')
 
-  const [status, setStatus] = useState<string>(ALL)
-  const [techId, setTechId] = useState<string>(ALL)
-
-  const { data: orders, isPending } = useLabOrders({
-    ...(status === ALL ? {} : { status: status as LabStatus }),
-    ...(techId === ALL || !canWrite ? {} : { techId }),
-  })
+  // Roʻyxat toʻliq keladi (texnik faqat oʻzinikini koʻradi — server
+  // cheklaydi), shuning uchun filtr, saralash va sahifalash mijozda
+  const { data: orders, isPending } = useLabOrders({})
   const { data: staff } = useStaffNames()
   const { mutateAsync: setLabStatus } = useSetLabStatus()
   const { mutateAsync: remove } = useDeleteLabOrder()
@@ -71,10 +66,50 @@ export function Lab() {
   const [returning, setReturning] = useState<LabOrder | null>(null)
   const [deleting, setDeleting] = useState<LabOrder | null>(null)
 
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'dueDate', desc: false }])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 })
+
+  const table = useReactTable({
+    data: orders ?? [],
+    columns: labColumns({
+      canWrite,
+      canSeePrice,
+      onReady: (order) => void setLabStatus({ id: order.id, status: 'ready' }),
+      onDelivered: (order) => void setLabStatus({ id: order.id, status: 'delivered' }),
+      onReturn: setReturning,
+      onEdit: (order) => {
+        setEditing(order)
+        setFormOpen(true)
+      },
+      onRemove: setDeleting,
+    }),
+    state: { sorting, columnFilters, columnVisibility, pagination },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  })
+
+  const filterValue = (id: string) =>
+    (table.getColumn(id)?.getFilterValue() as string[] | undefined) ?? []
+  const setFilter = (id: string, values: string[]) =>
+    table.getColumn(id)?.setFilterValue(values.length ? values : undefined)
+
+  const statusCounts = new Map<string, number>()
+  for (const order of orders ?? []) {
+    statusCounts.set(order.status, (statusCounts.get(order.status) ?? 0) + 1)
+  }
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold tracking-tight">{LAB_UI.title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{LAB_UI.title}</h1>
         {canWrite && (
           <Button
             size="sm"
@@ -89,134 +124,44 @@ export function Lab() {
         )}
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-2">
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger size="sm" className="w-44">
-            <SelectValue placeholder={LAB_UI.filter_status} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{LAB_UI.filter_all}</SelectItem>
-            {STATUSES.map((key) => (
-              <SelectItem key={key} value={key}>
-                {LAB_STATUS_LABELS[key]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <DataTableFacetedFilter
+          title={LAB_UI.status}
+          options={STATUSES.map((key) => ({ value: key, label: LAB_STATUS_LABELS[key] }))}
+          selected={filterValue('status')}
+          onChange={(values) => setFilter('status', values)}
+          counts={statusCounts}
+        />
         {canWrite && staff && (
-          <Select value={techId} onValueChange={setTechId}>
-            <SelectTrigger size="sm" className="w-52">
-              <SelectValue placeholder={LAB_UI.filter_tech} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{LAB_UI.filter_all}</SelectItem>
-              {staff.map((person) => (
-                <SelectItem key={person.id} value={person.id}>
-                  {person.fullName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DataTableFacetedFilter
+            title={LAB_UI.tech}
+            options={staff.map((person) => ({
+              value: person.id,
+              label: person.fullName ?? person.id,
+            }))}
+            selected={filterValue('tech')}
+            onChange={(values) => setFilter('tech', values)}
+          />
         )}
+        <DataTableViewOptions table={table} />
       </div>
 
-      {isPending ? (
-        <Skeleton className="h-40 w-full" />
-      ) : orders?.length === 0 ? (
-        <Card className="py-0">
-          <EmptyState icon={FlaskConicalIcon} text={LAB_UI.empty} />
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {orders?.map((order) => (
-            <Card key={order.id} className={cn('gap-2 p-3', statusTone(order))}>
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{order.fio}</span>
-                    <Badge variant="secondary">{LAB_STATUS_LABELS[order.status]}</Badge>
-                    {order.overdue && <Badge variant="destructive">{LAB_UI.overdue}</Badge>}
-                    {order.returns > 0 && (
-                      <Badge variant="outline">{LAB_UI.returns(order.returns)}</Badge>
-                    )}
-                  </div>
-                  <div className="text-muted-foreground mt-0.5 text-sm">
-                    {LAB_WORK_TYPE_LABELS[order.workType]} · {LAB_MATERIAL_LABELS[order.material]}
-                    {order.shade ? ` · ${order.shade}` : ''} · {order.teeth.join(', ')}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {LAB_UI.due}: {formatDate(order.dueDate)} · {LAB_UI.tech}:{' '}
-                    {order.techName || LAB_UI.tech_none}
-                    {order.techPrice !== undefined && ` · ${formatSom(order.techPrice)}`}
-                  </div>
-                  {order.note && <div className="mt-1 text-sm">{order.note}</div>}
-                  {order.returnReason && (
-                    <div className="text-xs">
-                      {LAB_UI.returned_at}: {LAB_RETURN_REASON_LABELS[order.returnReason]}
-                      {order.returnNote ? ` — ${order.returnNote}` : ''}
-                    </div>
-                  )}
-                </div>
+      <DataTable
+        table={table}
+        loading={isPending && !orders}
+        emptyText={LAB_UI.empty}
+        rowClassName={rowTone}
+      />
 
-                <div className="flex flex-wrap items-center gap-1">
-                  {order.status === 'issued' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setLabStatus({ id: order.id, status: 'ready' })}
-                    >
-                      {LAB_UI.mark_ready}
-                    </Button>
-                  )}
-                  {order.status === 'ready' && canWrite && (
-                    <>
-                      <Button
-                        size="sm"
-                        onClick={() => setLabStatus({ id: order.id, status: 'delivered' })}
-                      >
-                        {LAB_UI.mark_delivered}
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => setReturning(order)}>
-                        {LAB_UI.mark_returned}
-                      </Button>
-                    </>
-                  )}
-                  {canWrite && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={LAB_UI.edit}
-                        onClick={() => {
-                          setEditing(order)
-                          setFormOpen(true)
-                        }}
-                      >
-                        <PencilIcon />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={CARD_UI.delete}
-                        onClick={() => setDeleting(order)}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+      <div className="mt-3">
+        <DataTablePagination table={table} />
+      </div>
 
       <LabFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         order={editing}
-        canSeePrice={hasPermission('lab.cost')}
+        canSeePrice={canSeePrice}
       />
 
       <ReturnDialog order={returning} onOpenChange={(open) => !open && setReturning(null)} />
