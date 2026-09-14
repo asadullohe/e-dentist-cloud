@@ -9,7 +9,6 @@ import { Lab } from '@/pages/Lab'
 import { Login } from '@/pages/Login'
 import { PatientCard } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
-import { Placeholder } from '@/pages/Placeholder'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
 import { QueueScreen } from '@/pages/QueueScreen'
@@ -19,7 +18,6 @@ import { Schedule } from '@/pages/Schedule'
 import { Services } from '@/pages/Services'
 import { Settings } from '@/pages/Settings'
 import { VerifyEmail } from '@/pages/VerifyEmail'
-import { NAV_SECTIONS } from '@/shared/config'
 import { AuthLayout } from './layouts/AuthLayout'
 import { CabinetLayout } from './layouts/CabinetLayout'
 
@@ -75,27 +73,6 @@ export function Router() {
           <Route path="settings" element={<Settings />} />
           <Route path="lab" element={<Lab />} />
           <Route path="queue" element={<QueueBoard />} />
-          {/* Qolgan boʻlimlar keyingi tasklarda toʻldiriladi */}
-          {NAV_SECTIONS.filter(
-            (section) =>
-              ![
-                '/patients',
-                '/debtors',
-                '/services',
-                '/schedule',
-                '/expenses',
-                '/reports',
-                '/settings',
-                '/lab',
-                '/queue',
-              ].includes(section.path),
-          ).map((section) => (
-            <Route
-              key={section.path}
-              path={section.path.slice(1)}
-              element={<Placeholder title={section.label} icon={section.icon} />}
-            />
-          ))}
         </Route>
       </Route>
 

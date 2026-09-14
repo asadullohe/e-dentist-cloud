@@ -1,1 +1,2 @@
-export { NAV_SECTIONS, type NavSection } from './nav'
+export { type NavSection, navSections } from './nav'
+export { type SettingsItem, settingsItems } from './settingsNav'

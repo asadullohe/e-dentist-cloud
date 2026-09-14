@@ -7,7 +7,15 @@ import {
   PATIENT_UI,
   UI_TEXT,
 } from '@e-dentist/shared'
-import { FileDownIcon, PencilIcon, PlusIcon, SheetIcon, Trash2Icon, UploadIcon } from 'lucide-react'
+import {
+  FileDownIcon,
+  PencilIcon,
+  PlusIcon,
+  SheetIcon,
+  Trash2Icon,
+  UploadIcon,
+  UsersIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Patient, usePatients } from '@/entities/patient'
@@ -212,7 +220,7 @@ export function Patients() {
           </Table>
         ) : (
           <EmptyState
-            icon="👥"
+            icon={UsersIcon}
             text={debouncedSearch ? PATIENT_UI.nothing_found : PATIENT_UI.empty}
           />
         )}

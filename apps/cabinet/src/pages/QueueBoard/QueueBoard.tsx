@@ -5,7 +5,7 @@ import {
   QUEUE_STATUS_LABELS,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ExternalLinkIcon } from 'lucide-react'
+import { BellIcon, ExternalLinkIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { type QueueEntry, useQueueStream } from '@/entities/queue'
 import { useSession } from '@/entities/session'
@@ -69,7 +69,7 @@ export function QueueBoard() {
         <Skeleton className="h-40 w-full" />
       ) : entries?.length === 0 ? (
         <Card className="py-0">
-          <EmptyState icon="🔔" text={QUEUE_CABINET_UI.empty} />
+          <EmptyState icon={BellIcon} text={QUEUE_CABINET_UI.empty} />
         </Card>
       ) : (
         <div className="space-y-2">

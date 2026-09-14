@@ -1,5 +1,5 @@
 import { CARD_UI, formatSom, SERVICE_UI } from '@e-dentist/shared'
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { PencilIcon, PlusIcon, TagIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { type Service, useServices } from '@/entities/service'
 import { ServiceFormDialog, useDeleteService } from '@/features/service-form'
@@ -54,7 +54,7 @@ export function Services() {
             <Skeleton className="h-8 w-full" />
           </div>
         ) : services?.length === 0 ? (
-          <EmptyState icon="🏷" text={SERVICE_UI.empty} />
+          <EmptyState icon={TagIcon} text={SERVICE_UI.empty} />
         ) : (
           <Table>
             <TableHeader>

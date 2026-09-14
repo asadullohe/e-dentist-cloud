@@ -9,7 +9,7 @@ import {
   LAB_WORK_TYPE_LABELS,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { FlaskConicalIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { type LabOrder, type LabStatus, useLabOrders } from '@/entities/lab-order'
 import { useHasPermission } from '@/entities/session'
@@ -125,7 +125,7 @@ export function Lab() {
         <Skeleton className="h-40 w-full" />
       ) : orders?.length === 0 ? (
         <Card className="py-0">
-          <EmptyState icon="🦷" text={LAB_UI.empty} />
+          <EmptyState icon={FlaskConicalIcon} text={LAB_UI.empty} />
         </Card>
       ) : (
         <div className="space-y-2">

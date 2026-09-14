@@ -9,7 +9,14 @@ import {
   WEEKDAYS,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import {
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { type Appointment, useAppointments } from '@/entities/appointment'
 import { AppointmentFormDialog, useDeleteAppointment } from '@/features/appointment-form'
@@ -176,7 +183,7 @@ export function Schedule() {
           </div>
 
           {dayList.length === 0 ? (
-            <EmptyState icon="🗓" text={SCHEDULE_UI.empty_day} />
+            <EmptyState icon={CalendarIcon} text={SCHEDULE_UI.empty_day} />
           ) : (
             <ul className="space-y-2">
               {dayList.map((item) => (

@@ -7,7 +7,7 @@ import {
   todayISO,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { ChartColumnIcon, ChevronLeftIcon, ChevronRightIcon, ReceiptIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useReport } from '@/entities/report'
 import {
@@ -129,7 +129,7 @@ export function Reports() {
             {REPORT_UI.treatments_title}
           </h2>
           {data?.topTreatments.length === 0 ? (
-            <EmptyState icon="📊" text={REPORT_UI.empty_visits} />
+            <EmptyState icon={ChartColumnIcon} text={REPORT_UI.empty_visits} />
           ) : (
             <Table>
               <TableHeader>
@@ -159,7 +159,7 @@ export function Reports() {
         <Card className="gap-0 overflow-hidden p-0">
           <h2 className="font-display px-4 pt-4 pb-2 font-semibold">{REPORT_UI.expenses_title}</h2>
           {data?.topExpenses.length === 0 ? (
-            <EmptyState icon="🧾" text={REPORT_UI.empty_expenses} />
+            <EmptyState icon={ReceiptIcon} text={REPORT_UI.empty_expenses} />
           ) : (
             <Table>
               <TableHeader>

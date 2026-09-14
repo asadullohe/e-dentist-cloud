@@ -1,13 +1,17 @@
+import { FolderOpenIcon, type LucideIcon } from 'lucide-react'
+
 interface EmptyStateProps {
-  icon?: string
+  icon?: LucideIcon
   text: string
 }
 
-export function EmptyState({ icon = '🗂', text }: EmptyStateProps) {
+/// Boʻsh roʻyxat: emoji emas, chiziqli ikonka — qolgan interfeys bilan
+/// bir xil tilda
+export function EmptyState({ icon: Icon = FolderOpenIcon, text }: EmptyStateProps) {
   return (
     <div className="text-muted-foreground px-5 py-11 text-center">
-      <div className="mb-2 text-4xl">{icon}</div>
-      <div>{text}</div>
+      <Icon className="mx-auto mb-3 size-8 opacity-60" aria-hidden="true" />
+      <div className="text-sm">{text}</div>
     </div>
   )
 }

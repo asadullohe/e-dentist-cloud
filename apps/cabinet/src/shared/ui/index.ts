@@ -33,7 +33,16 @@ export {
   DialogHeader,
   DialogTitle,
 } from './dialog'
+export {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './dropdown-menu'
 export { EmptyState } from './empty-state'
+export { Flag } from './flag'
 export {
   Form,
   FormControl,

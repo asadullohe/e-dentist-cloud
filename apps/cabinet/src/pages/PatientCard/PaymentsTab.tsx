@@ -1,6 +1,6 @@
 import { CARD_UI, formatDate, formatSom, PAYMENT_UI } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { CreditCardIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { type Payment, useBalance, usePayments } from '@/entities/payment'
 import { PaymentFormDialog, useDeletePayment } from '@/features/payment-form'
@@ -77,7 +77,7 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
             <Skeleton className="h-8 w-full" />
           </div>
         ) : payments?.length === 0 ? (
-          <EmptyState icon="💳" text={PAYMENT_UI.empty} />
+          <EmptyState icon={CreditCardIcon} text={PAYMENT_UI.empty} />
         ) : (
           <Table>
             <TableHeader>

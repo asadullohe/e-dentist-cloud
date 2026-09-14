@@ -1,5 +1,5 @@
 import { CARD_UI, IMAGE_UI } from '@e-dentist/shared'
-import { ImagePlusIcon, Trash2Icon } from 'lucide-react'
+import { ImageIcon, ImagePlusIcon, Trash2Icon } from 'lucide-react'
 import { type ChangeEvent, useRef, useState } from 'react'
 import { type PatientImage, useImages } from '@/entities/patient-image'
 import { useDeleteImage, useUploadImage } from '@/features/image-upload'
@@ -78,7 +78,7 @@ export function ImagesTab({ patientId }: { patientId: string }) {
         <Skeleton className="h-40 w-full" />
       ) : images?.length === 0 ? (
         <Card>
-          <EmptyState icon="🖼" text={IMAGE_UI.empty} />
+          <EmptyState icon={ImageIcon} text={IMAGE_UI.empty} />
         </Card>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">

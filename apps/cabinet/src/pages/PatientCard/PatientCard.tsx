@@ -10,7 +10,7 @@ import {
   PAYMENT_UI,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
-import { ArrowLeftIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { ArrowLeftIcon, CalendarIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { usePatient } from '@/entities/patient'
@@ -87,7 +87,7 @@ function VisitsTab({ patientId }: { patientId: string }) {
             <Skeleton className="h-8 w-full" />
           </div>
         ) : visits?.length === 0 ? (
-          <EmptyState icon="🗓" text={CARD_UI.no_visits} />
+          <EmptyState icon={CalendarIcon} text={CARD_UI.no_visits} />
         ) : (
           <Table>
             <TableHeader>

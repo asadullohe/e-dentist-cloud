@@ -1,4 +1,5 @@
 import { DEBTORS_UI, formatSom, formatUzPhone, PAYMENT_UI } from '@e-dentist/shared'
+import { PartyPopperIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDebtors } from '@/entities/debtor'
@@ -42,7 +43,7 @@ export function Debtors() {
             <Skeleton className="h-8 w-full" />
           </div>
         ) : data?.items.length === 0 ? (
-          <EmptyState icon="🎉" text={DEBTORS_UI.empty} />
+          <EmptyState icon={PartyPopperIcon} text={DEBTORS_UI.empty} />
         ) : (
           <Table>
             <TableHeader>

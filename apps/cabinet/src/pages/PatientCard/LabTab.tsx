@@ -7,6 +7,7 @@ import {
   LAB_WORK_TYPE_LABELS,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
+import { FlaskConicalIcon } from 'lucide-react'
 import { useLabOrders } from '@/entities/lab-order'
 import { Badge, Card, EmptyState, Skeleton } from '@/shared/ui'
 
@@ -20,7 +21,7 @@ export function LabTab({ patientId }: { patientId: string }) {
   if (orders?.length === 0) {
     return (
       <Card className="py-0">
-        <EmptyState icon="🦷" text={LAB_UI.empty_patient} />
+        <EmptyState icon={FlaskConicalIcon} text={LAB_UI.empty_patient} />
       </Card>
     )
   }

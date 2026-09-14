@@ -7,7 +7,14 @@ import {
   formatSom,
   todayISO,
 } from '@e-dentist/shared'
-import { ChevronLeftIcon, ChevronRightIcon, PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PencilIcon,
+  PlusIcon,
+  ReceiptIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { type Expense, useExpenses } from '@/entities/expense'
 import { ExpenseFormDialog, useDeleteExpense } from '@/features/expense-form'
@@ -127,7 +134,7 @@ export function Expenses() {
             <Skeleton className="h-8 w-full" />
           </div>
         ) : data?.items.length === 0 ? (
-          <EmptyState icon="🧾" text={EXPENSE_UI.empty} />
+          <EmptyState icon={ReceiptIcon} text={EXPENSE_UI.empty} />
         ) : (
           <Table>
             <TableHeader>
