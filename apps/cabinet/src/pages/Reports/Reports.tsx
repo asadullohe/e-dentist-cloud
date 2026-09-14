@@ -7,12 +7,27 @@ import {
   todayISO,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ChartColumnIcon, ChevronLeftIcon, ChevronRightIcon, ReceiptIcon } from 'lucide-react'
+import {
+  CalendarCheckIcon,
+  ChartColumnIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  type LucideIcon,
+  ReceiptIcon,
+  StethoscopeIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
+  UserPlusIcon,
+  WalletIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useReport } from '@/entities/report'
 import {
   Button,
   Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   EmptyState,
   Skeleton,
   Table,
@@ -35,23 +50,24 @@ function shiftMonth(month: string, by: number): string {
 interface StatProps {
   label: string
   value: string
-  tone?: 'ok' | 'warn' | 'bad'
+  icon: LucideIcon
+  /// Faqat salbiy natija ajratiladi (zarar) — qolgani neytral
+  negative?: boolean
 }
 
-function Stat({ label, value, tone }: StatProps) {
+/// Koʻrsatkich kartasi: sarlavha va ikonka tepada, raqam pastda
+function Stat({ label, value, icon: Icon, negative = false }: StatProps) {
   return (
-    <Card className="gap-1 p-3">
-      <div className="text-muted-foreground text-xs">{label}</div>
-      <div
-        className={cn(
-          'font-display text-xl font-bold tabular-nums',
-          tone === 'ok' && 'text-ok',
-          tone === 'warn' && 'text-warn',
-          tone === 'bad' && 'text-destructive',
-        )}
-      >
-        {value}
-      </div>
+    <Card className="gap-2 py-5">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-sm font-medium">{label}</CardTitle>
+        <Icon className="text-muted-foreground size-4" aria-hidden="true" />
+      </CardHeader>
+      <CardContent>
+        <div className={cn('text-2xl font-bold tabular-nums', negative && 'text-destructive')}>
+          {value}
+        </div>
+      </CardContent>
     </Card>
   )
 }
@@ -66,7 +82,7 @@ export function Reports() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">{REPORT_UI.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{REPORT_UI.title}</h1>
           <p className="text-muted-foreground text-sm">{REPORT_UI.subtitle}</p>
         </div>
         <div className="flex items-center gap-1">
@@ -78,9 +94,7 @@ export function Reports() {
           >
             <ChevronLeftIcon />
           </Button>
-          <span className="font-display min-w-36 text-center font-semibold">
-            {formatMonth(month)}
-          </span>
+          <span className="min-w-36 text-center font-semibold">{formatMonth(month)}</span>
           <Button
             variant="ghost"
             size="icon"
@@ -98,36 +112,53 @@ export function Reports() {
       </div>
 
       {isPending || !summary ? (
-        <Skeleton className="mb-4 h-24 w-full" />
+        <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {['visits', 'charges', 'payments', 'expenses', 'profit', 'new'].map((key) => (
+            <Skeleton key={key} className="h-28 w-full" />
+          ))}
+        </div>
       ) : (
-        <div className="mb-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          <Stat label={REPORT_UI.visits} value={String(summary.visits)} />
-          <Stat label={REPORT_UI.charges} value={formatSom(summary.charges)} tone="warn" />
-          <Stat label={REPORT_UI.payments} value={formatSom(summary.payments)} tone="ok" />
-          <Stat label={REPORT_UI.expenses} value={formatSom(summary.expenses)} tone="bad" />
+        <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Stat label={REPORT_UI.visits} value={String(summary.visits)} icon={CalendarCheckIcon} />
+          <Stat
+            label={REPORT_UI.charges}
+            value={formatSom(summary.charges)}
+            icon={StethoscopeIcon}
+          />
+          <Stat label={REPORT_UI.payments} value={formatSom(summary.payments)} icon={WalletIcon} />
+          <Stat label={REPORT_UI.expenses} value={formatSom(summary.expenses)} icon={ReceiptIcon} />
           <Stat
             label={REPORT_UI.profit}
             value={formatSom(summary.profit)}
-            tone={summary.profit >= 0 ? 'ok' : 'bad'}
+            icon={summary.profit >= 0 ? TrendingUpIcon : TrendingDownIcon}
+            negative={summary.profit < 0}
           />
-          <Stat label={REPORT_UI.new_patients} value={String(summary.newPatients)} />
+          <Stat
+            label={REPORT_UI.new_patients}
+            value={String(summary.newPatients)}
+            icon={UserPlusIcon}
+          />
         </div>
       )}
 
-      <Card className="mb-4 p-4">
-        <h2 className="font-display font-semibold">{REPORT_UI.last_months}</h2>
-        {isPending || !data ? (
-          <Skeleton className="h-56 w-full" />
-        ) : (
-          <MonthsChart months={data.months} selected={month} onPick={setMonth} />
-        )}
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>{REPORT_UI.last_months}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isPending || !data ? (
+            <Skeleton className="h-64 w-full" />
+          ) : (
+            <MonthsChart months={data.months} selected={month} onPick={setMonth} />
+          )}
+        </CardContent>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="gap-0 overflow-hidden p-0">
-          <h2 className="font-display px-4 pt-4 pb-2 font-semibold">
-            {REPORT_UI.treatments_title}
-          </h2>
+        <Card className="gap-3 overflow-hidden pb-0">
+          <CardHeader>
+            <CardTitle>{REPORT_UI.treatments_title}</CardTitle>
+          </CardHeader>
           {data?.topTreatments.length === 0 ? (
             <EmptyState icon={ChartColumnIcon} text={REPORT_UI.empty_visits} />
           ) : (
@@ -156,8 +187,10 @@ export function Reports() {
           )}
         </Card>
 
-        <Card className="gap-0 overflow-hidden p-0">
-          <h2 className="font-display px-4 pt-4 pb-2 font-semibold">{REPORT_UI.expenses_title}</h2>
+        <Card className="gap-3 overflow-hidden pb-0">
+          <CardHeader>
+            <CardTitle>{REPORT_UI.expenses_title}</CardTitle>
+          </CardHeader>
           {data?.topExpenses.length === 0 ? (
             <EmptyState icon={ReceiptIcon} text={REPORT_UI.empty_expenses} />
           ) : (
