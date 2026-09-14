@@ -27,11 +27,11 @@ describe('tillar', () => {
     expect(UI_TEXT.login).toBe('Kirish')
   })
 
-  it('tarjima qilinmagan kalit oʻzbekchaga qaytadi', () => {
+  it('tarjima qilinmagan toʻplam oʻzbekchaga qaytadi', () => {
+    // VITA_SHADES ru.ts da yoʻq — butun toʻplam asosiy tildan keladi
+    expect(strings('ru').VITA_SHADES).toEqual(strings('uz').VITA_SHADES)
     setLocale('ru')
-    expect(UI_TEXT.brand).toBe('E-Dentist')
-    // Butun toʻplam ham: ruscha faylda yoʻq toʻplam toʻliq oʻzbekcha
-    expect(AUDIT_LABELS.registered).toBe('Roʻyxatdan oʻtdi')
+    expect(AUDIT_LABELS.registered).toBe('Регистрация')
   })
 
   it('funksiyali matnlar ham ishlaydi', () => {
@@ -75,6 +75,41 @@ describe('server tili', () => {
     expect(parseAcceptLanguage(undefined)).toBe('uz')
     // q=0 — rad etilgan til
     expect(parseAcceptLanguage('ru;q=0,en')).toBe('uz')
+  })
+})
+
+describe('ruscha tarjima toʻliq', () => {
+  /// Har tilda bir xil qoladigan toʻplamlar — tarjima talab qilinmaydi
+  const SAME_IN_ALL = new Set(['VITA_SHADES'])
+
+  const isPlain = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null && !Array.isArray(v)
+
+  function missingKeys(base: unknown, patch: unknown, path = ''): string[] {
+    if (!isPlain(base)) return []
+    if (!isPlain(patch)) return [path || '(ildiz)']
+    return Object.keys(base).flatMap((key) => {
+      const next = path ? `${path}.${key}` : key
+      if (SAME_IN_ALL.has(key)) return []
+      if (!(key in patch)) return [next]
+      return missingKeys(base[key], patch[key], next)
+    })
+  }
+
+  it('uz.ts dagi har kalit ru.ts da ham bor', async () => {
+    const { ru } = await import('./locales/ru.js')
+    const uz = await import('./locales/uz.js')
+    // Yangi matn qoʻshilganda ruschasi ham birga yoziladi — shu test eslatadi
+    expect(missingKeys({ ...uz }, ru)).toEqual([])
+  })
+
+  it('ruscha koʻplik shakllari toʻgʻri', () => {
+    const t = strings('ru')
+    expect(t.DEBTORS_UI.count(1)).toBe('1 пациент')
+    expect(t.DEBTORS_UI.count(3)).toBe('3 пациента')
+    expect(t.DEBTORS_UI.count(11)).toBe('11 пациентов')
+    expect(t.DEBTORS_UI.count(21)).toBe('21 пациент')
+    expect(t.UI_TEXT.trial_left(5)).toBe('Пробный период: осталось 5 дней')
   })
 })
 

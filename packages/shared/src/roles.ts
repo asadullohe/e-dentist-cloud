@@ -16,10 +16,13 @@ export interface RoleTemplateSpec {
 // rad etadi. Busiz klinika oʻz kabinetidan qulflanib qolishi mumkin
 export const OWNER_REQUIRED_PERMISSIONS: readonly Permission[] = ['staff.manage', 'billing.manage']
 
+// `label` — getter: import vaqtida emas, oʻqilganda joriy tilda qaytadi
 export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
   egasi: {
     template: 'egasi',
-    label: ROLE_LABELS.owner,
+    get label() {
+      return ROLE_LABELS.owner
+    },
     isOwner: true,
     permissions: PERMISSIONS,
   },
@@ -27,7 +30,9 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
   // «Bemorlar, tashriflar, tish xaritasi, qabullar» + naryad yozish
   shifokor: {
     template: 'shifokor',
-    label: ROLE_LABELS.shifokor,
+    get label() {
+      return ROLE_LABELS.shifokor
+    },
     isOwner: false,
     permissions: [
       'patients.read',
@@ -42,7 +47,9 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
   // «Bemorlar, qabullar, toʻlovlar» + navbatni boshqarish
   qabulxona: {
     template: 'qabulxona',
-    label: ROLE_LABELS.qabulxona,
+    get label() {
+      return ROLE_LABELS.qabulxona
+    },
     isOwner: false,
     permissions: [
       'patients.read',
@@ -59,7 +66,9 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
   // bemorning ismi — naryadning oʻzida keladi (tz.md 7-boʻlim)
   texnik: {
     template: 'texnik',
-    label: ROLE_LABELS.techRole,
+    get label() {
+      return ROLE_LABELS.techRole
+    },
     isOwner: false,
     permissions: ['lab.own'],
   },
@@ -67,8 +76,20 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
   // Buxgalter, stajyor. Faqat oʻqiydi
   kuzatuvchi: {
     template: 'kuzatuvchi',
-    label: ROLE_LABELS.kuzatuvchi,
+    get label() {
+      return ROLE_LABELS.kuzatuvchi
+    },
     isOwner: false,
     permissions: ['patients.read', 'payments.read', 'expenses.read', 'reports.read'],
   },
+}
+
+/// Rol nomi ekranda. Bazadagi `name` roʻyxatdan oʻtish paytidagi tilda
+/// qotib qolgan — shablon nomi joriy tilda koʻrsatiladi. Nomaʼlum shablon
+/// (kelajakdagi maxsus rol) — bazadagi nom
+export function roleLabel(role: { name: string; template: string }): string {
+  return (
+    (ROLE_TEMPLATE_SPECS as Partial<Record<string, RoleTemplateSpec>>)[role.template]?.label ??
+    role.name
+  )
 }
