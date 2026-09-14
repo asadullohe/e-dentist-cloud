@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Reja toʻliq bajarildi** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
+**Hozirgi task: 7.2** — 0 dan 6 gacha barcha tasklar yopiq _(11/09/2026)_ — bosqich 5 `master` da. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_
 
 ---
@@ -961,6 +961,56 @@ _Bu bosqichda birinchi marta haqiqiy server kerak boʻladi._
 > uchun `exceljs` ga oʻtish kerak: bemorlar eksporti, xatolar fayli, shablon
 > va toʻliq zip — hammasi qayta yoziladi. Foydasi kichik, narxi katta,
 > shuning uchun kutadi. Ekrandagi hisobot sarlavhasiga qoʻyish mumkin.
+
+---
+
+## Bosqich 7 — Kabinet dizayni · ~3 kun
+
+Panel bilan bitta tizim: neytral slate palitra, Inter, `0.625rem`, lucide
+ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
+
+- [x] **7.1 Tokenlar va qobiq** — palitra, shrift, radius; och va yigʻiladigan yon
+      menyu (klinika logotipi bilan), tepa panel; emoji oʻrniga lucide — menyuda
+      ham, boʻsh holatlarda ham
+- [~] **7.2 Sahifalar** — 18 sahifani birma-bir: sarlavhalar, jadvallar,
+      kartochkalar, formalar. Har sahifa alohida tasdiqlanadi.
+      Qilindi: Sozlamalar va bemor kartochkasi yon menyuli tartibda (har boʻlim
+      oʻz manzilida); data-table (TanStack Table): Bemorlar, Xarajatlar, Texnik
+      ishlari, Qarzdorlar, Xizmatlar, Tashriflar, Toʻlovlar. Qoldi: formalar va
+      qolgan sahifalarni birma-bir koʻrib chiqish
+- [ ] **7.3 Maxsus qismlar** — kalendar, navbat taxtasi, bemor kartochkasi va tish
+      xaritasi. Tish holat ranglari tibbiy maʼno beradi — palitra bilan almashmaydi
+
+- [x] **7.4 Tema** — kabinetda yorugʻ/tungi rejim tugmasi (panelda bor edi), tanlov
+      brauzerda saqlanadi
+- [x] **7.5 Tillar — tuzilma** — matnlar `locales/uz.ts` ga koʻchdi, `ru.ts` boʻsh
+      shablon, `strings.ts` jonli eksportlar beradi. Til tanlash kabinet va panel
+      tepasida. 6 ta test. Import vaqtida muzlab qoladigan joylar tuzatildi:
+      navigatsiya konfiguratsiyalari funksiya boʻldi, zod xato matnlari `{ error: () => … }`
+- [ ] **7.6 Server tili** — soʻrovdagi `Accept-Language` ga qarab xato matnlari, xat
+      va Excel sarlavhalari. zod sxemalari serverda ham matnni import vaqtida
+      ushlaydi — ular ham funksiyaga oʻtadi
+- [ ] **7.7 Ruscha tarjima** — `ru.ts` toʻldiriladi: 62 toʻplam, ~950 qator. Tip
+      tekshiruvi kalit tushib qolganini koʻrsatadi
+
+> **Nega Proxy, nega `t('kalit')` emas** _(qaror 14/09/2026)_
+>
+> 80 ta fayl `AUTH_TEXT.login` koʻrinishida import qiladi. i18n kutubxonasi
+> hammasini `t('auth.login')` ga oʻzgartirishni talab qilardi va kalitlar
+> tip tekshiruvidan chiqib ketardi. Jonli eksport shu importlarni saqlab
+> qoladi: `AUTH_TEXT` — Proxy, har oʻqish joriy tilga boradi.
+>
+> Narxi: import vaqtida oʻqilgan qiymat muzlab qoladi. Shunday joylar
+> topilib tuzatildi (navigatsiya, zod). Yangi kod yozganda qoida —
+> matn funksiya ichida oʻqilsin.
+>
+> Til almashganda butun daraxt `key={locale}` bilan qayta yaratiladi —
+> forma holati yoʻqoladi, lekin til bir umrda bir marta almashadi.
+
+> **Ommaviy sahifalar tegilmaydi**
+>
+> Navbat sahifasi va kutish xonasi ekrani bemorlar uchun: klinika logotipi,
+> katta raqamlar, qorongʻi fon. Ular kabinet dizayni emas, klinika brendi.
 
 ---
 
