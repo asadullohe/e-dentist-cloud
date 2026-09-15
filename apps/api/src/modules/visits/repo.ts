@@ -160,6 +160,59 @@ export function topTreatments(tx: ClinicTx, from: Date, to: Date, take: number) 
   })
 }
 
+/// Ish haqi uchun: oy ichida shifokor boʻyicha jamlanma. `doctorId` null —
+/// 9.1 dan oldingi yozuvlar («shifokor koʻrsatilmagan» qatori)
+export function doctorTotals(tx: ClinicTx, from: Date, to: Date) {
+  return tx.visit.groupBy({
+    by: ['doctorId'],
+    where: { date: { gte: from, lte: to } },
+    _sum: { price: true, doctorShare: true },
+    _count: { _all: true },
+  })
+}
+
+/// Shifokorning oydagi ishlari roʻyxati — ulushi bilan
+export function listByDoctor(tx: ClinicTx, doctorId: string, from: Date, to: Date) {
+  return tx.visit.findMany({
+    where: { doctorId, date: { gte: from, lte: to } },
+    select: {
+      id: true,
+      patientId: true,
+      date: true,
+      treatment: true,
+      tooth: true,
+      price: true,
+      doctorPercent: true,
+      doctorShare: true,
+    },
+    orderBy: [{ date: 'desc' }, { id: 'desc' }],
+  })
+}
+
+/// Qayta hisoblash: oydagi tashriflarga bitta foizni yozadi. Prisma da
+/// `share = price × p` ni bitta UPDATE bilan yozib boʻlmaydi — qatorlar
+/// olinib, har biriga alohida yoziladi; oyga bir shifokorda yuzlab qator
+export async function setSharesByDoctor(
+  tx: ClinicTx,
+  doctorId: string,
+  from: Date,
+  to: Date,
+  shareFor: (price: number) => number,
+  percent: number,
+): Promise<number> {
+  const rows = await tx.visit.findMany({
+    where: { doctorId, date: { gte: from, lte: to } },
+    select: { id: true, price: true },
+  })
+  for (const row of rows) {
+    await tx.visit.update({
+      where: { id: row.id },
+      data: { doctorPercent: percent, doctorShare: shareFor(row.price) },
+    })
+  }
+  return rows.length
+}
+
 /// Toʻliq eksport uchun: klinikaning barcha tashriflari, tishlari, koʻpriklari
 export function allVisits(tx: ClinicTx) {
   return tx.visit.findMany({

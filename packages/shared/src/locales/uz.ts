@@ -137,6 +137,7 @@ export const SECTION_LABELS = {
   services: 'Narxnoma',
   expenses: 'Xarajatlar',
   reports: 'Hisobotlar',
+  payroll: 'Ish haqi',
   queue: 'Navbat',
   settings: 'Sozlamalar',
 } as const
@@ -427,6 +428,61 @@ export const REPORT_UI = {
   empty_expenses: 'Bu oyda xarajat yozilmagan',
 } as const
 
+// Ish haqi (tz.md 15-boʻlim)
+export const PAYROLL_TEXT = {
+  staff_not_found: 'Xodim topilmadi',
+  payout_not_found: 'Toʻlov topilmadi',
+  amount_required: 'Summa noldan katta boʻlishi kerak',
+  expense_note: (name: string, month: string) => `Ish haqi: ${name} — ${month}`,
+} as const
+
+export const PAYROLL_UI = {
+  title: 'Ish haqi',
+  subtitle: 'Oy boʻyicha xodimlarning ulushi va oyligi',
+  own_subtitle: 'Shu oyda qilgan ishlaringiz va ulushingiz',
+  staff: 'Xodim',
+  visits: 'Tashriflar',
+  charges: 'Ish summasi',
+  percent: 'Foiz',
+  share: 'Ulush',
+  salary: 'Oylik',
+  total: 'Jami',
+  paid: 'Toʻlangan',
+  remaining: 'Qoldiq',
+  totals: 'Jami',
+  empty: 'Bu oyda hisoblanadigan narsa yoʻq',
+  unassigned: (count: number, sum: string) =>
+    `Shifokor koʻrsatilmagan tashriflar: ${count} ta, ${sum}. Ular hech kimning ulushiga kirmaydi — tashrifni tahrirlab shifokorni tanlang.`,
+  no_terms_hint: 'Ish haqi sharti Sozlamalar → Xodimlar da belgilanadi.',
+  // Ishlar roʻyxati
+  works_title: (name: string) => `${name} — ishlari`,
+  works_empty: 'Bu oyda tashrif yoʻq',
+  date: 'Sana',
+  patient: 'Bemor',
+  treatment: 'Muolaja',
+  tooth: 'Tish',
+  price: 'Narx',
+  show_works: 'Ishlarini koʻrish',
+  // Qayta hisoblash
+  recalculate: 'Qayta hisoblash',
+  recalculate_title: 'Ulushni qayta hisoblash',
+  recalculate_text: (name: string, percent: number, month: string) =>
+    `${name} ning ${month} oyidagi barcha tashriflariga joriy foiz (${percent}%) qayta yoziladi. Bu amal ortga qaytmaydi.`,
+  recalculated: (count: number) => `${count} ta tashrif qayta hisoblandi`,
+  // Toʻlab berish
+  pay: 'Toʻlash',
+  pay_title: (name: string, month: string) => `Toʻlovlar — ${name}, ${month}`,
+  pay_hint: 'Har toʻlov «Oylik» turkumida xarajatga tushadi. Qisman yoki avans toʻlash mumkin.',
+  amount: 'Summa (soʻm)',
+  pay_date: 'Sana',
+  note: 'Izoh',
+  add_payout: 'Toʻlovni yozish',
+  payouts_empty: 'Hali toʻlanmagan',
+  delete_payout: 'Oʻchirish',
+  delete_payout_title: 'Toʻlov oʻchirilsinmi?',
+  delete_payout_text: 'Xarajat ham oʻchadi. Bu amalni qaytarib boʻlmaydi.',
+} as const
+
 // Xodimlar va rollar
 export const STAFF_TEXT = {
   not_found: 'Xodim topilmadi',
@@ -499,6 +555,8 @@ export const PERMISSION_LABELS = {
   'lab.own': 'Oʻz naryadlari',
   'lab.write': 'Naryad yozish',
   'lab.cost': 'Texnik narxlari',
+  'payroll.own': 'Oʻz ish haqi',
+  'payroll.manage': 'Ish haqi: hamma xodim, toʻlab berish',
   'queue.manage': 'Navbat',
   'staff.manage': 'Xodimlar va rollar',
   'billing.manage': 'Obuna va toʻlov',
@@ -848,6 +906,9 @@ export const AUDIT_LABELS = {
   lab_returned: 'Naryad qaytarildi',
   data_exported: 'Maʼlumot yuklab olindi',
   queue_changed: 'Navbat oʻzgardi',
+  payroll_recalculated: 'Ish haqi qayta hisoblandi',
+  payout_created: 'Ish haqi toʻlandi',
+  payout_deleted: 'Ish haqi toʻlovi oʻchirildi',
   subscription_extended: 'Muddat uzaytirildi',
   clinic_blocked: 'Bloklandi',
   clinic_unblocked: 'Blokdan chiqarildi',

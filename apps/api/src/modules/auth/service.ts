@@ -518,23 +518,27 @@ export function listStaffNames(deps: AuthDeps, clinicId: string) {
   })
 }
 
-export function listStaff(deps: AuthDeps, clinicId: string): Promise<StaffMember[]> {
-  return withClinic(deps.db, clinicId, async (tx) => {
-    const [people, roles] = await Promise.all([repo.listStaff(tx), clinics.listRolesTx(tx)])
-    const roleName = new Map(roles.map((role) => [role.id, role.name]))
+/// Boshqa modullar uchun (payroll): xodimlar roʻyxati ish haqi sharti bilan.
+/// Ochiq tranzaksiya ichida
+export async function listStaffTx(tx: ClinicTx): Promise<StaffMember[]> {
+  const [people, roles] = await Promise.all([repo.listStaff(tx), clinics.listRolesTx(tx)])
+  const roleName = new Map(roles.map((role) => [role.id, role.name]))
 
-    return people.map((person) => ({
-      id: person.id,
-      email: person.email,
-      fullName: person.fullName,
-      roleId: person.roleId,
-      roleName: person.roleId ? (roleName.get(person.roleId) ?? null) : null,
-      status: person.status,
-      salaryAmount: person.salaryAmount,
-      payPercent: person.payPercent,
-      lastLoginAt: person.lastLoginAt,
-    }))
-  })
+  return people.map((person) => ({
+    id: person.id,
+    email: person.email,
+    fullName: person.fullName,
+    roleId: person.roleId,
+    roleName: person.roleId ? (roleName.get(person.roleId) ?? null) : null,
+    status: person.status,
+    salaryAmount: person.salaryAmount,
+    payPercent: person.payPercent,
+    lastLoginAt: person.lastLoginAt,
+  }))
+}
+
+export function listStaff(deps: AuthDeps, clinicId: string): Promise<StaffMember[]> {
+  return withClinic(deps.db, clinicId, (tx) => listStaffTx(tx))
 }
 
 /// Xodim hisobini egasi ochadi: parolni u belgilaydi va xodimga aytadi.

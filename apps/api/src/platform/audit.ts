@@ -45,6 +45,10 @@ export const AUDIT_ACTION = {
   data_exported: 'data_exported',
   queue_changed: 'queue_changed',
   clinic_logo_changed: 'clinic_logo_changed',
+  /// Ish haqi (tz.md 15-boʻlim)
+  payroll_recalculated: 'payroll_recalculated',
+  payout_created: 'payout_created',
+  payout_deleted: 'payout_deleted',
   /// Boshqaruv panelidagi amallar — klinikaning oʻz tarixida qoladi
   clinic_created: 'clinic_created',
   invite_sent: 'invite_sent',

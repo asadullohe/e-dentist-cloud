@@ -16,6 +16,7 @@ import {
   VisitsSection,
 } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
+import { Payroll } from '@/pages/Payroll'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
 import { QueueScreen } from '@/pages/QueueScreen'
@@ -91,6 +92,7 @@ export function Router() {
           <Route path="schedule" element={<Schedule />} />
           <Route path="expenses" element={<Expenses />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="payroll" element={<Payroll />} />
           <Route path="settings" element={<Settings />}>
             <Route index element={<AccountSection />} />
             <Route path="xodimlar" element={<StaffSection />} />

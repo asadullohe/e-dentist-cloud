@@ -25,6 +25,13 @@ export function formatSom(n: number | null | undefined): string {
   return `${groupDigits(v)} ${strings().CURRENCY}`
 }
 
+/// «2026-09» ± n oy → «2026-10». Oy almashtirgichlar uchun
+export function shiftMonth(month: string, by: number): string {
+  const [year, index] = month.split('-').map(Number) as [number, number]
+  const date = new Date(year, index - 1 + by, 1)
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}`
+}
+
 /// Ish haqi sharti bir satrda: «2 000 000 soʻm + 20%», «50%», «3 000 000 soʻm».
 /// Ikkalasi nol boʻlsa boʻsh — chaqiruvchi «belgilanmagan» deb koʻrsatadi
 export function formatPayTerms(salaryAmount: number, payPercent: number): string {

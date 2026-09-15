@@ -1,5 +1,6 @@
 import { type Permission, SECTION_LABELS } from '@e-dentist/shared'
 import {
+  BanknoteIcon,
   BellIcon,
   CalendarIcon,
   ChartColumnIcon,
@@ -66,6 +67,13 @@ export const navSections = (): readonly NavSection[] => [
     label: SECTION_LABELS.reports,
     icon: ChartColumnIcon,
     permission: 'reports.read',
+  },
+  // Egasida ikkalasi ham bor; shifokorda faqat `own` — shuning uchun `own`
+  {
+    path: '/payroll',
+    label: SECTION_LABELS.payroll,
+    icon: BanknoteIcon,
+    permission: 'payroll.own',
   },
   {
     path: '/settings',

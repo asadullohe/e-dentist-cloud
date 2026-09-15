@@ -27,7 +27,8 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
     permissions: PERMISSIONS,
   },
 
-  // «Bemorlar, tashriflar, tish xaritasi, qabullar» + naryad yozish
+  // «Bemorlar, tashriflar, tish xaritasi, qabullar» + naryad yozish +
+  // oʻz ish haqi hisobi (tz.md 15-boʻlim)
   shifokor: {
     template: 'shifokor',
     get label() {
@@ -41,6 +42,7 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'teeth.write',
       'schedule.write',
       'lab.write',
+      'payroll.own',
     ],
   },
 

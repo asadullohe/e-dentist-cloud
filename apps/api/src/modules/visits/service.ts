@@ -64,6 +64,38 @@ export async function dailyTotalsTx(
   }))
 }
 
+/// Boshqa modullar uchun (payroll): oy ichida shifokor boʻyicha jamlanma
+export async function doctorTotalsTx(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+): Promise<{ doctorId: string | null; count: number; charges: number; share: number }[]> {
+  const rows = await repo.doctorTotals(tx, from, to)
+  return rows.map((row) => ({
+    doctorId: row.doctorId,
+    count: row._count._all,
+    charges: row._sum.price ?? 0,
+    share: row._sum.doctorShare ?? 0,
+  }))
+}
+
+/// Boshqa modullar uchun (payroll): shifokorning oydagi ishlari
+export function listByDoctorTx(tx: ClinicTx, doctorId: string, from: Date, to: Date) {
+  return repo.listByDoctor(tx, doctorId, from, to)
+}
+
+/// Boshqa modullar uchun (payroll): oydagi tashriflarga joriy foizni qayta
+/// yozish. Snapshot qoidasidan ataylab chekinish — aniq amal, audit bilan
+export function recalculateSharesTx(
+  tx: ClinicTx,
+  doctorId: string,
+  from: Date,
+  to: Date,
+  percent: number,
+): Promise<number> {
+  return repo.setSharesByDoctor(tx, doctorId, from, to, (price) => shareOf(price, percent), percent)
+}
+
 /// Boshqa modullar uchun (reports): oraliqdagi eng qimmat muolajalar
 export async function topTreatmentsTx(
   tx: ClinicTx,

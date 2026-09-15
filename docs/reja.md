@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 9.4 — `payroll` moduli va «Ish haqi» sahifasi
+**Hozirgi task:** 9.5 — toʻlab berish
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1103,7 +1103,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > `price` dagi `.default(0)` ni olib tashlamaydi — narxsiz `PATCH` narxni
 > 0 ga tushirardi. Forma doim hamma maydonni yuborgani uchun koʻrinmagan.
 > Endi narx yangilash sxemasida sukutsiz; test bor.
-- [ ] **9.4 `payroll` moduli va «Ish haqi» sahifasi** — `payroll.own` /
+- [x] **9.4 `payroll` moduli va «Ish haqi» sahifasi** — `payroll.own` /
       `payroll.manage` ruxsatlari (mavjud rollarga migratsiya: egasi ikkalasi,
       shifokor shabloni `own`); `GET /payroll?month` — xodim boʻyicha
       tashriflar, ish summasi, ulush, oylik, jami; «Shifokor koʻrsatilmagan»
