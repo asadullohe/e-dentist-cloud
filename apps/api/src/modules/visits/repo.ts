@@ -61,10 +61,21 @@ export function createVisit(
     tooth?: number | null
     serviceId?: string | null
     price: number
+    doctorPercent: number
+    doctorShare: number
     note?: string | null
   },
 ) {
   return tx.visit.create({ data: tenantScoped({ id, ...data }), select: VISIT_SELECT })
+}
+
+/// Tahrir uchun: ulush maydonlari ham. Ular roʻyxat javobiga qoʻshilmaydi —
+/// shifokorning foizi bemor kartochkasini koʻrgan har kimga koʻrinmasin
+export function findVisit(tx: ClinicTx, id: string) {
+  return tx.visit.findUnique({
+    where: { id },
+    select: { ...VISIT_SELECT, doctorPercent: true, doctorShare: true },
+  })
 }
 
 export function updateVisit(tx: ClinicTx, id: string, data: Prisma.VisitUpdateInput) {

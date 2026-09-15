@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 9.3 — ulush snapshoti
+**Hozirgi task:** 9.4 — `payroll` moduli va «Ish haqi» sahifasi
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1093,9 +1093,16 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       oʻzgartira oladi — rol/holat cheklovi bunga tegmaydi); Sozlamalar →
       Xodimlar da «Ish haqi» ustuni va tahrirlash oynasi; yangi xodim
       oynasida ham
-- [ ] **9.3 Ulush snapshoti** — `visits.doctor_percent`, `visits.doctor_share`;
+- [x] **9.3 Ulush snapshoti** — `visits.doctor_percent`, `visits.doctor_share`;
       yozishda shifokorning joriy foizi, narx tahririda saqlangan foiz bilan
       qayta hisob, shifokor almashsa yangi foiz. Testlar: yaxlitlash, tahrir
+
+> **Yoʻl-yoʻlakay topilgan xato**
+>
+> `visitUpdateSchema = createSchema.partial()` edi, lekin `.partial()`
+> `price` dagi `.default(0)` ni olib tashlamaydi — narxsiz `PATCH` narxni
+> 0 ga tushirardi. Forma doim hamma maydonni yuborgani uchun koʻrinmagan.
+> Endi narx yangilash sxemasida sukutsiz; test bor.
 - [ ] **9.4 `payroll` moduli va «Ish haqi» sahifasi** — `payroll.own` /
       `payroll.manage` ruxsatlari (mavjud rollarga migratsiya: egasi ikkalasi,
       shifokor shabloni `own`); `GET /payroll?month` — xodim boʻyicha

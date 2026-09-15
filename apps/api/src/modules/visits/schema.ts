@@ -22,6 +22,11 @@ const toothNumber = z.coerce
   .int()
   .refine((value) => isToothNo(value), { error: () => VISIT_TEXT.tooth_invalid })
 
+const visitPrice = z.coerce
+  .number()
+  .int()
+  .min(0, { error: () => VISIT_TEXT.price_negative })
+
 export const visitCreateSchema = z.object({
   patientId: z.string().uuid(),
   /// Berilmasa — yozayotgan odamning oʻzi (u `visits.write` bilan kirgan)
@@ -37,15 +42,16 @@ export const visitCreateSchema = z.object({
     .max(300),
   tooth: toothNumber.nullish(),
   serviceId: z.string().uuid().nullish(),
-  price: z.coerce
-    .number()
-    .int()
-    .min(0, { error: () => VISIT_TEXT.price_negative })
-    .default(0),
+  price: visitPrice.default(0),
   note: z.string().trim().max(2000).nullish(),
 })
 
-export const visitUpdateSchema = visitCreateSchema.omit({ patientId: true }).partial()
+/// `.partial()` `.default(0)` ni olib tashlamaydi: narxsiz PATCH da u 0 ga
+/// tushib qolardi. Shuning uchun narx alohida — sukutsiz
+export const visitUpdateSchema = visitCreateSchema
+  .omit({ patientId: true, price: true })
+  .partial()
+  .extend({ price: visitPrice.optional() })
 
 export const toothUpdateSchema = z.object({
   status: z.string().refine((value) => TOOTH_STATUSES.includes(value as never), {

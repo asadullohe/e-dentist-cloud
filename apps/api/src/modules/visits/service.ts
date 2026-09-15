@@ -79,6 +79,12 @@ export async function topTreatmentsTx(
   }))
 }
 
+/// Shifokor ulushi: narx × foiz, butun soʻmga yaxlitlanadi (tz.md 15-boʻlim).
+/// payroll moduli qayta hisoblashda ham shu formulani ishlatadi
+export function shareOf(price: number, percent: number): number {
+  return Math.round((price * percent) / 100)
+}
+
 /// Shifokor faol va `visits.write` li xodim boʻlishi shart. Tashqi kalit
 /// yoʻq — begona klinika xodimining id si shu tekshiruvsiz oʻtib ketardi
 async function assertDoctor(tx: ClinicTx, doctorId: string): Promise<void> {
@@ -121,6 +127,8 @@ export function createVisit(
     // demak shifokorlar roʻyxatida bor
     const doctorId = input.doctorId ?? userId
     await assertDoctor(tx, doctorId)
+    // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
+    const { payPercent } = await auth.payTermsTx(tx, doctorId)
 
     const visit = await repo.createVisit(tx, id, {
       patientId: input.patientId,
@@ -130,6 +138,8 @@ export function createVisit(
       tooth: input.tooth ?? null,
       serviceId: input.serviceId ?? null,
       price: input.price,
+      doctorPercent: payPercent,
+      doctorShare: shareOf(input.price, payPercent),
       note: input.note ?? null,
     })
     await writeAudit(tx, {
@@ -152,14 +162,29 @@ export function updateVisit(
   input: VisitUpdateInput,
 ) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    if (input.doctorId !== undefined) await assertDoctor(tx, input.doctorId)
+    const current = await repo.findVisit(tx, id)
+    if (!current) throw errors.notFound(VISIT_TEXT.not_found)
+
+    // Ulush qachon qayta sanaladi: shifokor almashsa — yangi shifokorning
+    // joriy foizi; faqat narx oʻzgarsa — saqlangan foiz (snapshot buzilmaydi)
+    const doctorChanged = input.doctorId !== undefined && input.doctorId !== current.doctorId
+    let percent = current.doctorPercent
+    if (doctorChanged && input.doctorId) {
+      await assertDoctor(tx, input.doctorId)
+      percent = (await auth.payTermsTx(tx, input.doctorId)).payPercent
+    }
+    const price = input.price ?? current.price
+    const share =
+      doctorChanged || input.price !== undefined ? shareOf(price, percent) : current.doctorShare
+
     try {
       const visit = await repo.updateVisit(tx, id, {
-        ...(input.doctorId === undefined ? {} : { doctorId: input.doctorId }),
+        ...(doctorChanged ? { doctorId: input.doctorId, doctorPercent: percent } : {}),
         ...(input.date === undefined ? {} : { date: toDate(input.date) }),
         ...(input.treatment === undefined ? {} : { treatment: input.treatment }),
         ...(input.tooth === undefined ? {} : { tooth: input.tooth }),
         ...(input.price === undefined ? {} : { price: input.price }),
+        doctorShare: share,
         ...(input.note === undefined ? {} : { note: input.note }),
       })
       await writeAudit(tx, {

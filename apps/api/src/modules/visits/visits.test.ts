@@ -158,6 +158,104 @@ describe('tashrif shifokori', () => {
   })
 })
 
+describe('shifokor ulushi (snapshot)', () => {
+  let doctorId = ''
+
+  async function shareOf(visitId: string) {
+    const row = await h.ownerDb.visit.findUnique({
+      where: { id: visitId },
+      select: { doctorPercent: true, doctorShare: true, price: true },
+    })
+    return row as { doctorPercent: number; doctorShare: number; price: number }
+  }
+
+  beforeAll(async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `foizli-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Foizli Shifokor',
+      roleId: role?.id,
+      password: 'parol12345',
+      payPercent: 50,
+    })
+    doctorId = created.json().data.id
+  })
+
+  it('yozishda joriy foiz va ulush muzlatiladi; yaxlitlash butun soʻmga', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 300_000,
+    })
+    expect(await shareOf(r.json().data.id)).toEqual({
+      price: 300_000,
+      doctorPercent: 50,
+      doctorShare: 150_000,
+    })
+    // Roʻyxat javobida ulush yoʻq — bemor kartochkasini koʻrgan har kimga
+    // shifokorning foizi koʻrinmasin
+    expect(r.json().data.doctorShare).toBeUndefined()
+
+    const odd = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 333_333,
+    })
+    expect((await shareOf(odd.json().data.id)).doctorShare).toBe(166_667)
+  })
+
+  it('narx tahrirlansa saqlangan foiz bilan qayta sanaladi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 100_000,
+    })
+    const id = r.json().data.id
+    // Shifokorning foizi oʻzgardi — bu eski tashrifga tegmaydi
+    await call('PATCH', `/api/staff/${doctorId}`, { payPercent: 40 })
+    expect(await shareOf(id)).toMatchObject({ doctorPercent: 50, doctorShare: 50_000 })
+
+    await call('PATCH', `/api/visits/${id}`, { price: 200_000 })
+    expect(await shareOf(id)).toEqual({ price: 200_000, doctorPercent: 50, doctorShare: 100_000 })
+  })
+
+  it('shifokor almashsa yangi shifokorning joriy foizi olinadi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 100_000,
+    })
+    const id = r.json().data.id
+    // Egasi (h.userId) — foizsiz
+    expect(await shareOf(id)).toMatchObject({ doctorPercent: 0, doctorShare: 0 })
+
+    await call('PATCH', `/api/visits/${id}`, { doctorId })
+    expect(await shareOf(id)).toMatchObject({ doctorPercent: 40, doctorShare: 40_000 })
+  })
+
+  it('narxsiz PATCH narxni va ulushni buzmaydi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 100_000,
+    })
+    const id = r.json().data.id
+    await call('PATCH', `/api/visits/${id}`, { note: 'faqat izoh' })
+    expect(await shareOf(id)).toEqual({ price: 100_000, doctorPercent: 40, doctorShare: 40_000 })
+  })
+})
+
 describe('tashriflar roʻyxati', () => {
   it('yangisi tepada', async () => {
     await call('POST', '/api/visits', { patientId, date: '2026-08-01', treatment: 'Eski' })

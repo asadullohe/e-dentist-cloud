@@ -239,6 +239,11 @@ model Visit {
   serviceId String?  @map("service_id") @db.Uuid
   /// Soʻm, butun son
   price     Int      @default(0)
+  /// Shifokor ulushi — tashrif yozilgan paytdagi foiz va undan hisoblangan
+  /// summa (snapshot, tz.md 15-boʻlim). Foiz keyin oʻzgarsa oʻtgan oylar
+  /// qayta hisoblanmaydi; narx tahrirlansa saqlangan foiz bilan qayta sanaladi
+  doctorPercent Int  @default(0) @map("doctor_percent")
+  doctorShare   Int  @default(0) @map("doctor_share")
   note      String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
