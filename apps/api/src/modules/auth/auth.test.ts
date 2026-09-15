@@ -1,7 +1,7 @@
 // Auth moduli — uchidan uchiga. Haqiqiy baza va Redis bilan ishlaydi,
 // xat esa xotirada ushlanadi: tasdiqlash havolasini oʻsha yerdan olamiz.
 
-import { addDays } from '@e-dentist/shared'
+import { addDays, PERMISSIONS } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { memoryBus } from '../../platform/bus.js'
@@ -358,7 +358,8 @@ describe('kirish va sessiya', () => {
     expect(d.user.email).toBe(EMAIL)
     expect(d.clinic.name).toBe(CLINIC)
     expect(d.role.template).toBe('egasi')
-    expect(d.permissions).toHaveLength(17)
+    // Egasida hammasi — roʻyxat kengaysa test qoʻlda yangilanmasin
+    expect(d.permissions).toHaveLength(PERMISSIONS.length)
     expect(d.permissions).toContain('staff.manage')
   })
 
