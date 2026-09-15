@@ -8,8 +8,10 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Reja toʻliq bajarildi** — 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
-boshqaruv paneli va landing ochiq _(09/09/2026)_
+**Hozirgi task:** 9.1 — `visits.doctor_id`
+
+0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
+boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
 
 ---
 
@@ -1065,6 +1067,49 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       ishlaydi); Kuma monitori `http://garage:3903/health` — qoʻlda qoʻshiladi
 - [x] **8.5 Hujjatlar** — tz.md, CLAUDE.md, server.md, birinchi-chiqarish.md,
       make-env.sh (yangi server Garage bilan), .env.example
+
+---
+
+## Bosqich 9 — Ish haqi: foiz va oylik · ~1 hafta
+
+> **Nega** _(qaror 15/09/2026, tz.md 15-boʻlim)_
+>
+> Klinikada shifokor foizga ishlaydi (plomba 300 000 → 150 000 klinikaga,
+> 150 000 shifokorga), administrator oylikka. Tizimda buning oʻrni yoʻq edi:
+> `visits` da shifokor yoʻq, xodimda shart yoʻq, hisobotda maosh koʻrinmaydi.
+>
+> Qarorlar: foiz **qilingan ish narxidan** (toʻlangan puldan emas — toʻlov
+> tashrifga bogʻlanmagan); xodimga **bitta foiz** (xizmat boʻyicha emas);
+> shifokor **oʻz** ulushini koʻradi; toʻlab berish **tugma bilan** xarajatga
+> tushadi (qoʻlda yozilsa hisob va xarajat ajralib ketadi).
+
+- [ ] **9.1 `visits.doctor_id`** — ustun + indeks; API: `doctorId` ixtiyoriy,
+      berilmasa yozgan odam (`visits.write` bilan kirgan — demak shifokor);
+      faqat faol va `visits.write` li xodim; `GET /staff/doctors`; tashrif
+      formasida «Shifokor» tanlovi (sukut — oʻzi); jadvalda ustun; eksportda
+      ustun. Eski yozuvlar `null`. Testlar: sukut, begona klinika xodimi rad
+- [ ] **9.2 Xodimda ish haqi sharti** — `users.salary_amount`, `users.pay_percent`
+      (CHECK 0..100); `PATCH /staff/:id` da ikkalasi (oʻzinikini ham
+      oʻzgartira oladi — rol/holat cheklovi bunga tegmaydi); Sozlamalar →
+      Xodimlar da «Ish haqi» ustuni va tahrirlash oynasi; yangi xodim
+      oynasida ham
+- [ ] **9.3 Ulush snapshoti** — `visits.doctor_percent`, `visits.doctor_share`;
+      yozishda shifokorning joriy foizi, narx tahririda saqlangan foiz bilan
+      qayta hisob, shifokor almashsa yangi foiz. Testlar: yaxlitlash, tahrir
+- [ ] **9.4 `payroll` moduli va «Ish haqi» sahifasi** — `payroll.own` /
+      `payroll.manage` ruxsatlari (mavjud rollarga migratsiya: egasi ikkalasi,
+      shifokor shabloni `own`); `GET /payroll?month` — xodim boʻyicha
+      tashriflar, ish summasi, ulush, oylik, jami; «Shifokor koʻrsatilmagan»
+      qatori; `POST /payroll/recalculate`; sahifa oy almashtirgich bilan;
+      yon menyuda «Ish haqi». Testlar: koʻp ijarachilik, `own` faqat oʻzini
+- [ ] **9.5 Toʻlab berish** — `staff_payouts` (user_id, month, expense_id,
+      RLS) — summa va sana xarajatda; `POST /payroll/payouts` →
+      `expenses.addTx(salary)` + bogʻlanish bir tranzaksiyada;
+      `DELETE /payroll/payouts/:id` → xarajat ham oʻchadi; sahifada
+      «toʻlangan / qoldiq» ustunlari va «Toʻlash» oynasi (toʻlovlar roʻyxati,
+      qoʻshish, oʻchirish). Testlar: xarajat oʻchsa bogʻlanish ketadi
+- [ ] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md tekshiruv, `master` ga
+      qoʻshish, serverda migratsiya
 
 ---
 
