@@ -1100,8 +1100,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `payroll.manage` ruxsatlari (mavjud rollarga migratsiya: egasi ikkalasi,
       shifokor shabloni `own`); `GET /payroll?month` — xodim boʻyicha
       tashriflar, ish summasi, ulush, oylik, jami; «Shifokor koʻrsatilmagan»
-      qatori; `POST /payroll/recalculate`; sahifa oy almashtirgich bilan;
-      yon menyuda «Ish haqi». Testlar: koʻp ijarachilik, `own` faqat oʻzini
+      qatori; `GET /payroll/visits?month&userId` — shifokorning oʻsha oydagi
+      ishlari roʻyxati (sana · bemor · muolaja · narx · ulush) — qator
+      ochilganda koʻrinadi, shifokor oʻzinikini koʻradi; `POST
+      /payroll/recalculate`; sahifa oy almashtirgich bilan; yon menyuda
+      «Ish haqi». Testlar: koʻp ijarachilik, `own` faqat oʻzini
 - [ ] **9.5 Toʻlab berish** — `staff_payouts` (user_id, month, expense_id,
       RLS) — summa va sana xarajatda; `POST /payroll/payouts` →
       `expenses.addTx(salary)` + bogʻlanish bir tranzaksiyada;

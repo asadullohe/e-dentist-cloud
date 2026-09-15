@@ -698,6 +698,8 @@ Foiz xodimga bitta — xizmat turi boʻyicha farqlanmaydi. Kerak boʻlsa keyin `
 
 Oy kesimida jadval: xodim · tashriflar · ish summasi · foiz · ulush · oylik · jami · toʻlangan · qoldiq.
 
+Qator ochilganda — oʻsha xodimning oydagi **ishlari roʻyxati**: sana · bemor · muolaja · tish · narx · ulush. Shifokor oʻzi qancha ish qilganini va nimalardan ekanini koʻradi, egasi hammasini — hisob «qora quti» boʻlmasin.
+
 | Ruxsat | Nimaga ochadi |
 |---|---|
 | `payroll.own` | Faqat oʻz qatori. «Shifokor» shabloniga kiradi — shifokor oʻz ulushini koʻradi, boshqalarnikini emas |
