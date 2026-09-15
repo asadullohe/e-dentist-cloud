@@ -61,6 +61,7 @@ model Clinic {
   images       PatientImage[]
   expenses     Expense[]
   labOrders    LabOrder[]
+  staffPayouts StaffPayout[]
 
   @@index([status])
   @@map("clinics")
@@ -505,10 +506,34 @@ model Expense {
   createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  clinic Clinic       @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  payout StaffPayout?
 
   @@index([clinicId, date])
   @@map("expenses")
+}
+
+// ─────────────────────────  Ish haqi toʻlovlari  ─────────────────────────
+
+/// Xodimga berilgan pulning oy va xodimga bogʻlanishi (tz.md 15-boʻlim).
+/// Summa va sana bu yerda YOʻQ — ular xarajatning oʻzida: ikki joyda turgan
+/// son ertami-kechmi ajralib qoladi. Xarajat oʻchirilsa bogʻlanish ham
+/// ketadi (Cascade) — «toʻlangan» qaytadan sanaladi
+model StaffPayout {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// Qaysi oy uchun — oyning 1-kuni, DATE
+  month     DateTime @db.Date
+  expenseId String   @unique @map("expense_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId, month])
+  @@index([clinicId, userId, month])
+  @@map("staff_payouts")
 }
 
 // ────────────────────────────  Bemor rasmlari  ────────────────────────────

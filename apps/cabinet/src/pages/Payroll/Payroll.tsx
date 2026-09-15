@@ -12,13 +12,14 @@ import {
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  HandCoinsIcon,
   MoreHorizontalIcon,
   RefreshCwIcon,
 } from 'lucide-react'
 import { Fragment, useState } from 'react'
 import { type PayrollRow, usePayroll } from '@/entities/payroll'
 import { useHasPermission } from '@/entities/session'
-import { RecalculateDialog } from '@/features/payroll-manage'
+import { PayoutsDialog, RecalculateDialog } from '@/features/payroll-manage'
 import {
   Button,
   Card,
@@ -56,6 +57,10 @@ export function Payroll() {
 
   const [openRow, setOpenRow] = useState<string | null>(null)
   const [recalcRow, setRecalcRow] = useState<PayrollRow | null>(null)
+  // Toʻlov oynasi qatorni id boʻyicha oladi: toʻlovdan keyin roʻyxat
+  // yangilanadi va oyna yangi qoldiqni koʻrsatishi kerak
+  const [payForId, setPayForId] = useState<string | null>(null)
+  const payFor = data?.rows.find((row) => row.userId === payForId) ?? null
   const [notice, setNotice] = useState('')
 
   // Shifokor faqat oʻzini koʻradi — bitta qator, ishlar roʻyxati darhol ochiq
@@ -119,18 +124,21 @@ export function Payroll() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{PAYROLL_UI.staff}</TableHead>
-                  <TableHead className="w-20 text-right">{PAYROLL_UI.visits}</TableHead>
-                  <TableHead className="hidden w-36 text-right lg:table-cell">
+                  <TableHead className="w-16 text-right">{PAYROLL_UI.visits}</TableHead>
+                  <TableHead className="hidden w-32 text-right xl:table-cell">
                     {PAYROLL_UI.charges}
                   </TableHead>
-                  <TableHead className="hidden w-16 text-right md:table-cell">
-                    {PAYROLL_UI.percent}
-                  </TableHead>
-                  <TableHead className="w-36 text-right">{PAYROLL_UI.share}</TableHead>
-                  <TableHead className="hidden w-36 text-right md:table-cell">
+                  <TableHead className="w-32 text-right">{PAYROLL_UI.share}</TableHead>
+                  <TableHead className="hidden w-32 text-right md:table-cell">
                     {PAYROLL_UI.salary}
                   </TableHead>
-                  <TableHead className="w-36 text-right">{PAYROLL_UI.total}</TableHead>
+                  <TableHead className="w-32 text-right">{PAYROLL_UI.total}</TableHead>
+                  <TableHead className="hidden w-32 text-right xl:table-cell">
+                    {PAYROLL_UI.paid}
+                  </TableHead>
+                  <TableHead className="hidden w-32 text-right lg:table-cell">
+                    {PAYROLL_UI.remaining}
+                  </TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
@@ -163,22 +171,36 @@ export function Payroll() {
                           </span>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{row.visits}</TableCell>
-                        <TableCell className="hidden text-right tabular-nums lg:table-cell">
+                        <TableCell className="hidden text-right tabular-nums xl:table-cell">
                           {formatSom(row.charges)}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground hidden text-right tabular-nums md:table-cell">
-                          {row.percent > 0 ? `${row.percent}%` : '—'}
                         </TableCell>
                         <TableCell
                           className={cn('text-right tabular-nums', needsRecalc(row) && 'text-warn')}
                         >
-                          {formatSom(row.share)}
+                          {row.percent > 0 || row.share > 0 ? formatSom(row.share) : '—'}
+                          {row.percent > 0 && (
+                            <span className="text-muted-foreground block text-xs">
+                              {row.percent}%
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="hidden text-right tabular-nums md:table-cell">
                           {row.salary > 0 ? formatSom(row.salary) : '—'}
                         </TableCell>
                         <TableCell className="text-right font-semibold tabular-nums">
                           {formatSom(row.total)}
+                        </TableCell>
+                        <TableCell className="hidden text-right tabular-nums xl:table-cell">
+                          {row.paid > 0 ? formatSom(row.paid) : '—'}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            'hidden text-right tabular-nums lg:table-cell',
+                            row.remaining > 0 && row.total > 0 && 'text-warn',
+                            row.remaining < 0 && 'text-destructive',
+                          )}
+                        >
+                          {row.total > 0 || row.paid > 0 ? formatSom(row.remaining) : '—'}
                         </TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
@@ -198,6 +220,10 @@ export function Payroll() {
                               className="w-48"
                               onClick={(event) => event.stopPropagation()}
                             >
+                              <DropdownMenuItem onClick={() => setPayForId(row.userId)}>
+                                <HandCoinsIcon />
+                                {PAYROLL_UI.pay}
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setOpenRow(row.userId)}>
                                 <ChevronDownIcon />
                                 {PAYROLL_UI.show_works}
@@ -215,7 +241,7 @@ export function Payroll() {
                       </TableRow>
                       {opened && (
                         <TableRow className="bg-muted/40 hover:bg-muted/40">
-                          <TableCell colSpan={8} className="p-0">
+                          <TableCell colSpan={9} className="p-0">
                             <WorksTable month={month} userId={row.userId} />
                           </TableCell>
                         </TableRow>
@@ -226,10 +252,9 @@ export function Payroll() {
                 <TableRow className="bg-muted/40 font-semibold hover:bg-muted/40">
                   <TableCell>{PAYROLL_UI.totals}</TableCell>
                   <TableCell />
-                  <TableCell className="hidden text-right tabular-nums lg:table-cell">
+                  <TableCell className="hidden text-right tabular-nums xl:table-cell">
                     {formatSom(data.totals.charges)}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell" />
                   <TableCell className="text-right tabular-nums">
                     {formatSom(data.totals.share)}
                   </TableCell>
@@ -238,6 +263,12 @@ export function Payroll() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatSom(data.totals.total)}
+                  </TableCell>
+                  <TableCell className="hidden text-right tabular-nums xl:table-cell">
+                    {formatSom(data.totals.paid)}
+                  </TableCell>
+                  <TableCell className="hidden text-right tabular-nums lg:table-cell">
+                    {formatSom(data.totals.total - data.totals.paid)}
                   </TableCell>
                   <TableCell />
                 </TableRow>
@@ -255,6 +286,7 @@ export function Payroll() {
         onClose={() => setRecalcRow(null)}
         onDone={(count) => setNotice(PAYROLL_UI.recalculated(count))}
       />
+      <PayoutsDialog month={month} row={payFor} onClose={() => setPayForId(null)} />
     </>
   )
 }
@@ -267,6 +299,12 @@ function OwnView({ month, row }: { month: string; row: PayrollRow }) {
     { label: PAYROLL_UI.share, value: formatSom(row.share) },
     ...(row.salary > 0 ? [{ label: PAYROLL_UI.salary, value: formatSom(row.salary) }] : []),
     { label: PAYROLL_UI.total, value: formatSom(row.total) },
+    ...(row.paid > 0
+      ? [
+          { label: PAYROLL_UI.paid, value: formatSom(row.paid) },
+          { label: PAYROLL_UI.remaining, value: formatSom(row.remaining) },
+        ]
+      : []),
   ]
   return (
     <>

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 9.5 — toʻlab berish
+**Hozirgi task:** 9.6 — hujjatlar va chiqarish
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1112,7 +1112,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       ochilganda koʻrinadi, shifokor oʻzinikini koʻradi; `POST
       /payroll/recalculate`; sahifa oy almashtirgich bilan; yon menyuda
       «Ish haqi». Testlar: koʻp ijarachilik, `own` faqat oʻzini
-- [ ] **9.5 Toʻlab berish** — `staff_payouts` (user_id, month, expense_id,
+- [x] **9.5 Toʻlab berish** — `staff_payouts` (user_id, month, expense_id,
       RLS) — summa va sana xarajatda; `POST /payroll/payouts` →
       `expenses.addTx(salary)` + bogʻlanish bir tranzaksiyada;
       `DELETE /payroll/payouts/:id` → xarajat ham oʻchadi; sahifada

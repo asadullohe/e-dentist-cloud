@@ -1,3 +1,13 @@
+/// Bitta toʻlov. Summa va sana xarajatdan
+export interface Payout {
+  id: string
+  expenseId: string
+  /// YYYY-MM-DD
+  date: string
+  amount: number
+  note: string
+}
+
 export interface PayrollRow {
   userId: string
   fullName: string
@@ -12,13 +22,17 @@ export interface PayrollRow {
   salary: number
   /// salary + share
   total: number
+  /// Shu oy uchun berilgan pul va qoldiq
+  paid: number
+  remaining: number
+  payouts: Payout[]
 }
 
 export interface Payroll {
   /// YYYY-MM
   month: string
   rows: PayrollRow[]
-  totals: { charges: number; share: number; salary: number; total: number }
+  totals: { charges: number; share: number; salary: number; total: number; paid: number }
   /// Shifokori yoʻq tashriflar — faqat `payroll.manage` ga keladi
   unassigned: { visits: number; charges: number } | null
 }

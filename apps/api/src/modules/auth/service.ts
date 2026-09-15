@@ -472,6 +472,13 @@ export async function staffNamesTx(tx: ClinicTx, ids: string[]): Promise<Map<str
   return new Map(rows.map((row) => [row.id, row.fullName ?? '']))
 }
 
+/// Xodimning ismi. Boshqa modullar uchun (payroll — xarajat izohiga).
+/// Yoʻq boʻlsa null — begona klinika xodimi ham shu
+export async function findStaffNameTx(tx: ClinicTx, userId: string): Promise<string | null> {
+  const row = await repo.findStaff(tx, userId)
+  return row ? (row.fullName ?? '') : null
+}
+
 /// Xodim shu klinikada bormi — naryadga texnik tayinlashda tekshiriladi
 export async function existsInClinic(tx: ClinicTx, userId: string): Promise<boolean> {
   return (await repo.findStaff(tx, userId)) !== null
