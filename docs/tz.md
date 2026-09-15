@@ -514,6 +514,7 @@ _Klinika kundalik ishlaydigan asosiy ilova. Mavjud desktop ilovaning tuzilishini
 | Narxnoma | Xizmatlar va narxlari | Egasi |
 | Xarajatlar | Oylik xarajatlar, turlari boʻyicha | Egasi |
 | Hisobotlar | Tushum, sof foyda, 12 oylik grafik | Egasi |
+| Ish haqi | Oy boʻyicha xodimlar: ulush, oylik, toʻlangan, qoldiq; ishlar roʻyxati; toʻlab berish (15-boʻlim) | Egasi hammasini, shifokor oʻzinikini |
 | Sozlamalar | Klinika, xodimlar, obuna, eksport | Egasi |
 
 ### Nimalarni koʻchirish mumkin

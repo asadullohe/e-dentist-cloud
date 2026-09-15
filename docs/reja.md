@@ -1118,8 +1118,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `DELETE /payroll/payouts/:id` → xarajat ham oʻchadi; sahifada
       «toʻlangan / qoldiq» ustunlari va «Toʻlash» oynasi (toʻlovlar roʻyxati,
       qoʻshish, oʻchirish). Testlar: xarajat oʻchsa bogʻlanish ketadi
-- [ ] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md tekshiruv, `master` ga
-      qoʻshish, serverda migratsiya
+- [~] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi. Qolgani
+      foydalanuvchi tasdigʻidan keyin: `master` ga qoʻshish → avtomatik
+      chiqarish → serverda `prisma migrate deploy` (5 ta migratsiya: tashrif
+      shifokori, ish haqi sharti, shifokor ulushi, ish haqi ruxsatlari, ish
+      haqi toʻlovlari; hammasi orqaga mos — eski yozuvlar buzilmaydi)
 
 ---
 
