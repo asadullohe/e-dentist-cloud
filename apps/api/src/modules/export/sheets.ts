@@ -52,6 +52,7 @@ export function nameOf(people: Map<string, string>, patientId: string): string {
 export function visitsSheet(
   rows: {
     patientId: string
+    doctorId: string | null
     date: Date
     treatment: string
     tooth: number | null
@@ -59,11 +60,13 @@ export function visitsSheet(
     note: string | null
   }[],
   people: Map<string, string>,
+  staff: Map<string, string>,
 ): SheetData {
   return sheet(
     [
       EXPORT_COLUMNS.date,
       EXPORT_COLUMNS.patient,
+      EXPORT_COLUMNS.doctor,
       EXPORT_COLUMNS.treatment,
       EXPORT_COLUMNS.tooth,
       EXPORT_COLUMNS.price,
@@ -72,6 +75,7 @@ export function visitsSheet(
     rows.map((row) => [
       iso(row.date),
       nameOf(people, row.patientId),
+      row.doctorId ? (staff.get(row.doctorId) ?? '') : '',
       row.treatment,
       row.tooth,
       row.price,

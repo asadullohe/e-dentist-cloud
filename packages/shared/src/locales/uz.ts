@@ -229,6 +229,8 @@ export const VISIT_TEXT = {
   bridge_not_found: 'Koʻprik topilmadi',
   bridge_same_arch: 'Ikkala tish ham bitta jagʻda boʻlishi kerak',
   bridge_role_invalid: 'Tish roli notoʻgʻri',
+  doctor_invalid: 'Shifokorni tanlang',
+  doctor_not_found: 'Bu xodim tashrifga shifokor boʻla olmaydi',
 } as const
 
 // Koʻprik (quyma tish) oynasi
@@ -268,6 +270,8 @@ export const CARD_UI = {
   tooth: 'Tish',
   price: 'Narx',
   note: 'Izoh',
+  doctor: 'Shifokor',
+  doctor_unknown: 'Koʻrsatilmagan',
   total: 'Jami',
   delete_visit_title: 'Tashrif oʻchirilsinmi?',
   delete_visit_text: 'Bu amalni qaytarib boʻlmaydi.',
@@ -628,6 +632,7 @@ export const EXPORT_COLUMNS = {
   shade: 'Rang',
   due: 'Muddat',
   tech: 'Texnik',
+  doctor: 'Shifokor',
   tech_price: 'Texnik narxi',
   returns: 'Qaytishlar',
   bridge: 'Koʻprik',

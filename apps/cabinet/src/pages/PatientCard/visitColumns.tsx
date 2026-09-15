@@ -45,6 +45,17 @@ export function visitColumns({ onEdit, onRemove }: Actions): ColumnDef<Visit>[] 
       ),
     },
     {
+      accessorKey: 'doctorName',
+      meta: { title: CARD_UI.doctor, className: 'hidden w-40 md:table-cell' } satisfies ColumnMeta,
+      header: CARD_UI.doctor,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className={row.original.doctorName ? '' : 'text-muted-foreground'}>
+          {row.original.doctorName ?? CARD_UI.doctor_unknown}
+        </span>
+      ),
+    },
+    {
       accessorKey: 'tooth',
       meta: { title: CARD_UI.tooth, className: 'w-20' } satisfies ColumnMeta,
       header: CARD_UI.tooth,

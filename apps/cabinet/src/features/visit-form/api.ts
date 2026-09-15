@@ -3,6 +3,7 @@ import { apiRequest } from '@/shared/api'
 
 export interface VisitPayload {
   patientId?: string
+  doctorId: string
   date: string
   treatment: string
   tooth: number | null

@@ -84,6 +84,80 @@ describe('tashrif yozish', () => {
   })
 })
 
+describe('tashrif shifokori', () => {
+  it('berilmasa yozgan odamning oʻzi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      treatment: 'Koʻrik',
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.doctorId).toBe(h.userId)
+    expect(typeof r.json().data.doctorName).toBe('string')
+  })
+
+  it('boshqa shifokor tanlanadi va ismi javobda keladi', async () => {
+    const created = await call('POST', '/api/staff', {
+      email: `shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Aliyev Bobur',
+      roleId: (
+        await h.ownerDb.role.findFirst({ where: { clinicId: h.clinicId, template: 'shifokor' } })
+      )?.id,
+      password: 'parol12345',
+    })
+    const doctorId = created.json().data.id as string
+
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 300_000,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({ doctorId, doctorName: 'Aliyev Bobur' })
+
+    // Faolsizlantirilgan xodimga yangi tashrif yozilmaydi
+    await call('PATCH', `/api/staff/${doctorId}`, { status: 'disabled' })
+    const again = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-02',
+      treatment: 'Plomba',
+    })
+    expect(again.statusCode).toBe(400)
+    expect(again.json().error.fields.doctorId).toBe('Bu xodim tashrifga shifokor boʻla olmaydi')
+  })
+
+  it('visits.write siz xodim (texnik) shifokor boʻla olmaydi', async () => {
+    const tech = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'texnik' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `texnik-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Texnik Toʻra',
+      roleId: tech?.id,
+      password: 'parol12345',
+    })
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId: created.json().data.id,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+    })
+    expect(r.statusCode).toBe(400)
+  })
+
+  it('shifokorlar roʻyxati — faqat faol va visits.write li xodimlar', async () => {
+    const r = await call('GET', '/api/staff/doctors')
+    expect(r.statusCode).toBe(200)
+    const names = r.json().data.map((d: { fullName: string }) => d.fullName)
+    expect(names).not.toContain('Aliyev Bobur') // faolsizlantirilgan
+    expect(names).not.toContain('Texnik Toʻra') // visits.write yoʻq
+    expect(r.json().data.some((d: { id: string }) => d.id === h.userId)).toBe(true)
+  })
+})
+
 describe('tashriflar roʻyxati', () => {
   it('yangisi tepada', async () => {
     await call('POST', '/api/visits', { patientId, date: '2026-08-01', treatment: 'Eski' })
@@ -174,6 +248,35 @@ describe('koʻp ijarachilik', () => {
     const r = await call('PUT', `/api/patients/${otherPatientId}/teeth/16`, { status: 'karies' })
     expect(r.statusCode).toBe(404)
     expect(await h.ownerDb.tooth.count({ where: { patientId: otherPatientId } })).toBe(0)
+  })
+
+  it('begona klinikaning xodimi shifokor boʻla olmaydi', async () => {
+    const role = await h.ownerDb.role.create({
+      data: {
+        clinicId: otherClinicId,
+        template: 'shifokor',
+        name: 'Shifokor',
+        permissions: ['visits.write'],
+      },
+    })
+    const foreignDoctor = await h.ownerDb.user.create({
+      data: {
+        clinicId: otherClinicId,
+        roleId: role.id,
+        email: `begona-shifokor-${otherClinicId.slice(0, 8)}@sinov.uz`,
+        passwordHash: 'x',
+        fullName: 'Begona Shifokor',
+        emailVerifiedAt: new Date(),
+      },
+    })
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId: foreignDoctor.id,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+    })
+    expect(r.statusCode).toBe(400)
+    expect(await h.ownerDb.visit.count({ where: { doctorId: foreignDoctor.id } })).toBe(0)
   })
 
   it('begona klinikaning tashrifini oʻchirib boʻlmaydi', async () => {

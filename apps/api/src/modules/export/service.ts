@@ -31,7 +31,7 @@ export interface Archive {
 }
 
 const WIDTH = {
-  visits: [14, 28, 40, 8, 16, 40],
+  visits: [14, 28, 24, 40, 8, 16, 40],
   teeth: [28, 8, 20, 20, 40],
   bridges: [28, 24, 20],
   payments: [14, 28, 16, 40],
@@ -61,8 +61,13 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
     ])
 
     const names = new Map(people.map((person) => [person.id, person.fio]))
-    const techNames = await auth.staffNamesTx(tx, [
-      ...new Set(labRows.map((row) => row.techId).filter((id): id is string => id !== null)),
+    // Bitta soʻrovda: naryaddagi texniklar va tashrifdagi shifokorlar
+    const staffNames = await auth.staffNamesTx(tx, [
+      ...new Set(
+        [...labRows.map((row) => row.techId), ...visitRows.map((row) => row.doctorId)].filter(
+          (id): id is string => id !== null,
+        ),
+      ),
     ])
 
     const [
@@ -77,7 +82,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       servicesFile,
     ] = await Promise.all([
       patients.buildPatientsSheet(people),
-      sheets.toBuffer('Tashriflar', sheets.visitsSheet(visitRows, names), WIDTH.visits),
+      sheets.toBuffer('Tashriflar', sheets.visitsSheet(visitRows, names, staffNames), WIDTH.visits),
       sheets.toBuffer('Tish xaritasi', sheets.teethSheet(teethRows, names), WIDTH.teeth),
       sheets.toBuffer('Koʻpriklar', sheets.bridgesSheet(bridgeRows, names), WIDTH.bridges),
       sheets.toBuffer('Toʻlovlar', sheets.paymentsSheet(paymentRows, names), WIDTH.payments),
@@ -89,7 +94,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       sheets.toBuffer('Xarajatlar', sheets.expensesSheet(expenseRows), WIDTH.expenses),
       sheets.toBuffer(
         'Naryadlar',
-        sheets.labSheet(labRows, names, techNames, (index) => labRows[index]?.techId ?? null),
+        sheets.labSheet(labRows, names, staffNames, (index) => labRows[index]?.techId ?? null),
         WIDTH.lab,
       ),
       sheets.toBuffer('Narxnoma', sheets.servicesSheet(serviceRows), WIDTH.services),

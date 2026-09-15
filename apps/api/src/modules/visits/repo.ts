@@ -6,6 +6,7 @@ import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 const VISIT_SELECT = {
   id: true,
   patientId: true,
+  doctorId: true,
   date: true,
   treatment: true,
   tooth: true,
@@ -54,6 +55,7 @@ export function createVisit(
   id: string,
   data: {
     patientId: string
+    doctorId: string
     date: Date
     treatment: string
     tooth?: number | null

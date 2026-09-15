@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 9.1 — `visits.doctor_id`
+**Hozirgi task:** 9.2 — xodimda ish haqi sharti
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1083,7 +1083,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > shifokor **oʻz** ulushini koʻradi; toʻlab berish **tugma bilan** xarajatga
 > tushadi (qoʻlda yozilsa hisob va xarajat ajralib ketadi).
 
-- [ ] **9.1 `visits.doctor_id`** — ustun + indeks; API: `doctorId` ixtiyoriy,
+- [x] **9.1 `visits.doctor_id`** — ustun + indeks; API: `doctorId` ixtiyoriy,
       berilmasa yozgan odam (`visits.write` bilan kirgan — demak shifokor);
       faqat faol va `visits.write` li xodim; `GET /staff/doctors`; tashrif
       formasida «Shifokor» tanlovi (sukut — oʻzi); jadvalda ustun; eksportda

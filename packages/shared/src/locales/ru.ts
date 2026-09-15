@@ -228,6 +228,8 @@ export const ru: DeepPartial<Strings> = {
     bridge_not_found: 'Мост не найден',
     bridge_same_arch: 'Оба зуба должны быть на одной челюсти',
     bridge_role_invalid: 'Неверная роль зуба',
+    doctor_invalid: 'Выберите врача',
+    doctor_not_found: 'Этот сотрудник не может быть врачом визита',
   },
 
   BRIDGE_UI: {
@@ -263,6 +265,8 @@ export const ru: DeepPartial<Strings> = {
     treatment: 'Процедура',
     tooth: 'Зуб',
     price: 'Цена',
+    doctor: 'Врач',
+    doctor_unknown: 'Не указан',
     note: 'Примечание',
     total: 'Итого',
     delete_visit_title: 'Удалить визит?',
@@ -588,6 +592,7 @@ export const ru: DeepPartial<Strings> = {
     shade: 'Оттенок',
     due: 'Срок',
     tech: 'Техник',
+    doctor: 'Врач',
     tech_price: 'Цена техника',
     returns: 'Возвраты',
     bridge: 'Мост',

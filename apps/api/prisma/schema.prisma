@@ -222,6 +222,9 @@ model Visit {
   id        String   @id @default(uuid(7)) @db.Uuid
   clinicId  String   @map("clinic_id") @db.Uuid
   patientId String   @map("patient_id") @db.Uuid
+  /// Ishni qilgan shifokor. Ish haqi hisobi shunga qaraydi (tz.md 15-boʻlim).
+  /// 9.1 dan oldingi yozuvlarda boʻsh — hisobda «koʻrsatilmagan» qatorida
+  doctorId  String?  @map("doctor_id") @db.Uuid
   date      DateTime @db.Date
   /// Muolaja nomi. Narxnomadan tanlansa ham matn saqlanadi — narxnoma
   /// keyin oʻzgarsa tarix buzilmasin
@@ -241,6 +244,7 @@ model Visit {
 
   @@index([clinicId, patientId, date])
   @@index([clinicId, date])
+  @@index([clinicId, doctorId, date])
   @@map("visits")
 }
 

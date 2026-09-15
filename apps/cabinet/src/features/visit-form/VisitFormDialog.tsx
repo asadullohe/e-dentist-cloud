@@ -12,7 +12,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useServices } from '@/entities/service'
+import { useSession } from '@/entities/session'
+import { useDoctors } from '@/entities/staff'
 import type { Visit } from '@/entities/visit'
+import { fieldErrors } from '@/shared/api'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
@@ -62,8 +65,18 @@ function toValues(visit: Visit | undefined): VisitValues {
 export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitFormDialogProps) {
   const { mutateAsync, isPending } = useSaveVisit(visit?.id ?? null)
   const { data: services } = useServices()
+  const { data: doctors } = useDoctors()
+  const { data: session } = useSession()
   const [formError, setFormError] = useState('')
   const [serviceId, setServiceId] = useState<string | null>(null)
+  const [doctorId, setDoctorId] = useState('')
+  // Shifokor tanlovi react-hook-form dan tashqarida (serviceId kabi) —
+  // server xatosi shu yerda ushlanadi
+  const [doctorError, setDoctorError] = useState('')
+
+  // Sukut — kirgan odamning oʻzi: koʻpincha tashrifni shifokor oʻzi yozadi.
+  // Eski tashrifda shifokor boʻlmasa ham shu, tahrirda tanlab qoʻyiladi
+  const selfId = session?.user.id ?? ''
 
   const form = useForm<VisitValues>({
     resolver: zodResolver(visitSchema),
@@ -76,14 +89,18 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
       form.reset(toValues(visit))
       setFormError('')
       setServiceId(visit?.serviceId ?? null)
+      setDoctorId(visit?.doctorId ?? selfId)
+      setDoctorError('')
     }
-  }, [open, visit, form])
+  }, [open, visit, form, selfId])
 
   async function onSubmit(values: VisitValues) {
     setFormError('')
+    setDoctorError('')
     try {
       await mutateAsync({
         ...(visit ? {} : { patientId }),
+        doctorId,
         date: parseDisplayDate(values.date) as string,
         treatment: values.treatment,
         tooth: values.tooth ? Number(values.tooth) : null,
@@ -93,6 +110,7 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
       })
       onOpenChange(false)
     } catch (error) {
+      setDoctorError(fieldErrors(error).doctorId ?? '')
       setFormError(applyServerErrors(form, error))
     }
   }
@@ -133,6 +151,23 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="visit-doctor">{CARD_UI.doctor}</Label>
+              <Select value={doctorId} onValueChange={setDoctorId}>
+                <SelectTrigger id="visit-doctor" className="w-full">
+                  <SelectValue placeholder={CARD_UI.doctor} />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors?.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {doctorError && <p className="text-destructive text-sm">{doctorError}</p>}
             </div>
 
             {services && services.length > 0 && (

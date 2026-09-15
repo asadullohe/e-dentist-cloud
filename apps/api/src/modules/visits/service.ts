@@ -7,6 +7,7 @@ import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
+import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
 import * as repo from './repo.js'
 import type {
@@ -78,10 +79,32 @@ export async function topTreatmentsTx(
   }))
 }
 
+/// Shifokor faol va `visits.write` li xodim boʻlishi shart. Tashqi kalit
+/// yoʻq — begona klinika xodimining id si shu tekshiruvsiz oʻtib ketardi
+async function assertDoctor(tx: ClinicTx, doctorId: string): Promise<void> {
+  if (!(await auth.isDoctorTx(tx, doctorId))) {
+    throw errors.validation({ doctorId: VISIT_TEXT.doctor_not_found }, VISIT_TEXT.doctor_not_found)
+  }
+}
+
+/// Javobga shifokor ismi qoʻshiladi — jadvalda id emas, ism koʻrinadi.
+/// Eski yozuvda shifokor yoʻq (`null`)
+async function withDoctorNames<T extends { doctorId: string | null }>(
+  tx: ClinicTx,
+  rows: T[],
+): Promise<(T & { doctorName: string | null })[]> {
+  const ids = [...new Set(rows.map((row) => row.doctorId).filter((id): id is string => !!id))]
+  const names = await auth.staffNamesTx(tx, ids)
+  return rows.map((row) => ({
+    ...row,
+    doctorName: row.doctorId ? (names.get(row.doctorId) ?? null) : null,
+  }))
+}
+
 export function listVisits(deps: VisitDeps, clinicId: string, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, patientId)
-    return repo.listVisits(tx, patientId)
+    return withDoctorNames(tx, await repo.listVisits(tx, patientId))
   })
 }
 
@@ -94,9 +117,14 @@ export function createVisit(
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, input.patientId)
+    // Sukut — yozayotgan odamning oʻzi: u `visits.write` bilan kirgan,
+    // demak shifokorlar roʻyxatida bor
+    const doctorId = input.doctorId ?? userId
+    await assertDoctor(tx, doctorId)
 
     const visit = await repo.createVisit(tx, id, {
       patientId: input.patientId,
+      doctorId,
       date: toDate(input.date),
       treatment: input.treatment,
       tooth: input.tooth ?? null,
@@ -109,9 +137,10 @@ export function createVisit(
       action: AUDIT_ACTION.visit_created,
       entity: 'visit',
       entityId: id,
-      meta: { patientId: input.patientId },
+      meta: { patientId: input.patientId, doctorId },
     })
-    return visit
+    const [row] = await withDoctorNames(tx, [visit])
+    return row
   })
 }
 
@@ -123,8 +152,10 @@ export function updateVisit(
   input: VisitUpdateInput,
 ) {
   return withClinic(deps.db, clinicId, async (tx) => {
+    if (input.doctorId !== undefined) await assertDoctor(tx, input.doctorId)
     try {
       const visit = await repo.updateVisit(tx, id, {
+        ...(input.doctorId === undefined ? {} : { doctorId: input.doctorId }),
         ...(input.date === undefined ? {} : { date: toDate(input.date) }),
         ...(input.treatment === undefined ? {} : { treatment: input.treatment }),
         ...(input.tooth === undefined ? {} : { tooth: input.tooth }),
@@ -137,7 +168,8 @@ export function updateVisit(
         entity: 'visit',
         entityId: id,
       })
-      return visit
+      const [row] = await withDoctorNames(tx, [visit])
+      return row
     } catch (error) {
       if (isMissing(error)) throw errors.notFound(VISIT_TEXT.not_found)
       throw error

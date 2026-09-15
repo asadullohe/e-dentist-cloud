@@ -24,6 +24,11 @@ const toothNumber = z.coerce
 
 export const visitCreateSchema = z.object({
   patientId: z.string().uuid(),
+  /// Berilmasa — yozayotgan odamning oʻzi (u `visits.write` bilan kirgan)
+  doctorId: z
+    .string()
+    .uuid({ error: () => VISIT_TEXT.doctor_invalid })
+    .optional(),
   date: visitDate,
   treatment: z
     .string()

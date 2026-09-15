@@ -476,6 +476,19 @@ export async function listDoctorsTx(tx: ClinicTx): Promise<{ id: string; fullNam
     .map((person) => ({ id: person.id, fullName: person.fullName ?? '' }))
 }
 
+/// Tashrif formasidagi «Shifokor» tanlovi uchun
+export function listDoctors(deps: AuthDeps, clinicId: string) {
+  return withClinic(deps.db, clinicId, (tx) => listDoctorsTx(tx))
+}
+
+/// Boshqa modullar uchun (visits): shu odam tashrifga shifokor boʻla oladimi —
+/// faol va roli `visits.write` beradi. Begona klinika xodimi bu yerda
+/// topilmaydi: `listStaff` ijarachi kengaytmasi ostida
+export async function isDoctorTx(tx: ClinicTx, userId: string): Promise<boolean> {
+  const doctors = await listDoctorsTx(tx)
+  return doctors.some((doctor) => doctor.id === userId)
+}
+
 /// Faqat ism va id. Naryadga texnik tayinlash uchun `lab.write` boriga
 /// ochiq — toʻliq roʻyxatda pochta, holat va oxirgi kirish bor, ular
 /// `staff.manage` ishi
