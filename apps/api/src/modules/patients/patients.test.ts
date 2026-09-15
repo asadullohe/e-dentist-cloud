@@ -109,7 +109,22 @@ describe('qidiruv', () => {
     const both = await get(`/api/patients?fio=manzilli&address=${encodeURIComponent('Samarqand')}`)
     expect(both.json().data.items).toHaveLength(0)
 
+    // Yosh oraligʻi: 1990 da tugʻilgan «Sanali Bemor» — 30–40 orasida (2026),
+    // sanasi yoʻq bemorlar hech qaysi oraliqqa tushmaydi
+    await post('/api/patients', { fio: 'Bolakay Bemor', birthDate: '2020-01-15' })
+    const adults = await get('/api/patients?ageFrom=30&ageTo=40')
+    const adultNames = adults.json().data.items.map((p: { fio: string }) => p.fio)
+    expect(adultNames).toEqual(['Sanali Bemor'])
+    const kids = await get('/api/patients?ageTo=10')
+    expect(kids.json().data.items.map((p: { fio: string }) => p.fio)).toEqual(['Bolakay Bemor'])
+    const kid = kids.json().data.items[0]
+
     // Keyingi testlar bemorlar sonini sanaydi — oʻzimiz qoʻshganini olib tashlaymiz
+    await h.app.inject({
+      method: 'DELETE',
+      url: `/api/patients/${kid.id}`,
+      headers: { cookie: h.cookie },
+    })
     await h.app.inject({
       method: 'DELETE',
       url: `/api/patients/${created.json().data.id}`,

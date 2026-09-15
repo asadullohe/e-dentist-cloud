@@ -70,11 +70,16 @@ export function Patients() {
   // thead dagi ustun filtrlari — server sahifalagani uchun soʻrovga ketadi
   const filterOf = (id: string) =>
     columnFilters.find((f) => f.id === id)?.value as string | undefined
+  const ageRange = columnFilters.find((f) => f.id === 'birthDate')?.value as
+    | [number | undefined, number | undefined]
+    | undefined
   const { data, isPending } = usePatients({
     q: debouncedSearch || undefined,
     fio: filterOf('fio'),
     phone: filterOf('phone'),
     address: filterOf('address'),
+    ageFrom: ageRange?.[0],
+    ageTo: ageRange?.[1],
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
     sort: (sort?.id as PatientSort | undefined) ?? 'fio',

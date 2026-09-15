@@ -49,7 +49,12 @@ export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient
     },
     {
       accessorKey: 'birthDate',
-      meta: { title: PATIENT_UI.col_age, className: 'hidden md:table-cell' } satisfies ColumnMeta,
+      meta: {
+        title: PATIENT_UI.col_age,
+        className: 'hidden w-44 md:table-cell',
+        // Yosh oraligʻi — Patients.tsx uni serverga ageFrom/ageTo qilib uzatadi
+        filter: { type: 'range' },
+      } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={PATIENT_UI.col_age} />,
       cell: ({ row }) => {
         const birth = row.original.birthDate

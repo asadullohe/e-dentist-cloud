@@ -46,6 +46,9 @@ export const patientListSchema = z.object({
   fio: z.string().trim().max(100).optional(),
   phone: z.string().trim().max(30).optional(),
   address: z.string().trim().max(100).optional(),
+  // Yosh oraligʻi (toʻliq yil) — tugʻilgan sana chegaralariga aylanadi
+  ageFrom: z.coerce.number().int().min(0).max(150).optional(),
+  ageTo: z.coerce.number().int().min(0).max(150).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   sort: z.enum(PATIENT_SORT).default('fio'),

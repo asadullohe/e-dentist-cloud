@@ -12,6 +12,10 @@ import type { FacetOption } from './faceted-filter'
 export type ColumnFilterMeta =
   | { type: 'text'; placeholder?: string }
   | { type: 'select'; options: readonly FacetOption[] }
+  /// Son oraligʻi: qiymat `[dan, gacha]` — TanStack `inNumberRange` bilan mos
+  | { type: 'range' }
+
+type Range = [number | undefined, number | undefined]
 
 /// Roʻyxatda «hammasi» qiymati: Radix Select boʻsh satrni qabul qilmaydi
 const ALL = '__all__'
@@ -36,7 +40,7 @@ function TextFilter<TData>({
 
   // Tashqaridan tozalansa (masalan «Tozalash» tugmasi) maydon ham boʻshasin
   useEffect(() => {
-    if (current === '') setValue('')
+    if (current === '') setValue((prev) => (prev === '' ? prev : ''))
   }, [current])
 
   return (
@@ -59,6 +63,65 @@ function TextFilter<TData>({
           <XIcon className="size-3.5" />
         </Button>
       )}
+    </div>
+  )
+}
+
+/// Ikki kichik maydon: «dan» va «gacha». Boʻsh — chegara yoʻq
+function RangeFilter<TData>({ column }: { column: Column<TData> }) {
+  // Massiv emas, ikkita son: filtr boʻsh boʻlganda har renderda yangi
+  // `[undefined, undefined]` chiqib effektni cheksiz aylantirib yubormasin
+  const current = column.getFilterValue() as Range | undefined
+  const from = current?.[0]
+  const to = current?.[1]
+  const [value, setValue] = useState<[string, string]>([
+    from?.toString() ?? '',
+    to?.toString() ?? '',
+  ])
+
+  useEffect(() => {
+    const nextFrom = value[0] === '' ? undefined : Number(value[0])
+    const nextTo = value[1] === '' ? undefined : Number(value[1])
+    if (nextFrom === from && nextTo === to) return
+    const timer = setTimeout(
+      () =>
+        column.setFilterValue(
+          nextFrom === undefined && nextTo === undefined ? undefined : [nextFrom, nextTo],
+        ),
+      300,
+    )
+    return () => clearTimeout(timer)
+  }, [value, from, to, column])
+
+  // Tashqaridan tozalansa maydonlar ham boʻshasin
+  useEffect(() => {
+    if (from === undefined && to === undefined) {
+      setValue((prev) => (prev[0] === '' && prev[1] === '' ? prev : ['', '']))
+    }
+  }, [from, to])
+
+  const field = (index: 0 | 1, placeholder: string) => (
+    <Input
+      type="number"
+      inputMode="numeric"
+      min={0}
+      value={value[index]}
+      onChange={(event) => {
+        const next: [string, string] = [...value]
+        next[index] = event.target.value
+        setValue(next)
+      }}
+      placeholder={placeholder}
+      aria-label={placeholder}
+      className="h-8 px-2 text-xs font-normal"
+    />
+  )
+
+  return (
+    <div className="flex items-center gap-1">
+      {field(0, TABLE_UI.range_from)}
+      <span className="text-muted-foreground text-xs">–</span>
+      {field(1, TABLE_UI.range_to)}
     </div>
   )
 }
@@ -111,6 +174,7 @@ export function DataTableFilterRow<TData>({ table }: { table: TableInstance<TDat
           <TableHead key={column.id} className={className}>
             {meta?.type === 'text' && <TextFilter column={column} placeholder={meta.placeholder} />}
             {meta?.type === 'select' && <SelectFilter column={column} options={meta.options} />}
+            {meta?.type === 'range' && <RangeFilter column={column} />}
           </TableHead>
         )
       })}

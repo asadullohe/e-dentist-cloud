@@ -24,6 +24,9 @@ export interface PatientQuery {
   fio?: string
   phone?: string
   address?: string
+  /// Yosh oraligʻi (toʻliq yil)
+  ageFrom?: number
+  ageTo?: number
   page?: number
   pageSize?: number
   sort?: PatientSort

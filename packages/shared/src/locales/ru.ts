@@ -848,6 +848,8 @@ export const ru: DeepPartial<Strings> = {
     filter_search: 'Поиск…',
     filter_clear: 'Сбросить фильтр',
     filter_all: 'Все',
+    range_from: 'от',
+    range_to: 'до',
     selected: (n: number) => `Выбрано: ${n}`,
   },
 

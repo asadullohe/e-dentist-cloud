@@ -1,7 +1,7 @@
 // patients moduli `patients` jadvaliga egalik qiladi.
 // clinicId ni kengaytma oʻzi qoʻyadi — bu yerda hech qayerda yozilmaydi.
 
-import { phoneDigits, searchKey } from '@e-dentist/shared'
+import { phoneDigits, searchKey, todayISO } from '@e-dentist/shared'
 import type { Prisma } from '../../../generated/prisma/client.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
@@ -35,9 +35,25 @@ function searchWhere(query: string | undefined): Prisma.PatientWhereInput {
   return { OR: or }
 }
 
+/// Bugundan N yil oldingi sana (UTC yarim tun — DATE ustuni bilan bir xil)
+function yearsAgo(years: number): Date {
+  const [y, m, d] = todayISO().split('-').map(Number) as [number, number, number]
+  return new Date(Date.UTC(y - years, m - 1, d))
+}
+
 /// Ustun filtrlari: har biri oʻz ustunida, umumiy qidiruv bilan AND
-function columnWhere(input: { fio?: string; phone?: string; address?: string }) {
+function columnWhere(input: {
+  fio?: string
+  phone?: string
+  address?: string
+  ageFrom?: number
+  ageTo?: number
+}) {
   const and: Prisma.PatientWhereInput[] = []
+  // Yosh ≥ N: tugʻilgan sana N yil oldingi kundan kech emas.
+  // Yosh ≤ M: (M+1) yil oldingi kundan keyin tugʻilgan
+  if (input.ageFrom !== undefined) and.push({ birthDate: { lte: yearsAgo(input.ageFrom) } })
+  if (input.ageTo !== undefined) and.push({ birthDate: { gt: yearsAgo(input.ageTo + 1) } })
   if (input.fio?.trim()) and.push({ fioSearch: { contains: searchKey(input.fio) } })
   if (input.phone?.trim()) {
     const digits = phoneDigits(input.phone)
@@ -57,6 +73,8 @@ export async function list(
     fio?: string
     phone?: string
     address?: string
+    ageFrom?: number
+    ageTo?: number
     page: number
     pageSize: number
     sort: 'fio' | 'birthDate' | 'createdAt'

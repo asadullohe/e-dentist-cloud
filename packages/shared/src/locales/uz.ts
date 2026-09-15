@@ -895,6 +895,8 @@ export const TABLE_UI = {
   filter_search: 'Qidirish…',
   filter_clear: 'Filtrni tozalash',
   filter_all: 'Hammasi',
+  range_from: 'dan',
+  range_to: 'gacha',
   selected: (n: number) => `${n} ta tanlangan`,
 } as const
 
