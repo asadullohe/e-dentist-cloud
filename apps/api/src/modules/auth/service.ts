@@ -304,6 +304,9 @@ export async function acceptInvite(
         email: invite.email,
         passwordHash,
         fullName: input.fullName,
+        // Ish haqi shartini egasi keyin Sozlamalarda belgilaydi
+        salaryAmount: 0,
+        payPercent: 0,
       })
       await repo.markInviteAccepted(tx, invite.id)
       await writeAudit(tx, {
@@ -445,7 +448,21 @@ export interface StaffMember {
   roleId: string | null
   roleName: string | null
   status: 'active' | 'disabled'
+  /// Ish haqi sharti: oylik (soʻm) va ish narxidan foiz (tz.md 15-boʻlim)
+  salaryAmount: number
+  payPercent: number
   lastLoginAt: Date | null
+}
+
+/// Xodimning ish haqi sharti. Boshqa modullar uchun (visits — tashrifga
+/// foizni yozadi, payroll — oylikni qoʻshadi). Topilmasa nol — begona
+/// klinika xodimi ijarachi kengaytmasi ostida topilmaydi
+export async function payTermsTx(
+  tx: ClinicTx,
+  userId: string,
+): Promise<{ salaryAmount: number; payPercent: number }> {
+  const row = await repo.findStaff(tx, userId)
+  return { salaryAmount: row?.salaryAmount ?? 0, payPercent: row?.payPercent ?? 0 }
 }
 
 /// Boshqa modullar uchun (lab): xodim ismlari. Ochiq tranzaksiya ichida
@@ -513,6 +530,8 @@ export function listStaff(deps: AuthDeps, clinicId: string): Promise<StaffMember
       roleId: person.roleId,
       roleName: person.roleId ? (roleName.get(person.roleId) ?? null) : null,
       status: person.status,
+      salaryAmount: person.salaryAmount,
+      payPercent: person.payPercent,
       lastLoginAt: person.lastLoginAt,
     }))
   })
@@ -544,6 +563,8 @@ export function createStaff(
         email: input.email,
         passwordHash,
         fullName: input.fullName,
+        salaryAmount: input.salaryAmount,
+        payPercent: input.payPercent,
       })
     } catch (error) {
       // users.email butun bazada yagona
@@ -566,6 +587,8 @@ export function createStaff(
       roleId: created.roleId,
       roleName: role.name,
       status: created.status,
+      salaryAmount: created.salaryAmount,
+      payPercent: created.payPercent,
       lastLoginAt: created.lastLoginAt,
     }
   })
@@ -601,8 +624,9 @@ export function changePassword(
   })
 }
 
-/// Rol yoki holatni oʻzgartirish. Uchta himoya (tz.md 6-boʻlim):
-///   1. oʻzini oʻzgartira olmaydi
+/// Rol, holat yoki ish haqi shartini oʻzgartirish. Uchta himoya (tz.md 6-boʻlim):
+///   1. oʻz rolini va holatini oʻzgartira olmaydi (ish haqi shartini — mumkin:
+///      egasi oʻzi ham shifokor boʻlib foizga ishlashi mumkin)
 ///   2. oxirgi faol egasi qolishi shart
 ///   3. rol shu klinikaniki boʻlishi kerak — buni ijarachi qatlami ushlaydi
 export function updateStaff(
@@ -612,7 +636,8 @@ export function updateStaff(
   targetId: string,
   input: StaffUpdateInput,
 ) {
-  if (actorId === targetId) throw errors.badRequest(STAFF_TEXT.self_change)
+  const touchesAccess = input.roleId !== undefined || input.status !== undefined
+  if (actorId === targetId && touchesAccess) throw errors.badRequest(STAFF_TEXT.self_change)
 
   return withClinic(deps.db, clinicId, async (tx) => {
     const target = await repo.findStaff(tx, targetId)
@@ -638,6 +663,8 @@ export function updateStaff(
     const updated = await repo.updateStaff(tx, targetId, {
       ...(input.roleId === undefined ? {} : { roleId: input.roleId }),
       ...(input.status === undefined ? {} : { status: input.status }),
+      ...(input.salaryAmount === undefined ? {} : { salaryAmount: input.salaryAmount }),
+      ...(input.payPercent === undefined ? {} : { payPercent: input.payPercent }),
     })
     await writeAudit(tx, {
       userId: actorId,

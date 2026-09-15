@@ -438,6 +438,8 @@ export const STAFF_TEXT = {
   name_required: 'Ism-familiyani yozing',
   password_wrong: 'Joriy parol notoʻgʻri',
   password_same: 'Yangi parol eskisidan farq qilishi kerak',
+  salary_negative: 'Oylik manfiy boʻlishi mumkin emas',
+  percent_range: 'Foiz 0 dan 100 gacha boʻlishi kerak',
 } as const
 
 // Sozlamalar → Xodimlar va Rollar
@@ -466,6 +468,15 @@ export const STAFF_UI = {
   save_role: 'Saqlash',
   role_saved: 'Rol yangilandi',
   owner_locked: 'Egasi bu ruxsatlarni yoʻqota olmaydi',
+  // Ish haqi sharti (tz.md 15-boʻlim)
+  pay: 'Ish haqi',
+  pay_title: (name: string) => `Ish haqi sharti — ${name}`,
+  pay_hint:
+    'Oylik har oy qoʻshiladi. Foiz — shifokor qilgan ish narxidan ulushi. Ikkalasi birga boʻlishi mumkin.',
+  salary: 'Oylik (soʻm)',
+  percent: 'Foiz (%)',
+  pay_none: 'Belgilanmagan',
+  pay_optional_hint: 'Keyin ham oʻzgartirish mumkin',
   // Oʻz parolini almashtirish
   change_password: 'Parolni almashtirish',
   current_password: 'Joriy parol',

@@ -425,6 +425,8 @@ export const ru: DeepPartial<Strings> = {
     name_required: 'Напишите имя и фамилию',
     password_wrong: 'Текущий пароль неверный',
     password_same: 'Новый пароль должен отличаться от старого',
+    salary_negative: 'Оклад не может быть отрицательным',
+    percent_range: 'Процент должен быть от 0 до 100',
   },
 
   STAFF_UI: {
@@ -456,6 +458,14 @@ export const ru: DeepPartial<Strings> = {
     current_password: 'Текущий пароль',
     new_password: 'Новый пароль',
     password_changed: 'Пароль изменён',
+    pay: 'Оплата',
+    pay_title: (name: string) => `Условия оплаты — ${name}`,
+    pay_hint:
+      'Оклад начисляется каждый месяц. Процент — доля врача от стоимости выполненной работы. Можно указать оба.',
+    salary: 'Оклад (сум)',
+    percent: 'Процент (%)',
+    pay_none: 'Не задано',
+    pay_optional_hint: 'Можно изменить позже',
   },
 
   PERMISSION_LABELS: {

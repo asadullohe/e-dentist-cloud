@@ -1,4 +1,13 @@
-import { AUTH_TEXT, CARD_UI, roleLabel, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
+import {
+  AUTH_TEXT,
+  CARD_UI,
+  formatMoney,
+  moneyDigits,
+  roleLabel,
+  STAFF_TEXT,
+  STAFF_UI,
+  UI_TEXT,
+} from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -43,9 +52,26 @@ const schema = z.object({
     .string()
     .min(8, { error: () => AUTH_TEXT.password_too_short })
     .max(200),
+  // Ish haqi sharti — ixtiyoriy, maskalangan matn (tz.md 15-boʻlim)
+  salaryAmount: z.string().trim(),
+  payPercent: z
+    .string()
+    .trim()
+    .refine((value) => value === '' || (Number(value) >= 0 && Number(value) <= 100), {
+      error: () => STAFF_TEXT.percent_range,
+    }),
 })
 
 type Values = z.infer<typeof schema>
+
+const EMPTY: Values = {
+  email: '',
+  fullName: '',
+  roleId: '',
+  password: '',
+  salaryAmount: '',
+  payPercent: '',
+}
 
 interface StaffDialogProps {
   open: boolean
@@ -61,12 +87,12 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', fullName: '', roleId: '', password: '' },
+    defaultValues: EMPTY,
   })
 
   useEffect(() => {
     if (open) {
-      form.reset({ email: '', fullName: '', roleId: '', password: '' })
+      form.reset(EMPTY)
       setFormError('')
     }
   }, [open, form])
@@ -74,7 +100,14 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
   async function onSubmit(values: Values) {
     setFormError('')
     try {
-      await mutateAsync(values)
+      await mutateAsync({
+        email: values.email,
+        fullName: values.fullName,
+        roleId: values.roleId,
+        password: values.password,
+        salaryAmount: Number(moneyDigits(values.salaryAmount) || 0),
+        payPercent: Number(values.payPercent || 0),
+      })
       onOpenChange(false)
     } catch (error) {
       setFormError(applyServerErrors(form, error))
@@ -154,6 +187,48 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="salaryAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{STAFF_UI.salary}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        placeholder="0"
+                        {...field}
+                        onChange={(event) => field.onChange(formatMoney(event.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="payPercent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{STAFF_UI.percent}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        placeholder="0"
+                        {...field}
+                        onChange={(event) =>
+                          field.onChange(event.target.value.replace(/\D/g, '').slice(0, 3))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormDescription>{STAFF_UI.pay_optional_hint}</FormDescription>
 
             {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
 

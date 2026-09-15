@@ -131,6 +131,8 @@ const STAFF_SELECT = {
   fullName: true,
   roleId: true,
   status: true,
+  salaryAmount: true,
+  payPercent: true,
   lastLoginAt: true,
   createdAt: true,
 }
@@ -150,7 +152,12 @@ export function findStaff(tx: ClinicTx, userId: string) {
 export function updateStaff(
   tx: ClinicTx,
   userId: string,
-  data: { roleId?: string; status?: 'active' | 'disabled' },
+  data: {
+    roleId?: string
+    status?: 'active' | 'disabled'
+    salaryAmount?: number
+    payPercent?: number
+  },
 ) {
   return tx.user.update({ where: { id: userId }, data, select: STAFF_SELECT })
 }
@@ -167,6 +174,8 @@ export interface NewStaff {
   email: string
   passwordHash: string
   fullName: string
+  salaryAmount: number
+  payPercent: number
 }
 
 /// Egasi ochgan hisob darhol faol: pochta tasdigʻi klinikaning oʻzi
@@ -179,6 +188,8 @@ export function createStaff(tx: ClinicTx, m: NewStaff) {
       email: m.email,
       passwordHash: m.passwordHash,
       fullName: m.fullName,
+      salaryAmount: m.salaryAmount,
+      payPercent: m.payPercent,
       emailVerifiedAt: new Date(),
     }),
     select: STAFF_SELECT,

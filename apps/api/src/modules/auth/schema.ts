@@ -48,6 +48,17 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 })
 
+/// Ish haqi sharti — ikkalasi ixtiyoriy, sukut 0 (tz.md 15-boʻlim)
+const salaryAmount = z.coerce
+  .number()
+  .int()
+  .min(0, { error: () => STAFF_TEXT.salary_negative })
+const payPercent = z.coerce
+  .number()
+  .int()
+  .min(0, { error: () => STAFF_TEXT.percent_range })
+  .max(100, { error: () => STAFF_TEXT.percent_range })
+
 export const staffCreateSchema = z.object({
   email,
   fullName: z
@@ -58,6 +69,8 @@ export const staffCreateSchema = z.object({
   roleId: z.string().uuid({ error: () => STAFF_TEXT.role_required }),
   // Parolni egasi belgilaydi va xodimga aytadi; xodim keyin oʻzgartiradi
   password,
+  salaryAmount: salaryAmount.default(0),
+  payPercent: payPercent.default(0),
 })
 
 export const staffUpdateSchema = z.object({
@@ -66,6 +79,8 @@ export const staffUpdateSchema = z.object({
     .uuid({ error: () => STAFF_TEXT.role_not_found })
     .optional(),
   status: z.enum(['active', 'disabled']).optional(),
+  salaryAmount: salaryAmount.optional(),
+  payPercent: payPercent.optional(),
 })
 
 /// Taklifnomani qabul qilish: kalit havoladan, ism va parol odamdan

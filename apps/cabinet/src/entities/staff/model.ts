@@ -9,6 +9,9 @@ export interface StaffMember {
   roleId: string | null
   roleName: string | null
   status: StaffStatus
+  /// Ish haqi sharti: oylik (soʻm) va ish narxidan foiz
+  salaryAmount: number
+  payPercent: number
   lastLoginAt: string | null
 }
 

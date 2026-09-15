@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 9.2 — xodimda ish haqi sharti
+**Hozirgi task:** 9.3 — ulush snapshoti
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1088,7 +1088,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       faqat faol va `visits.write` li xodim; `GET /staff/doctors`; tashrif
       formasida «Shifokor» tanlovi (sukut — oʻzi); jadvalda ustun; eksportda
       ustun. Eski yozuvlar `null`. Testlar: sukut, begona klinika xodimi rad
-- [ ] **9.2 Xodimda ish haqi sharti** — `users.salary_amount`, `users.pay_percent`
+- [x] **9.2 Xodimda ish haqi sharti** — `users.salary_amount`, `users.pay_percent`
       (CHECK 0..100); `PATCH /staff/:id` da ikkalasi (oʻzinikini ham
       oʻzgartira oladi — rol/holat cheklovi bunga tegmaydi); Sozlamalar →
       Xodimlar da «Ish haqi» ustuni va tahrirlash oynasi; yangi xodim

@@ -124,6 +124,11 @@ model User {
   emailVerifyTokenHash  String?   @unique @map("email_verify_token_hash")
   emailVerifyExpiresAt  DateTime? @map("email_verify_expires_at") @db.Timestamptz(3)
   lastLoginAt     DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  /// Ish haqi sharti (tz.md 15-boʻlim): oylik (soʻm) va qilingan ish
+  /// narxidan foiz. Ikkalasi birga boʻlishi mumkin — «baza + foiz».
+  /// Enum emas: uch holat ham ikki son bilan yopiladi
+  salaryAmount    Int        @default(0) @map("salary_amount")
+  payPercent      Int        @default(0) @map("pay_percent")
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
