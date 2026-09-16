@@ -15,11 +15,14 @@ import {
 interface Actions {
   onEdit: (payment: Payment) => void
   onRemove: (payment: Payment) => void
+  /// `payments.write` boʻlmasa amallar ustuni chiqmaydi — server baribir rad
+  /// etadi, lekin tugma koʻrinib turishi chalgʻitadi
+  canEdit: boolean
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
-export function paymentColumns({ onEdit, onRemove }: Actions): ColumnDef<Payment>[] {
-  return [
+export function paymentColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<Payment>[] {
+  const columns: ColumnDef<Payment>[] = [
     {
       accessorKey: 'date',
       meta: { title: PAYMENT_UI.date, className: 'w-28' } satisfies ColumnMeta,
@@ -80,4 +83,5 @@ export function paymentColumns({ onEdit, onRemove }: Actions): ColumnDef<Payment
       ),
     },
   ]
+  return canEdit ? columns : columns.filter((column) => column.id !== 'actions')
 }

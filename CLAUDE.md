@@ -34,6 +34,13 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 - **Texnik** (protez ustasi) klinika xodimi, oʻz hisobi bilan kiradi, faqat oʻz
   naryadlarini koʻradi. Holatlar: berildi → tayyor → topshirildi + «qaytarildi»
 - **QR navbat** 1-versiyada: ochiq sahifa, kutish xonasi ekrani, SSE
+- **Ish haqi** _(qaror 15/09/2026, tz.md 15-boʻlim)_: xodimda ikki son —
+  `salary_amount` (oylik) va `pay_percent` (foiz), enum emas. Foiz **qilingan
+  ish narxidan** (`visits.price`), tushgan puldan emas; xodimga **bitta foiz**.
+  Tashrifda `doctor_id` + `doctor_percent`/`doctor_share` **snapshot**; oyga
+  «Qayta hisoblash» amali bor. Shifokor **oʻz** hisobini va ishlarini koʻradi
+  (`payroll.own`). Toʻlab berish → `expenses(salary)` + `staff_payouts`
+  bogʻlanishi; summa faqat xarajatda
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar

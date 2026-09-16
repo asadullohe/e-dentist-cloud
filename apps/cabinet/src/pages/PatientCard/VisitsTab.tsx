@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table'
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useHasPermission } from '@/entities/session'
 import { useVisits, type Visit } from '@/entities/visit'
 import { useDeleteVisit, VisitFormDialog } from '@/features/visit-form'
 import {
@@ -33,6 +34,8 @@ export function VisitsTab({ patientId }: { patientId: string }) {
   // Bitta bemorning tashriflari toʻliq keladi — saralash va sahifalash mijozda
   const { data: visits, isPending } = useVisits(patientId)
   const { mutateAsync: removeVisit } = useDeleteVisit()
+  const hasPermission = useHasPermission()
+  const canWrite = hasPermission('visits.write')
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Visit | undefined>(undefined)
   const [deleting, setDeleting] = useState<Visit | null>(null)
@@ -50,6 +53,7 @@ export function VisitsTab({ patientId }: { patientId: string }) {
         setFormOpen(true)
       },
       onRemove: setDeleting,
+      canEdit: canWrite,
     }),
     state: { sorting, columnVisibility, columnFilters, pagination },
     onSortingChange: setSorting,
@@ -71,16 +75,19 @@ export function VisitsTab({ patientId }: { patientId: string }) {
         <div className="text-muted-foreground text-sm">
           {CARD_UI.total}: <span className="text-foreground font-semibold">{formatSom(total)}</span>
         </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditing(undefined)
-            setFormOpen(true)
-          }}
-        >
-          <PlusIcon />
-          {CARD_UI.add_visit}
-        </Button>
+        {/* Qabulxona koʻradi, lekin yozmaydi */}
+        {canWrite && (
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditing(undefined)
+              setFormOpen(true)
+            }}
+          >
+            <PlusIcon />
+            {CARD_UI.add_visit}
+          </Button>
+        )}
       </div>
 
       <DataTable table={table} loading={isPending && !visits} emptyText={CARD_UI.no_visits} />

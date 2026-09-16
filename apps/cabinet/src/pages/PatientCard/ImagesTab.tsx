@@ -2,6 +2,7 @@ import { CARD_UI, IMAGE_UI } from '@e-dentist/shared'
 import { ImageIcon, ImagePlusIcon, Trash2Icon } from 'lucide-react'
 import { type ChangeEvent, useRef, useState } from 'react'
 import { type PatientImage, useImages } from '@/entities/patient-image'
+import { useHasPermission } from '@/entities/session'
 import { useDeleteImage, useUploadImage } from '@/features/image-upload'
 import { ApiError } from '@/shared/api'
 import {
@@ -28,6 +29,9 @@ export function ImagesTab({ patientId }: { patientId: string }) {
   const { data: images, isPending } = useImages(patientId)
   const { mutateAsync: upload, isPending: isUploading } = useUploadImage(patientId)
   const { mutateAsync: remove } = useDeleteImage(patientId)
+  const hasPermission = useHasPermission()
+  // Rasm yuklash va oʻchirish — bemor yozuvini oʻzgartirish (patients.write)
+  const canWrite = hasPermission('patients.write')
 
   const fileInput = useRef<HTMLInputElement>(null)
   const [caption, setCaption] = useState('')
@@ -52,25 +56,27 @@ export function ImagesTab({ patientId }: { patientId: string }) {
 
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Input
-          value={caption}
-          onChange={(event) => setCaption(event.target.value)}
-          placeholder={IMAGE_UI.caption_placeholder}
-          className="max-w-xs"
-        />
-        <Button size="sm" disabled={isUploading} onClick={() => fileInput.current?.click()}>
-          <ImagePlusIcon />
-          {isUploading ? IMAGE_UI.uploading : IMAGE_UI.upload}
-        </Button>
-        <input
-          ref={fileInput}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          hidden
-          onChange={pickFile}
-        />
-      </div>
+      {canWrite && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Input
+            value={caption}
+            onChange={(event) => setCaption(event.target.value)}
+            placeholder={IMAGE_UI.caption_placeholder}
+            className="max-w-xs"
+          />
+          <Button size="sm" disabled={isUploading} onClick={() => fileInput.current?.click()}>
+            <ImagePlusIcon />
+            {isUploading ? IMAGE_UI.uploading : IMAGE_UI.upload}
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            onChange={pickFile}
+          />
+        </div>
+      )}
 
       {error && <p className="text-destructive mb-3 text-sm font-medium">{error}</p>}
 
@@ -101,14 +107,16 @@ export function ImagesTab({ patientId }: { patientId: string }) {
                   {image.caption}
                 </div>
               )}
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute top-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-                onClick={() => setDeleting(image)}
-              >
-                <Trash2Icon />
-              </Button>
+              {canWrite && (
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-1.5 right-1.5 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                  onClick={() => setDeleting(image)}
+                >
+                  <Trash2Icon />
+                </Button>
+              )}
             </Card>
           ))}
         </div>

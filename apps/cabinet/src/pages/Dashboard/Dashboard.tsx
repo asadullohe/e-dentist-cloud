@@ -245,8 +245,9 @@ export function Dashboard() {
   const today = todayISO()
   const month = today.slice(0, 7)
 
-  const canSchedule = hasPermission('schedule.write')
   const canPatients = hasPermission('patients.read')
+  // Qabullar roʻyxati serverda `patients.read` bilan ochiladi — ikkalasi kerak
+  const canSchedule = hasPermission('schedule.write') && canPatients
   const canReports = hasPermission('reports.read')
   const canPayments = hasPermission('payments.read')
 

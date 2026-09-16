@@ -15,11 +15,14 @@ import {
 interface Actions {
   onEdit: (visit: Visit) => void
   onRemove: (visit: Visit) => void
+  /// `visits.write` boʻlmasa amallar ustuni chiqmaydi — server baribir rad
+  /// etadi, lekin tugma koʻrinib turishi chalgʻitadi
+  canEdit: boolean
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
-export function visitColumns({ onEdit, onRemove }: Actions): ColumnDef<Visit>[] {
-  return [
+export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<Visit>[] {
+  const columns: ColumnDef<Visit>[] = [
     {
       accessorKey: 'date',
       meta: { title: CARD_UI.date, className: 'w-28' } satisfies ColumnMeta,
@@ -42,6 +45,17 @@ export function visitColumns({ onEdit, onRemove }: Actions): ColumnDef<Visit>[] 
             <div className="text-muted-foreground text-xs">{row.original.note}</div>
           )}
         </div>
+      ),
+    },
+    {
+      accessorKey: 'doctorName',
+      meta: { title: CARD_UI.doctor, className: 'hidden w-40 md:table-cell' } satisfies ColumnMeta,
+      header: CARD_UI.doctor,
+      enableSorting: false,
+      cell: ({ row }) => (
+        <span className={row.original.doctorName ? '' : 'text-muted-foreground'}>
+          {row.original.doctorName ?? CARD_UI.doctor_unknown}
+        </span>
       ),
     },
     {
@@ -92,4 +106,5 @@ export function visitColumns({ onEdit, onRemove }: Actions): ColumnDef<Visit>[] 
       ),
     },
   ]
+  return canEdit ? columns : columns.filter((column) => column.id !== 'actions')
 }

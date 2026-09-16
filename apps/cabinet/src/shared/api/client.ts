@@ -92,10 +92,16 @@ export async function downloadFile(path: string): Promise<void> {
     throw new ApiError('internal', ERROR_TEXT.internal)
   }
 
-  // Fayl nomi serverdan keladi — u oʻzbekcha va sanali
+  // Fayl nomi serverdan keladi — u oʻzbekcha va sanali. Ikkala shakl ham
+  // oʻqiladi: `filename*=UTF-8''…` (bizniki) va oddiy `filename="…"`.
+  // Topilmasa kengaytma javob turidan — zip ni .xlsx deb saqlab qoʻymaslik uchun
   const disposition = response.headers.get('content-disposition') ?? ''
   const encoded = /filename\*=UTF-8''([^;]+)/.exec(disposition)?.[1]
-  const filename = encoded ? decodeURIComponent(encoded) : 'export.xlsx'
+  const plain = /filename="([^"]+)"/.exec(disposition)?.[1]
+  const isZip = (response.headers.get('content-type') ?? '').includes('zip')
+  const filename = encoded
+    ? decodeURIComponent(encoded)
+    : (plain ?? (isZip ? 'export.zip' : 'export.xlsx'))
 
   const url = URL.createObjectURL(await response.blob())
   const link = document.createElement('a')

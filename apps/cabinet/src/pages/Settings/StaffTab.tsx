@@ -1,9 +1,9 @@
-import { formatDateTime, roleLabel, STAFF_UI } from '@e-dentist/shared'
-import { PlusIcon, UserCheckIcon, UserXIcon } from 'lucide-react'
+import { formatDateTime, formatPayTerms, roleLabel, STAFF_UI } from '@e-dentist/shared'
+import { PencilIcon, PlusIcon, UserCheckIcon, UserXIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useSession } from '@/entities/session'
-import { useRoles, useStaff } from '@/entities/staff'
-import { StaffDialog, useUpdateStaff } from '@/features/staff-manage'
+import { type StaffMember, useRoles, useStaff } from '@/entities/staff'
+import { PayTermsDialog, StaffDialog, useUpdateStaff } from '@/features/staff-manage'
 import {
   Badge,
   Button,
@@ -29,6 +29,7 @@ export function StaffTab() {
   const { mutateAsync: update } = useUpdateStaff()
 
   const [addOpen, setAddOpen] = useState(false)
+  const [payFor, setPayFor] = useState<StaffMember | null>(null)
   const [error, setError] = useState('')
 
   async function change(id: string, payload: { roleId?: string; status?: 'active' | 'disabled' }) {
@@ -58,9 +59,10 @@ export function StaffTab() {
           <TableHeader>
             <TableRow>
               <TableHead>{STAFF_UI.name}</TableHead>
-              <TableHead className="hidden w-56 lg:table-cell">{STAFF_UI.last_login}</TableHead>
+              <TableHead className="hidden w-48 xl:table-cell">{STAFF_UI.last_login}</TableHead>
               <TableHead className="w-44">{STAFF_UI.role}</TableHead>
-              <TableHead className="w-14 text-right sm:w-40">{STAFF_UI.status}</TableHead>
+              <TableHead className="hidden w-44 sm:table-cell">{STAFF_UI.pay}</TableHead>
+              <TableHead className="w-14 text-right xl:w-40">{STAFF_UI.status}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -77,7 +79,7 @@ export function StaffTab() {
                     )}
                     <span className="text-muted-foreground block text-xs">{person.email}</span>
                   </TableCell>
-                  <TableCell className="text-muted-foreground hidden lg:table-cell">
+                  <TableCell className="text-muted-foreground hidden xl:table-cell">
                     {person.lastLoginAt ? formatDateTime(person.lastLoginAt) : STAFF_UI.never}
                   </TableCell>
                   <TableCell>
@@ -98,6 +100,25 @@ export function StaffTab() {
                       </SelectContent>
                     </Select>
                   </TableCell>
+                  <TableCell className="hidden sm:table-cell">
+                    {/* Ish haqi sharti: oylik va/yoki foiz. Oʻzinikini ham
+                        oʻzgartira oladi — egasi shifokor boʻlishi mumkin */}
+                    <button
+                      type="button"
+                      className="hover:bg-muted -mx-2 flex items-center gap-2 rounded-md px-2 py-1 text-left"
+                      aria-label={STAFF_UI.pay_title(person.fullName ?? '')}
+                      onClick={() => setPayFor(person)}
+                    >
+                      {formatPayTerms(person.salaryAmount, person.payPercent) ? (
+                        <span className="tabular-nums">
+                          {formatPayTerms(person.salaryAmount, person.payPercent)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">{STAFF_UI.pay_none}</span>
+                      )}
+                      <PencilIcon className="text-muted-foreground size-3.5" aria-hidden="true" />
+                    </button>
+                  </TableCell>
                   <TableCell className="text-right">
                     {/* Tor ekranda faqat belgi qoladi — jadval siljimasin */}
                     {person.status === 'active' ? (
@@ -109,7 +130,7 @@ export function StaffTab() {
                         onClick={() => change(person.id, { status: 'disabled' })}
                       >
                         <UserXIcon />
-                        <span className="hidden sm:inline">{STAFF_UI.disable}</span>
+                        <span className="hidden xl:inline">{STAFF_UI.disable}</span>
                       </Button>
                     ) : (
                       <Button
@@ -119,7 +140,7 @@ export function StaffTab() {
                         onClick={() => change(person.id, { status: 'active' })}
                       >
                         <UserCheckIcon />
-                        <span className="hidden sm:inline">{STAFF_UI.enable}</span>
+                        <span className="hidden xl:inline">{STAFF_UI.enable}</span>
                       </Button>
                     )}
                   </TableCell>
@@ -131,6 +152,11 @@ export function StaffTab() {
       </Card>
 
       <StaffDialog open={addOpen} onOpenChange={setAddOpen} />
+      <PayTermsDialog
+        open={payFor !== null}
+        onOpenChange={(open) => !open && setPayFor(null)}
+        person={payFor}
+      />
     </>
   )
 }

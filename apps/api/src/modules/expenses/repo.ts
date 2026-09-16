@@ -38,6 +38,10 @@ export function remove(tx: ClinicTx, id: string) {
   return tx.expense.delete({ where: { id } })
 }
 
+export function findByIds(tx: ClinicTx, ids: string[]) {
+  return tx.expense.findMany({ where: { id: { in: ids } }, select: SELECT })
+}
+
 /// Kun boʻyicha xarajat. Oyga yigʻish xizmat qatlamida
 export function dailyTotals(tx: ClinicTx, from: Date, to: Date) {
   return tx.expense.groupBy({

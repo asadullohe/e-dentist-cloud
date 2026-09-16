@@ -1,6 +1,6 @@
-import { clinicLogoUrl, roleLabel, UI_TEXT } from '@e-dentist/shared'
+import { clinicLogoUrl, roleLabel, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ChevronRightIcon, LogOutIcon } from 'lucide-react'
+import { ChevronRightIcon, LogOutIcon, UserCogIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
@@ -118,6 +118,12 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
               {session?.user.email}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {/* Parolni almashtirish har xodimga kerak — Sozlamalar menyuda
+                boʻlsa ham, shu yerdan topish osonroq */}
+            <DropdownMenuItem onSelect={() => navigate('/settings')}>
+              <UserCogIcon />
+              {STAFF_UI.account_tab}
+            </DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onSelect={() => void handleLogout()}>
               <LogOutIcon />
               {UI_TEXT.logout}

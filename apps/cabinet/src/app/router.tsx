@@ -1,4 +1,4 @@
-import { UI_TEXT } from '@e-dentist/shared'
+import { type Permission, UI_TEXT } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
@@ -16,6 +16,7 @@ import {
   VisitsSection,
 } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
+import { Payroll } from '@/pages/Payroll'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
 import { QueueScreen } from '@/pages/QueueScreen'
@@ -52,6 +53,17 @@ function RequireAuth() {
   return <Outlet />
 }
 
+/// Marshrut darajasidagi ruxsat: yon menyu boʻlimni yashirsa ham, manzilni
+/// qoʻlda yozib kirib boʻlmasin. Sanab oʻtilganlardan bittasi yetarli.
+/// Haqiqiy himoya serverda — bu sahifa boʻsh/xato koʻrinmasligi uchun
+function RequirePermission({ anyOf }: { anyOf: Permission[] }) {
+  const hasPermission = useHasPermission()
+  if (!anyOf.some((permission) => hasPermission(permission))) {
+    return <Navigate to="/" replace />
+  }
+  return <Outlet />
+}
+
 /// Texnik kirganda boshlangʻich sahifasi — naryadlar, bemorlar roʻyxati emas
 /// (tz.md 7-boʻlim). Rol nomiga emas, ruxsatga qaraymiz: klinika rolni
 /// oʻzgartirgan boʻlishi mumkin
@@ -78,29 +90,62 @@ export function Router() {
       <Route element={<RequireAuth />}>
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Home />} />
-          <Route path="patients" element={<Patients />} />
-          <Route path="patients/:id" element={<PatientCard />}>
-            <Route index element={<VisitsSection />} />
-            <Route path="tishlar" element={<ChartSection />} />
-            <Route path="tolovlar" element={<PaymentsSection />} />
-            <Route path="rasmlar" element={<ImagesSection />} />
-            <Route path="texnik" element={<LabSection />} />
+
+          <Route element={<RequirePermission anyOf={['patients.read']} />}>
+            <Route path="patients" element={<Patients />} />
+            <Route path="patients/:id" element={<PatientCard />}>
+              <Route index element={<VisitsSection />} />
+              <Route path="tishlar" element={<ChartSection />} />
+              <Route element={<RequirePermission anyOf={['payments.read']} />}>
+                <Route path="tolovlar" element={<PaymentsSection />} />
+              </Route>
+              <Route path="rasmlar" element={<ImagesSection />} />
+              <Route element={<RequirePermission anyOf={['lab.write']} />}>
+                <Route path="texnik" element={<LabSection />} />
+              </Route>
+            </Route>
           </Route>
-          <Route path="debtors" element={<Debtors />} />
-          <Route path="services" element={<Services />} />
-          <Route path="schedule" element={<Schedule />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="reports" element={<Reports />} />
+
+          <Route element={<RequirePermission anyOf={['payments.read']} />}>
+            <Route path="debtors" element={<Debtors />} />
+          </Route>
+          <Route element={<RequirePermission anyOf={['services.manage']} />}>
+            <Route path="services" element={<Services />} />
+          </Route>
+          <Route element={<RequirePermission anyOf={['schedule.write']} />}>
+            <Route path="schedule" element={<Schedule />} />
+          </Route>
+          <Route element={<RequirePermission anyOf={['expenses.read']} />}>
+            <Route path="expenses" element={<Expenses />} />
+          </Route>
+          <Route element={<RequirePermission anyOf={['reports.read']} />}>
+            <Route path="reports" element={<Reports />} />
+          </Route>
+          <Route element={<RequirePermission anyOf={['payroll.own', 'payroll.manage']} />}>
+            <Route path="payroll" element={<Payroll />} />
+          </Route>
+
+          {/* Sozlamalar hammaga ochiq — «Hisobim» (parol) har xodimga kerak;
+              boshqa boʻlimlar ruxsatga qarab */}
           <Route path="settings" element={<Settings />}>
             <Route index element={<AccountSection />} />
-            <Route path="xodimlar" element={<StaffSection />} />
-            <Route path="rollar" element={<RolesSection />} />
-            <Route path="klinika" element={<ClinicSection />} />
-            <Route path="navbat" element={<QueueSection />} />
-            <Route path="malumot" element={<DataSection />} />
+            <Route element={<RequirePermission anyOf={['staff.manage']} />}>
+              <Route path="xodimlar" element={<StaffSection />} />
+              <Route path="rollar" element={<RolesSection />} />
+              <Route path="klinika" element={<ClinicSection />} />
+              <Route path="navbat" element={<QueueSection />} />
+            </Route>
+            <Route element={<RequirePermission anyOf={['data.export']} />}>
+              <Route path="malumot" element={<DataSection />} />
+            </Route>
           </Route>
-          <Route path="lab" element={<Lab />} />
-          <Route path="queue" element={<QueueBoard />} />
+
+          <Route element={<RequirePermission anyOf={['lab.own', 'lab.write']} />}>
+            <Route path="lab" element={<Lab />} />
+          </Route>
+          <Route element={<RequirePermission anyOf={['queue.manage']} />}>
+            <Route path="queue" element={<QueueBoard />} />
+          </Route>
         </Route>
       </Route>
 

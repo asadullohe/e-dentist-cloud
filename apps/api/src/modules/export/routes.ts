@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
+import { attachment } from '../../platform/response.js'
 import * as service from './service.js'
 
 export interface ExportRouteOpts {
@@ -17,7 +18,7 @@ export const exportRoutes: FastifyPluginAsync<ExportRouteOpts> = async (app, opt
     const archive = await service.buildArchive(opts.deps, session.clinicId, session.userId)
     return reply
       .header('content-type', 'application/zip')
-      .header('content-disposition', `attachment; filename="${archive.fileName}"`)
+      .header('content-disposition', attachment(archive.fileName))
       .send(archive.buffer)
   })
 }

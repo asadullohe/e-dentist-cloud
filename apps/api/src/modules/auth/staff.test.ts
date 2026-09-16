@@ -292,3 +292,41 @@ describe('xodim holati', () => {
     expect(rows.find((row) => row.email === h.email)?.roleName).toBe('Egasi')
   })
 })
+
+describe('ish haqi sharti', () => {
+  it('yangi xodimga oylik va foiz yoziladi, sukut — nol', async () => {
+    const withTerms = await addStaff('foizli@example.com', { payPercent: 50 })
+    expect(withTerms.statusCode).toBe(200)
+    expect(withTerms.json().data).toMatchObject({ salaryAmount: 0, payPercent: 50 })
+
+    const plain = await addStaff('oddiy@example.com')
+    expect(plain.json().data).toMatchObject({ salaryAmount: 0, payPercent: 0 })
+  })
+
+  it('oylik va foiz alohida-alohida oʻzgartiriladi', async () => {
+    const target = await h.ownerDb.user.findFirst({ where: { email: 'foizli@example.com' } })
+    const r = await call('PATCH', `/api/staff/${target?.id}`, { salaryAmount: 2_000_000 })
+    expect(r.statusCode).toBe(200)
+    // Foiz tegilmagan — 50 ligicha qoladi: «baza + foiz»
+    expect(r.json().data).toMatchObject({ salaryAmount: 2_000_000, payPercent: 50 })
+  })
+
+  it('foiz 100 dan oshsa yoki oylik manfiy boʻlsa rad etiladi', async () => {
+    const target = await h.ownerDb.user.findFirst({ where: { email: 'foizli@example.com' } })
+    const percent = await call('PATCH', `/api/staff/${target?.id}`, { payPercent: 120 })
+    expect(percent.statusCode).toBe(400)
+    expect(percent.json().error.fields.payPercent).toBe('Foiz 0 dan 100 gacha boʻlishi kerak')
+
+    const salary = await call('PATCH', `/api/staff/${target?.id}`, { salaryAmount: -1 })
+    expect(salary.statusCode).toBe(400)
+    expect(salary.json().error.fields.salaryAmount).toBe('Oylik manfiy boʻlishi mumkin emas')
+  })
+
+  // Egasi oʻzi ham shifokor boʻlib foizga ishlashi mumkin — rol/holat
+  // cheklovi bunga tegmaydi
+  it('egasi oʻz ish haqi shartini oʻzgartira oladi', async () => {
+    const r = await call('PATCH', `/api/staff/${h.userId}`, { payPercent: 40 })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.payPercent).toBe(40)
+  })
+})

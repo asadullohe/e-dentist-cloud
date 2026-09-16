@@ -15,11 +15,13 @@ import {
 interface Actions {
   onEdit: (patient: Patient) => void
   onRemove: (patient: Patient) => void
+  /// `patients.write` boʻlmasa amallar ustuni chiqmaydi (kuzatuvchi)
+  canEdit: boolean
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
-export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient>[] {
-  return [
+export function patientColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<Patient>[] {
+  const columns: ColumnDef<Patient>[] = [
     {
       accessorKey: 'fio',
       meta: { title: PATIENT_UI.col_fio, filter: { type: 'text' } } satisfies ColumnMeta,
@@ -115,4 +117,5 @@ export function patientColumns({ onEdit, onRemove }: Actions): ColumnDef<Patient
       ),
     },
   ]
+  return canEdit ? columns : columns.filter((column) => column.id !== 'actions')
 }

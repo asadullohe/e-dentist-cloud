@@ -8,8 +8,10 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Reja toʻliq bajarildi** — 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
-boshqaruv paneli va landing ochiq _(09/09/2026)_
+**Hozirgi task:** yoʻq — 9-bosqich yopildi _(16/09/2026)_
+
+0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
+boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
 
 ---
 
@@ -1065,6 +1067,90 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       ishlaydi); Kuma monitori `http://garage:3903/health` — qoʻlda qoʻshiladi
 - [x] **8.5 Hujjatlar** — tz.md, CLAUDE.md, server.md, birinchi-chiqarish.md,
       make-env.sh (yangi server Garage bilan), .env.example
+
+---
+
+## Bosqich 9 — Ish haqi: foiz va oylik · ~1 hafta
+
+> **Nega** _(qaror 15/09/2026, tz.md 15-boʻlim)_
+>
+> Klinikada shifokor foizga ishlaydi (plomba 300 000 → 150 000 klinikaga,
+> 150 000 shifokorga), administrator oylikka. Tizimda buning oʻrni yoʻq edi:
+> `visits` da shifokor yoʻq, xodimda shart yoʻq, hisobotda maosh koʻrinmaydi.
+>
+> Qarorlar: foiz **qilingan ish narxidan** (toʻlangan puldan emas — toʻlov
+> tashrifga bogʻlanmagan); xodimga **bitta foiz** (xizmat boʻyicha emas);
+> shifokor **oʻz** ulushini koʻradi; toʻlab berish **tugma bilan** xarajatga
+> tushadi (qoʻlda yozilsa hisob va xarajat ajralib ketadi).
+
+- [x] **9.1 `visits.doctor_id`** — ustun + indeks; API: `doctorId` ixtiyoriy,
+      berilmasa yozgan odam (`visits.write` bilan kirgan — demak shifokor);
+      faqat faol va `visits.write` li xodim; `GET /staff/doctors`; tashrif
+      formasida «Shifokor» tanlovi (sukut — oʻzi); jadvalda ustun; eksportda
+      ustun. Eski yozuvlar `null`. Testlar: sukut, begona klinika xodimi rad
+- [x] **9.2 Xodimda ish haqi sharti** — `users.salary_amount`, `users.pay_percent`
+      (CHECK 0..100); `PATCH /staff/:id` da ikkalasi (oʻzinikini ham
+      oʻzgartira oladi — rol/holat cheklovi bunga tegmaydi); Sozlamalar →
+      Xodimlar da «Ish haqi» ustuni va tahrirlash oynasi; yangi xodim
+      oynasida ham
+- [x] **9.3 Ulush snapshoti** — `visits.doctor_percent`, `visits.doctor_share`;
+      yozishda shifokorning joriy foizi, narx tahririda saqlangan foiz bilan
+      qayta hisob, shifokor almashsa yangi foiz. Testlar: yaxlitlash, tahrir
+
+> **Yoʻl-yoʻlakay topilgan xato**
+>
+> `visitUpdateSchema = createSchema.partial()` edi, lekin `.partial()`
+> `price` dagi `.default(0)` ni olib tashlamaydi — narxsiz `PATCH` narxni
+> 0 ga tushirardi. Forma doim hamma maydonni yuborgani uchun koʻrinmagan.
+> Endi narx yangilash sxemasida sukutsiz; test bor.
+- [x] **9.4 `payroll` moduli va «Ish haqi» sahifasi** — `payroll.own` /
+      `payroll.manage` ruxsatlari (mavjud rollarga migratsiya: egasi ikkalasi,
+      shifokor shabloni `own`); `GET /payroll?month` — xodim boʻyicha
+      tashriflar, ish summasi, ulush, oylik, jami; «Shifokor koʻrsatilmagan»
+      qatori; `GET /payroll/visits?month&userId` — shifokorning oʻsha oydagi
+      ishlari roʻyxati (sana · bemor · muolaja · narx · ulush) — qator
+      ochilganda koʻrinadi, shifokor oʻzinikini koʻradi; `POST
+      /payroll/recalculate`; sahifa oy almashtirgich bilan; yon menyuda
+      «Ish haqi». Testlar: koʻp ijarachilik, `own` faqat oʻzini
+- [x] **9.5 Toʻlab berish** — `staff_payouts` (user_id, month, expense_id,
+      RLS) — summa va sana xarajatda; `POST /payroll/payouts` →
+      `expenses.addTx(salary)` + bogʻlanish bir tranzaksiyada;
+      `DELETE /payroll/payouts/:id` → xarajat ham oʻchadi; sahifada
+      «toʻlangan / qoldiq» ustunlari va «Toʻlash» oynasi (toʻlovlar roʻyxati,
+      qoʻshish, oʻchirish). Testlar: xarajat oʻchsa bogʻlanish ketadi
+- [x] **9.5a Eksport va tuzatishlar** — arxivga `ish-haqi.xlsx` (oy × xodim);
+      oylik hisob ochilgan oydan; yuklab olish xatosi: server
+      `filename="…"` yuborar, kabinet faqat `filename*=` ni oʻqirdi — zip
+      `export.xlsx` nomi bilan saqlanib Excel ochmasdi. Endi `attachment()`
+      yordamchisi `platform/response.ts` da, kabinet ikkala shaklni oʻqiydi
+- [x] **9.5b Kartochkada ruxsatga qarab boʻlimlar** — «Toʻlovlar» boʻlimi
+      faqat `payments.read` bilan (shifokor koʻrmaydi); «Toʻlov qabul qilish»
+      va qator amallari — `payments.write`; tashrif qoʻshish/tahrir —
+      `visits.write`. Avval hammaga koʻrinar, server 403 berardi
+- [x] **9.5c Ruxsatlar auditi (kabinet)** — server marshrutlari ↔ kabinet
+      tugmalari solishtirildi. Topilgan va tuzatilgani:
+      · marshrut darajasida himoya yoʻq edi — `/expenses`, `/services`,
+        `/settings/xodimlar` … ni manzil yozib ochish mumkin edi (server 403,
+        sahifa boʻsh). Endi `RequirePermission` — ruxsatsiz bosh sahifaga
+      · Sozlamalar butunlay `staff.manage` ostida edi — shifokor/qabulxona/
+        texnik **oʻz parolini almashtira olmasdi** (tz.md 6-boʻlim buzilgan).
+        Endi Sozlamalar hammaga, ichida faqat ruxsatli boʻlimlar; foydalanuvchi
+        menyusida ham «Hisobim»
+      · Bemorlar: shablon/import/yangi bemor/tahrir/oʻchirish — `patients.write`
+        (kuzatuvchi koʻrardi); kartochkada «Tahrirlash» ham
+      · Tish xaritasi: koʻprik qoʻshish/oʻchirish, tishni bosib tahrirlash —
+        `teeth.write`
+      · Rasmlar: yuklash/oʻchirish — `patients.write`
+      · Bosh sahifa: bugungi qabullar `schedule.write` **va** `patients.read`
+        (server GET /appointments `patients.read` talab qiladi)
+      Toʻgʻri boʻlgani: Texnik ishlari (lab.write/lab.cost/lab.own toʻliq
+      ajratilgan), Xarajatlar, Narxnoma, Hisobotlar, Navbat, Qarzdorlar — sahifa
+      ruxsati bilan amal ruxsati bir xil
+- [x] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi;
+      16/09/2026 `master` ga qoʻshildi → avtomatik chiqarish; 5 ta migratsiya
+      (tashrif shifokori, ish haqi sharti, shifokor ulushi, ish haqi
+      ruxsatlari, ish haqi toʻlovlari) `migrate` konteynerida oʻzi oʻtadi,
+      hammasi orqaga mos
 
 ---
 

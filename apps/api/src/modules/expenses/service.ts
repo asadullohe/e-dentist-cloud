@@ -103,6 +103,23 @@ export function addTx(
   return repo.create(tx, uuidV7(), data).then(toApi)
 }
 
+/// Boshqa modullar uchun (payroll): toʻlovga bogʻlangan xarajatlar —
+/// summa va sana shu yerdan oʻqiladi
+export async function findByIdsTx(tx: ClinicTx, ids: string[]): Promise<Expense[]> {
+  if (ids.length === 0) return []
+  return (await repo.findByIds(tx, ids)).map(toApi)
+}
+
+/// Boshqa modullar uchun (payroll): toʻlov oʻchirilganda xarajati ham.
+/// Ochiq tranzaksiya ichida — audit yozuvini chaqiruvchi yozadi
+export async function removeTx(tx: ClinicTx, id: string): Promise<void> {
+  try {
+    await repo.remove(tx, id)
+  } catch (error) {
+    notFound(error)
+  }
+}
+
 /// Boshqa modullar uchun (reports): kun boʻyicha xarajat
 export async function dailyTotalsTx(
   tx: ClinicTx,

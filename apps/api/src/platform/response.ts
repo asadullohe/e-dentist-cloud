@@ -19,3 +19,10 @@ export function errorResponse(e: AppError): ApiErrorResponse {
     },
   }
 }
+
+/// Fayl yuklab berish sarlavhasi. Har doim `filename*=UTF-8''` shakli:
+/// nomda oʻzbekcha harf va apostrof boʻlishi mumkin, oddiy `filename="…"`
+/// ularni buzadi. Kabinet aynan shu shaklni oʻqiydi (shared/api/client.ts)
+export function attachment(filename: string): string {
+  return `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`
+}

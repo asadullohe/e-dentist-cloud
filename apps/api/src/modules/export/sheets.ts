@@ -7,6 +7,7 @@ import {
   EXPORT_COLUMNS,
   formatDate,
   formatDateTime,
+  formatMonth,
   LAB_MATERIAL_LABELS,
   LAB_STATUS_LABELS,
   LAB_WORK_TYPE_LABELS,
@@ -52,6 +53,7 @@ export function nameOf(people: Map<string, string>, patientId: string): string {
 export function visitsSheet(
   rows: {
     patientId: string
+    doctorId: string | null
     date: Date
     treatment: string
     tooth: number | null
@@ -59,11 +61,13 @@ export function visitsSheet(
     note: string | null
   }[],
   people: Map<string, string>,
+  staff: Map<string, string>,
 ): SheetData {
   return sheet(
     [
       EXPORT_COLUMNS.date,
       EXPORT_COLUMNS.patient,
+      EXPORT_COLUMNS.doctor,
       EXPORT_COLUMNS.treatment,
       EXPORT_COLUMNS.tooth,
       EXPORT_COLUMNS.price,
@@ -72,6 +76,7 @@ export function visitsSheet(
     rows.map((row) => [
       iso(row.date),
       nameOf(people, row.patientId),
+      row.doctorId ? (staff.get(row.doctorId) ?? '') : '',
       row.treatment,
       row.tooth,
       row.price,
@@ -224,5 +229,50 @@ export function servicesSheet(rows: { name: string; price: number }[]): SheetDat
   return sheet(
     [EXPORT_COLUMNS.service, EXPORT_COLUMNS.price],
     rows.map((row) => [row.name, row.price]),
+  )
+}
+
+export function payrollSheet(
+  rows: {
+    month: string
+    fullName: string
+    roleName: string | null
+    visits: number
+    charges: number
+    percent: number
+    share: number
+    salary: number
+    total: number
+    paid: number
+    remaining: number
+  }[],
+): SheetData {
+  return sheet(
+    [
+      EXPORT_COLUMNS.month,
+      EXPORT_COLUMNS.staff,
+      EXPORT_COLUMNS.role,
+      EXPORT_COLUMNS.visits,
+      EXPORT_COLUMNS.charges,
+      EXPORT_COLUMNS.percent,
+      EXPORT_COLUMNS.share,
+      EXPORT_COLUMNS.salary,
+      EXPORT_COLUMNS.total,
+      EXPORT_COLUMNS.paid,
+      EXPORT_COLUMNS.remaining,
+    ],
+    rows.map((row) => [
+      formatMonth(row.month),
+      row.fullName,
+      row.roleName,
+      row.visits,
+      row.charges,
+      row.percent,
+      row.share,
+      row.salary,
+      row.total,
+      row.paid,
+      row.remaining,
+    ]),
   )
 }

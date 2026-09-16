@@ -197,17 +197,18 @@ Uch qatlamli himoya:
 | Jadval | Muhim ustunlar | Izoh |
 |---|---|---|
 | `clinics` | name, phone, status, plan, expires_at, is_trial | Ijarachi. Sinov ham shu qator, faqat `is_trial = true` |
-| `users` | clinic_id, role_id, email, password_hash, full_name, status, email_verified_at | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi. `email` butun tizimda yagona: 1-versiyada bitta odam ikki klinikada ishlay olmaydi |
+| `users` | clinic_id, role_id, email, password_hash, full_name, status, email_verified_at, salary_amount, pay_percent | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi. `email` butun tizimda yagona: 1-versiyada bitta odam ikki klinikada ishlay olmaydi |
 | `roles` | clinic_id, template, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi. `template` — qaysi shablondan kelgani: texnikning boshlangʻich sahifasi shunga qarab tanlanadi |
 | `invites` | clinic_id, role_id, email, token_hash, expires_at, accepted_at | Xodimni taklif qilish havolasi. **1-versiyada ishlatilmaydi**: SMTP sozlanmagani uchun hisobni egasi parol bilan ochadi (6-boʻlim). Jadval SMTP qoʻshilgan kunga saqlanib turadi |
 | `patients` | clinic_id, fio, phone, birth_date, note | Qidiruv uchun `fio` va `phone` ga indeks |
-| `visits` | patient_id, date, treatment, tooth, price |  |
+| `visits` | patient_id, doctor_id, date, treatment, tooth, price, doctor_percent, doctor_share | `doctor_*` — ish haqi hisobi uchun snapshot (15-boʻlim) |
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
 | `bridges` | patient_id, teeth[], material | Koʻprik: tayanch va oraliq tishlar |
 | `payments` | patient_id, date, amount | Qarz = tashriflar summasi − toʻlovlar |
 | `appointments` | clinic_id, patient_id, doctor_id, at, status, queue_number, queue_status, guest_name, guest_phone | Navbat ham shu jadvalda: «bugungi, vaqti belgilanmagan qabul». Ochiq sahifadan yozilganda `patient_id` boʻsh — qabulxona tasdiqlaganda bogʻlanadi, shu sababli ism va telefon `guest_*` da |
 | `services` | clinic_id, name, price | Narxnoma |
 | `expenses` | clinic_id, date, category, amount |  |
+| `staff_payouts` | clinic_id, user_id, month, expense_id | Ish haqi toʻlovi ↔ xarajat bogʻlanishi. Summa xarajatda (15-boʻlim) |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
 | `images` | patient_id, key, caption | `key` — ombordagi (Garage, S3) obyekt nomi |
 | `audit_log` | clinic_id, user_id, action, entity, entity_id, meta, at | Tibbiy maʼlumot uchun kim nima qilgani yozilishi shart. `entity_id` boʻlmasa «qaysi bemor yozuvi» degan savolga javob yoʻq (12-boʻlim talabi) |
@@ -238,6 +239,8 @@ Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta t
 | `reports.read` | Hisobotlar, tushum, foyda |
 | `lab.own` | Oʻz naryadlari, holatni oʻzgartirish |
 | `lab.write` | Naryad yozish va texnik tayinlash |
+| `payroll.own` | Oʻz ish haqi hisobi |
+| `payroll.manage` | Hamma xodimning ish haqi, toʻlab berish |
 | `lab.cost` | Texnik narxlari |
 | `staff.manage` | Xodimlar va rollar |
 | `billing.manage` | Obuna va toʻlov |
@@ -352,6 +355,7 @@ _Har modul mustaqil ishlab chiqiladi va alohida testlanadi._
 | `expenses` | Xarajatlar | clinics |
 | `lab` | Naryadlar, texnik ishlari, holatlar | patients, expenses, visits |
 | `reports` | Oylik tushum, sof foyda, statistika | visits, payments, expenses |
+| `payroll` | Ish haqi hisobi, toʻlab berish. **`staff_payouts` jadvaliga egalik qiladi** | auth, visits, expenses |
 | `billing` | Obuna holati, muddat, bloklash | clinics |
 
 ### Bemorlarni Excel dan yuklash
@@ -448,9 +452,15 @@ GET    /api/debtors
 GET    /api/reports?month=2026-09
 GET    /api/export                # barcha maʼlumot, zip
 
+GET    /api/payroll?month=2026-09        # ish haqi: payroll.own — oʻz qatori, payroll.manage — hammasi
+POST   /api/payroll/recalculate          # oy + xodim: tashriflarga joriy foizni qayta yozish
+POST   /api/payroll/payouts              # toʻlab berish → expenses(salary) + bogʻlanish
+DELETE /api/payroll/payouts/:id
+
 GET    /api/staff                # klinika xodimlari
 POST   /api/staff                # egasi hisob ochadi, parolni oʻzi belgilaydi
-PATCH  /api/staff/:id            # rol, status
+PATCH  /api/staff/:id            # rol, status, ish haqi sharti (salaryAmount, payPercent)
+GET    /api/staff/doctors        # visits.write li faol xodimlar — tashrif formasi uchun
 POST   /api/me/password          # oʻz parolini almashtirish
 GET    /api/roles
 PATCH  /api/roles/:id            # ruxsatlar roʻyxati
@@ -504,6 +514,7 @@ _Klinika kundalik ishlaydigan asosiy ilova. Mavjud desktop ilovaning tuzilishini
 | Narxnoma | Xizmatlar va narxlari | Egasi |
 | Xarajatlar | Oylik xarajatlar, turlari boʻyicha | Egasi |
 | Hisobotlar | Tushum, sof foyda, 12 oylik grafik | Egasi |
+| Ish haqi | Oy boʻyicha xodimlar: ulush, oylik, toʻlangan, qoldiq; ishlar roʻyxati; toʻlab berish (15-boʻlim) | Egasi hammasini, shifokor oʻzinikini |
 | Sozlamalar | Klinika, xodimlar, obuna, eksport | Egasi |
 
 ### Nimalarni koʻchirish mumkin
@@ -650,7 +661,64 @@ televizor | Kutish xonasi | Katta shriftda: hozir chaqirilgan raqam va keyingi u
 - **Yangi ruxsatlar:** `queue.manage` — chaqirish va holatni oʻzgartirish
 - **Bogʻlanish:** navbatdagi bemor kartotekada bor boʻlsa telefon boʻyicha topiladi; yoʻq boʻlsa qabulxona tasdiqlaganda yangi bemor yaratiladi
 
-## 15. Bosqichlar
+## 15. Ish haqi
+
+_Qaror 15/09/2026. Shifokor foizga ishlaydi, administrator oylikka — bu klinikaning kundalik hisobi, u tizimda boʻlmasa egasi daftar tutadi._
+
+### Model — xodimga ikki raqam
+
+Xodimda `pay_type` enum yoʻq, ikkita son bor: `salary_amount` (oylik, soʻm) va `pay_percent` (0–100). Ikkalasi bir vaqtda boʻlishi mumkin — bitta model uch holatni yopadi:
+
+| Xodim | salary_amount | pay_percent |
+|---|---|---|
+| Administrator | 3 000 000 | 0 |
+| Shifokor 50/50 | 0 | 50 |
+| Shifokor «baza + foiz» | 2 000 000 | 20 |
+
+Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi.
+
+Oylik **hisob ochilgan oydan** boshlab sanaladi (`users.created_at`) — bugun qoʻshilgan administratorga oʻtgan yil uchun oylik chiqmasin.
+
+### Tashrifga shifokor va ulush yoziladi
+
+`visits` ga uchta ustun: `doctor_id`, `doctor_percent`, `doctor_share`.
+
+- **`doctor_id`** — ishni qilgan shifokor. Yozayotgan odam `visits.write` bilan kirgan — sukut boʻyicha oʻzi; qabulxona yoki egasi boshqasini tanlaydi. Faqat faol va `visits.write` ruxsatli xodim boʻla oladi. Eski yozuvlarda `null` — hisobda «Shifokor koʻrsatilmagan» qatorida turadi
+- **`doctor_percent`** — tashrif yozilgan paytdagi foiz, **snapshot**. Foiz 40 dan 50 ga oshsa oʻtgan oylar qayta hisoblanmasin — `treatment` matnini narxnomadan koʻchirib saqlash bilan bir qoida
+- **`doctor_share`** = `round(price × doctor_percent / 100)`. Narx tahrirlansa saqlangan foiz bilan qayta hisoblanadi; shifokor almashtirilsa yangi shifokorning joriy foizi olinadi
+
+> **Snapshotning tuzogʻi va uning yechimi**
+>
+> Egasi avval tashriflarni yozib, keyin shifokorga foiz qoʻysa, oʻsha tashriflarda ulush 0 boʻlib qoladi. Shuning uchun «Ish haqi» sahifasida oy va xodim boʻyicha **«Qayta hisoblash»** amali bor: oʻsha oyning tashriflariga joriy foiz qayta yoziladi. Amal aniq va audit yozuvi qoladi — jim oʻzgarish yoʻq.
+
+### Hisob nimadan olinadi
+
+**Qilingan ish narxidan** (`visits.price`), tushgan puldan emas. Bemor qarzga ketsa xavf klinikada qoladi. «Toʻlangan puldan» rejimi 1-versiyaga kirmaydi: toʻlov bemorga bogʻlangan, tashrifga emas — buning uchun toʻlovni tashriflarga taqsimlash kerak boʻladi.
+
+Foiz xodimga bitta — xizmat turi boʻyicha farqlanmaydi. Kerak boʻlsa keyin `services` ga ustun qoʻshiladi.
+
+### «Ish haqi» sahifasi
+
+Oy kesimida jadval: xodim · tashriflar · ish summasi · foiz · ulush · oylik · jami · toʻlangan · qoldiq.
+
+Qator ochilganda — oʻsha xodimning oydagi **ishlari roʻyxati**: sana · bemor · muolaja · tish · narx · ulush. Shifokor oʻzi qancha ish qilganini va nimalardan ekanini koʻradi, egasi hammasini — hisob «qora quti» boʻlmasin.
+
+| Ruxsat | Nimaga ochadi |
+|---|---|
+| `payroll.own` | Faqat oʻz qatori. «Shifokor» shabloniga kiradi — shifokor oʻz ulushini koʻradi, boshqalarnikini emas |
+| `payroll.manage` | Hamma xodim, toʻlab berish, qayta hisoblash. Egasiga |
+
+### Toʻlab berish → xarajat
+
+Xodimga pul berilganda «Toʻlash» amali `expenses` ga `salary` turkumida yozuv tushiradi (naryad topshirilganda texnik narxi xarajatga tushishi bilan bir andoza, 7-boʻlim). Qisman va avans toʻlov mumkin — bir oyga bir nechta yozuv.
+
+`staff_payouts` jadvali (user_id, month, expense_id) toʻlovni oy va xodimga bogʻlaydi. **Summa va sana xarajatning oʻzida** — ikki joyda turgan son ertami-kechmi ajralib qoladi. Xarajat oʻchirilsa bogʻlanish ham ketadi (`ON DELETE CASCADE`), «toʻlangan» qaytadan sanaladi.
+
+Hisobotdagi sof foyda oʻz-oʻzidan toʻgʻri boʻladi: `tushum − xarajat`, ish haqi xarajatga tushgan.
+
+Eksport arxivida `ish-haqi.xlsx`: oy × xodim — tashriflar, ish summasi, foiz, ulush, oylik, jami, toʻlangan, qoldiq; birinchi tashrif yoki toʻlovdan joriy oygacha.
+
+## 16. Bosqichlar
 
 _Har bosqich oxirida ishlaydigan narsa boʻlishi kerak. Muddatlar yolgʻiz, toʻliq bandlik uchun._
 
@@ -680,7 +748,7 @@ Klinikalar roʻyxati, obuna boshqaruvi, zaxira, kuzatuv, domen, HTTPS. Birinchi 
 >
 > Real rejaga **11 hafta emas, 4-5 oy** deb qarang. Qamrovni qisqartirish kerak boʻlsa, birinchi nomzod — navbat va QR: u alohida boʻlim, qolganiga bogʻliq emas.
 
-## 16. Ochiq savollar
+## 17. Ochiq savollar
 
 _Kod yozishdan oldin javob berilishi kerak boʻlgan narsalar._
 

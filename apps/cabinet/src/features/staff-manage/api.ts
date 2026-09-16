@@ -8,12 +8,21 @@ export interface StaffPayload {
   roleId: string
   /// Parolni egasi belgilaydi va xodimga aytadi
   password: string
+  salaryAmount: number
+  payPercent: number
+}
+
+export interface StaffUpdatePayload {
+  roleId?: string
+  status?: StaffStatus
+  salaryAmount?: number
+  payPercent?: number
 }
 
 export const createStaff = (payload: StaffPayload) =>
   apiRequest<StaffMember>('/staff', { method: 'POST', body: payload })
 
-export const updateStaff = (id: string, payload: { roleId?: string; status?: StaffStatus }) =>
+export const updateStaff = (id: string, payload: StaffUpdatePayload) =>
   apiRequest<StaffMember>(`/staff/${id}`, { method: 'PATCH', body: payload })
 
 export const updateRolePermissions = (id: string, permissions: Permission[]) =>

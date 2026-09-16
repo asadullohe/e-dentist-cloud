@@ -84,6 +84,178 @@ describe('tashrif yozish', () => {
   })
 })
 
+describe('tashrif shifokori', () => {
+  it('berilmasa yozgan odamning oʻzi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      treatment: 'Koʻrik',
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.doctorId).toBe(h.userId)
+    expect(typeof r.json().data.doctorName).toBe('string')
+  })
+
+  it('boshqa shifokor tanlanadi va ismi javobda keladi', async () => {
+    const created = await call('POST', '/api/staff', {
+      email: `shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Aliyev Bobur',
+      roleId: (
+        await h.ownerDb.role.findFirst({ where: { clinicId: h.clinicId, template: 'shifokor' } })
+      )?.id,
+      password: 'parol12345',
+    })
+    const doctorId = created.json().data.id as string
+
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 300_000,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({ doctorId, doctorName: 'Aliyev Bobur' })
+
+    // Faolsizlantirilgan xodimga yangi tashrif yozilmaydi
+    await call('PATCH', `/api/staff/${doctorId}`, { status: 'disabled' })
+    const again = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-02',
+      treatment: 'Plomba',
+    })
+    expect(again.statusCode).toBe(400)
+    expect(again.json().error.fields.doctorId).toBe('Bu xodim tashrifga shifokor boʻla olmaydi')
+  })
+
+  it('visits.write siz xodim (texnik) shifokor boʻla olmaydi', async () => {
+    const tech = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'texnik' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `texnik-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Texnik Toʻra',
+      roleId: tech?.id,
+      password: 'parol12345',
+    })
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId: created.json().data.id,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+    })
+    expect(r.statusCode).toBe(400)
+  })
+
+  it('shifokorlar roʻyxati — faqat faol va visits.write li xodimlar', async () => {
+    const r = await call('GET', '/api/staff/doctors')
+    expect(r.statusCode).toBe(200)
+    const names = r.json().data.map((d: { fullName: string }) => d.fullName)
+    expect(names).not.toContain('Aliyev Bobur') // faolsizlantirilgan
+    expect(names).not.toContain('Texnik Toʻra') // visits.write yoʻq
+    expect(r.json().data.some((d: { id: string }) => d.id === h.userId)).toBe(true)
+  })
+})
+
+describe('shifokor ulushi (snapshot)', () => {
+  let doctorId = ''
+
+  async function shareOf(visitId: string) {
+    const row = await h.ownerDb.visit.findUnique({
+      where: { id: visitId },
+      select: { doctorPercent: true, doctorShare: true, price: true },
+    })
+    return row as { doctorPercent: number; doctorShare: number; price: number }
+  }
+
+  beforeAll(async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `foizli-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Foizli Shifokor',
+      roleId: role?.id,
+      password: 'parol12345',
+      payPercent: 50,
+    })
+    doctorId = created.json().data.id
+  })
+
+  it('yozishda joriy foiz va ulush muzlatiladi; yaxlitlash butun soʻmga', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 300_000,
+    })
+    expect(await shareOf(r.json().data.id)).toEqual({
+      price: 300_000,
+      doctorPercent: 50,
+      doctorShare: 150_000,
+    })
+    // Roʻyxat javobida ulush yoʻq — bemor kartochkasini koʻrgan har kimga
+    // shifokorning foizi koʻrinmasin
+    expect(r.json().data.doctorShare).toBeUndefined()
+
+    const odd = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 333_333,
+    })
+    expect((await shareOf(odd.json().data.id)).doctorShare).toBe(166_667)
+  })
+
+  it('narx tahrirlansa saqlangan foiz bilan qayta sanaladi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 100_000,
+    })
+    const id = r.json().data.id
+    // Shifokorning foizi oʻzgardi — bu eski tashrifga tegmaydi
+    await call('PATCH', `/api/staff/${doctorId}`, { payPercent: 40 })
+    expect(await shareOf(id)).toMatchObject({ doctorPercent: 50, doctorShare: 50_000 })
+
+    await call('PATCH', `/api/visits/${id}`, { price: 200_000 })
+    expect(await shareOf(id)).toEqual({ price: 200_000, doctorPercent: 50, doctorShare: 100_000 })
+  })
+
+  it('shifokor almashsa yangi shifokorning joriy foizi olinadi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 100_000,
+    })
+    const id = r.json().data.id
+    // Egasi (h.userId) — foizsiz
+    expect(await shareOf(id)).toMatchObject({ doctorPercent: 0, doctorShare: 0 })
+
+    await call('PATCH', `/api/visits/${id}`, { doctorId })
+    expect(await shareOf(id)).toMatchObject({ doctorPercent: 40, doctorShare: 40_000 })
+  })
+
+  it('narxsiz PATCH narxni va ulushni buzmaydi', async () => {
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+      price: 100_000,
+    })
+    const id = r.json().data.id
+    await call('PATCH', `/api/visits/${id}`, { note: 'faqat izoh' })
+    expect(await shareOf(id)).toEqual({ price: 100_000, doctorPercent: 40, doctorShare: 40_000 })
+  })
+})
+
 describe('tashriflar roʻyxati', () => {
   it('yangisi tepada', async () => {
     await call('POST', '/api/visits', { patientId, date: '2026-08-01', treatment: 'Eski' })
@@ -174,6 +346,35 @@ describe('koʻp ijarachilik', () => {
     const r = await call('PUT', `/api/patients/${otherPatientId}/teeth/16`, { status: 'karies' })
     expect(r.statusCode).toBe(404)
     expect(await h.ownerDb.tooth.count({ where: { patientId: otherPatientId } })).toBe(0)
+  })
+
+  it('begona klinikaning xodimi shifokor boʻla olmaydi', async () => {
+    const role = await h.ownerDb.role.create({
+      data: {
+        clinicId: otherClinicId,
+        template: 'shifokor',
+        name: 'Shifokor',
+        permissions: ['visits.write'],
+      },
+    })
+    const foreignDoctor = await h.ownerDb.user.create({
+      data: {
+        clinicId: otherClinicId,
+        roleId: role.id,
+        email: `begona-shifokor-${otherClinicId.slice(0, 8)}@sinov.uz`,
+        passwordHash: 'x',
+        fullName: 'Begona Shifokor',
+        emailVerifiedAt: new Date(),
+      },
+    })
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId: foreignDoctor.id,
+      date: '2026-09-01',
+      treatment: 'Plomba',
+    })
+    expect(r.statusCode).toBe(400)
+    expect(await h.ownerDb.visit.count({ where: { doctorId: foreignDoctor.id } })).toBe(0)
   })
 
   it('begona klinikaning tashrifini oʻchirib boʻlmaydi', async () => {

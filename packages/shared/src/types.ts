@@ -52,6 +52,8 @@ export const PERMISSIONS = [
   'lab.own',
   'lab.write',
   'lab.cost',
+  'payroll.own',
+  'payroll.manage',
   'staff.manage',
   'billing.manage',
   'data.export',

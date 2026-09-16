@@ -14,6 +14,7 @@ import { cn } from 'cn'
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type Payment, useBalance, usePayments } from '@/entities/payment'
+import { useHasPermission } from '@/entities/session'
 import { PaymentFormDialog, useDeletePayment } from '@/features/payment-form'
 import {
   AlertDialog,
@@ -44,6 +45,8 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
   const { data: payments, isPending } = usePayments(patientId)
   const { data: balance } = useBalance(patientId)
   const { mutateAsync: remove } = useDeletePayment()
+  const hasPermission = useHasPermission()
+  const canWrite = hasPermission('payments.write')
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Payment | undefined>(undefined)
@@ -62,6 +65,7 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
         setFormOpen(true)
       },
       onRemove: setDeleting,
+      canEdit: canWrite,
     }),
     state: { sorting, columnVisibility, columnFilters, pagination },
     onSortingChange: setSorting,
@@ -89,16 +93,19 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
             tone={debt > 0 ? 'text-destructive' : debt < 0 ? 'text-ok' : undefined}
           />
         </div>
-        <Button
-          size="sm"
-          onClick={() => {
-            setEditing(undefined)
-            setFormOpen(true)
-          }}
-        >
-          <PlusIcon />
-          {PAYMENT_UI.add}
-        </Button>
+        {/* Kuzatuvchi (payments.read) koʻradi, lekin qabul qilmaydi */}
+        {canWrite && (
+          <Button
+            size="sm"
+            onClick={() => {
+              setEditing(undefined)
+              setFormOpen(true)
+            }}
+          >
+            <PlusIcon />
+            {PAYMENT_UI.add}
+          </Button>
+        )}
       </div>
 
       <DataTable table={table} loading={isPending && !payments} emptyText={PAYMENT_UI.empty} />

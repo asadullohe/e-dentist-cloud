@@ -61,6 +61,7 @@ model Clinic {
   images       PatientImage[]
   expenses     Expense[]
   labOrders    LabOrder[]
+  staffPayouts StaffPayout[]
 
   @@index([status])
   @@map("clinics")
@@ -124,6 +125,11 @@ model User {
   emailVerifyTokenHash  String?   @unique @map("email_verify_token_hash")
   emailVerifyExpiresAt  DateTime? @map("email_verify_expires_at") @db.Timestamptz(3)
   lastLoginAt     DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  /// Ish haqi sharti (tz.md 15-boʻlim): oylik (soʻm) va qilingan ish
+  /// narxidan foiz. Ikkalasi birga boʻlishi mumkin — «baza + foiz».
+  /// Enum emas: uch holat ham ikki son bilan yopiladi
+  salaryAmount    Int        @default(0) @map("salary_amount")
+  payPercent      Int        @default(0) @map("pay_percent")
   createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -222,6 +228,9 @@ model Visit {
   id        String   @id @default(uuid(7)) @db.Uuid
   clinicId  String   @map("clinic_id") @db.Uuid
   patientId String   @map("patient_id") @db.Uuid
+  /// Ishni qilgan shifokor. Ish haqi hisobi shunga qaraydi (tz.md 15-boʻlim).
+  /// 9.1 dan oldingi yozuvlarda boʻsh — hisobda «koʻrsatilmagan» qatorida
+  doctorId  String?  @map("doctor_id") @db.Uuid
   date      DateTime @db.Date
   /// Muolaja nomi. Narxnomadan tanlansa ham matn saqlanadi — narxnoma
   /// keyin oʻzgarsa tarix buzilmasin
@@ -231,6 +240,11 @@ model Visit {
   serviceId String?  @map("service_id") @db.Uuid
   /// Soʻm, butun son
   price     Int      @default(0)
+  /// Shifokor ulushi — tashrif yozilgan paytdagi foiz va undan hisoblangan
+  /// summa (snapshot, tz.md 15-boʻlim). Foiz keyin oʻzgarsa oʻtgan oylar
+  /// qayta hisoblanmaydi; narx tahrirlansa saqlangan foiz bilan qayta sanaladi
+  doctorPercent Int  @default(0) @map("doctor_percent")
+  doctorShare   Int  @default(0) @map("doctor_share")
   note      String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -241,6 +255,7 @@ model Visit {
 
   @@index([clinicId, patientId, date])
   @@index([clinicId, date])
+  @@index([clinicId, doctorId, date])
   @@map("visits")
 }
 
@@ -491,10 +506,34 @@ model Expense {
   createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  clinic Clinic       @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  payout StaffPayout?
 
   @@index([clinicId, date])
   @@map("expenses")
+}
+
+// ─────────────────────────  Ish haqi toʻlovlari  ─────────────────────────
+
+/// Xodimga berilgan pulning oy va xodimga bogʻlanishi (tz.md 15-boʻlim).
+/// Summa va sana bu yerda YOʻQ — ular xarajatning oʻzida: ikki joyda turgan
+/// son ertami-kechmi ajralib qoladi. Xarajat oʻchirilsa bogʻlanish ham
+/// ketadi (Cascade) — «toʻlangan» qaytadan sanaladi
+model StaffPayout {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  /// Qaysi oy uchun — oyning 1-kuni, DATE
+  month     DateTime @db.Date
+  expenseId String   @unique @map("expense_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId, month])
+  @@index([clinicId, userId, month])
+  @@map("staff_payouts")
 }
 
 // ────────────────────────────  Bemor rasmlari  ────────────────────────────

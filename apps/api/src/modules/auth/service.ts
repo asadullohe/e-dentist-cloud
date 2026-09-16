@@ -304,6 +304,9 @@ export async function acceptInvite(
         email: invite.email,
         passwordHash,
         fullName: input.fullName,
+        // Ish haqi shartini egasi keyin Sozlamalarda belgilaydi
+        salaryAmount: 0,
+        payPercent: 0,
       })
       await repo.markInviteAccepted(tx, invite.id)
       await writeAudit(tx, {
@@ -445,7 +448,23 @@ export interface StaffMember {
   roleId: string | null
   roleName: string | null
   status: 'active' | 'disabled'
+  /// Ish haqi sharti: oylik (soʻm) va ish narxidan foiz (tz.md 15-boʻlim)
+  salaryAmount: number
+  payPercent: number
   lastLoginAt: Date | null
+  /// Hisob ochilgan vaqt — oylik shu oydan boshlab hisoblanadi (payroll)
+  createdAt: Date
+}
+
+/// Xodimning ish haqi sharti. Boshqa modullar uchun (visits — tashrifga
+/// foizni yozadi, payroll — oylikni qoʻshadi). Topilmasa nol — begona
+/// klinika xodimi ijarachi kengaytmasi ostida topilmaydi
+export async function payTermsTx(
+  tx: ClinicTx,
+  userId: string,
+): Promise<{ salaryAmount: number; payPercent: number }> {
+  const row = await repo.findStaff(tx, userId)
+  return { salaryAmount: row?.salaryAmount ?? 0, payPercent: row?.payPercent ?? 0 }
 }
 
 /// Boshqa modullar uchun (lab): xodim ismlari. Ochiq tranzaksiya ichida
@@ -453,6 +472,13 @@ export async function staffNamesTx(tx: ClinicTx, ids: string[]): Promise<Map<str
   if (ids.length === 0) return new Map()
   const rows = await repo.findStaffByIds(tx, ids)
   return new Map(rows.map((row) => [row.id, row.fullName ?? '']))
+}
+
+/// Xodimning ismi. Boshqa modullar uchun (payroll — xarajat izohiga).
+/// Yoʻq boʻlsa null — begona klinika xodimi ham shu
+export async function findStaffNameTx(tx: ClinicTx, userId: string): Promise<string | null> {
+  const row = await repo.findStaff(tx, userId)
+  return row ? (row.fullName ?? '') : null
 }
 
 /// Xodim shu klinikada bormi — naryadga texnik tayinlashda tekshiriladi
@@ -476,6 +502,19 @@ export async function listDoctorsTx(tx: ClinicTx): Promise<{ id: string; fullNam
     .map((person) => ({ id: person.id, fullName: person.fullName ?? '' }))
 }
 
+/// Tashrif formasidagi «Shifokor» tanlovi uchun
+export function listDoctors(deps: AuthDeps, clinicId: string) {
+  return withClinic(deps.db, clinicId, (tx) => listDoctorsTx(tx))
+}
+
+/// Boshqa modullar uchun (visits): shu odam tashrifga shifokor boʻla oladimi —
+/// faol va roli `visits.write` beradi. Begona klinika xodimi bu yerda
+/// topilmaydi: `listStaff` ijarachi kengaytmasi ostida
+export async function isDoctorTx(tx: ClinicTx, userId: string): Promise<boolean> {
+  const doctors = await listDoctorsTx(tx)
+  return doctors.some((doctor) => doctor.id === userId)
+}
+
 /// Faqat ism va id. Naryadga texnik tayinlash uchun `lab.write` boriga
 /// ochiq — toʻliq roʻyxatda pochta, holat va oxirgi kirish bor, ular
 /// `staff.manage` ishi
@@ -488,21 +527,28 @@ export function listStaffNames(deps: AuthDeps, clinicId: string) {
   })
 }
 
-export function listStaff(deps: AuthDeps, clinicId: string): Promise<StaffMember[]> {
-  return withClinic(deps.db, clinicId, async (tx) => {
-    const [people, roles] = await Promise.all([repo.listStaff(tx), clinics.listRolesTx(tx)])
-    const roleName = new Map(roles.map((role) => [role.id, role.name]))
+/// Boshqa modullar uchun (payroll): xodimlar roʻyxati ish haqi sharti bilan.
+/// Ochiq tranzaksiya ichida
+export async function listStaffTx(tx: ClinicTx): Promise<StaffMember[]> {
+  const [people, roles] = await Promise.all([repo.listStaff(tx), clinics.listRolesTx(tx)])
+  const roleName = new Map(roles.map((role) => [role.id, role.name]))
 
-    return people.map((person) => ({
-      id: person.id,
-      email: person.email,
-      fullName: person.fullName,
-      roleId: person.roleId,
-      roleName: person.roleId ? (roleName.get(person.roleId) ?? null) : null,
-      status: person.status,
-      lastLoginAt: person.lastLoginAt,
-    }))
-  })
+  return people.map((person) => ({
+    id: person.id,
+    email: person.email,
+    fullName: person.fullName,
+    roleId: person.roleId,
+    roleName: person.roleId ? (roleName.get(person.roleId) ?? null) : null,
+    status: person.status,
+    salaryAmount: person.salaryAmount,
+    payPercent: person.payPercent,
+    lastLoginAt: person.lastLoginAt,
+    createdAt: person.createdAt,
+  }))
+}
+
+export function listStaff(deps: AuthDeps, clinicId: string): Promise<StaffMember[]> {
+  return withClinic(deps.db, clinicId, (tx) => listStaffTx(tx))
 }
 
 /// Xodim hisobini egasi ochadi: parolni u belgilaydi va xodimga aytadi.
@@ -531,6 +577,8 @@ export function createStaff(
         email: input.email,
         passwordHash,
         fullName: input.fullName,
+        salaryAmount: input.salaryAmount,
+        payPercent: input.payPercent,
       })
     } catch (error) {
       // users.email butun bazada yagona
@@ -553,7 +601,10 @@ export function createStaff(
       roleId: created.roleId,
       roleName: role.name,
       status: created.status,
+      salaryAmount: created.salaryAmount,
+      payPercent: created.payPercent,
       lastLoginAt: created.lastLoginAt,
+      createdAt: created.createdAt,
     }
   })
 }
@@ -588,8 +639,9 @@ export function changePassword(
   })
 }
 
-/// Rol yoki holatni oʻzgartirish. Uchta himoya (tz.md 6-boʻlim):
-///   1. oʻzini oʻzgartira olmaydi
+/// Rol, holat yoki ish haqi shartini oʻzgartirish. Uchta himoya (tz.md 6-boʻlim):
+///   1. oʻz rolini va holatini oʻzgartira olmaydi (ish haqi shartini — mumkin:
+///      egasi oʻzi ham shifokor boʻlib foizga ishlashi mumkin)
 ///   2. oxirgi faol egasi qolishi shart
 ///   3. rol shu klinikaniki boʻlishi kerak — buni ijarachi qatlami ushlaydi
 export function updateStaff(
@@ -599,7 +651,8 @@ export function updateStaff(
   targetId: string,
   input: StaffUpdateInput,
 ) {
-  if (actorId === targetId) throw errors.badRequest(STAFF_TEXT.self_change)
+  const touchesAccess = input.roleId !== undefined || input.status !== undefined
+  if (actorId === targetId && touchesAccess) throw errors.badRequest(STAFF_TEXT.self_change)
 
   return withClinic(deps.db, clinicId, async (tx) => {
     const target = await repo.findStaff(tx, targetId)
@@ -625,6 +678,8 @@ export function updateStaff(
     const updated = await repo.updateStaff(tx, targetId, {
       ...(input.roleId === undefined ? {} : { roleId: input.roleId }),
       ...(input.status === undefined ? {} : { status: input.status }),
+      ...(input.salaryAmount === undefined ? {} : { salaryAmount: input.salaryAmount }),
+      ...(input.payPercent === undefined ? {} : { payPercent: input.payPercent }),
     })
     await writeAudit(tx, {
       userId: actorId,

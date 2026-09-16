@@ -7,3 +7,6 @@ export const fetchRoles = () => apiRequest<Role[]>('/roles')
 
 /// Faqat ism va id — naryadga texnik tanlash uchun
 export const fetchStaffNames = () => apiRequest<StaffName[]>('/staff/names')
+
+/// Tashrif formasidagi «Shifokor» tanlovi: faol va `visits.write` li xodimlar
+export const fetchDoctors = () => apiRequest<StaffName[]>('/staff/doctors')
