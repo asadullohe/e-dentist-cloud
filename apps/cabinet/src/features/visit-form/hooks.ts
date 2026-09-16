@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { VISIT_KEYS } from '@/entities/visit'
 import * as api from './api'
@@ -8,6 +9,7 @@ export function useSaveVisit(id: string | null) {
     mutationFn: (payload: api.VisitPayload) =>
       id ? api.updateVisit(id, payload) : api.createVisit(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: VISIT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.visit_saved, inlineErrors: true },
   })
 }
 
@@ -16,5 +18,6 @@ export function useDeleteVisit() {
   return useMutation({
     mutationFn: api.deleteVisit,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: VISIT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.visit_deleted },
   })
 }

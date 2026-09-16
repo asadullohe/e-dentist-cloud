@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PAYMENT_KEYS } from '@/entities/payment'
 import * as api from './api'
@@ -15,6 +16,7 @@ export function useSavePayment(id: string | null) {
     mutationFn: (payload: api.PaymentPayload) =>
       id ? api.updatePayment(id, payload) : api.createPayment(payload),
     onSuccess: () => invalidate(queryClient),
+    meta: { success: () => TOAST_TEXT.payment_saved, inlineErrors: true },
   })
 }
 
@@ -23,5 +25,6 @@ export function useDeletePayment() {
   return useMutation({
     mutationFn: api.deletePayment,
     onSuccess: () => invalidate(queryClient),
+    meta: { success: () => TOAST_TEXT.payment_deleted },
   })
 }

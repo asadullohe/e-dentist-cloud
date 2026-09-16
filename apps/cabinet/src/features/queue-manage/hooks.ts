@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { QUEUE_KEYS } from '@/entities/queue'
 import { SESSION_QUERY_KEY } from '@/entities/session'
@@ -31,5 +32,6 @@ export function useSetQueueEnabled() {
     mutationFn: setQueueEnabled,
     // Holat sessiya javobida keladi — menyu va sahifa shundan oʻqiydi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY }),
+    meta: { success: () => TOAST_TEXT.queue_setting_saved, inlineErrors: true },
   })
 }

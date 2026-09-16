@@ -9,6 +9,8 @@ export function useLogin() {
   return useMutation({
     mutationFn: api.login,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY }),
+    // Kirish sahifasi xatoni forma ostida koʻrsatadi; muvaffaqiyat — kabinetga oʻtish
+    meta: { inlineErrors: true },
   })
 }
 
@@ -19,15 +21,16 @@ export function useLogout() {
     // Chiqqandan keyin keshda hech narsa qolmasin: keyingi foydalanuvchi
     // oldingisining maʼlumotini koʻrmasligi kerak
     onSuccess: () => queryClient.clear(),
+    meta: { inlineErrors: true },
   })
 }
 
 export function useRegister() {
-  return useMutation({ mutationFn: api.register })
+  return useMutation({ mutationFn: api.register, meta: { inlineErrors: true } })
 }
 
 export function useVerifyEmail() {
-  return useMutation({ mutationFn: api.verifyEmail })
+  return useMutation({ mutationFn: api.verifyEmail, meta: { inlineErrors: true } })
 }
 
 /// Havolani tekshirish. Xato boʻlsa qayta urinishning maʼnosi yoʻq —
@@ -47,6 +50,7 @@ export function useAcceptInvite() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: api.acceptInvite,
+    meta: { inlineErrors: true },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY }),
   })
 }

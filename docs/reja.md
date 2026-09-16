@@ -1151,6 +1151,15 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       (tashrif shifokori, ish haqi sharti, shifokor ulushi, ish haqi
       ruxsatlari, ish haqi toʻlovlari) `migrate` konteynerida oʻzi oʻtadi,
       hammasi orqaga mos
+- [x] **9.7 Toast bildirishlar** _(foydalanuvchi taklifi, 16/09/2026)_ —
+      `<Toaster />` ulangan, lekin 35 mutatsiyaning birortasi ishlatmasdi.
+      Markazlashtirildi: `QueryClient` ning `MutationCache` da bitta joy —
+      muvaffaqiyat matnini mutatsiya `meta.success` (funksiya — joriy tilda)
+      beradi, xato avtomatik. Maydon xatolari (formada koʻrinadi) va
+      `meta.inlineErrors` li formalar toast bermaydi — bir xato ikki joyda
+      chiqmasin. Matnlar `TOAST_TEXT` (uz/ru). Inline «saqlandi» yozuvlari
+      (rol, parol, qayta hisoblash) toastga koʻchdi. Navbat amallari
+      muvaffaqiyatda jim (roʻyxat oʻzi oʻzgaradi), xatoda toast
 
 ---
 

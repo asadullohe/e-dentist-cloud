@@ -34,7 +34,6 @@ export function AccountTab() {
   const { data: session } = useSession()
   const { mutateAsync, isPending } = useChangePassword()
   const [formError, setFormError] = useState('')
-  const [saved, setSaved] = useState(false)
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -43,11 +42,9 @@ export function AccountTab() {
 
   async function onSubmit(values: Values) {
     setFormError('')
-    setSaved(false)
     try {
       await mutateAsync(values)
       form.reset({ currentPassword: '', newPassword: '' })
-      setSaved(true)
     } catch (error) {
       setFormError(applyServerErrors(form, error))
     }
@@ -92,7 +89,6 @@ export function AccountTab() {
           />
 
           {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
-          {saved && <p className="text-ok text-sm font-medium">{STAFF_UI.password_changed}</p>}
 
           <Button type="submit" disabled={isPending}>
             {isPending ? UI_TEXT.loading : STAFF_UI.change_password}

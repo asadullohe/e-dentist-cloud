@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { APPOINTMENT_KEYS, type AppointmentStatus } from '@/entities/appointment'
 import * as api from './api'
@@ -8,6 +9,7 @@ export function useSaveAppointment(id: string | null) {
     mutationFn: (payload: api.AppointmentPayload) =>
       id ? api.updateAppointment(id, payload) : api.createAppointment(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.appointment_saved, inlineErrors: true },
   })
 }
 
@@ -18,6 +20,7 @@ export function useSetAppointmentStatus() {
     mutationFn: ({ id, status }: { id: string; status: AppointmentStatus }) =>
       api.updateAppointment(id, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.appointment_status },
   })
 }
 
@@ -26,5 +29,6 @@ export function useDeleteAppointment() {
   return useMutation({
     mutationFn: api.deleteAppointment,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.appointment_deleted },
   })
 }

@@ -23,14 +23,12 @@ function RoleCard({ role }: { role: Role }) {
   const { mutateAsync, isPending } = useUpdateRole()
   const [selected, setSelected] = useState<Permission[]>(role.permissions)
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
 
   const changed =
     selected.length !== role.permissions.length ||
     selected.some((permission) => !role.permissions.includes(permission))
 
   function toggle(permission: Permission, on: boolean) {
-    setSaved(false)
     setSelected((current) =>
       on ? [...current, permission] : current.filter((item) => item !== permission),
     )
@@ -40,7 +38,6 @@ function RoleCard({ role }: { role: Role }) {
     setError('')
     try {
       await mutateAsync({ id: role.id, permissions: selected })
-      setSaved(true)
     } catch (caught) {
       setError(caught instanceof ApiError ? caught.message : UI_TEXT.offline)
     }
@@ -79,7 +76,6 @@ function RoleCard({ role }: { role: Role }) {
         <Button size="sm" disabled={!changed || isPending} onClick={save}>
           {isPending ? UI_TEXT.loading : STAFF_UI.save_role}
         </Button>
-        {saved && !changed && <span className="text-ok text-sm">{STAFF_UI.role_saved}</span>}
       </div>
     </Card>
   )

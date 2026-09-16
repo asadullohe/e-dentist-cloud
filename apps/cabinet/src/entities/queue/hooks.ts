@@ -66,5 +66,9 @@ export function useQueueStream(code: string): void {
 }
 
 export function useJoinQueue(code: string) {
-  return useMutation({ mutationFn: (payload: JoinPayload) => joinQueue(code, payload) })
+  return useMutation({
+    mutationFn: (payload: JoinPayload) => joinQueue(code, payload),
+    // Ochiq sahifa xatoni oʻzi koʻrsatadi
+    meta: { inlineErrors: true },
+  })
 }
