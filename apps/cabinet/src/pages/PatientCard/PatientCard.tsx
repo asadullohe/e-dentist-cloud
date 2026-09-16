@@ -138,16 +138,20 @@ function ChartTab({ patientId }: { patientId: string }) {
   )
 }
 
-/// Kartochka boʻlimlari. Funksiya — matnlar joriy tilda oʻqilishi uchun
-function cardItems(id: string, canLab: boolean): SideNavItem[] {
+/// Kartochka boʻlimlari. Funksiya — matnlar joriy tilda oʻqilishi uchun.
+/// Ruxsatga bogʻliq boʻlimlar (toʻlovlar, texnik) roʻyxatga kirmaydi —
+/// shifokor «Toʻlovlar» ni koʻrmaydi, haqiqiy himoya serverda
+function cardItems(id: string, can: { payments: boolean; lab: boolean }): SideNavItem[] {
   const base = `/patients/${id}`
   const items: SideNavItem[] = [
     { to: base, label: CARD_UI.tab_visits, icon: CalendarIcon },
     { to: `${base}/tishlar`, label: CARD_UI.tab_chart, icon: LayoutGridIcon },
-    { to: `${base}/tolovlar`, label: PAYMENT_UI.tab, icon: CreditCardIcon },
-    { to: `${base}/rasmlar`, label: IMAGE_UI.tab, icon: ImageIcon },
   ]
-  if (canLab) items.push({ to: `${base}/texnik`, label: LAB_UI.tab, icon: FlaskConicalIcon })
+  if (can.payments) {
+    items.push({ to: `${base}/tolovlar`, label: PAYMENT_UI.tab, icon: CreditCardIcon })
+  }
+  items.push({ to: `${base}/rasmlar`, label: IMAGE_UI.tab, icon: ImageIcon })
+  if (can.lab) items.push({ to: `${base}/texnik`, label: LAB_UI.tab, icon: FlaskConicalIcon })
   return items
 }
 
@@ -239,7 +243,16 @@ export function PatientCard() {
       </div>
 
       <Separator className="mb-4" />
-      <SideNavLayout nav={<SideNav items={cardItems(id, hasPermission('lab.write'))} />}>
+      <SideNavLayout
+        nav={
+          <SideNav
+            items={cardItems(id, {
+              payments: hasPermission('payments.read'),
+              lab: hasPermission('lab.write'),
+            })}
+          />
+        }
+      >
         <Outlet />
       </SideNavLayout>
 

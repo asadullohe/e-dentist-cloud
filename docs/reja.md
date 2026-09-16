@@ -1123,6 +1123,10 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `filename="…"` yuborar, kabinet faqat `filename*=` ni oʻqirdi — zip
       `export.xlsx` nomi bilan saqlanib Excel ochmasdi. Endi `attachment()`
       yordamchisi `platform/response.ts` da, kabinet ikkala shaklni oʻqiydi
+- [x] **9.5b Kartochkada ruxsatga qarab boʻlimlar** — «Toʻlovlar» boʻlimi
+      faqat `payments.read` bilan (shifokor koʻrmaydi); «Toʻlov qabul qilish»
+      va qator amallari — `payments.write`; tashrif qoʻshish/tahrir —
+      `visits.write`. Avval hammaga koʻrinar, server 403 berardi
 - [~] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi. Qolgani
       foydalanuvchi tasdigʻidan keyin: `master` ga qoʻshish → avtomatik
       chiqarish → serverda `prisma migrate deploy` (5 ta migratsiya: tashrif
