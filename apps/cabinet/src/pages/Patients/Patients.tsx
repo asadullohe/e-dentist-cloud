@@ -11,6 +11,7 @@ import { FileDownIcon, PlusIcon, SearchIcon, SheetIcon, UploadIcon, XIcon } from
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
+import { useHasPermission } from '@/entities/session'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { PatientImportDialog } from '@/features/patient-import'
 import { ApiError, downloadFile } from '@/shared/api'
@@ -86,10 +87,13 @@ export function Patients() {
     dir: sort?.desc ? 'desc' : 'asc',
   })
   const { mutateAsync: remove, isPending: isRemoving } = useDeletePatient()
+  const hasPermission = useHasPermission()
+  // Kuzatuvchi roʻyxatni koʻradi va Excelga chiqaradi, lekin yozmaydi
+  const canWrite = hasPermission('patients.write')
 
   const table = useReactTable({
     data: data?.items ?? [],
-    columns: patientColumns({ onEdit: openEdit, onRemove: setRemoving }),
+    columns: patientColumns({ onEdit: openEdit, onRemove: setRemoving, canEdit: canWrite }),
     pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
     state: { pagination, sorting, columnVisibility, columnFilters },
     manualPagination: true,
@@ -131,19 +135,23 @@ export function Patients() {
           {data && <p className="text-muted-foreground text-sm">{PATIENT_UI.total(data.total)}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={busy !== null}
-            onClick={() => download('template')}
-          >
-            <FileDownIcon />
-            {busy === 'template' ? EXCEL_UI.downloading : EXCEL_UI.template}
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-            <UploadIcon />
-            {IMPORT_UI.title}
-          </Button>
+          {canWrite && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy !== null}
+                onClick={() => download('template')}
+              >
+                <FileDownIcon />
+                {busy === 'template' ? EXCEL_UI.downloading : EXCEL_UI.template}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+                <UploadIcon />
+                {IMPORT_UI.title}
+              </Button>
+            </>
+          )}
           <Button
             size="sm"
             variant="outline"
@@ -153,10 +161,12 @@ export function Patients() {
             <SheetIcon />
             {busy === 'export' ? EXCEL_UI.downloading : EXCEL_UI.export}
           </Button>
-          <Button size="sm" onClick={openNew}>
-            <PlusIcon />
-            {PATIENT_UI.add}
-          </Button>
+          {canWrite && (
+            <Button size="sm" onClick={openNew}>
+              <PlusIcon />
+              {PATIENT_UI.add}
+            </Button>
+          )}
         </div>
       </div>
 

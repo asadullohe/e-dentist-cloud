@@ -23,10 +23,27 @@ export interface SettingsItem {
 /// Funksiya, konstanta emas: matnlar joriy tilga qarab oʻqilishi kerak.
 /// Modul darajasidagi massiv ularni import vaqtida muzlatib qoʻyardi
 export const settingsItems = (): readonly SettingsItem[] => [
+  // «Hisobim» — har xodimga: egasi bergan boshlangʻich parolni shu yerda
+  // almashtiradi (tz.md 6-boʻlim). Qolganlari egasining ishi
   { to: '/settings', label: STAFF_UI.account_tab, icon: UserCogIcon },
-  { to: '/settings/xodimlar', label: STAFF_UI.staff_tab, icon: UsersIcon },
-  { to: '/settings/rollar', label: STAFF_UI.roles_tab, icon: ShieldIcon },
-  { to: '/settings/klinika', label: LOGO_UI.tab, icon: BuildingIcon },
-  { to: '/settings/navbat', label: QUEUE_CABINET_UI.settings_tab, icon: BellIcon },
+  {
+    to: '/settings/xodimlar',
+    label: STAFF_UI.staff_tab,
+    icon: UsersIcon,
+    permission: 'staff.manage',
+  },
+  {
+    to: '/settings/rollar',
+    label: STAFF_UI.roles_tab,
+    icon: ShieldIcon,
+    permission: 'staff.manage',
+  },
+  { to: '/settings/klinika', label: LOGO_UI.tab, icon: BuildingIcon, permission: 'staff.manage' },
+  {
+    to: '/settings/navbat',
+    label: QUEUE_CABINET_UI.settings_tab,
+    icon: BellIcon,
+    permission: 'staff.manage',
+  },
   { to: '/settings/malumot', label: EXPORT_UI.tab, icon: DatabaseIcon, permission: 'data.export' },
 ]

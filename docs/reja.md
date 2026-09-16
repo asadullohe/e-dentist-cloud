@@ -1127,6 +1127,25 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       faqat `payments.read` bilan (shifokor koʻrmaydi); «Toʻlov qabul qilish»
       va qator amallari — `payments.write`; tashrif qoʻshish/tahrir —
       `visits.write`. Avval hammaga koʻrinar, server 403 berardi
+- [x] **9.5c Ruxsatlar auditi (kabinet)** — server marshrutlari ↔ kabinet
+      tugmalari solishtirildi. Topilgan va tuzatilgani:
+      · marshrut darajasida himoya yoʻq edi — `/expenses`, `/services`,
+        `/settings/xodimlar` … ni manzil yozib ochish mumkin edi (server 403,
+        sahifa boʻsh). Endi `RequirePermission` — ruxsatsiz bosh sahifaga
+      · Sozlamalar butunlay `staff.manage` ostida edi — shifokor/qabulxona/
+        texnik **oʻz parolini almashtira olmasdi** (tz.md 6-boʻlim buzilgan).
+        Endi Sozlamalar hammaga, ichida faqat ruxsatli boʻlimlar; foydalanuvchi
+        menyusida ham «Hisobim»
+      · Bemorlar: shablon/import/yangi bemor/tahrir/oʻchirish — `patients.write`
+        (kuzatuvchi koʻrardi); kartochkada «Tahrirlash» ham
+      · Tish xaritasi: koʻprik qoʻshish/oʻchirish, tishni bosib tahrirlash —
+        `teeth.write`
+      · Rasmlar: yuklash/oʻchirish — `patients.write`
+      · Bosh sahifa: bugungi qabullar `schedule.write` **va** `patients.read`
+        (server GET /appointments `patients.read` talab qiladi)
+      Toʻgʻri boʻlgani: Texnik ishlari (lab.write/lab.cost/lab.own toʻliq
+      ajratilgan), Xarajatlar, Narxnoma, Hisobotlar, Navbat, Qarzdorlar — sahifa
+      ruxsati bilan amal ruxsati bir xil
 - [~] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi. Qolgani
       foydalanuvchi tasdigʻidan keyin: `master` ga qoʻshish → avtomatik
       chiqarish → serverda `prisma migrate deploy` (5 ta migratsiya: tashrif

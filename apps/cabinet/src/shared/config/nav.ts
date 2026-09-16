@@ -75,11 +75,11 @@ export const navSections = (): readonly NavSection[] => [
     icon: BanknoteIcon,
     permission: 'payroll.own',
   },
+  // Hammaga: ichida «Hisobim» bor. Qolgan boʻlimlar oʻz ruxsati bilan
   {
     path: '/settings',
     label: SECTION_LABELS.settings,
     icon: SettingsIcon,
-    permission: 'staff.manage',
     children: settingsItems(),
   },
 ]

@@ -53,6 +53,9 @@ import { VisitsTab } from './VisitsTab'
 function ChartTab({ patientId }: { patientId: string }) {
   const { data: chart, isPending } = useToothChart(patientId)
   const { mutateAsync: removeBridge } = useDeleteBridge(patientId)
+  const hasPermission = useHasPermission()
+  // Qabulxona xaritani koʻradi, oʻzgartirmaydi
+  const canEdit = hasPermission('teeth.write')
   const [picked, setPicked] = useState<number | null>(null)
   const [bridgeOpen, setBridgeOpen] = useState(false)
   const [deletingBridge, setDeletingBridge] = useState<BridgeInfo | null>(null)
@@ -63,15 +66,21 @@ function ChartTab({ patientId }: { patientId: string }) {
 
   return (
     <>
-      <div className="mb-3 flex justify-end">
-        <Button size="sm" variant="outline" onClick={() => setBridgeOpen(true)}>
-          <PlusIcon />
-          {BRIDGE_UI.add}
-        </Button>
-      </div>
+      {canEdit && (
+        <div className="mb-3 flex justify-end">
+          <Button size="sm" variant="outline" onClick={() => setBridgeOpen(true)}>
+            <PlusIcon />
+            {BRIDGE_UI.add}
+          </Button>
+        </div>
+      )}
 
       <Card className="p-4">
-        <ToothChart teeth={chart?.teeth ?? []} bridges={bridges} onPick={setPicked} />
+        <ToothChart
+          teeth={chart?.teeth ?? []}
+          bridges={bridges}
+          onPick={canEdit ? setPicked : undefined}
+        />
       </Card>
 
       {bridges.length > 0 && (
@@ -89,9 +98,11 @@ function ChartTab({ patientId }: { patientId: string }) {
                 <span className="text-muted-foreground text-xs">
                   {crownMaterialLabel(bridge.material)}
                 </span>
-                <Button variant="ghost" size="icon" onClick={() => setDeletingBridge(bridge)}>
-                  <Trash2Icon />
-                </Button>
+                {canEdit && (
+                  <Button variant="ghost" size="icon" onClick={() => setDeletingBridge(bridge)}>
+                    <Trash2Icon />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
@@ -236,10 +247,12 @@ export function PatientCard() {
             {years !== null && ` · ${CARD_UI.age_years(years)}`}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-          <PencilIcon />
-          {CARD_UI.edit}
-        </Button>
+        {hasPermission('patients.write') && (
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+            <PencilIcon />
+            {CARD_UI.edit}
+          </Button>
+        )}
       </div>
 
       <Separator className="mb-4" />
