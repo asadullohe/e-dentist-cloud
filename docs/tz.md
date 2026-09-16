@@ -677,6 +677,8 @@ Xodimda `pay_type` enum yoʻq, ikkita son bor: `salary_amount` (oylik, soʻm) va
 
 Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi.
 
+Oylik **hisob ochilgan oydan** boshlab sanaladi (`users.created_at`) — bugun qoʻshilgan administratorga oʻtgan yil uchun oylik chiqmasin.
+
 ### Tashrifga shifokor va ulush yoziladi
 
 `visits` ga uchta ustun: `doctor_id`, `doctor_percent`, `doctor_share`.
@@ -713,6 +715,8 @@ Xodimga pul berilganda «Toʻlash» amali `expenses` ga `salary` turkumida yozuv
 `staff_payouts` jadvali (user_id, month, expense_id) toʻlovni oy va xodimga bogʻlaydi. **Summa va sana xarajatning oʻzida** — ikki joyda turgan son ertami-kechmi ajralib qoladi. Xarajat oʻchirilsa bogʻlanish ham ketadi (`ON DELETE CASCADE`), «toʻlangan» qaytadan sanaladi.
 
 Hisobotdagi sof foyda oʻz-oʻzidan toʻgʻri boʻladi: `tushum − xarajat`, ish haqi xarajatga tushgan.
+
+Eksport arxivida `ish-haqi.xlsx`: oy × xodim — tashriflar, ish summasi, foiz, ulush, oylik, jami, toʻlangan, qoldiq; birinchi tashrif yoki toʻlovdan joriy oygacha.
 
 ## 16. Bosqichlar
 

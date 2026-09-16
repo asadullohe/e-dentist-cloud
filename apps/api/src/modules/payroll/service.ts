@@ -5,7 +5,7 @@
 // Hisob = oylik + Σ tashrif ulushi. Ulush tashrifda snapshot, shuning uchun
 // bu yerda foiz qayta koʻpaytirilmaydi — `doctor_share` yigʻiladi.
 
-import { formatMonth, PAYROLL_TEXT } from '@e-dentist/shared'
+import { formatMonth, PAYROLL_TEXT, shiftMonth } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
@@ -82,6 +82,11 @@ export interface PayrollVisit {
   share: number
 }
 
+/// `created_at` aniq vaqt, jarayon TZ si Asia/Tashkent — mahalliy oy olinadi
+function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
 /// DATE ustunlari UTC yarim tunda — chegaralar ham UTC da (reports bilan bir xil)
 export function monthRange(month: string): { from: Date; to: Date } {
   const [year, index] = month.split('-').map(Number) as [number, number]
@@ -136,7 +141,10 @@ async function build(tx: ClinicTx, month: string, viewer: Viewer): Promise<Payro
     .map((person) => {
       const work = byDoctor.get(person.id)
       const share = work?.share ?? 0
-      const total = person.salaryAmount + share
+      // Oylik hisob ochilgan oydan boshlab: bugun qoʻshilgan administratorga
+      // oʻtgan yil uchun ham oylik chiqmasin
+      const salary = monthKey(person.createdAt) <= month ? person.salaryAmount : 0
+      const total = salary + share
       const own = payouts.get(person.id) ?? []
       const paid = own.reduce((acc, payout) => acc + payout.amount, 0)
       return {
@@ -148,7 +156,7 @@ async function build(tx: ClinicTx, month: string, viewer: Viewer): Promise<Payro
         charges: work?.charges ?? 0,
         percent: person.payPercent,
         share,
-        salary: person.salaryAmount,
+        salary,
         total,
         paid,
         remaining: total - paid,
@@ -300,4 +308,53 @@ export function removePayout(
       meta: { payoutId: id, expenseId: link.expenseId },
     })
   })
+}
+
+export interface PayrollExportRow {
+  month: string
+  fullName: string
+  roleName: string | null
+  visits: number
+  charges: number
+  percent: number
+  share: number
+  salary: number
+  total: number
+  paid: number
+  remaining: number
+}
+
+/// Boshqa modullar uchun (export): birinchi tashrif yoki toʻlovdan joriy
+/// oygacha, oy × xodim. Boʻsh qatorlar (na ish, na oylik, na toʻlov) tushmaydi.
+/// Ochiq tranzaksiya ichida
+export async function exportRowsTx(tx: ClinicTx): Promise<PayrollExportRow[]> {
+  const [firstVisit, firstPayout] = await Promise.all([visits.firstDateTx(tx), repo.firstMonth(tx)])
+  const starts = [firstVisit, firstPayout]
+    .filter((date): date is Date => date !== null)
+    .map((date) => date.toISOString().slice(0, 7))
+  if (starts.length === 0) return []
+
+  const viewer: Viewer = { userId: '', manage: true }
+  const rows: PayrollExportRow[] = []
+  const last = monthKey(new Date())
+  for (let month = starts.sort()[0] as string; month <= last; month = shiftMonth(month, 1)) {
+    const payroll = await build(tx, month, viewer)
+    for (const row of payroll.rows) {
+      if (row.visits === 0 && row.total === 0 && row.paid === 0) continue
+      rows.push({
+        month,
+        fullName: row.fullName,
+        roleName: row.roleName,
+        visits: row.visits,
+        charges: row.charges,
+        percent: row.percent,
+        share: row.share,
+        salary: row.salary,
+        total: row.total,
+        paid: row.paid,
+        remaining: row.remaining,
+      })
+    }
+  }
+  return rows
 }

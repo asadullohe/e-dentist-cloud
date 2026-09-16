@@ -1118,6 +1118,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `DELETE /payroll/payouts/:id` → xarajat ham oʻchadi; sahifada
       «toʻlangan / qoldiq» ustunlari va «Toʻlash» oynasi (toʻlovlar roʻyxati,
       qoʻshish, oʻchirish). Testlar: xarajat oʻchsa bogʻlanish ketadi
+- [x] **9.5a Eksport va tuzatishlar** — arxivga `ish-haqi.xlsx` (oy × xodim);
+      oylik hisob ochilgan oydan; yuklab olish xatosi: server
+      `filename="…"` yuborar, kabinet faqat `filename*=` ni oʻqirdi — zip
+      `export.xlsx` nomi bilan saqlanib Excel ochmasdi. Endi `attachment()`
+      yordamchisi `platform/response.ts` da, kabinet ikkala shaklni oʻqiydi
 - [~] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi. Qolgani
       foydalanuvchi tasdigʻidan keyin: `master` ga qoʻshish → avtomatik
       chiqarish → serverda `prisma migrate deploy` (5 ta migratsiya: tashrif

@@ -16,6 +16,7 @@ import * as expenses from '../expenses/service.js'
 import * as lab from '../lab/service.js'
 import * as patients from '../patients/service.js'
 import * as payments from '../payments/service.js'
+import * as payroll from '../payroll/service.js'
 import * as schedule from '../schedule/service.js'
 import * as services from '../services/service.js'
 import * as visits from '../visits/service.js'
@@ -39,6 +40,7 @@ const WIDTH = {
   expenses: [14, 20, 40, 16],
   lab: [14, 28, 20, 20, 10, 20, 24, 16, 16, 12, 40],
   services: [40, 16],
+  payroll: [16, 28, 16, 10, 16, 8, 16, 16, 16, 16, 16],
 }
 
 export function buildArchive(deps: ExportDeps, clinicId: string, userId: string): Promise<Archive> {
@@ -52,13 +54,15 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       visits.exportTeethTx(tx),
       visits.exportBridgesTx(tx),
     ])
-    const [paymentRows, appointmentRows, expenseRows, labRows, serviceRows] = await Promise.all([
-      payments.exportPaymentsTx(tx),
-      schedule.exportAppointmentsTx(tx),
-      expenses.exportExpensesTx(tx),
-      lab.exportOrdersTx(tx),
-      services.listTx(tx),
-    ])
+    const [paymentRows, appointmentRows, expenseRows, labRows, serviceRows, payrollRows] =
+      await Promise.all([
+        payments.exportPaymentsTx(tx),
+        schedule.exportAppointmentsTx(tx),
+        expenses.exportExpensesTx(tx),
+        lab.exportOrdersTx(tx),
+        services.listTx(tx),
+        payroll.exportRowsTx(tx),
+      ])
 
     const names = new Map(people.map((person) => [person.id, person.fio]))
     // Bitta soʻrovda: naryaddagi texniklar va tashrifdagi shifokorlar
@@ -80,6 +84,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       expensesFile,
       labFile,
       servicesFile,
+      payrollFile,
     ] = await Promise.all([
       patients.buildPatientsSheet(people),
       sheets.toBuffer('Tashriflar', sheets.visitsSheet(visitRows, names, staffNames), WIDTH.visits),
@@ -98,6 +103,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
         WIDTH.lab,
       ),
       sheets.toBuffer('Narxnoma', sheets.servicesSheet(serviceRows), WIDTH.services),
+      sheets.toBuffer('Ish haqi', sheets.payrollSheet(payrollRows), WIDTH.payroll),
     ])
 
     const zip = new AdmZip()
@@ -110,6 +116,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
     zip.addFile(EXPORT_FILES.expenses, expensesFile)
     zip.addFile(EXPORT_FILES.lab, labFile)
     zip.addFile(EXPORT_FILES.services, servicesFile)
+    zip.addFile(EXPORT_FILES.payroll, payrollFile)
     zip.addFile(
       EXPORT_FILES.readme,
       Buffer.from(EXPORT_UI.readme(clinic.name, formatDate(todayISO())), 'utf8'),

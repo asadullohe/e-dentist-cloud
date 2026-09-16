@@ -76,6 +76,12 @@ beforeAll(async () => {
     salaryAmount: 3_000_000,
   })
   adminId = admin.json().data.id
+  // Oylik hisob ochilgan oydan boshlab sanaladi — sinov oylari 2026-04/05,
+  // shuning uchun hisoblar oʻsha paytda ochilgan deb belgilanadi
+  await h.ownerDb.user.updateMany({
+    where: { id: { in: [doctorId, adminId] } },
+    data: { createdAt: new Date('2026-04-01T09:00:00+05:00') },
+  })
 
   const login = await h.app.inject({
     method: 'POST',
@@ -179,6 +185,13 @@ describe('oylik hisob', () => {
     expect(data.totals.salary).toBe(3_000_000)
     expect(data.totals.total).toBe(3_250_000)
     expect(data.unassigned).toEqual({ visits: 1, charges: 50_000 })
+  })
+
+  it('oylik hisob ochilgan oydan boshlab — oldingi oyga chiqmaydi', async () => {
+    const before = (await payroll('2026-03')).rows.find((row) => row.userId === adminId)
+    expect(before).toMatchObject({ salary: 0, total: 0 })
+    const after = (await payroll('2026-05')).rows.find((row) => row.userId === adminId)
+    expect(after).toMatchObject({ salary: 3_000_000 })
   })
 
   it('boshqa oy alohida', async () => {

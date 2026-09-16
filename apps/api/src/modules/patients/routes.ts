@@ -3,14 +3,10 @@ import { EXCEL_TEXT, IMAGE_TEXT, IMPORT_TEXT, IMPORT_UI, todayISO } from '@e-den
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 /// Fayl nomida oʻzbekcha harflar bor — RFC 5987 koʻrinishi kerak
-function attachment(filename: string): string {
-  return `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`
-}
-
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
-import { ok } from '../../platform/response.js'
+import { attachment, ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import {
   importCommitSchema,

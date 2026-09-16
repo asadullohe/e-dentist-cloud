@@ -452,6 +452,8 @@ export interface StaffMember {
   salaryAmount: number
   payPercent: number
   lastLoginAt: Date | null
+  /// Hisob ochilgan vaqt — oylik shu oydan boshlab hisoblanadi (payroll)
+  createdAt: Date
 }
 
 /// Xodimning ish haqi sharti. Boshqa modullar uchun (visits — tashrifga
@@ -541,6 +543,7 @@ export async function listStaffTx(tx: ClinicTx): Promise<StaffMember[]> {
     salaryAmount: person.salaryAmount,
     payPercent: person.payPercent,
     lastLoginAt: person.lastLoginAt,
+    createdAt: person.createdAt,
   }))
 }
 
@@ -601,6 +604,7 @@ export function createStaff(
       salaryAmount: created.salaryAmount,
       payPercent: created.payPercent,
       lastLoginAt: created.lastLoginAt,
+      createdAt: created.createdAt,
     }
   })
 }

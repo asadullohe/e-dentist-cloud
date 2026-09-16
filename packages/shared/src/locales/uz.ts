@@ -680,6 +680,7 @@ export const EXPORT_FILES = {
   expenses: 'xarajatlar.xlsx',
   lab: 'naryadlar.xlsx',
   services: 'narxnoma.xlsx',
+  payroll: 'ish-haqi.xlsx',
   readme: 'malumot.txt',
 } as const
 
@@ -705,6 +706,18 @@ export const EXPORT_COLUMNS = {
   tech_price: 'Texnik narxi',
   returns: 'Qaytishlar',
   bridge: 'Koʻprik',
+  // ish-haqi.xlsx
+  month: 'Oy',
+  staff: 'Xodim',
+  role: 'Rol',
+  visits: 'Tashriflar',
+  charges: 'Ish summasi',
+  percent: 'Foiz',
+  share: 'Ulush',
+  salary: 'Oylik',
+  total: 'Jami',
+  paid: 'Toʻlangan',
+  remaining: 'Qoldiq',
 } as const
 
 export const EXPORT_UI = {

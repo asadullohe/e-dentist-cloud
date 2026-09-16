@@ -160,6 +160,12 @@ export function topTreatments(tx: ClinicTx, from: Date, to: Date, take: number) 
   })
 }
 
+/// Eng birinchi tashrif sanasi — eksportda oylar oraligʻi shundan boshlanadi
+export async function firstDate(tx: ClinicTx): Promise<Date | null> {
+  const row = await tx.visit.aggregate({ _min: { date: true } })
+  return row._min.date
+}
+
 /// Ish haqi uchun: oy ichida shifokor boʻyicha jamlanma. `doctorId` null —
 /// 9.1 dan oldingi yozuvlar («shifokor koʻrsatilmagan» qatori)
 export function doctorTotals(tx: ClinicTx, from: Date, to: Date) {

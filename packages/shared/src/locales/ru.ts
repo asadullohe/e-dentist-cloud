@@ -636,6 +636,7 @@ export const ru: DeepPartial<Strings> = {
     expenses: 'rashody.xlsx',
     lab: 'naryady.xlsx',
     services: 'prajs-list.xlsx',
+    payroll: 'zarplata.xlsx',
     readme: 'opisanie.txt',
   },
 
@@ -661,6 +662,17 @@ export const ru: DeepPartial<Strings> = {
     tech_price: 'Цена техника',
     returns: 'Возвраты',
     bridge: 'Мост',
+    month: 'Месяц',
+    staff: 'Сотрудник',
+    role: 'Роль',
+    visits: 'Визиты',
+    charges: 'Сумма работ',
+    percent: 'Процент',
+    share: 'Доля',
+    salary: 'Оклад',
+    total: 'Итого',
+    paid: 'Выплачено',
+    remaining: 'Остаток',
   },
 
   EXPORT_UI: {

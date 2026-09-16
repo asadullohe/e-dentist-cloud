@@ -29,3 +29,8 @@ export function create(
 ) {
   return tx.staffPayout.create({ data: tenantScoped({ id, ...data }), select: SELECT })
 }
+
+export async function firstMonth(tx: ClinicTx): Promise<Date | null> {
+  const row = await tx.staffPayout.aggregate({ _min: { month: true } })
+  return row._min.month
+}

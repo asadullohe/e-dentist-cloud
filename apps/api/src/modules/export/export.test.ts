@@ -6,6 +6,7 @@ import {
   removeClinic,
   startHarness,
 } from '../../test-support/harness.js'
+import { sheetRows } from '../../test-support/sheets.js'
 
 let h: Harness
 let patientId = ''
@@ -86,9 +87,33 @@ describe('toʻliq eksport', () => {
         'xarajatlar.xlsx',
         'naryadlar.xlsx',
         'narxnoma.xlsx',
+        'ish-haqi.xlsx',
         'malumot.txt',
       ]),
     )
+  })
+
+  // Egasi tashrifni oʻzi yozgan (foizsiz) — qatorda 1 tashrif, ulush 0.
+  // Oylar birinchi tashrifdan (2026-03) boshlanadi
+  it('ish-haqi.xlsx — oy × xodim, tashriflar va ulush', async () => {
+    const { zip } = await archive()
+    const rows = await sheetRows(zip.getEntry('ish-haqi.xlsx')?.getData() as Buffer)
+    expect(rows[0]).toEqual([
+      'Oy',
+      'Xodim',
+      'Rol',
+      'Tashriflar',
+      'Ish summasi',
+      'Foiz',
+      'Ulush',
+      'Oylik',
+      'Jami',
+      'Toʻlangan',
+      'Qoldiq',
+    ])
+    const march = rows.find((row) => row[0] === 'Mart 2026')
+    expect(march).toBeDefined()
+    expect(march?.slice(3)).toEqual([1, 300_000, 0, 0, 0, 0, 0, 0])
   })
 
   it('maʼlumot faylida klinika nomi bor', async () => {

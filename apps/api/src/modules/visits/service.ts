@@ -64,6 +64,11 @@ export async function dailyTotalsTx(
   }))
 }
 
+/// Boshqa modullar uchun (payroll): eng birinchi tashrif sanasi
+export function firstDateTx(tx: ClinicTx): Promise<Date | null> {
+  return repo.firstDate(tx)
+}
+
 /// Boshqa modullar uchun (payroll): oy ichida shifokor boʻyicha jamlanma
 export async function doctorTotalsTx(
   tx: ClinicTx,
