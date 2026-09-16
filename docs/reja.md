@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 9.6 — hujjatlar va chiqarish
+**Hozirgi task:** yoʻq — 9-bosqich yopildi _(16/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1146,11 +1146,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       Toʻgʻri boʻlgani: Texnik ishlari (lab.write/lab.cost/lab.own toʻliq
       ajratilgan), Xarajatlar, Narxnoma, Hisobotlar, Navbat, Qarzdorlar — sahifa
       ruxsati bilan amal ruxsati bir xil
-- [~] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi. Qolgani
-      foydalanuvchi tasdigʻidan keyin: `master` ga qoʻshish → avtomatik
-      chiqarish → serverda `prisma migrate deploy` (5 ta migratsiya: tashrif
-      shifokori, ish haqi sharti, shifokor ulushi, ish haqi ruxsatlari, ish
-      haqi toʻlovlari; hammasi orqaga mos — eski yozuvlar buzilmaydi)
+- [x] **9.6 Hujjatlar va chiqarish** — tz.md/CLAUDE.md yangilandi;
+      16/09/2026 `master` ga qoʻshildi → avtomatik chiqarish; 5 ta migratsiya
+      (tashrif shifokori, ish haqi sharti, shifokor ulushi, ish haqi
+      ruxsatlari, ish haqi toʻlovlari) `migrate` konteynerida oʻzi oʻtadi,
+      hammasi orqaga mos
 
 ---
 
