@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { TOOTH_KEYS } from '@/entities/tooth'
 import * as api from './api'
@@ -9,5 +10,6 @@ export function useSetTooth(patientId: string) {
       api.setTooth(patientId, tooth, payload),
     // Server tayyor xaritani qaytaradi — qayta soʻrash shart emas
     onSuccess: (chart) => queryClient.setQueryData(TOOTH_KEYS.chart(patientId), chart),
+    meta: { success: () => TOAST_TEXT.tooth_saved },
   })
 }

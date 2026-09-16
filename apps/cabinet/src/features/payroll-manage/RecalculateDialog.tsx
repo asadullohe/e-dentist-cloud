@@ -18,12 +18,11 @@ interface RecalculateDialogProps {
   /// Boʻsh — oyna yopiq
   row: PayrollRow | null
   onClose(): void
-  onDone(count: number): void
 }
 
 /// Oydagi tashriflarga xodimning joriy foizini qayta yozish. Snapshot
 /// qoidasidan aniq chekinish — shuning uchun tasdiq soʻraladi (tz.md 15-boʻlim)
-export function RecalculateDialog({ month, row, onClose, onDone }: RecalculateDialogProps) {
+export function RecalculateDialog({ month, row, onClose }: RecalculateDialogProps) {
   const { mutateAsync, isPending } = useRecalculate()
   const [error, setError] = useState('')
 
@@ -31,8 +30,8 @@ export function RecalculateDialog({ month, row, onClose, onDone }: RecalculateDi
     if (!row) return
     setError('')
     try {
-      const result = await mutateAsync({ month, userId: row.userId })
-      onDone(result.count)
+      // Natija toastda (hook `meta.success`)
+      await mutateAsync({ month, userId: row.userId })
       onClose()
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '')

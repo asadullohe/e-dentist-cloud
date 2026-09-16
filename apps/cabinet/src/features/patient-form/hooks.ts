@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PATIENT_KEYS } from '@/entities/patient'
 import * as api from './api'
@@ -8,6 +9,7 @@ export function useSavePatient(id: string | null) {
     mutationFn: (payload: api.PatientPayload) =>
       id ? api.updatePatient(id, payload) : api.createPatient(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.patient_saved, inlineErrors: true },
   })
 }
 
@@ -16,5 +18,6 @@ export function useDeletePatient() {
   return useMutation({
     mutationFn: api.deletePatient,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.patient_deleted },
   })
 }

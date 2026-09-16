@@ -1,3 +1,4 @@
+import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { EXPENSE_KEYS } from '@/entities/expense'
 import * as api from './api'
@@ -8,6 +9,7 @@ export function useSaveExpense(id: string | null) {
     mutationFn: (payload: api.ExpensePayload) =>
       id ? api.updateExpense(id, payload) : api.createExpense(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: EXPENSE_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.expense_saved, inlineErrors: true },
   })
 }
 
@@ -16,5 +18,6 @@ export function useDeleteExpense() {
   return useMutation({
     mutationFn: api.deleteExpense,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: EXPENSE_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.expense_deleted },
   })
 }

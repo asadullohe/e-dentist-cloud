@@ -483,6 +483,44 @@ export const PAYROLL_UI = {
   delete_payout_text: 'Xarajat ham oʻchadi. Bu amalni qaytarib boʻlmaydi.',
 } as const
 
+// Amal bajarilgach chiqadigan qisqa xabarlar (toast). Bitta qolip:
+// «nima» + «nima boʻldi». Xato matnlari serverdan keladi, bu yerda yoʻq
+export const TOAST_TEXT = {
+  patient_saved: 'Bemor saqlandi',
+  patient_deleted: 'Bemor oʻchirildi',
+  visit_saved: 'Tashrif saqlandi',
+  visit_deleted: 'Tashrif oʻchirildi',
+  tooth_saved: 'Tish holati saqlandi',
+  bridge_added: 'Koʻprik qoʻshildi',
+  bridge_deleted: 'Koʻprik oʻchirildi',
+  image_uploaded: 'Rasm yuklandi',
+  image_deleted: 'Rasm oʻchirildi',
+  payment_saved: 'Toʻlov saqlandi',
+  payment_deleted: 'Toʻlov oʻchirildi',
+  appointment_saved: 'Qabul saqlandi',
+  appointment_deleted: 'Qabul oʻchirildi',
+  appointment_status: 'Qabul holati yangilandi',
+  expense_saved: 'Xarajat saqlandi',
+  expense_deleted: 'Xarajat oʻchirildi',
+  service_saved: 'Narxnoma saqlandi',
+  service_deleted: 'Xizmat oʻchirildi',
+  staff_created: 'Xodim qoʻshildi',
+  staff_updated: 'Xodim yangilandi',
+  role_saved: 'Rol yangilandi',
+  password_changed: 'Parol almashtirildi',
+  lab_saved: 'Naryad saqlandi',
+  lab_deleted: 'Naryad oʻchirildi',
+  lab_status: 'Naryad holati yangilandi',
+  lab_returned: 'Naryad qaytarildi',
+  payout_saved: 'Toʻlov yozildi',
+  payout_deleted: 'Toʻlov oʻchirildi',
+  logo_saved: 'Logotip saqlandi',
+  logo_removed: 'Logotip olib tashlandi',
+  queue_setting_saved: 'Navbat sozlamasi saqlandi',
+  import_done: (added: number, updated: number) =>
+    `Yuklandi: ${added} ta yangi, ${updated} ta yangilandi`,
+} as const
+
 // Xodimlar va rollar
 export const STAFF_TEXT = {
   not_found: 'Xodim topilmadi',

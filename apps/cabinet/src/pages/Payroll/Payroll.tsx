@@ -61,7 +61,6 @@ export function Payroll() {
   // yangilanadi va oyna yangi qoldiqni koʻrsatishi kerak
   const [payForId, setPayForId] = useState<string | null>(null)
   const payFor = data?.rows.find((row) => row.userId === payForId) ?? null
-  const [notice, setNotice] = useState('')
 
   // Shifokor faqat oʻzini koʻradi — bitta qator, ishlar roʻyxati darhol ochiq
   const own = !manage && data?.rows.length === 1 ? data.rows[0] : null
@@ -100,8 +99,6 @@ export function Payroll() {
           )}
         </div>
       </div>
-
-      {notice && <p className="text-ok mb-3 text-sm font-medium">{notice}</p>}
 
       {isPending || !data ? (
         <Skeleton className="h-48 w-full" />
@@ -280,12 +277,7 @@ export function Payroll() {
         </>
       )}
 
-      <RecalculateDialog
-        month={month}
-        row={recalcRow}
-        onClose={() => setRecalcRow(null)}
-        onDone={(count) => setNotice(PAYROLL_UI.recalculated(count))}
-      />
+      <RecalculateDialog month={month} row={recalcRow} onClose={() => setRecalcRow(null)} />
       <PayoutsDialog month={month} row={payFor} onClose={() => setPayForId(null)} />
     </>
   )
