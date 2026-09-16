@@ -9,7 +9,10 @@ export function useSaveService(id: string | null) {
     mutationFn: (payload: api.ServicePayload) =>
       id ? api.updateService(id, payload) : api.createService(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SERVICE_KEYS.all }),
-    meta: { success: () => TOAST_TEXT.service_saved, inlineErrors: true },
+    meta: {
+      success: () => (id ? TOAST_TEXT.service_updated : TOAST_TEXT.service_created),
+      inlineErrors: true,
+    },
   })
 }
 

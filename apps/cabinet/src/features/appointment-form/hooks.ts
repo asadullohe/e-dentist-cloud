@@ -9,7 +9,10 @@ export function useSaveAppointment(id: string | null) {
     mutationFn: (payload: api.AppointmentPayload) =>
       id ? api.updateAppointment(id, payload) : api.createAppointment(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
-    meta: { success: () => TOAST_TEXT.appointment_saved, inlineErrors: true },
+    meta: {
+      success: () => (id ? TOAST_TEXT.appointment_updated : TOAST_TEXT.appointment_created),
+      inlineErrors: true,
+    },
   })
 }
 
@@ -20,7 +23,10 @@ export function useSetAppointmentStatus() {
     mutationFn: ({ id, status }: { id: string; status: AppointmentStatus }) =>
       api.updateAppointment(id, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
-    meta: { success: () => TOAST_TEXT.appointment_status },
+    meta: {
+      success: (_data, { status }: { status: AppointmentStatus }) =>
+        TOAST_TEXT[`appointment_${status}`],
+    },
   })
 }
 

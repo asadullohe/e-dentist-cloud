@@ -8,7 +8,7 @@ import * as api from './api'
 /// xatoni oʻzi koʻrsatadi — toast faqat muvaffaqiyatda
 function useStaffMutation<TArgs, TResult>(
   fn: (args: TArgs) => Promise<TResult>,
-  success: () => string,
+  success: (data: TResult, variables: TArgs) => string,
 ) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -29,11 +29,18 @@ export function useChangePassword() {
   })
 }
 
+/// Bitta soʻrov — uch xil amal: rol, holat, ish haqi sharti. Toast matni
+/// nima yuborilganiga qarab tanlanadi
 export function useUpdateStaff() {
   return useStaffMutation(
     ({ id, ...rest }: { id: string } & Parameters<typeof api.updateStaff>[1]) =>
       api.updateStaff(id, rest),
-    () => TOAST_TEXT.staff_updated,
+    (_data, { roleId, status }) => {
+      if (status === 'disabled') return TOAST_TEXT.staff_disabled
+      if (status === 'active') return TOAST_TEXT.staff_enabled
+      if (roleId) return TOAST_TEXT.staff_role_changed
+      return TOAST_TEXT.staff_pay_saved
+    },
   )
 }
 

@@ -32,6 +32,9 @@ export function useSetQueueEnabled() {
     mutationFn: setQueueEnabled,
     // Holat sessiya javobida keladi — menyu va sahifa shundan oʻqiydi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY }),
-    meta: { success: () => TOAST_TEXT.queue_setting_saved, inlineErrors: true },
+    meta: {
+      success: (_data, enabled) => (enabled ? TOAST_TEXT.queue_enabled : TOAST_TEXT.queue_disabled),
+      inlineErrors: true,
+    },
   })
 }

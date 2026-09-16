@@ -9,7 +9,10 @@ export function useSaveVisit(id: string | null) {
     mutationFn: (payload: api.VisitPayload) =>
       id ? api.updateVisit(id, payload) : api.createVisit(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: VISIT_KEYS.all }),
-    meta: { success: () => TOAST_TEXT.visit_saved, inlineErrors: true },
+    meta: {
+      success: () => (id ? TOAST_TEXT.visit_updated : TOAST_TEXT.visit_created),
+      inlineErrors: true,
+    },
   })
 }
 
