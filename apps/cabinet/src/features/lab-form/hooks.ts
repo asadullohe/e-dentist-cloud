@@ -7,7 +7,7 @@ import * as api from './api'
 /// (topshirilganda) — shuning uchun ular ham qayta soʻraladi
 function useLabMutation<TArgs, TResult>(
   fn: (args: TArgs) => Promise<TResult>,
-  meta: { success: () => string; inlineErrors?: boolean },
+  meta: { success: (data: TResult, variables: TArgs) => string; inlineErrors?: boolean },
 ) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -25,7 +25,7 @@ export function useSaveLabOrder(id: string | null) {
   return useLabMutation(
     (payload: api.LabPayload) =>
       id ? api.updateLabOrder(id, payload) : api.createLabOrder(payload),
-    { success: () => TOAST_TEXT.lab_saved, inlineErrors: true },
+    { success: () => (id ? TOAST_TEXT.lab_updated : TOAST_TEXT.lab_created), inlineErrors: true },
   )
 }
 
@@ -33,7 +33,7 @@ export function useSetLabStatus() {
   return useLabMutation(
     ({ id, status }: { id: string; status: Parameters<typeof api.setLabStatus>[1] }) =>
       api.setLabStatus(id, status),
-    { success: () => TOAST_TEXT.lab_status },
+    { success: (_data, { status }) => TOAST_TEXT[`lab_${status}`] },
   )
 }
 

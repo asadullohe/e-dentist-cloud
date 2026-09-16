@@ -9,7 +9,10 @@ export function useSaveExpense(id: string | null) {
     mutationFn: (payload: api.ExpensePayload) =>
       id ? api.updateExpense(id, payload) : api.createExpense(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: EXPENSE_KEYS.all }),
-    meta: { success: () => TOAST_TEXT.expense_saved, inlineErrors: true },
+    meta: {
+      success: () => (id ? TOAST_TEXT.expense_updated : TOAST_TEXT.expense_created),
+      inlineErrors: true,
+    },
   })
 }
 

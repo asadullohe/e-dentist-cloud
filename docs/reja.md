@@ -1159,7 +1159,13 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `meta.inlineErrors` li formalar toast bermaydi — bir xato ikki joyda
       chiqmasin. Matnlar `TOAST_TEXT` (uz/ru). Inline «saqlandi» yozuvlari
       (rol, parol, qayta hisoblash) toastga koʻchdi. Navbat amallari
-      muvaffaqiyatda jim (roʻyxat oʻzi oʻzgaradi), xatoda toast
+      muvaffaqiyatda jim (roʻyxat oʻzi oʻzgaradi), xatoda toast.
+      Matn **aniq amalga** mos (foydalanuvchi eslatmasi): qoʻshish ≠ tahrirlash
+      («Tashrif qoʻshildi» / «Tashrif tahrirlandi»); bitta soʻrov bir necha
+      amalga xizmat qilsa argumentlardan tanlanadi — xodim holati
+      («faolsizlantirildi» / «faollashtirildi»), roli, ish haqi sharti;
+      qabul va naryad holatlari («Bemor keldi deb belgilandi», «Naryad
+      topshirildi»); navbat yoqildi/oʻchirildi
 
 ---
 

@@ -16,7 +16,10 @@ export function useSavePayment(id: string | null) {
     mutationFn: (payload: api.PaymentPayload) =>
       id ? api.updatePayment(id, payload) : api.createPayment(payload),
     onSuccess: () => invalidate(queryClient),
-    meta: { success: () => TOAST_TEXT.payment_saved, inlineErrors: true },
+    meta: {
+      success: () => (id ? TOAST_TEXT.payment_updated : TOAST_TEXT.payment_created),
+      inlineErrors: true,
+    },
   })
 }
 

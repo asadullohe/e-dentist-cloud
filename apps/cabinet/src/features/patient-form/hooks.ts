@@ -9,7 +9,10 @@ export function useSavePatient(id: string | null) {
     mutationFn: (payload: api.PatientPayload) =>
       id ? api.updatePatient(id, payload) : api.createPatient(payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all }),
-    meta: { success: () => TOAST_TEXT.patient_saved, inlineErrors: true },
+    meta: {
+      success: () => (id ? TOAST_TEXT.patient_updated : TOAST_TEXT.patient_created),
+      inlineErrors: true,
+    },
   })
 }
 
