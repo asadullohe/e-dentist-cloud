@@ -13,6 +13,12 @@ const isoDate = z
 
 export const appointmentCreateSchema = z.object({
   patientId: z.string().uuid({ error: () => APPOINTMENT_TEXT.patient_required }),
+  /// Berilmasa — bemorning biriktirilgan shifokori; `null` — shifokorsiz
+  doctorId: z
+    .string()
+    .uuid({ error: () => VALIDATION_TEXT.doctor_invalid })
+    .nullable()
+    .optional(),
   date: isoDate,
   /// Soat:daqiqa, mahalliy vaqt
   time: z
@@ -26,6 +32,11 @@ export const appointmentCreateSchema = z.object({
 })
 
 export const appointmentUpdateSchema = z.object({
+  doctorId: z
+    .string()
+    .uuid({ error: () => VALIDATION_TEXT.doctor_invalid })
+    .nullable()
+    .optional(),
   date: isoDate.optional(),
   time: z
     .string()
@@ -39,6 +50,7 @@ export const appointmentUpdateSchema = z.object({
 export const appointmentListSchema = z.object({
   from: isoDate,
   to: isoDate,
+  doctorId: z.string().uuid().optional(),
 })
 
 export type AppointmentCreateInput = z.infer<typeof appointmentCreateSchema>

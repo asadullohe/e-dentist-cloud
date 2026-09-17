@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 10.2 — qabulda shifokor
+**Hozirgi task:** 10.3 — kabinetdan navbatga qoʻshish
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1212,7 +1212,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `visits.write` li xodim); bemor oynasida «Shifokor» tanlovi; roʻyxatda
       ustun va filtr; kartochka sarlavhasida ism; API javobida `doctorName`.
       Testlar: begona klinika xodimi rad, koʻp ijarachilik
-- [ ] **10.2 Qabulda shifokor** — `POST/PATCH /appointments` da `doctorId`
+- [x] **10.2 Qabulda shifokor** — `POST/PATCH /appointments` da `doctorId`
       (sukut — bemorning shifokori); formada tanlov; kunlik roʻyxatda ism;
       shifokor boʻyicha filtr; bosh sahifadagi bugungi qabullarda ism
 - [ ] **10.3 Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`):

@@ -169,9 +169,11 @@ function TodayList({ today, className }: { today: string; className?: string }) 
                   >
                     {item.fio}
                   </Link>
-                  {item.phone && (
+                  {(item.phone || item.doctorName) && (
                     <div className="text-muted-foreground truncate text-xs">
-                      {formatUzPhone(item.phone)}
+                      {[item.phone && formatUzPhone(item.phone), item.doctorName]
+                        .filter(Boolean)
+                        .join(' · ')}
                     </div>
                   )}
                 </div>

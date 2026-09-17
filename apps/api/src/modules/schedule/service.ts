@@ -6,6 +6,7 @@ import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
+import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
 import * as repo from './repo.js'
 import type {
@@ -38,10 +39,24 @@ async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
   }
 }
 
+/// Qabuldagi shifokor faol va `visits.write` li xodim boʻlishi shart
+async function assertDoctor(tx: ClinicTx, doctorId: string | null | undefined): Promise<void> {
+  if (!doctorId) return
+  if (!(await auth.isDoctorTx(tx, doctorId))) {
+    throw errors.validation(
+      { doctorId: PATIENT_TEXT.doctor_not_found },
+      PATIENT_TEXT.doctor_not_found,
+    )
+  }
+}
+
 export interface Appointment {
   id: string
   /// Navbatga ochiq sahifadan yozilgan odam kartotekada boʻlmasligi mumkin
   patientId: string | null
+  /// Qabul qiladigan shifokor. Sukut — bemorning biriktirilgan shifokori
+  doctorId: string | null
+  doctorName: string | null
   at: Date
   status: string
   note: string | null
@@ -57,6 +72,7 @@ async function withPatients(
   rows: {
     id: string
     patientId: string | null
+    doctorId: string | null
     at: Date
     status: string
     note: string | null
@@ -65,7 +81,11 @@ async function withPatients(
   }[],
 ): Promise<Appointment[]> {
   const ids = rows.map((row) => row.patientId).filter((id): id is string => id !== null)
-  const people = await patients.findByIds(tx, [...new Set(ids)])
+  const doctorIds = rows.map((row) => row.doctorId).filter((id): id is string => id !== null)
+  const [people, doctorNames] = await Promise.all([
+    patients.findByIds(tx, [...new Set(ids)]),
+    auth.staffNamesTx(tx, [...new Set(doctorIds)]),
+  ])
   const byId = new Map(people.map((person) => [person.id, person]))
 
   return rows.map((row) => {
@@ -73,6 +93,8 @@ async function withPatients(
     return {
       id: row.id,
       patientId: row.patientId,
+      doctorId: row.doctorId,
+      doctorName: row.doctorId ? (doctorNames.get(row.doctorId) ?? null) : null,
       at: row.at,
       status: row.status,
       note: row.note,
@@ -89,7 +111,7 @@ export function list(deps: ScheduleDeps, clinicId: string, input: AppointmentLis
     const to = new Date(`${input.to}T00:00:00`)
     to.setDate(to.getDate() + 1)
 
-    return withPatients(tx, await repo.list(tx, from, to))
+    return withPatients(tx, await repo.list(tx, from, to, input.doctorId))
   })
 }
 
@@ -102,9 +124,16 @@ export function create(
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, input.patientId)
+    // Shifokor berilmasa — bemorning biriktirilgan shifokori (10.2)
+    const doctorId =
+      input.doctorId === undefined
+        ? ((await patients.findByIds(tx, [input.patientId]))[0]?.doctorId ?? null)
+        : input.doctorId
+    await assertDoctor(tx, doctorId)
 
     const created = await repo.create(tx, id, {
       patientId: input.patientId,
+      doctorId,
       at: toInstant(input.date, input.time),
       note: input.note ?? null,
     })
@@ -140,8 +169,10 @@ export function update(
               input.time ?? formatLocalTime(existing.at),
             )
 
+      await assertDoctor(tx, input.doctorId)
       const updated = await repo.update(tx, id, {
         ...(at === undefined ? {} : { at }),
+        ...(input.doctorId === undefined ? {} : { doctorId: input.doctorId }),
         ...(input.status === undefined ? {} : { status: input.status }),
         ...(input.note === undefined ? {} : { note: input.note }),
       })

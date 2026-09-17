@@ -3,6 +3,8 @@ import { apiRequest } from '@/shared/api'
 
 export interface AppointmentPayload {
   patientId?: string
+  /// `null` — shifokorsiz; berilmasa server bemorning shifokorini oladi
+  doctorId?: string | null
   date?: string
   time?: string
   status?: AppointmentStatus

@@ -64,6 +64,79 @@ describe('qabul yozish', () => {
   })
 })
 
+describe('qabulda shifokor', () => {
+  let doctorId = ''
+  let doctorPatientId = ''
+
+  beforeAll(async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `qabul-shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Qabul Shifokori',
+      roleId: role?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    doctorId = created.json().data.id
+    // Biriktirilgan shifokori bor bemor
+    const patient = await call('POST', '/api/patients', { fio: 'Biriktirilgan Bemor', doctorId })
+    doctorPatientId = patient.json().data.id
+  })
+
+  it('berilmasa bemorning biriktirilgan shifokori olinadi', async () => {
+    const r = await call('POST', '/api/appointments', {
+      patientId: doctorPatientId,
+      date: '2027-03-05',
+      time: '10:00',
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({ doctorId, doctorName: 'Qabul Shifokori' })
+  })
+
+  it('aniq berilsa oʻsha, null boʻlsa shifokorsiz', async () => {
+    const r = await call('POST', '/api/appointments', {
+      patientId: doctorPatientId,
+      doctorId: null,
+      date: '2027-03-05',
+      time: '11:00',
+    })
+    expect(r.json().data).toMatchObject({ doctorId: null, doctorName: null })
+
+    const changed = await call('PATCH', `/api/appointments/${r.json().data.id}`, { doctorId })
+    expect(changed.json().data.doctorName).toBe('Qabul Shifokori')
+  })
+
+  it('roʻyxat shifokor boʻyicha filtrlanadi', async () => {
+    const r = await call(
+      'GET',
+      `/api/appointments?from=2027-03-05&to=2027-03-05&doctorId=${doctorId}`,
+    )
+    const rows = r.json().data as { doctorId: string | null }[]
+    expect(rows.length).toBe(2)
+    expect(rows.every((row) => row.doctorId === doctorId)).toBe(true)
+  })
+
+  it('shifokor boʻlmagan xodim rad etiladi', async () => {
+    const tech = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'texnik' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `qabul-texnik-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Texnik',
+      roleId: tech?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    const r = await call('POST', '/api/appointments', {
+      patientId: doctorPatientId,
+      doctorId: created.json().data.id,
+      date: '2027-03-06',
+      time: '10:00',
+    })
+    expect(r.statusCode).toBe(400)
+  })
+})
+
 describe('oraliq boʻyicha roʻyxat', () => {
   it('faqat soʻralgan oraliqdagilar', async () => {
     const r = await call('GET', '/api/appointments?from=2026-09-01&to=2026-09-30')

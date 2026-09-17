@@ -25,6 +25,7 @@ import {
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Appointment, type AppointmentStatus, useAppointments } from '@/entities/appointment'
+import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
   useDeleteAppointment,
@@ -52,6 +53,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   EmptyState,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Skeleton,
 } from '@/shared/ui'
 
@@ -62,6 +68,9 @@ const isoOf = (year: number, month: number, day: number) => `${year}-${pad(month
 const mondayFirst = (date: Date) => (date.getDay() + 6) % 7
 
 const STATUSES: AppointmentStatus[] = ['scheduled', 'arrived', 'done', 'no_show', 'cancelled']
+
+/// Radix Select boʻsh satrni qabul qilmaydi — «hammasi» uchun belgi
+const ALL_DOCTORS = '__all__'
 
 /// Holat belgisi: keldi — sariq, yakunlandi — yashil, kelmadi/bekor — qizil
 function statusBadge(status: AppointmentStatus): string {
@@ -97,7 +106,10 @@ export function Schedule() {
   const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate()
   const from = isoOf(cursor.year, cursor.month, 1)
   const to = isoOf(cursor.year, cursor.month, daysInMonth)
-  const { data: appointments, isPending } = useAppointments(from, to)
+  // Shifokor boʻyicha filtr — boʻsh: hammasi
+  const [doctorFilter, setDoctorFilter] = useState('')
+  const { data: doctors } = useDoctors()
+  const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
 
   // Kun boʻyicha guruhlash — kalendar katakchalarida son koʻrsatish uchun
   const byDay = new Map<string, Appointment[]>()
@@ -148,10 +160,28 @@ export function Schedule() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
-        <Button size="sm" onClick={openNew}>
-          <PlusIcon />
-          {SCHEDULE_UI.add}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select
+            value={doctorFilter || ALL_DOCTORS}
+            onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
+          >
+            <SelectTrigger size="sm" className="w-48" aria-label={SCHEDULE_UI.doctor}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
+              {doctors?.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button size="sm" onClick={openNew}>
+            <PlusIcon />
+            {SCHEDULE_UI.add}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
@@ -271,11 +301,11 @@ export function Schedule() {
                       >
                         {item.fio}
                       </Link>
-                      {item.phone && (
-                        <div className="text-muted-foreground text-xs">
-                          {formatUzPhone(item.phone)}
-                        </div>
-                      )}
+                      <div className="text-muted-foreground text-xs">
+                        {[item.phone && formatUzPhone(item.phone), item.doctorName]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
                       {item.note && (
                         <div className="text-muted-foreground mt-0.5 text-xs">{item.note}</div>
                       )}

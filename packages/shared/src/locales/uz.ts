@@ -1185,6 +1185,9 @@ export const SCHEDULE_UI = {
   set_status: 'Holatni oʻzgartirish',
   open_card: 'Kartochka',
   date_unreadable: 'Sanani oʻqib boʻlmadi',
+  doctor: 'Shifokor',
+  doctor_none: 'Shifokorsiz',
+  all_doctors: 'Hamma shifokorlar',
 } as const
 
 // Sana formati uchun. `format.ts` shulardan oladi

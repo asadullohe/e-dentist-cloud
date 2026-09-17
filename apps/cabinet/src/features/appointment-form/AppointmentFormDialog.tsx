@@ -9,6 +9,7 @@ import {
 import { useEffect, useState } from 'react'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
 import { PatientPicker } from '@/entities/patient'
+import { useDoctors } from '@/entities/staff'
 import { ApiError } from '@/shared/api'
 import {
   Button,
@@ -28,6 +29,9 @@ import {
   Textarea,
 } from '@/shared/ui'
 import { useSaveAppointment } from './hooks'
+
+/// Radix Select boʻsh satrni qabul qilmaydi — «shifokorsiz» uchun belgi
+const NO_DOCTOR = '__none__'
 
 interface AppointmentFormDialogProps {
   open: boolean
@@ -57,7 +61,11 @@ export function AppointmentFormDialog({
   const [time, setTime] = useState('')
   const [status, setStatus] = useState<AppointmentStatus>('scheduled')
   const [note, setNote] = useState('')
+  // Boʻsh — shifokorsiz. Bemor tanlanganda uning biriktirilgan shifokori
+  // qoʻyiladi, keyin qoʻlda oʻzgartirish mumkin (shifokor taʼtilda)
+  const [doctorId, setDoctorId] = useState('')
   const [error, setError] = useState('')
+  const { data: doctors } = useDoctors()
 
   useEffect(() => {
     if (!open) return
@@ -69,6 +77,7 @@ export function AppointmentFormDialog({
       setTime(localTime(appointment.at))
       setStatus(appointment.status)
       setNote(appointment.note ?? '')
+      setDoctorId(appointment.doctorId ?? '')
     } else {
       setPatientId(null)
       setPatientName('')
@@ -76,6 +85,7 @@ export function AppointmentFormDialog({
       setTime('')
       setStatus('scheduled')
       setNote('')
+      setDoctorId('')
     }
   }, [open, appointment, defaultDate])
 
@@ -88,6 +98,7 @@ export function AppointmentFormDialog({
     try {
       await mutateAsync({
         ...(appointment ? { status } : { patientId: patientId as string }),
+        doctorId: doctorId || null,
         date: iso,
         time,
         note: note || null,
@@ -112,13 +123,34 @@ export function AppointmentFormDialog({
               <PatientPicker
                 value={patientId}
                 label={patientName}
-                onPick={(id, fio) => {
+                onPick={(id, fio, patient) => {
                   setPatientId(id)
                   setPatientName(fio)
+                  setDoctorId(patient.doctorId ?? '')
                 }}
               />
             </div>
           )}
+
+          <div className="space-y-1.5">
+            <Label htmlFor="appointment-doctor">{SCHEDULE_UI.doctor}</Label>
+            <Select
+              value={doctorId || NO_DOCTOR}
+              onValueChange={(value) => setDoctorId(value === NO_DOCTOR ? '' : value)}
+            >
+              <SelectTrigger id="appointment-doctor" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_DOCTOR}>{SCHEDULE_UI.doctor_none}</SelectItem>
+                {doctors?.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

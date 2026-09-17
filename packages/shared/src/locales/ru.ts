@@ -1122,6 +1122,9 @@ export const ru: DeepPartial<Strings> = {
     set_status: 'Изменить статус',
     open_card: 'Карточка',
     date_unreadable: 'Не удалось прочитать дату',
+    doctor: 'Врач',
+    doctor_none: 'Без врача',
+    all_doctors: 'Все врачи',
   },
 
   MONTHS: [

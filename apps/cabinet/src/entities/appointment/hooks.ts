@@ -3,13 +3,14 @@ import { fetchAppointments } from './api'
 
 export const APPOINTMENT_KEYS = {
   all: ['appointments'] as const,
-  range: (from: string, to: string) => ['appointments', from, to] as const,
+  range: (from: string, to: string, doctorId?: string) =>
+    ['appointments', from, to, doctorId ?? ''] as const,
 }
 
-export function useAppointments(from: string, to: string) {
+export function useAppointments(from: string, to: string, doctorId?: string) {
   return useQuery({
-    queryKey: APPOINTMENT_KEYS.range(from, to),
-    queryFn: () => fetchAppointments(from, to),
+    queryKey: APPOINTMENT_KEYS.range(from, to, doctorId),
+    queryFn: () => fetchAppointments(from, to, doctorId),
     // Oydan oyga oʻtganda kalendar boʻshab-toʻlib turmasin
     placeholderData: keepPreviousData,
   })

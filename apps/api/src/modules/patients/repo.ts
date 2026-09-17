@@ -143,7 +143,7 @@ export async function searchIds(tx: ClinicTx, query: string): Promise<Set<string
 export function findByIds(tx: ClinicTx, ids: string[]) {
   return tx.patient.findMany({
     where: { id: { in: ids } },
-    select: { id: true, fio: true, phone: true },
+    select: { id: true, fio: true, phone: true, doctorId: true },
   })
 }
 
