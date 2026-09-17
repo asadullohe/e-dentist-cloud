@@ -11,6 +11,7 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { usePatient } from '@/entities/patient'
 import { useServices } from '@/entities/service'
 import { useSession } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
@@ -74,9 +75,12 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
   // server xatosi shu yerda ushlanadi
   const [doctorError, setDoctorError] = useState('')
 
-  // Sukut — kirgan odamning oʻzi: koʻpincha tashrifni shifokor oʻzi yozadi.
-  // Eski tashrifda shifokor boʻlmasa ham shu, tahrirda tanlab qoʻyiladi
+  // Sukut — bemorning biriktirilgan shifokori (10.4); yoʻq boʻlsa kirgan
+  // odamning oʻzi (koʻpincha tashrifni shifokor oʻzi yozadi). Eski tashrifda
+  // shifokor boʻlmasa ham shu, tahrirda tanlab qoʻyiladi
+  const { data: patientCard } = usePatient(patientId)
   const selfId = session?.user.id ?? ''
+  const defaultDoctorId = patientCard?.doctorId ?? selfId
 
   const form = useForm<VisitValues>({
     resolver: zodResolver(visitSchema),
@@ -89,10 +93,10 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
       form.reset(toValues(visit))
       setFormError('')
       setServiceId(visit?.serviceId ?? null)
-      setDoctorId(visit?.doctorId ?? selfId)
+      setDoctorId(visit?.doctorId ?? defaultDoctorId)
       setDoctorError('')
     }
-  }, [open, visit, form, selfId])
+  }, [open, visit, form, defaultDoctorId])
 
   async function onSubmit(values: VisitValues) {
     setFormError('')
