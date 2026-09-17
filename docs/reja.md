@@ -1186,9 +1186,9 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > Nom «e-dentist» — Inter 900, kichik harflar, qiya (payme belgisi uslubi,
 > foydalanuvchi tanlovi). SVG matn: har harf ketma-ket koʻk kontur bilan
 > chiziladi (bitta uzluksiz chiziq — dash uzunligi harf konturidan katta),
-> keyin toʻladi; jami ~2 s. Ekran kamida 2.3 s turadi (`MIN_VISIBLE_MS`,
-> sahifa ochilgan lahzadan) — sessiya tezroq kelsa ham brend toʻliq
-> koʻrinsin. `prefers-reduced-motion` da hammasi darhol, harakatsiz
+> keyin toʻladi; jami ~2 s. Ilova tayyor boʻlishi bilan yopiladi —
+> animatsiya tugashini kutmaydi (foydalanuvchi qarori: «kutish shart
+> emas»). `prefers-reduced-motion` da hammasi darhol, harakatsiz
 
 ---
 

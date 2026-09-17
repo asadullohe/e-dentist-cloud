@@ -6,29 +6,17 @@ import { useLayoutEffect } from 'react'
 // oxirgisi yoʻqolganda yopiladi. Belgi ikki joyda takrorlanmaydi va
 // almashinuvda animatsiya sakramaydi.
 
-/// Nom chizilib boʻlguncha (index.html: oxirgi harf ~2 s) ekran yopilmaydi —
-/// sessiya tezroq kelsa ham brend toʻliq koʻrinadi. Sahifa ochilgan
-/// lahzadan sanaladi, React chizilganidan emas
-const MIN_VISIBLE_MS = 2300
-
 /// Hozir nechta <Splash/> ushlab turibdi
 let holders = 0
-let hideTimer: number | undefined
 
 function element(): HTMLElement | null {
   return document.getElementById('splash')
 }
 
+/// Ilova tayyor boʻlishi bilan yopiladi — animatsiya tugashini kutmaydi:
+/// foydalanuvchi ishga kirmoqchi, tomosha qilmoqchi emas
 function hide(): void {
-  window.clearTimeout(hideTimer)
-  const wait = MIN_VISIBLE_MS - performance.now()
-  if (wait <= 0) {
-    element()?.setAttribute('hidden', '')
-    return
-  }
-  hideTimer = window.setTimeout(() => {
-    if (holders === 0) element()?.setAttribute('hidden', '')
-  }, wait)
+  element()?.setAttribute('hidden', '')
 }
 
 /// React birinchi marta chizilgach App chaqiradi: hech kim ushlab turmagan
@@ -44,7 +32,6 @@ export function Splash() {
   // dismissStaticSplash chaqirilganda hisob allaqachon 1 boʻladi
   useLayoutEffect(() => {
     holders++
-    window.clearTimeout(hideTimer)
     element()?.removeAttribute('hidden')
     return () => {
       holders--
