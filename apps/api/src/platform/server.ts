@@ -168,7 +168,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(serviceRoutes, { prefix: '/api', deps: { db: deps.db } })
-  app.register(scheduleRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(scheduleRoutes, { prefix: '/api', deps: { db: deps.db, bus: deps.bus } })
   // Navbat marshrutlari ochiq: /api/n/<kod>
   app.register(queueRoutes, {
     prefix: '/api',

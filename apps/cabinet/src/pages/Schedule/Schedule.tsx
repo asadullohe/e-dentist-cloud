@@ -4,6 +4,7 @@ import {
   EXPENSE_UI,
   formatDate,
   formatUzPhone,
+  localISODate,
   MONTHS,
   SCHEDULE_UI,
   todayISO,
@@ -25,11 +26,14 @@ import {
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Appointment, type AppointmentStatus, useAppointments } from '@/entities/appointment'
+import { useHasPermission } from '@/entities/session'
+import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
   useDeleteAppointment,
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
+import { VisitFormDialog } from '@/features/visit-form'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,6 +56,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   EmptyState,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Skeleton,
 } from '@/shared/ui'
 
@@ -62,6 +71,9 @@ const isoOf = (year: number, month: number, day: number) => `${year}-${pad(month
 const mondayFirst = (date: Date) => (date.getDay() + 6) % 7
 
 const STATUSES: AppointmentStatus[] = ['scheduled', 'arrived', 'done', 'no_show', 'cancelled']
+
+/// Radix Select boʻsh satrni qabul qilmaydi — «hammasi» uchun belgi
+const ALL_DOCTORS = '__all__'
 
 /// Holat belgisi: keldi — sariq, yakunlandi — yashil, kelmadi/bekor — qizil
 function statusBadge(status: AppointmentStatus): string {
@@ -90,14 +102,22 @@ export function Schedule() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Appointment | undefined>(undefined)
   const [deleting, setDeleting] = useState<Appointment | null>(null)
+  // «Yakunlandi» — qilingan ish yoziladi, tashrif boʻladi (10.6)
+  const [completing, setCompleting] = useState<Appointment | null>(null)
 
   const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
+  // `schedule.all` yoʻq (shifokor): server faqat oʻz qabullarini qaytaradi —
+  // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
+  const seesAll = useHasPermission()('schedule.all')
 
   const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate()
   const from = isoOf(cursor.year, cursor.month, 1)
   const to = isoOf(cursor.year, cursor.month, daysInMonth)
-  const { data: appointments, isPending } = useAppointments(from, to)
+  // Shifokor boʻyicha filtr — boʻsh: hammasi
+  const [doctorFilter, setDoctorFilter] = useState('')
+  const { data: doctors } = useDoctors()
+  const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
 
   // Kun boʻyicha guruhlash — kalendar katakchalarida son koʻrsatish uchun
   const byDay = new Map<string, Appointment[]>()
@@ -148,10 +168,30 @@ export function Schedule() {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
-        <Button size="sm" onClick={openNew}>
-          <PlusIcon />
-          {SCHEDULE_UI.add}
-        </Button>
+        <div className="flex items-center gap-2">
+          {seesAll && (
+            <Select
+              value={doctorFilter || ALL_DOCTORS}
+              onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
+            >
+              <SelectTrigger size="sm" className="w-48" aria-label={SCHEDULE_UI.doctor}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
+                {doctors?.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button size="sm" onClick={openNew}>
+            <PlusIcon />
+            {SCHEDULE_UI.add}
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
@@ -271,11 +311,11 @@ export function Schedule() {
                       >
                         {item.fio}
                       </Link>
-                      {item.phone && (
-                        <div className="text-muted-foreground text-xs">
-                          {formatUzPhone(item.phone)}
-                        </div>
-                      )}
+                      <div className="text-muted-foreground text-xs">
+                        {[item.phone && formatUzPhone(item.phone), item.doctorName]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
                       {item.note && (
                         <div className="text-muted-foreground mt-0.5 text-xs">{item.note}</div>
                       )}
@@ -303,7 +343,11 @@ export function Schedule() {
                           <DropdownMenuItem
                             key={status}
                             disabled={status === item.status}
-                            onClick={() => setStatus({ id: item.id, status })}
+                            onClick={() =>
+                              status === 'done'
+                                ? setCompleting(item)
+                                : setStatus({ id: item.id, status })
+                            }
                           >
                             <span className="flex-1">{APPOINTMENT_STATUS_LABELS[status]}</span>
                             {status === item.status && <CheckIcon className="size-4" />}
@@ -339,7 +383,30 @@ export function Schedule() {
         onOpenChange={setFormOpen}
         defaultDate={selected}
         appointment={editing}
+        ownOnly={!seesAll}
+        onSaved={(saved) => {
+          // Yozilgan qabul doim koʻrinsin: uning kuniga oʻtamiz; shifokor
+          // filtri uni yashirsa — filtr olib tashlanadi
+          const day = saved.at.slice(0, 10)
+          const date = new Date(saved.at)
+          setCursor({ year: date.getFullYear(), month: date.getMonth() })
+          setSelected(day)
+          if (doctorFilter && saved.doctorId !== doctorFilter) setDoctorFilter('')
+        }}
       />
+
+      {completing && (
+        <VisitFormDialog
+          open
+          onOpenChange={(open) => !open && setCompleting(null)}
+          patientId={completing.patientId}
+          appointment={{
+            id: completing.id,
+            doctorId: completing.doctorId,
+            date: localISODate(completing.at),
+          }}
+        />
+      )}
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>

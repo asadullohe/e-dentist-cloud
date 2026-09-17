@@ -3,6 +3,9 @@ export type AppointmentStatus = 'scheduled' | 'arrived' | 'no_show' | 'done' | '
 export interface Appointment {
   id: string
   patientId: string
+  /// Qabul qiladigan shifokor. Sukut — bemorning biriktirilgan shifokori
+  doctorId: string | null
+  doctorName: string | null
   /// ISO lahza: 2026-09-15T14:30:00.000Z
   at: string
   status: AppointmentStatus

@@ -21,6 +21,10 @@ export interface VisitDeps {
   db: Db
 }
 
+/// Boshqa modullar uchun (schedule): tashrif maydonlarining sxemasi —
+/// qabulni yakunlash formasi ham shu maydonlarni oladi
+export { visitCreateSchema } from './schema.js'
+
 function toDate(value: string): Date {
   return new Date(`${value}T00:00:00Z`)
 }
@@ -151,44 +155,55 @@ export function listVisits(deps: VisitDeps, clinicId: string, patientId: string)
   })
 }
 
+/// Tashrif yozish — ochiq tranzaksiya ichida. Boshqa modullar uchun ham
+/// (schedule: qabul yakunlanganda tashrif shu yerdan yoziladi, bir
+/// tranzaksiyada — tashrif yozilib, qabul yakunlanmay qolmasin)
+export async function createTx(
+  tx: ClinicTx,
+  userId: string,
+  input: VisitCreateInput,
+): Promise<VisitRow> {
+  const id = uuidV7()
+  await assertPatient(tx, input.patientId)
+  // Sukut — yozayotgan odamning oʻzi: u `visits.write` bilan kirgan,
+  // demak shifokorlar roʻyxatida bor
+  const doctorId = input.doctorId ?? userId
+  await assertDoctor(tx, doctorId)
+  // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
+  const { payPercent } = await auth.payTermsTx(tx, doctorId)
+
+  const visit = await repo.createVisit(tx, id, {
+    patientId: input.patientId,
+    doctorId,
+    date: toDate(input.date),
+    treatment: input.treatment,
+    tooth: input.tooth ?? null,
+    serviceId: input.serviceId ?? null,
+    price: input.price,
+    doctorPercent: payPercent,
+    doctorShare: shareOf(input.price, payPercent),
+    note: input.note ?? null,
+  })
+  await writeAudit(tx, {
+    userId,
+    action: AUDIT_ACTION.visit_created,
+    entity: 'visit',
+    entityId: id,
+    meta: { patientId: input.patientId, doctorId },
+  })
+  const [row] = await withDoctorNames(tx, [visit])
+  return row as VisitRow
+}
+
+export type VisitRow = Awaited<ReturnType<typeof repo.createVisit>> & { doctorName: string | null }
+
 export function createVisit(
   deps: VisitDeps,
   clinicId: string,
   userId: string,
   input: VisitCreateInput,
 ) {
-  const id = uuidV7()
-  return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, input.patientId)
-    // Sukut — yozayotgan odamning oʻzi: u `visits.write` bilan kirgan,
-    // demak shifokorlar roʻyxatida bor
-    const doctorId = input.doctorId ?? userId
-    await assertDoctor(tx, doctorId)
-    // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
-    const { payPercent } = await auth.payTermsTx(tx, doctorId)
-
-    const visit = await repo.createVisit(tx, id, {
-      patientId: input.patientId,
-      doctorId,
-      date: toDate(input.date),
-      treatment: input.treatment,
-      tooth: input.tooth ?? null,
-      serviceId: input.serviceId ?? null,
-      price: input.price,
-      doctorPercent: payPercent,
-      doctorShare: shareOf(input.price, payPercent),
-      note: input.note ?? null,
-    })
-    await writeAudit(tx, {
-      userId,
-      action: AUDIT_ACTION.visit_created,
-      entity: 'visit',
-      entityId: id,
-      meta: { patientId: input.patientId, doctorId },
-    })
-    const [row] = await withDoctorNames(tx, [visit])
-    return row
-  })
+  return withClinic(deps.db, clinicId, (tx) => createTx(tx, userId, input))
 }
 
 export function updateVisit(

@@ -63,6 +63,99 @@ describe('bemor qoʻshish', () => {
   })
 })
 
+describe('biriktirilgan shifokor', () => {
+  let doctorId = ''
+  let patientId = ''
+
+  beforeAll(async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const created = await post('/api/staff', {
+      email: `shifokor-bemor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Biriktirilgan Shifokor',
+      roleId: role?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    doctorId = created.json().data.id
+  })
+
+  // Keyingi bloklar bemorlar sonini sanaydi — bu yerdagi bemor qolmasin
+  afterAll(async () => {
+    await h.ownerDb.auditLog.deleteMany({ where: { entityId: patientId } })
+    await h.ownerDb.patient.deleteMany({ where: { id: patientId } })
+  })
+
+  it('yaratishda tanlanadi, javobda ismi keladi', async () => {
+    const r = await post('/api/patients', { fio: 'Shifokorli Bemor', doctorId })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({ doctorId, doctorName: 'Biriktirilgan Shifokor' })
+    patientId = r.json().data.id
+
+    const card = await get(`/api/patients/${patientId}`)
+    expect(card.json().data.doctorName).toBe('Biriktirilgan Shifokor')
+  })
+
+  it('roʻyxatda ismi bor va shifokor boʻyicha filtrlanadi', async () => {
+    const r = await get(`/api/patients?doctorId=${doctorId}`)
+    const items = r.json().data.items as { id: string; doctorName: string | null }[]
+    expect(items.map((item) => item.id)).toEqual([patientId])
+    expect(items[0]?.doctorName).toBe('Biriktirilgan Shifokor')
+  })
+
+  it('tahrirda olib tashlanadi (null)', async () => {
+    const r = await h.app.inject({
+      method: 'PATCH',
+      url: `/api/patients/${patientId}`,
+      payload: { doctorId: null },
+      headers: { cookie: h.cookie },
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({ doctorId: null, doctorName: null })
+  })
+
+  it('shifokor boʻlmagan xodim (texnik) rad etiladi', async () => {
+    const tech = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'texnik' },
+    })
+    const created = await post('/api/staff', {
+      email: `texnik-bemor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Texnik',
+      roleId: tech?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    const r = await post('/api/patients', {
+      fio: 'Xato Bemor',
+      doctorId: created.json().data.id,
+    })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields.doctorId).toBe('Bu xodim shifokor emas yoki faol emas')
+  })
+
+  it('begona klinikaning xodimi rad etiladi', async () => {
+    const role = await h.ownerDb.role.create({
+      data: {
+        clinicId: otherClinicId,
+        template: 'shifokor',
+        name: 'Shifokor',
+        permissions: ['visits.write'],
+      },
+    })
+    const foreign = await h.ownerDb.user.create({
+      data: {
+        clinicId: otherClinicId,
+        roleId: role.id,
+        email: `begona-${otherClinicId.slice(0, 8)}@sinov.uz`,
+        passwordHash: 'x',
+        fullName: 'Begona',
+        emailVerifiedAt: new Date(),
+      },
+    })
+    const r = await post('/api/patients', { fio: 'Xato Bemor', doctorId: foreign.id })
+    expect(r.statusCode).toBe(400)
+  })
+})
+
 describe('qidiruv', () => {
   beforeAll(async () => {
     await post('/api/patients', { fio: 'Gʻayratov Shoʻhrat', phone: '901112233' })

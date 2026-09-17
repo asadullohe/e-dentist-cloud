@@ -9,6 +9,7 @@ import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 const SELECT = {
   id: true,
   patientId: true,
+  doctorId: true,
   at: true,
   status: true,
   note: true,
@@ -17,9 +18,9 @@ const SELECT = {
   guestPhone: true,
 } satisfies Prisma.AppointmentSelect
 
-export function list(tx: ClinicTx, from: Date, to: Date) {
+export function list(tx: ClinicTx, from: Date, to: Date, doctorId?: string) {
   return tx.appointment.findMany({
-    where: { at: { gte: from, lt: to } },
+    where: { at: { gte: from, lt: to }, ...(doctorId ? { doctorId } : {}) },
     select: SELECT,
     orderBy: { at: 'asc' },
   })
@@ -32,7 +33,7 @@ export function findById(tx: ClinicTx, id: string) {
 export function create(
   tx: ClinicTx,
   id: string,
-  data: { patientId: string; at: Date; note?: string | null },
+  data: { patientId: string; doctorId: string | null; at: Date; note?: string | null },
 ) {
   return tx.appointment.create({ data: tenantScoped({ id, ...data }), select: SELECT })
 }
@@ -102,6 +103,19 @@ export function createQueueEntry(
 
 export function updateQueueEntry(tx: ClinicTx, id: string, data: Prisma.AppointmentUpdateInput) {
   return tx.appointment.update({ where: { id }, data, select: QUEUE_SELECT })
+}
+
+/// Bemor bugun navbatda turibdimi (tugallanmagan yozuv) — ikki marta
+/// qoʻshib boʻlmasin
+export function activeQueueEntryOfPatient(tx: ClinicTx, from: Date, to: Date, patientId: string) {
+  return tx.appointment.findFirst({
+    where: {
+      patientId,
+      at: { gte: from, lte: to },
+      queueStatus: { in: ['unconfirmed', 'waiting', 'called'] },
+    },
+    select: { id: true },
+  })
 }
 
 /// Kunning eng katta raqami. Yangi yozuv shundan keyingisini oladi

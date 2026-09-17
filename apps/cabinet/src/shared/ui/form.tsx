@@ -74,7 +74,9 @@ function FormItem({ className, ...props }: React.ComponentProps<'div'>) {
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div data-slot="form-item" className={cn('grid gap-2', className)} {...props} />
+      {/* content-start: yonma-yon maydonlarda biri xato bilan balandroq
+          boʻlsa, ikkinchisining qatorlari choʻzilib pastga sakramasin */}
+      <div data-slot="form-item" className={cn('grid content-start gap-2', className)} {...props} />
     </FormItemContext.Provider>
   )
 }

@@ -14,11 +14,13 @@ import {
   PopoverTrigger,
 } from '@/shared/ui'
 import { usePatients } from '../hooks'
+import type { Patient } from '../model'
 
 interface PatientPickerProps {
   value: string | null
   label: string
-  onPick(id: string, fio: string): void
+  /// Uchinchi argument — bemorning oʻzi (biriktirilgan shifokori kerak boʻlsa)
+  onPick(id: string, fio: string, patient: Patient): void
 }
 
 /// Bemorni qidirib tanlash. Roʻyxat uzun boʻlishi mumkin, shuning uchun
@@ -56,7 +58,7 @@ export function PatientPicker({ value, label, onPick }: PatientPickerProps) {
                 key={patient.id}
                 value={patient.id}
                 onSelect={() => {
-                  onPick(patient.id, patient.fio)
+                  onPick(patient.id, patient.fio, patient)
                   setOpen(false)
                 }}
               >

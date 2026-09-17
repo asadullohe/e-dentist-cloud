@@ -47,6 +47,7 @@ export const ru: DeepPartial<Strings> = {
     fio_letters_only: 'В имени могут быть только буквы',
     phone_incomplete: 'Номер неполный: +998 XX XXX XX XX',
     date_invalid: 'Неверная дата',
+    doctor_invalid: 'Неверный врач',
     date_in_future: 'Дата не может быть в будущем',
     date_too_old: 'Слишком давняя дата',
   },
@@ -153,6 +154,7 @@ export const ru: DeepPartial<Strings> = {
     created: 'Пациент добавлен',
     updated: 'Данные пациента обновлены',
     deleted: 'Пациент удалён',
+    doctor_not_found: 'Этот сотрудник не врач или не активен',
   },
 
   PATIENT_UI: {
@@ -167,6 +169,10 @@ export const ru: DeepPartial<Strings> = {
     col_phone: 'Телефон',
     col_age: 'Возраст',
     col_address: 'Адрес',
+    col_doctor: 'Врач',
+    doctor: 'Врач',
+    doctor_none: 'Не закреплён',
+    doctor_hint: 'В визите и приёме этот врач будет выбран по умолчанию',
     fio: 'Ф.И.О.',
     phone: 'Телефон',
     birth_date: 'Дата рождения',
@@ -488,7 +494,7 @@ export const ru: DeepPartial<Strings> = {
     appointment_deleted: 'Приём удалён',
     appointment_arrived: 'Отмечено: пациент пришёл',
     appointment_no_show: 'Отмечено: пациент не пришёл',
-    appointment_done: 'Приём завершён',
+    appointment_done: 'Приём завершён — визит записан',
     appointment_cancelled: 'Приём отменён',
     appointment_scheduled: 'Приём снова запланирован',
     expense_created: 'Расход добавлен',
@@ -517,6 +523,7 @@ export const ru: DeepPartial<Strings> = {
     logo_removed: 'Логотип удалён',
     queue_enabled: 'Очередь включена',
     queue_disabled: 'Очередь выключена',
+    enqueued: (name: string, number: number) => `${name} добавлен в очередь — №${number}`,
     import_done: (added: number, updated: number) =>
       `Загружено: новых ${added}, обновлено ${updated}`,
   },
@@ -581,6 +588,7 @@ export const ru: DeepPartial<Strings> = {
     'teeth.write': 'Зубная карта',
     'payments.read': 'Платежи и задолженность',
     'payments.write': 'Приём оплаты',
+    'schedule.all': 'Расписание: приёмы всех врачей',
     'schedule.write': 'Расписание',
     'services.manage': 'Прайс-лист',
     'expenses.read': 'Расходы',
@@ -754,6 +762,7 @@ export const ru: DeepPartial<Strings> = {
     too_many: 'С этого устройства сегодня слишком много записей',
     not_in_queue: 'Этой записи нет в очереди',
     status_flow: 'Статус очереди нельзя изменить с этого этапа',
+    already_in_queue: 'Этот пациент сегодня уже в очереди',
   },
 
   QUEUE_UI: {
@@ -777,6 +786,12 @@ export const ru: DeepPartial<Strings> = {
 
   QUEUE_CABINET_UI: {
     title: 'Очередь',
+    enqueue: 'Добавить в очередь',
+    enqueue_title: (name: string) => `В очередь — ${name}`,
+    enqueue_hint:
+      'Пациент попадёт в сегодняшнюю очередь к выбранному врачу, подтверждение не нужно.',
+    enqueue_on_create: 'Добавить в очередь сегодня',
+    enqueue_needs_doctor: 'Чтобы добавить в очередь, выберите врача',
     empty: 'Сегодня очередь пуста',
     number: 'Номер',
     patient: 'Пациент',
@@ -801,6 +816,16 @@ export const ru: DeepPartial<Strings> = {
     address: 'Адрес страницы',
     copy: 'Скопировать',
     copied: 'Скопировано',
+    qr: 'QR-код',
+    qr_hint: 'Отсканируйте камерой телефона для проверки — ведёт на этот адрес',
+    poster: 'Распечатать — лист A4',
+    poster_scan: 'Наведите камеру телефона на QR-код',
+    poster_steps:
+      'Выберите врача, напишите имя — получите номер в очереди. Устанавливать приложение не нужно.',
+    poster_disabled:
+      'Запись в очередь сейчас закрыта — этот лист не будет работать. Включите её в Настройки → Очередь.',
+    poster_print: 'Распечатать',
+    poster_back: 'Вернуться в настройки',
   },
 
   QUEUE_STATUS_LABELS: {
@@ -1086,6 +1111,9 @@ export const ru: DeepPartial<Strings> = {
     patient_required: 'Выберите пациента',
     time_required: 'Укажите время',
     time_invalid: 'Не удалось прочитать время — укажите в виде часы:минуты',
+    already_done: 'Этот приём уже завершён',
+    done_needs_visit:
+      'Чтобы завершить приём, запишите выполненную работу — «Завершён» ставится через визит',
   },
 
   APPOINTMENT_STATUS_LABELS: {
@@ -1116,6 +1144,13 @@ export const ru: DeepPartial<Strings> = {
     set_status: 'Изменить статус',
     open_card: 'Карточка',
     date_unreadable: 'Не удалось прочитать дату',
+    doctor: 'Врач',
+    doctor_none: 'Без врача',
+    all_doctors: 'Все врачи',
+    complete: 'Завершить приём',
+    complete_hint: (date: string) =>
+      `Выполненная работа попадёт в карточку пациента как визит от ${date}, приём станет «Завершён».`,
+    complete_submit: 'Завершить',
   },
 
   MONTHS: [

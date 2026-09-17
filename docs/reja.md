@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** yoʻq — 9-bosqich yopildi _(16/09/2026)_
+**Hozirgi task:** yoʻq — 10-bosqich yopildi _(17/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1189,6 +1189,58 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > keyin toʻladi; jami ~2 s. Ilova tayyor boʻlishi bilan yopiladi —
 > animatsiya tugashini kutmaydi (foydalanuvchi qarori: «kutish shart
 > emas»). `prefers-reduced-motion` da hammasi darhol, harakatsiz
+
+---
+
+## Bosqich 10 — Bemor → shifokor → navbat/qabul · ~3 kun
+
+> **Nega** _(qaror 17/09/2026)_
+>
+> Qabulxona bemorni yaratganda uni shifokorga yoʻnaltiradi — lekin tizimda
+> bemorda shifokor yoʻq edi, qabul formasi shifokorni soʻramas edi (bazada
+> `doctor_id` bor, ishlatilmagan), navbatga faqat QR sahifadan yozilardi —
+> kabinetdan qoʻshib boʻlmasdi. Mavjud bemor kelganda «kimning bemori»
+> koʻrinmasdi.
+>
+> Qarorlar: shifokor bemorga **biriktiriladi** (`patients.doctor_id`,
+> kartochkada oʻzgartirish mumkin); tashrif va qabulda shu **sukut**, lekin
+> har safar boshqasini tanlash mumkin (shifokor taʼtilda). Yangi bemor
+> oynasida «Bugun navbatga qoʻshish» belgisi — qabulxona uchun sukut
+> **yoqilgan** (bemor odatda oldida turadi); mavjud bemorga alohida amal.
+
+- [x] **10.1 Bemorga shifokor** — `patients.doctor_id` (ixtiyoriy, faol
+      `visits.write` li xodim); bemor oynasida «Shifokor» tanlovi; roʻyxatda
+      ustun va filtr; kartochka sarlavhasida ism; API javobida `doctorName`.
+      Testlar: begona klinika xodimi rad, koʻp ijarachilik
+- [x] **10.2 Qabulda shifokor** — `POST/PATCH /appointments` da `doctorId`
+      (sukut — bemorning shifokori); formada tanlov; kunlik roʻyxatda ism;
+      shifokor boʻyicha filtr; bosh sahifadagi bugungi qabullarda ism
+- [x] **10.3 Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`):
+      bemor + shifokor → bugungi navbat, tasdiqlangan holatda (qabulxona
+      oʻzi qoʻshdi); yangi bemor oynasida «Bugun navbatga qoʻshish» belgisi;
+      bemorlar roʻyxati va kartochkada «Navbatga qoʻshish» amali; SSE
+      orqali ekran yangilanadi. Testlar: navbat yopiq boʻlsa rad, ikki marta
+      qoʻshib boʻlmaydi
+- [x] **10.4 Tashrifda sukut shifokor** — bemorning shifokori, boʻlmasa
+      yozayotgan odam
+- [x] **10.5 Hujjatlar va chiqarish** — tz.md (5, 14-boʻlim), CLAUDE.md; 17/09/2026 `master` ga
+- [x] **10.6 Yakunlash = tashrif** — «Yakunlandi» jadvalda ham, navbat
+      taxtasida ham tashrif formasini ochadi (sana va shifokor qabuldan);
+      `POST /appointments/:id/complete` bitta tranzaksiyada tashrif + `done`
+      + navbat `finished`; `PATCH {status: done}` va navbatdagi `done` amali
+      rad etiladi. Testlar: ulush snapshot, ikkinchi marta yakunlab
+      boʻlmaydi, yaroqsiz shifokorda hech narsa yozilmaydi, kelajakdagi
+      qabul → bugungi tashrif, begona klinika
+- [x] **10.7 Shifokor faqat oʻz jadvalini koʻradi** — yangi ruxsat
+      `schedule.all` (egasi, qabulxona; mavjud rollarga migratsiya). Usiz
+      roʻyxat, bosh sahifa faqat oʻz qabullari; yangi qabul oʻziga; boshqaning
+      qabuli «topilmadi»; kabinetda shifokor filtri va formadagi tanlov
+      yashiriladi. Testlar: roʻyxat, filtr eʼtiborsiz, POST oʻziga, PATCH/
+      complete/DELETE 404, ruxsat berilsa hammasi
+- [x] **10.8 Eshik uchun QR** — Sozlamalar → Navbat da QR koʻrinishi
+      (`qrcode.react`, brauzerda), «Chop etish — A4 varaq»: yon menyusiz
+      sahifa `/navbat-varaq` (klinika nomi, logotip, katta QR, yoʻriqnoma,
+      manzil), `@page A4`; navbat yopiq boʻlsa ogohlantirish
 
 ---
 

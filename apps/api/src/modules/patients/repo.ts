@@ -12,6 +12,7 @@ const SELECT = {
   birthDate: true,
   address: true,
   note: true,
+  doctorId: true,
   createdAt: true,
 } satisfies Prisma.PatientSelect
 
@@ -21,6 +22,7 @@ export interface PatientFields {
   birthDate?: Date | null | undefined
   address?: string | null | undefined
   note?: string | null | undefined
+  doctorId?: string | null | undefined
 }
 
 /// Qidiruv: ism boʻyicha normallashtirilgan ustundan, telefon boʻyicha
@@ -46,10 +48,12 @@ function columnWhere(input: {
   fio?: string
   phone?: string
   address?: string
+  doctorId?: string
   ageFrom?: number
   ageTo?: number
 }) {
   const and: Prisma.PatientWhereInput[] = []
+  if (input.doctorId) and.push({ doctorId: input.doctorId })
   // Yosh ≥ N: tugʻilgan sana N yil oldingi kundan kech emas.
   // Yosh ≤ M: (M+1) yil oldingi kundan keyin tugʻilgan
   if (input.ageFrom !== undefined) and.push({ birthDate: { lte: yearsAgo(input.ageFrom) } })
@@ -73,6 +77,7 @@ export async function list(
     fio?: string
     phone?: string
     address?: string
+    doctorId?: string
     ageFrom?: number
     ageTo?: number
     page: number
@@ -138,7 +143,7 @@ export async function searchIds(tx: ClinicTx, query: string): Promise<Set<string
 export function findByIds(tx: ClinicTx, ids: string[]) {
   return tx.patient.findMany({
     where: { id: { in: ids } },
-    select: { id: true, fio: true, phone: true },
+    select: { id: true, fio: true, phone: true, doctorId: true },
   })
 }
 

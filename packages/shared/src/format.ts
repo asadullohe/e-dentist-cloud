@@ -45,7 +45,13 @@ export function formatPayTerms(salaryAmount: number, payPercent: number): string
 // Diqqat: mahalliy vaqt zonasidan oladi. Server konteynerida
 // TZ=Asia/Tashkent boʻlishi shart, aks holda «bugun» besh soatga surilib ketadi.
 export function todayISO(): string {
-  const d = new Date()
+  return localISODate(new Date())
+}
+
+// Lahzaning mahalliy sanasi YYYY-MM-DD: qabul vaqti (ISO, UTC) → qabul kuni.
+// `iso.slice(0, 10)` UTC kunini beradi — yarim tundan keyingi qabulda notoʻgʻri
+export function localISODate(value: Date | string): string {
+  const d = value instanceof Date ? value : new Date(value)
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 

@@ -22,6 +22,8 @@ export const patientSchema = z.object({
     }),
   address: z.string().trim().max(300),
   note: z.string().trim().max(2000),
+  /// Boʻsh — biriktirilmagan
+  doctorId: z.string(),
 })
 
 export type PatientValues = z.infer<typeof patientSchema>
@@ -32,4 +34,5 @@ export const EMPTY_PATIENT: PatientValues = {
   birthDate: '',
   address: '',
   note: '',
+  doctorId: '',
 }

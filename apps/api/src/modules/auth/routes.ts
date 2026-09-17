@@ -103,12 +103,17 @@ export const authRoutes: FastifyPluginAsync<AuthRouteOpts> = async (app, opts) =
     },
   )
 
-  // Tashrif yozadigan har kim shifokorni tanlay olishi kerak — shuning
-  // uchun `visits.write` yetarli
-  app.get('/staff/doctors', { preHandler: app.requirePermission('visits.write') }, async (req) => {
-    const { clinicId } = clinicOf(req)
-    return ok(await service.listDoctors(opts.deps, clinicId))
-  })
+  // Shifokorni tanlash bemor bilan ishlaydigan har kimga kerak: tashrif
+  // yozish, bemorga biriktirish, qabul, navbat. Ismlar ochiq navbat
+  // sahifasida ham koʻrinadi — sir emas
+  app.get(
+    '/staff/doctors',
+    { preHandler: app.requireAnyPermission('patients.read', 'visits.write', 'schedule.write') },
+    async (req) => {
+      const { clinicId } = clinicOf(req)
+      return ok(await service.listDoctors(opts.deps, clinicId))
+    },
+  )
 
   app.get('/staff', manage, async (req) => {
     const { clinicId } = clinicOf(req)

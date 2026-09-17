@@ -1,2 +1,2 @@
-export { useDeleteVisit, useSaveVisit } from './hooks'
-export { VisitFormDialog } from './VisitFormDialog'
+export { useCompleteAppointment, useDeleteVisit, useSaveVisit } from './hooks'
+export { type CompletingAppointment, VisitFormDialog } from './VisitFormDialog'

@@ -12,6 +12,16 @@ export interface VisitPayload {
   note: string | null
 }
 
+/// Qabulni yakunlash: tashrif + qabul «Yakunlandi», bitta soʻrov.
+/// Bemor va sana qabuldan — payload'da yuborilmaydi
+export type CompletePayload = Omit<VisitPayload, 'patientId' | 'date'>
+
+export const completeAppointment = (appointmentId: string, payload: CompletePayload) =>
+  apiRequest<{ appointment: { id: string; at: string }; visit: Visit }>(
+    `/appointments/${appointmentId}/complete`,
+    { method: 'POST', body: payload },
+  )
+
 export const createVisit = (payload: VisitPayload) =>
   apiRequest<Visit>('/visits', { method: 'POST', body: payload })
 

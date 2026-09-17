@@ -200,7 +200,7 @@ Uch qatlamli himoya:
 | `users` | clinic_id, role_id, email, password_hash, full_name, status, email_verified_at, salary_amount, pay_percent | Platforma admini uchun `clinic_id` boʻsh. Oʻchirilmaydi — `status` bilan faolsizlantiriladi. `email` butun tizimda yagona: 1-versiyada bitta odam ikki klinikada ishlay olmaydi |
 | `roles` | clinic_id, template, name, permissions[], is_owner | Har klinikaning oʻz rollari. Yaratilishda 5 ta shablon nusxalanadi. `template` — qaysi shablondan kelgani: texnikning boshlangʻich sahifasi shunga qarab tanlanadi |
 | `invites` | clinic_id, role_id, email, token_hash, expires_at, accepted_at | Xodimni taklif qilish havolasi. **1-versiyada ishlatilmaydi**: SMTP sozlanmagani uchun hisobni egasi parol bilan ochadi (6-boʻlim). Jadval SMTP qoʻshilgan kunga saqlanib turadi |
-| `patients` | clinic_id, fio, phone, birth_date, note | Qidiruv uchun `fio` va `phone` ga indeks |
+| `patients` | clinic_id, fio, phone, birth_date, note, doctor_id | Qidiruv uchun `fio` va `phone` ga indeks. `doctor_id` — biriktirilgan shifokor (14-boʻlim) |
 | `visits` | patient_id, doctor_id, date, treatment, tooth, price, doctor_percent, doctor_share | `doctor_*` — ish haqi hisobi uchun snapshot (15-boʻlim) |
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
 | `bridges` | patient_id, teeth[], material | Koʻprik: tayanch va oraliq tishlar |
@@ -233,7 +233,8 @@ Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta t
 | `teeth.write` | Tish xaritasini oʻzgartirish |
 | `payments.read` | Toʻlovlar va qarzdorlik |
 | `payments.write` | Toʻlov qabul qilish |
-| `schedule.write` | Qabul jadvali |
+| `schedule.write` | Qabul jadvali (oʻz qabullari) |
+| `schedule.all` | Jadvalda hamma shifokorning qabullari. Yoʻq boʻlsa — faqat oʻziniki: shifokor boshqaning bemorini koʻrmaydi |
 | `services.manage` | Narxnoma |
 | `expenses.read` | Xarajatlar |
 | `reports.read` | Hisobotlar, tushum, foyda |
@@ -245,8 +246,9 @@ Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta t
 | `staff.manage` | Xodimlar va rollar |
 | `billing.manage` | Obuna va toʻlov |
 | `data.export` | Barcha maʼlumotni yuklab olish |
+| `queue.manage` | Navbat: tasdiqlash, chaqirish, kabinetdan qoʻshish (14-boʻlim) |
 
-Roʻyxat ataylab qisqa — 16 ta ruxsat. Har boʻlim uchun alohida «koʻrish/qoʻshish/oʻchirish» uchligini yasash matritsani uch barobar kattalashtiradi va hech kimga kerak boʻlmaydi.
+Roʻyxat ataylab qisqa — 20 ta ruxsat. Har boʻlim uchun alohida «koʻrish/qoʻshish/oʻchirish» uchligini yasash matritsani uch barobar kattalashtiradi va hech kimga kerak boʻlmaydi.
 
 > **Qaror**
 >
@@ -447,6 +449,7 @@ POST   /api/lab-orders
 PATCH  /api/lab-orders/:id/status     # tayyor | topshirildi | qaytarildi
 
 GET    /api/appointments?from=2026-09-01&to=2026-09-30
+POST   /api/appointments/:id/complete   # yakunlash = tashrif + «done»; schedule.write yoki queue.manage
 POST   /api/payments
 GET    /api/debtors
 GET    /api/reports?month=2026-09
@@ -471,7 +474,8 @@ GET    /api/n/:code/ticket/:id    # ochiq: oʻz raqami
 GET    /api/n/:code/screen        # ochiq: kutish xonasi ekrani, ismsiz
 GET    /api/n/:code/stream        # ochiq: SSE, «navbat oʻzgardi»
 GET    /api/queue                 # kabinet: toʻliq roʻyxat, ismlari bilan
-PATCH  /api/queue/:id             # tasdiqlash · chaqirish · keldi · kelmadi · yakunlandi
+POST   /api/queue                 # kabinet: bemor + shifokor → bugungi navbat (waiting)
+PATCH  /api/queue/:id             # tasdiqlash · chaqirish · keldi · kelmadi (yakunlash — appointments/:id/complete)
 
 POST   /api/auth/register        # klinika + egasi, sinov boshlanadi
 POST   /api/auth/verify          # pochtani tasdiqlash
@@ -648,6 +652,8 @@ televizor | Kutish xonasi | Katta shriftda: hozir chaqirilgan raqam va keyingi u
 >
 > **Klinika kodi taxmin qilib boʻlmaydi** — 8 belgili tasodifiy, URL da klinika raqami koʻrinmaydi. QR faqat eshikda.
 >
+> **QR ni tizim oʻzi yasaydi** _(10.8)_: Sozlamalar → Navbat da manzil yonida QR koʻrinadi, «Chop etish — A4 varaq» alohida sahifa (`/navbat-varaq`, `staff.manage`) ochadi: klinika nomi va logotipi, katta QR, «Telefon kamerasini QR kodga tuting» yoʻriqnomasi, pastida manzil. QR brauzerda yasaladi (`qrcode.react`) — tashqi xizmat yoʻq, kod tashqariga chiqmaydi. Navbat yozuvi yopiq boʻlsa varaqda ogohlantirish.
+>
 > **Cheklov:** bitta qurilmadan kuniga 2 ta, bitta IP dan soatiga 5 ta yozuv.
 >
 > **Tasdiqlash qabulxonada.** Yozilgan bemor «tasdiqlanmagan» holatda turadi, qabulxona uni koʻradi va tasdiqlaydi. Soxta yozuv navbatni buzmaydi.
@@ -660,6 +666,16 @@ televizor | Kutish xonasi | Katta shriftda: hozir chaqirilgan raqam va keyingi u
 - **Taxminiy vaqt:** oxirgi 20 ta qabulning oʻrtacha davomiyligi × oldindagi odamlar soni. Aniq emas, lekin «10 daqiqa» deb yolgʻon aytishdan yaxshi
 - **Yangi ruxsatlar:** `queue.manage` — chaqirish va holatni oʻzgartirish
 - **Bogʻlanish:** navbatdagi bemor kartotekada bor boʻlsa telefon boʻyicha topiladi; yoʻq boʻlsa qabulxona tasdiqlaganda yangi bemor yaratiladi
+
+### Bemor → shifokor → navbat/qabul _(qaror 17/09/2026)_
+
+Qabulxona bemorni yaratganda uni shifokorga yoʻnaltiradi — tizimda buning oʻrni boʻlmagan edi.
+
+- **Biriktirilgan shifokor** — `patients.doctor_id`, ixtiyoriy. Bemor oynasida tanlanadi, roʻyxatda ustun va filtr, kartochka sarlavhasida ism. Tashrif va qabulda **sukut** shu, lekin har safar boshqasini tanlash mumkin (shifokor taʼtilda)
+- **Qabulda shifokor** — `appointments.doctor_id` endi qabul formasida ham: berilmasa bemorniki olinadi; kunlik roʻyxatda ism, shifokor boʻyicha filtr
+- **Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`): bemor + shifokor → bugungi navbat, darhol `waiting` (qabulxona oʻzi qoʻshdi, tasdiqlash shart emas). Yangi bemor oynasida «Bugun navbatga qoʻshish» belgisi — sukut **yoqilgan** (bemor odatda oldida turadi); mavjud bemorga roʻyxat va kartochkadan alohida amal. Bir bemor bir kunda ikki marta qoʻshilmaydi. «Navbat yozuvi ochiq» sozlamasi faqat ochiq (QR) sahifaga tegishli — kabinetdan qoʻshishga tegmaydi
+- **Shifokor faqat oʻz jadvalini koʻradi** _(qaror 17/09/2026)_ — `schedule.all` ruxsati: egasi va qabulxona shablonida bor, shifokorda yoʻq. U boʻlmasa `GET /appointments` faqat `doctor_id = oʻzi` qatorlarini qaytaradi (`doctorId` filtri eʼtiborga olinmaydi), yangi qabul doim oʻziga yoziladi (formada shifokor tanlovi yoʻq), boshqaning qabuli tahrir/yakunlash/oʻchirishda «topilmadi». Bosh sahifadagi «bugungi qabullar» ham shu soʻrovdan — shifokorga oʻziniki chiqadi
+- **Yakunlash = tashrif yozish** — «Yakunlandi» holati holat roʻyxatidan qoʻyilmaydi: jadvalda ham, navbat taxtasida ham u tashrif formasini ochadi (muolaja, tish, narx; sana va shifokor qabuldan, oʻzgartirish mumkin). `POST /appointments/:id/complete` bitta tranzaksiyada tashrifni yozadi (shifokor ulushi snapshot bilan), qabulni `done`, navbat yozuvini `finished` qiladi. `PATCH {status: done}` va navbatdagi `done` amali rad etiladi — qilingan ish yozilmay qabul yakunlanmaydi. Kelajakdagi qabul bugun yakunlansa tashrif sanasi bugun. Ruxsat — ilgari «Yakunlandi» qoʻya olganlar: `schedule.write` yoki `queue.manage` (qabulxona pulni oladi, narxni biladi)
 
 ## 15. Ish haqi
 

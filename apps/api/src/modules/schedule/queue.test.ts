@@ -444,19 +444,25 @@ describe('kabinetdagi navbat', () => {
     expect(
       statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'call' })).json().data),
     ).toBe('called')
-    expect(
-      statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'done' })).json().data),
-    ).toBe('finished')
+    // Yakunlash — qilingan ish bilan, complete orqali (10.6). Navbatda
+    // «finished», qabulda «done», tashrif bemor kartochkasida
+    const done = await call('POST', `/api/appointments/${joined.id}/complete`, {
+      treatment: 'Koʻrik',
+      price: 50_000,
+    })
+    expect(done.statusCode).toBe(200)
+    expect(statusOf((await call('GET', '/api/queue')).json().data)).toBe('finished')
 
     const appointment = await h.ownerDb.appointment.findUnique({ where: { id: joined.id } })
     expect(appointment?.status).toBe('done')
+    expect(done.json().data.visit.patientId).toBe(appointment?.patientId)
   })
 
   it('bosqichni sakrab boʻlmaydi', async () => {
     const joined = (
       await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Sakrash Bemori' })
     ).json().data
-    const r = await call('PATCH', `/api/queue/${joined.id}`, { action: 'done' })
+    const r = await call('PATCH', `/api/queue/${joined.id}`, { action: 'call' })
     expect(r.statusCode).toBe(400)
   })
 
@@ -505,6 +511,83 @@ describe('kabinetdagi navbat', () => {
     ).json().data
     const r = await open('PATCH' as 'POST', `/api/queue/${joined.id}`, { action: 'confirm' })
     expect(r.statusCode).toBe(401)
+  })
+})
+
+describe('kabinetdan navbatga qoʻshish (10.3)', () => {
+  let patientId = ''
+
+  beforeAll(async () => {
+    const created = await call('POST', '/api/patients', {
+      fio: 'Kabinetdan Qoʻshilgan',
+      phone: '901112233',
+      doctorId,
+    })
+    patientId = created.json().data.id
+  })
+
+  it('bemor darhol «waiting» holatida, raqam bilan, ochiq sahifa yangilanadi', async () => {
+    const r = await call('POST', '/api/queue', { patientId, doctorId })
+    expect(r.statusCode).toBe(200)
+    const rows = r.json().data as {
+      patientId: string | null
+      status: string
+      number: number
+      fio: string
+      doctorId: string | null
+    }[]
+    const mine = rows.find((row) => row.patientId === patientId)
+    expect(mine).toMatchObject({ status: 'waiting', fio: 'Kabinetdan Qoʻshilgan', doctorId })
+    expect(mine?.number).toBeGreaterThan(0)
+
+    // Ochiq sahifada shu shifokorning kutayotganlar soni oshdi
+    const board = (await open('GET', `/api/n/${code}`)).json().data
+    const doctor = board.doctors.find((item: { id: string }) => item.id === doctorId)
+    expect(doctor.waiting).toBeGreaterThan(0)
+  })
+
+  it('bir bemor bir kunda ikki marta qoʻshilmaydi', async () => {
+    const r = await call('POST', '/api/queue', { patientId, doctorId })
+    expect(r.statusCode).toBe(409)
+    expect(r.json().error.message).toBe('Bu bemor bugun allaqachon navbatda')
+  })
+
+  it('begona klinikaning bemori — topilmadi', async () => {
+    const foreign = await h.ownerDb.patient.create({
+      data: { clinicId: otherClinicId, fio: 'Begona', fioSearch: 'begona' },
+    })
+    const r = await call('POST', '/api/queue', { patientId: foreign.id, doctorId })
+    expect(r.statusCode).toBe(404)
+    await h.ownerDb.patient.delete({ where: { id: foreign.id } })
+  })
+
+  it('queue.manage siz rad etiladi', async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    await call('POST', '/api/staff', {
+      email: `navbat-shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Shifokor',
+      roleId: role?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    const login = await h.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress: h.clientIp,
+      payload: {
+        email: `navbat-shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+        password: 'juda-yaxshi-parol',
+      },
+    })
+    const cookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
+    const r = await h.app.inject({
+      method: 'POST',
+      url: '/api/queue',
+      payload: { patientId, doctorId },
+      headers: { cookie },
+    })
+    expect(r.statusCode).toBe(403)
   })
 })
 

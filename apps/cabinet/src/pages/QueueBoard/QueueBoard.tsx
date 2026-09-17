@@ -1,17 +1,25 @@
-import { formatUzPhone, QUEUE_CABINET_UI, QUEUE_STATUS_LABELS } from '@e-dentist/shared'
+import {
+  formatUzPhone,
+  localISODate,
+  QUEUE_CABINET_UI,
+  QUEUE_STATUS_LABELS,
+} from '@e-dentist/shared'
 import { cn } from 'cn'
 import { BellIcon, ExternalLinkIcon } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type QueueEntry, type QueueStatus, useQueueStream } from '@/entities/queue'
 import { useSession } from '@/entities/session'
 import { type QueueAction, useQueue, useQueueAction } from '@/features/queue-manage'
+import { VisitFormDialog } from '@/features/visit-form'
 import { Badge, Button, Card, EmptyState, Skeleton } from '@/shared/ui'
 
 /// Taxta ustunlari — navbat oqimi tartibida
 const COLUMNS: QueueStatus[] = ['unconfirmed', 'waiting', 'called', 'finished']
 
 interface Action {
-  action: QueueAction
+  /// `done` — navbat amali emas: qilingan ish yoziladi, tashrif boʻladi (10.6)
+  action: QueueAction | 'done'
   label: string
   primary?: boolean
 }
@@ -52,10 +60,14 @@ interface TicketProps {
   entry: QueueEntry
   busy: boolean
   onAct: (id: string, action: QueueAction) => void
+  onComplete: (entry: QueueEntry) => void
 }
 
-function Ticket({ entry, busy, onAct }: TicketProps) {
-  const actions = actionsFor(entry.status)
+function Ticket({ entry, busy, onAct, onComplete }: TicketProps) {
+  // Kartotekada yoʻq bemorga tashrif yozib boʻlmaydi — «Yakunlandi» chiqmaydi
+  const actions = actionsFor(entry.status).filter(
+    ({ action }) => action !== 'done' || entry.patientId !== null,
+  )
 
   return (
     <Card
@@ -99,7 +111,7 @@ function Ticket({ entry, busy, onAct }: TicketProps) {
               size="sm"
               variant={primary ? 'default' : 'outline'}
               disabled={busy}
-              onClick={() => onAct(entry.id, action)}
+              onClick={() => (action === 'done' ? onComplete(entry) : onAct(entry.id, action))}
             >
               {label}
             </Button>
@@ -114,6 +126,8 @@ export function QueueBoard() {
   const { data: session } = useSession()
   const { data: entries, isPending } = useQueue()
   const { mutate: act, isPending: isSaving } = useQueueAction()
+  // «Yakunlandi» — tashrif formasi ochiladi (10.6)
+  const [completing, setCompleting] = useState<QueueEntry | null>(null)
 
   // Boshqa xodim navbatni oʻzgartirsa roʻyxat oʻzi yangilanadi
   const code = session?.clinic?.queueCode ?? ''
@@ -185,6 +199,7 @@ export function QueueBoard() {
                       entry={entry}
                       busy={isSaving}
                       onAct={(id, action) => act({ id, action })}
+                      onComplete={setCompleting}
                     />
                   ))
                 )}
@@ -192,6 +207,19 @@ export function QueueBoard() {
             )
           })}
         </div>
+      )}
+
+      {completing?.patientId && (
+        <VisitFormDialog
+          open
+          onOpenChange={(open) => !open && setCompleting(null)}
+          patientId={completing.patientId}
+          appointment={{
+            id: completing.id,
+            doctorId: completing.doctorId,
+            date: localISODate(completing.at),
+          }}
+        />
       )}
     </>
   )

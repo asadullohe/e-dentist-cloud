@@ -30,6 +30,7 @@ export const VALIDATION_TEXT = {
   fio_letters_only: 'Ismda faqat harflar boʻlishi mumkin',
   phone_incomplete: 'Raqam toʻliq emas: +998 XX XXX XX XX',
   date_invalid: 'Sana notoʻgʻri',
+  doctor_invalid: 'Shifokor notoʻgʻri',
   date_in_future: 'Sana kelajakda boʻlishi mumkin emas',
   date_too_old: 'Sana juda qadimgi',
 } as const
@@ -149,6 +150,7 @@ export const PATIENT_TEXT = {
   created: 'Bemor qoʻshildi',
   updated: 'Bemor maʼlumoti yangilandi',
   deleted: 'Bemor oʻchirildi',
+  doctor_not_found: 'Bu xodim shifokor emas yoki faol emas',
 } as const
 
 // Bemorlar sahifasi
@@ -164,6 +166,10 @@ export const PATIENT_UI = {
   col_phone: 'Telefon',
   col_age: 'Yoshi',
   col_address: 'Manzil',
+  col_doctor: 'Shifokor',
+  doctor: 'Shifokor',
+  doctor_none: 'Biriktirilmagan',
+  doctor_hint: 'Tashrif va qabulda shu shifokor sukut boʻyicha tanlanadi',
   fio: 'F.I.O.',
   phone: 'Telefon',
   birth_date: 'Tugʻilgan sana',
@@ -507,7 +513,7 @@ export const TOAST_TEXT = {
   // Holat oʻzgarishi — qaysi holatga oʻtgani aytiladi
   appointment_arrived: 'Bemor keldi deb belgilandi',
   appointment_no_show: 'Bemor kelmadi deb belgilandi',
-  appointment_done: 'Qabul yakunlandi',
+  appointment_done: 'Qabul yakunlandi — tashrif yozildi',
   appointment_cancelled: 'Qabul bekor qilindi',
   appointment_scheduled: 'Qabul qayta rejalashtirildi',
   expense_created: 'Xarajat qoʻshildi',
@@ -536,6 +542,7 @@ export const TOAST_TEXT = {
   logo_removed: 'Logotip olib tashlandi',
   queue_enabled: 'Navbat yoqildi',
   queue_disabled: 'Navbat oʻchirildi',
+  enqueued: (name: string, number: number) => `${name} navbatga qoʻshildi — №${number}`,
   import_done: (added: number, updated: number) =>
     `Yuklandi: ${added} ta yangi, ${updated} ta yangilandi`,
 } as const
@@ -606,6 +613,7 @@ export const PERMISSION_LABELS = {
   'payments.read': 'Toʻlovlar va qarzdorlik',
   'payments.write': 'Toʻlov qabul qilish',
   'schedule.write': 'Qabul jadvali',
+  'schedule.all': 'Jadval: hamma shifokorning qabullari',
   'services.manage': 'Narxnoma',
   'expenses.read': 'Xarajatlar',
   'reports.read': 'Hisobotlar',
@@ -804,6 +812,7 @@ export const QUEUE_TEXT = {
   too_many: 'Bu qurilmadan bugun juda koʻp yozuv boʻldi',
   not_in_queue: 'Bu yozuv navbatda emas',
   status_flow: 'Navbat holatini bu bosqichdan oʻzgartirib boʻlmaydi',
+  already_in_queue: 'Bu bemor bugun allaqachon navbatda',
 } as const
 
 // Ochiq navbat sahifasi
@@ -829,6 +838,12 @@ export const QUEUE_UI = {
 // Kabinetdagi navbat
 export const QUEUE_CABINET_UI = {
   title: 'Navbat',
+  // Kabinetdan navbatga qoʻshish (10.3)
+  enqueue: 'Navbatga qoʻshish',
+  enqueue_title: (name: string) => `Navbatga qoʻshish — ${name}`,
+  enqueue_hint: 'Bemor bugungi navbatga tanlangan shifokorga tushadi, tasdiqlash shart emas.',
+  enqueue_on_create: 'Bugun navbatga qoʻshish',
+  enqueue_needs_doctor: 'Navbatga qoʻshish uchun shifokorni tanlang',
   empty: 'Bugun navbat boʻsh',
   number: 'Raqam',
   patient: 'Bemor',
@@ -853,6 +868,17 @@ export const QUEUE_CABINET_UI = {
   address: 'Sahifa manzili',
   copy: 'Nusxalash',
   copied: 'Nusxalandi',
+  // Eshikka osiladigan QR (10.8)
+  qr: 'QR kod',
+  qr_hint: 'Telefon kamerasi bilan skanerlab tekshiring — shu manzilga olib boradi',
+  poster: 'Chop etish — A4 varaq',
+  poster_scan: 'Telefon kamerasini QR kodga tuting',
+  poster_steps:
+    'Shifokorni tanlang, ismingizni yozing — navbat raqamini olasiz. Ilova oʻrnatish shart emas.',
+  poster_disabled:
+    'Navbat yozuvi hozir yopiq — bu varaq ishlamaydi. Sozlamalar → Navbat boʻlimida yoqing.',
+  poster_print: 'Chop etish',
+  poster_back: 'Sozlamalarga qaytish',
 } as const
 
 /// Navbat holatlari — kabinetda koʻrinadigan nomlar
@@ -1148,6 +1174,8 @@ export const APPOINTMENT_TEXT = {
   patient_required: 'Bemorni tanlang',
   time_required: 'Vaqt kiritilishi shart',
   time_invalid: 'Vaqtni oʻqib boʻlmadi — soat:daqiqa koʻrinishida yozing',
+  already_done: 'Bu qabul allaqachon yakunlangan',
+  done_needs_visit: 'Yakunlash uchun qilingan ishni yozing — «Yakunlandi» tashrif orqali qoʻyiladi',
 } as const
 
 /// Holat kalitlari bazada saqlanadi, shuning uchun oʻzgarmaydi
@@ -1179,6 +1207,14 @@ export const SCHEDULE_UI = {
   set_status: 'Holatni oʻzgartirish',
   open_card: 'Kartochka',
   date_unreadable: 'Sanani oʻqib boʻlmadi',
+  doctor: 'Shifokor',
+  doctor_none: 'Shifokorsiz',
+  all_doctors: 'Hamma shifokorlar',
+  // Yakunlash = tashrif yozish (10.6)
+  complete: 'Qabulni yakunlash',
+  complete_hint: (date: string) =>
+    `Qilingan ish ${date} sanasidagi tashrif sifatida bemor kartochkasiga tushadi, qabul «Yakunlandi» boʻladi.`,
+  complete_submit: 'Yakunlash',
 } as const
 
 // Sana formati uchun. `format.ts` shulardan oladi

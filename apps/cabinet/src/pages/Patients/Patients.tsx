@@ -12,8 +12,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
 import { useHasPermission } from '@/entities/session'
+import { useDoctors } from '@/entities/staff'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { PatientImportDialog } from '@/features/patient-import'
+import { EnqueueDialog, useEnqueue } from '@/features/queue-manage'
 import { ApiError, downloadFile } from '@/shared/api'
 import { useDebounced } from '@/shared/lib'
 import {
@@ -79,6 +81,7 @@ export function Patients() {
     fio: filterOf('fio'),
     phone: filterOf('phone'),
     address: filterOf('address'),
+    doctorId: filterOf('doctorId'),
     ageFrom: ageRange?.[0],
     ageTo: ageRange?.[1],
     page: pagination.pageIndex + 1,
@@ -87,13 +90,27 @@ export function Patients() {
     dir: sort?.desc ? 'desc' : 'asc',
   })
   const { mutateAsync: remove, isPending: isRemoving } = useDeletePatient()
+  const { mutate: enqueue } = useEnqueue()
   const hasPermission = useHasPermission()
+  const canEnqueue = hasPermission('queue.manage')
+  const [enqueuing, setEnqueuing] = useState<Patient | null>(null)
   // Kuzatuvchi roʻyxatni koʻradi va Excelga chiqaradi, lekin yozmaydi
   const canWrite = hasPermission('patients.write')
+  const { data: doctors } = useDoctors()
+  const doctorOptions = (doctors ?? []).map((item) => ({
+    value: item.id,
+    label: item.fullName ?? '',
+  }))
 
   const table = useReactTable({
     data: data?.items ?? [],
-    columns: patientColumns({ onEdit: openEdit, onRemove: setRemoving, canEdit: canWrite }),
+    columns: patientColumns({
+      onEdit: openEdit,
+      onRemove: setRemoving,
+      onEnqueue: canEnqueue ? setEnqueuing : undefined,
+      canEdit: canWrite,
+      doctorOptions,
+    }),
     pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
     state: { pagination, sorting, columnVisibility, columnFilters },
     manualPagination: true,
@@ -209,7 +226,19 @@ export function Patients() {
 
       <PatientImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
-      <PatientFormDialog open={formOpen} onOpenChange={setFormOpen} patient={editing} />
+      <PatientFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        patient={editing}
+        enqueueOption={canEnqueue}
+        onCreated={(created, { enqueueToday }) => {
+          // Shifokorsiz navbat boʻlmaydi — forma buni oʻzi tekshiradi
+          if (enqueueToday && created.doctorId) {
+            enqueue({ patientId: created.id, doctorId: created.doctorId })
+          }
+        }}
+      />
+      <EnqueueDialog patient={enqueuing} onClose={() => setEnqueuing(null)} />
 
       <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
         <AlertDialogContent>

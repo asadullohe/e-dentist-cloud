@@ -1,6 +1,14 @@
-import { age, formatDate, formatUzPhone, PATIENT_UI, TABLE_UI, UI_TEXT } from '@e-dentist/shared'
+import {
+  age,
+  formatDate,
+  formatUzPhone,
+  PATIENT_UI,
+  QUEUE_CABINET_UI,
+  TABLE_UI,
+  UI_TEXT,
+} from '@e-dentist/shared'
 import type { ColumnDef } from '@tanstack/react-table'
-import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
+import { BellPlusIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import type { Patient } from '@/entities/patient'
 import {
   Button,
@@ -10,17 +18,28 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  type FacetOption,
 } from '@/shared/ui'
 
 interface Actions {
   onEdit: (patient: Patient) => void
   onRemove: (patient: Patient) => void
+  /// Bugungi navbatga qoʻshish — `queue.manage` boʻlsa (10.3)
+  onEnqueue?: ((patient: Patient) => void) | undefined
   /// `patients.write` boʻlmasa amallar ustuni chiqmaydi (kuzatuvchi)
   canEdit: boolean
+  /// thead filtri uchun shifokorlar roʻyxati
+  doctorOptions: readonly FacetOption[]
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
-export function patientColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<Patient>[] {
+export function patientColumns({
+  onEdit,
+  onRemove,
+  onEnqueue,
+  canEdit,
+  doctorOptions,
+}: Actions): ColumnDef<Patient>[] {
   const columns: ColumnDef<Patient>[] = [
     {
       accessorKey: 'fio',
@@ -73,6 +92,23 @@ export function patientColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDe
       },
     },
     {
+      // Biriktirilgan shifokor. Filtr serverda (`doctorId`)
+      accessorKey: 'doctorId',
+      meta: {
+        title: PATIENT_UI.col_doctor,
+        className: 'hidden w-44 md:table-cell',
+        filter: doctorOptions.length ? { type: 'select', options: doctorOptions } : undefined,
+      } satisfies ColumnMeta,
+      header: PATIENT_UI.col_doctor,
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.doctorName ? (
+          <span>{row.original.doctorName}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
       accessorKey: 'address',
       meta: {
         title: PATIENT_UI.col_address,
@@ -102,20 +138,32 @@ export function patientColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDe
                 <MoreHorizontalIcon />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem onClick={() => onEdit(row.original)}>
-                <PencilIcon />
-                {UI_TEXT.edit}
-              </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onClick={() => onRemove(row.original)}>
-                <Trash2Icon />
-                {UI_TEXT.remove}
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-44">
+              {onEnqueue && (
+                <DropdownMenuItem onClick={() => onEnqueue(row.original)}>
+                  <BellPlusIcon />
+                  {QUEUE_CABINET_UI.enqueue}
+                </DropdownMenuItem>
+              )}
+              {canEdit && (
+                <>
+                  <DropdownMenuItem onClick={() => onEdit(row.original)}>
+                    <PencilIcon />
+                    {UI_TEXT.edit}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem variant="destructive" onClick={() => onRemove(row.original)}>
+                    <Trash2Icon />
+                    {UI_TEXT.remove}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       ),
     },
   ]
-  return canEdit ? columns : columns.filter((column) => column.id !== 'actions')
+  // Amallar ustuni: tahrir/oʻchirish yoki navbatga qoʻshish — bittasi boʻlsa ham
+  const hasActions = canEdit || onEnqueue !== undefined
+  return hasActions ? columns : columns.filter((column) => column.id !== 'actions')
 }

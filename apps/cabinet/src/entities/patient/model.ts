@@ -6,6 +6,9 @@ export interface Patient {
   birthDate: string | null
   address: string | null
   note: string | null
+  /// Biriktirilgan shifokor — tashrif va qabulda sukut
+  doctorId: string | null
+  doctorName: string | null
   createdAt: string
 }
 
@@ -24,6 +27,7 @@ export interface PatientQuery {
   fio?: string
   phone?: string
   address?: string
+  doctorId?: string
   /// Yosh oraligʻi (toʻliq yil)
   ageFrom?: number
   ageTo?: number
