@@ -1166,6 +1166,13 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       («faolsizlantirildi» / «faollashtirildi»), roli, ish haqi sharti;
       qabul va naryad holatlari («Bemor keldi deb belgilandi», «Naryad
       topshirildi»); navbat yoqildi/oʻchirildi
+- [x] **9.8 Yuklanish splashi** _(foydalanuvchi taklifi, 17/09/2026)_ —
+      `shared/ui/splash.tsx`: koʻk tish (Tabler `dental`, inline SVG — lucide
+      da tish yoʻq) suzadi, ostida soyasi, nom, uch nuqta. Faqat 200 ms dan
+      keyin koʻrinadi — sessiya tez kelsa miltillamaydi. `RequireAuth` da
+      «Yuklanmoqda…» matni oʻrniga. Animatsiyalar `index.css` `@theme` da
+      (`--animate-float`, `--animate-dot`). Uch tur variantdan (12 ta koʻrinish)
+      tanlandi
 
 ---
 
