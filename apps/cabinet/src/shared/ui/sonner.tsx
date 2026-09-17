@@ -15,6 +15,10 @@ function Toaster(props: ToasterProps) {
   return (
     <Sonner
       theme="system"
+      // Tepada, markazda: jadval oxiridagi tugmalarni toʻsmaydi (oʻng pastda
+      // «Faollashtirish» ustiga tushib qolardi) va koʻz sahifa sarlavhasi
+      // yonida — sezilarli
+      position="top-center"
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
