@@ -6,8 +6,218 @@
     <title>E-Dentist</title>
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <script>
+      // Tema — birinchi boʻyoqdan oldin. React effektini kutilsa qorongʻi
+      // rejimdagi foydalanuvchi bir lahza oq ekran koʻradi.
+      // Kalit va mantiq shared/lib/theme.ts bilan bir xil
+      try {
+        const saved = localStorage.getItem('edentist-cabinet-theme')
+        const dark =
+          saved === 'dark' ||
+          (saved !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) document.documentElement.classList.add('dark')
+      } catch {
+        // maxfiy oyna — tema keyin React dan keladi
+      }
+    </script>
+    <style>
+      /* Yuklanish ekrani — HTML kelishi bilan koʻrinadi, JS ni kutmaydi.
+         React chizilgach shared/ui/splash.tsx uni yopadi. Ranglar
+         app/styles/index.css tokenlari bilan bir xil (u hali yuklanmagan) */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: oklch(1 0 0);
+        color: oklch(0.129 0.042 264.695);
+        font-family: "Inter Variable", Inter, system-ui, sans-serif;
+        --splash-primary: oklch(0.55 0.2 255);
+        --splash-shadow: oklch(0.129 0.042 264.695 / 18%);
+      }
+      html.dark #splash {
+        background: oklch(0.129 0.042 264.695);
+        color: oklch(0.984 0.003 247.858);
+        --splash-primary: oklch(0.72 0.16 250);
+        --splash-shadow: oklch(1 0 0 / 22%);
+      }
+      #splash[hidden] {
+        display: none;
+      }
+      #splash .box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      /* Ketma-ketlik: tish paydo boʻladi (0–0.5 s) → nom harfma-harf
+         chiziladi (0.4–2 s) → nuqtalar (2.1 s). Keyin tish suzib turadi */
+      #splash .tooth {
+        width: 56px;
+        height: 56px;
+        color: var(--splash-primary);
+        opacity: 0;
+        animation:
+          splash-pop 0.5s ease-out forwards,
+          splash-float 2.6s ease-in-out 0.5s infinite;
+      }
+      /* Soya — chetlari xira ellips, tekis chiziq emas: tish koʻtarilganda
+         torayadi va xiralashadi */
+      #splash .shadow {
+        width: 48px;
+        height: 10px;
+        margin-top: 4px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, var(--splash-shadow) 0%, transparent 70%);
+        opacity: 0;
+        animation:
+          splash-pop 0.5s ease-out forwards,
+          splash-shadow 2.6s ease-in-out 0.5s infinite;
+      }
+      /* Nom — payme belgisi uslubida: kichik harflar, eng qalin, biroz qiya.
+         SVG matn: har harf avval koʻk kontur bilan chiziladi (bitta uzluksiz
+         chiziq — dash uzunligi harf konturidan katta), keyin toʻladi.
+         Inter Variable 900 gacha ogʻirlikni oʻzida oladi — yangi shrift yoʻq */
+      #splash .name {
+        width: 150px;
+        height: 32px;
+        margin-top: 14px;
+        overflow: visible;
+      }
+      #splash .name text {
+        font-family: "Inter Variable", Inter, system-ui, sans-serif;
+        font-weight: 900;
+        font-size: 24px;
+        letter-spacing: -0.04em;
+        fill: currentColor;
+        stroke: var(--splash-primary);
+        stroke-width: 1.4;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+        paint-order: stroke;
+      }
+      #splash .name tspan {
+        fill-opacity: 0;
+        stroke-dasharray: 150;
+        stroke-dashoffset: 150;
+        animation:
+          splash-draw 0.3s linear forwards,
+          splash-ink 0.2s ease forwards;
+      }
+      #splash .name tspan:nth-child(1) { animation-delay: 0.4s, 0.7s; }
+      #splash .name tspan:nth-child(2) { animation-delay: 0.56s, 0.86s; }
+      #splash .name tspan:nth-child(3) { animation-delay: 0.72s, 1.02s; }
+      #splash .name tspan:nth-child(4) { animation-delay: 0.88s, 1.18s; }
+      #splash .name tspan:nth-child(5) { animation-delay: 1.04s, 1.34s; }
+      #splash .name tspan:nth-child(6) { animation-delay: 1.2s, 1.5s; }
+      #splash .name tspan:nth-child(7) { animation-delay: 1.36s, 1.66s; }
+      #splash .name tspan:nth-child(8) { animation-delay: 1.52s, 1.82s; }
+      #splash .name tspan:nth-child(9) { animation-delay: 1.68s, 1.98s; }
+      #splash .dots {
+        display: flex;
+        gap: 6px;
+        margin-top: 14px;
+        opacity: 0;
+        animation: splash-pop 0.4s ease-out 2.1s forwards;
+      }
+      #splash .dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--splash-primary);
+        animation: splash-dot 1.3s ease-in-out infinite;
+      }
+      #splash .dots span:nth-child(2) {
+        animation-delay: 180ms;
+      }
+      #splash .dots span:nth-child(3) {
+        animation-delay: 360ms;
+      }
+      @keyframes splash-pop {
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes splash-draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @keyframes splash-ink {
+        to {
+          fill-opacity: 1;
+          stroke-opacity: 0;
+        }
+      }
+      @keyframes splash-float {
+        50% {
+          transform: translateY(-7px);
+        }
+      }
+      @keyframes splash-shadow {
+        50% {
+          transform: scale(0.72, 0.8);
+          opacity: 0.45;
+        }
+      }
+      @keyframes splash-dot {
+        0%,
+        70%,
+        100% {
+          opacity: 0.25;
+          transform: translateY(0);
+        }
+        35% {
+          opacity: 1;
+          transform: translateY(-4px);
+        }
+      }
+      /* Harakatni kamaytirish soʻralgan boʻlsa — hammasi darhol, qimirlamaydi */
+      @media (prefers-reduced-motion: reduce) {
+        #splash .tooth,
+        #splash .shadow,
+        #splash .dots,
+        #splash .dots span {
+          animation: none;
+          opacity: 1;
+        }
+        #splash .name tspan {
+          animation: none;
+          fill-opacity: 1;
+          stroke-opacity: 0;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" role="status" aria-label="Yuklanmoqda">
+      <div class="box">
+        <!-- Tish — Tabler Icons «dental» (MIT) -->
+        <svg
+          class="tooth"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path
+            d="M12 5.5c-1.074-.586-2.583-1.5-4-1.5-2.1 0-4 1.247-4 5 0 4.899 1.056 8.41 2.671 10.537.573.756 1.97.521 2.4-.327l1.06-2.086a1.05 1.05 0 0 1 1.738 0l1.06 2.086c.43.848 1.827 1.083 2.4.327 1.615-2.127 2.671-5.638 2.671-10.537 0-3.753-1.9-5-4-5-1.417 0-2.926.914-4 1.5z"
+          />
+          <path d="M12 5.5l3 1.5" />
+        </svg>
+        <div class="shadow"></div>
+        <svg class="name" viewBox="0 0 150 32" aria-hidden="true">
+          <text x="75" y="25" text-anchor="middle" transform="skewX(-8) translate(3.5 0)">
+            <tspan>e</tspan><tspan>-</tspan><tspan>d</tspan><tspan>e</tspan><tspan>n</tspan><tspan>t</tspan><tspan>i</tspan><tspan>s</tspan><tspan>t</tspan>
+          </text>
+        </svg>
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

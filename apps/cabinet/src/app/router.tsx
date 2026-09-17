@@ -1,4 +1,4 @@
-import { type Permission, UI_TEXT } from '@e-dentist/shared'
+import type { Permission } from '@e-dentist/shared'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
@@ -34,7 +34,7 @@ import {
   StaffSection,
 } from '@/pages/Settings'
 import { VerifyEmail } from '@/pages/VerifyEmail'
-import { AuthLayout } from './layouts/AuthLayout'
+import { Splash } from '@/shared/ui'
 import { CabinetLayout } from './layouts/CabinetLayout'
 
 function RequireAuth() {
@@ -42,13 +42,7 @@ function RequireAuth() {
 
   // Sahifa yangilanganda sessiya javobini kutamiz — aks holda kirgan
   // foydalanuvchi bir lahzaga kirish oynasiga otilib ketardi
-  if (isPending) {
-    return (
-      <AuthLayout centered>
-        <p>{UI_TEXT.loading}</p>
-      </AuthLayout>
-    )
-  }
+  if (isPending) return <Splash />
   if (!session) return <Navigate to="/login" replace />
   return <Outlet />
 }

@@ -11,7 +11,7 @@ import { StaffTab } from './StaffTab'
 
 export function AccountSection() {
   return (
-    <ContentSection title={STAFF_UI.account_tab} desc={SETTINGS_UI.account_hint}>
+    <ContentSection heading="page" title={STAFF_UI.account_tab} desc={SETTINGS_UI.account_hint}>
       <AccountTab />
     </ContentSection>
   )
@@ -19,7 +19,7 @@ export function AccountSection() {
 
 export function StaffSection() {
   return (
-    <ContentSection title={STAFF_UI.staff_tab} desc={SETTINGS_UI.staff_hint} wide>
+    <ContentSection heading="page" title={STAFF_UI.staff_tab} desc={SETTINGS_UI.staff_hint} wide>
       <StaffTab />
     </ContentSection>
   )
@@ -27,7 +27,7 @@ export function StaffSection() {
 
 export function RolesSection() {
   return (
-    <ContentSection title={STAFF_UI.roles_tab} desc={SETTINGS_UI.roles_hint} wide>
+    <ContentSection heading="page" title={STAFF_UI.roles_tab} desc={SETTINGS_UI.roles_hint} wide>
       <RolesTab />
     </ContentSection>
   )
@@ -35,7 +35,7 @@ export function RolesSection() {
 
 export function ClinicSection() {
   return (
-    <ContentSection title={LOGO_UI.tab} desc={SETTINGS_UI.clinic_hint}>
+    <ContentSection heading="page" title={LOGO_UI.tab} desc={SETTINGS_UI.clinic_hint}>
       <ClinicLogoCard />
     </ContentSection>
   )
@@ -43,7 +43,11 @@ export function ClinicSection() {
 
 export function QueueSection() {
   return (
-    <ContentSection title={QUEUE_CABINET_UI.settings_tab} desc={SETTINGS_UI.queue_hint}>
+    <ContentSection
+      heading="page"
+      title={QUEUE_CABINET_UI.settings_tab}
+      desc={SETTINGS_UI.queue_hint}
+    >
       <QueueTab />
     </ContentSection>
   )
@@ -51,7 +55,7 @@ export function QueueSection() {
 
 export function DataSection() {
   return (
-    <ContentSection title={EXPORT_UI.tab} desc={SETTINGS_UI.data_hint}>
+    <ContentSection heading="page" title={EXPORT_UI.tab} desc={SETTINGS_UI.data_hint}>
       <DataTab />
     </ContentSection>
   )
