@@ -76,6 +76,9 @@ interface AppointmentFormDialogProps {
   /// Boʻsh boʻlsa — yangi qabul. Kalendarda bosilgan kun shu yerga keladi
   defaultDate: string
   appointment?: Appointment | undefined
+  /// `schedule.all` yoʻq (shifokor): qabul doim oʻziga yoziladi — shifokor
+  /// tanlovi koʻrsatilmaydi, server oʻzi qoʻyadi (10.7)
+  ownOnly?: boolean
   /// Saqlangan qabul — sahifa kalendarni oʻsha kunga oʻtkazadi
   onSaved?(appointment: Appointment): void
 }
@@ -112,6 +115,7 @@ export function AppointmentFormDialog({
   onOpenChange,
   defaultDate,
   appointment,
+  ownOnly = false,
   onSaved,
 }: AppointmentFormDialogProps) {
   const { mutateAsync, isPending } = useSaveAppointment(appointment?.id ?? null)
@@ -141,7 +145,7 @@ export function AppointmentFormDialog({
     try {
       const saved = await mutateAsync({
         ...(appointment ? { status: values.status } : { patientId: values.patientId }),
-        doctorId: values.doctorId || null,
+        ...(ownOnly ? {} : { doctorId: values.doctorId || null }),
         date: parseDisplayDate(values.date) as string,
         time: values.time,
         note: values.note || null,
@@ -188,34 +192,36 @@ export function AppointmentFormDialog({
               />
             )}
 
-            <FormField
-              control={form.control}
-              name="doctorId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{SCHEDULE_UI.doctor}</FormLabel>
-                  <Select
-                    value={field.value || NO_DOCTOR}
-                    onValueChange={(value) => field.onChange(value === NO_DOCTOR ? '' : value)}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_DOCTOR}>{SCHEDULE_UI.doctor_none}</SelectItem>
-                      {doctors?.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.fullName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!ownOnly && (
+              <FormField
+                control={form.control}
+                name="doctorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SCHEDULE_UI.doctor}</FormLabel>
+                    <Select
+                      value={field.value || NO_DOCTOR}
+                      onValueChange={(value) => field.onChange(value === NO_DOCTOR ? '' : value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value={NO_DOCTOR}>{SCHEDULE_UI.doctor_none}</SelectItem>
+                        {doctors?.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.fullName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <FormField

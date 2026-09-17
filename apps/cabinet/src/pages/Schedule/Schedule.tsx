@@ -26,6 +26,7 @@ import {
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { type Appointment, type AppointmentStatus, useAppointments } from '@/entities/appointment'
+import { useHasPermission } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
@@ -106,6 +107,9 @@ export function Schedule() {
 
   const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
+  // `schedule.all` yoʻq (shifokor): server faqat oʻz qabullarini qaytaradi —
+  // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
+  const seesAll = useHasPermission()('schedule.all')
 
   const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate()
   const from = isoOf(cursor.year, cursor.month, 1)
@@ -165,22 +169,24 @@ export function Schedule() {
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
         <div className="flex items-center gap-2">
-          <Select
-            value={doctorFilter || ALL_DOCTORS}
-            onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
-          >
-            <SelectTrigger size="sm" className="w-48" aria-label={SCHEDULE_UI.doctor}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
-              {doctors?.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                  {item.fullName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {seesAll && (
+            <Select
+              value={doctorFilter || ALL_DOCTORS}
+              onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
+            >
+              <SelectTrigger size="sm" className="w-48" aria-label={SCHEDULE_UI.doctor}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
+                {doctors?.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>
+                    {item.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Button size="sm" onClick={openNew}>
             <PlusIcon />
             {SCHEDULE_UI.add}
@@ -377,6 +383,7 @@ export function Schedule() {
         onOpenChange={setFormOpen}
         defaultDate={selected}
         appointment={editing}
+        ownOnly={!seesAll}
         onSaved={(saved) => {
           // Yozilgan qabul doim koʻrinsin: uning kuniga oʻtamiz; shifokor
           // filtri uni yashirsa — filtr olib tashlanadi

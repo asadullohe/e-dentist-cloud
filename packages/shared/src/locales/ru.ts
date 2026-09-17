@@ -588,6 +588,7 @@ export const ru: DeepPartial<Strings> = {
     'teeth.write': 'Зубная карта',
     'payments.read': 'Платежи и задолженность',
     'payments.write': 'Приём оплаты',
+    'schedule.all': 'Расписание: приёмы всех врачей',
     'schedule.write': 'Расписание',
     'services.manage': 'Прайс-лист',
     'expenses.read': 'Расходы',

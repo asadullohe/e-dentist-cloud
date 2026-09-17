@@ -45,7 +45,9 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   shifokor **biriktiriladi** (`patients.doctor_id`), tashrif va qabulda sukut
   shu, oʻzgartirish mumkin. Qabulxona kabinetdan navbatga qoʻshadi
   (`POST /queue`, darhol `waiting`); yangi bemor oynasida «Bugun navbatga
-  qoʻshish» sukut yoqilgan
+  qoʻshish» sukut yoqilgan. «Yakunlandi» faqat tashrif bilan
+  (`POST /appointments/:id/complete`). Shifokor jadvalda **faqat oʻz**
+  qabullarini koʻradi — hammasini `schedule.all` ochadi (egasi, qabulxona)
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar

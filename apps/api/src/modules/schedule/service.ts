@@ -71,6 +71,20 @@ export interface Appointment {
   phone: string | null
 }
 
+/// Kim soʻrayapti. `schedule.all` boʻlmasa (shifokor) jadval faqat oʻz
+/// qabullaridan iborat: roʻyxatda boshqalarniki chiqmaydi, yangi qabul
+/// oʻziga yoziladi, boshqaning qabuli «topilmadi» (10.7)
+export interface ScheduleViewer {
+  userId: string
+  all: boolean
+}
+
+/// Boshqa shifokorning qabuli — cheklangan koʻruvchi uchun yoʻq
+function assertVisible(viewer: ScheduleViewer, row: { doctorId: string | null }): void {
+  if (!viewer.all && row.doctorId !== viewer.userId)
+    throw errors.notFound(APPOINTMENT_TEXT.not_found)
+}
+
 /// Bemor nomlarini qoʻshadi. `patients` boshqa modulning jadvali, shuning
 /// uchun uning servisidan soʻraladi
 async function withPatients(
@@ -110,29 +124,40 @@ async function withPatients(
   })
 }
 
-export function list(deps: ScheduleDeps, clinicId: string, input: AppointmentListInput) {
+export function list(
+  deps: ScheduleDeps,
+  clinicId: string,
+  viewer: ScheduleViewer,
+  input: AppointmentListInput,
+) {
   return withClinic(deps.db, clinicId, async (tx) => {
     // `to` chegarasi kiritiladi: oxirgi kunning qabullari ham chiqsin
     const from = new Date(`${input.from}T00:00:00`)
     const to = new Date(`${input.to}T00:00:00`)
     to.setDate(to.getDate() + 1)
 
-    return withPatients(tx, await repo.list(tx, from, to, input.doctorId))
+    // Cheklangan koʻruvchi filtrni tanlay olmaydi — doim oʻzi
+    const doctorId = viewer.all ? input.doctorId : viewer.userId
+    return withPatients(tx, await repo.list(tx, from, to, doctorId))
   })
 }
 
 export function create(
   deps: ScheduleDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScheduleViewer,
   input: AppointmentCreateInput,
 ) {
+  const { userId } = viewer
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, input.patientId)
-    // Shifokor berilmasa — bemorning biriktirilgan shifokori (10.2)
-    const doctorId =
-      input.doctorId === undefined
+    // Shifokor berilmasa — bemorning biriktirilgan shifokori (10.2).
+    // Cheklangan koʻruvchi (shifokor) faqat oʻziga yozadi — aks holda qabul
+    // oʻz jadvalidan gʻoyib boʻlardi
+    const doctorId = !viewer.all
+      ? userId
+      : input.doctorId === undefined
         ? ((await patients.findByIds(tx, [input.patientId]))[0]?.doctorId ?? null)
         : input.doctorId
     await assertDoctor(tx, doctorId)
@@ -157,14 +182,18 @@ export function create(
 export function update(
   deps: ScheduleDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScheduleViewer,
   id: string,
   input: AppointmentUpdateInput,
 ) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
     try {
       const existing = await repo.findById(tx, id)
       if (!existing) throw errors.notFound(APPOINTMENT_TEXT.not_found)
+      assertVisible(viewer, existing)
+      // Cheklangan koʻruvchi shifokorni oʻzgartira olmaydi — qabul oʻzida qoladi
+      if (!viewer.all) input = { ...input, doctorId: undefined }
       // «Yakunlandi» faqat tashrif bilan birga qoʻyiladi — complete() (10.6)
       if (input.status === 'done' && existing.status !== 'done')
         throw errors.badRequest(APPOINTMENT_TEXT.done_needs_visit)
@@ -207,13 +236,15 @@ export function update(
 export function complete(
   deps: ScheduleDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScheduleViewer,
   id: string,
   input: AppointmentCompleteInput,
 ) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
     const existing = await repo.findQueueEntry(tx, id)
     if (!existing) throw errors.notFound(APPOINTMENT_TEXT.not_found)
+    assertVisible(viewer, existing)
     if (!existing.patientId) throw errors.badRequest(APPOINTMENT_TEXT.patient_required)
     if (existing.status === 'done') throw errors.conflict(APPOINTMENT_TEXT.already_done)
 
@@ -263,9 +294,15 @@ function formatLocalTime(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
-export function remove(deps: ScheduleDeps, clinicId: string, userId: string, id: string) {
+export function remove(deps: ScheduleDeps, clinicId: string, viewer: ScheduleViewer, id: string) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
     try {
+      if (!viewer.all) {
+        const existing = await repo.findById(tx, id)
+        if (!existing) throw errors.notFound(APPOINTMENT_TEXT.not_found)
+        assertVisible(viewer, existing)
+      }
       await repo.remove(tx, id)
     } catch (error) {
       if (isMissing(error)) throw errors.notFound(APPOINTMENT_TEXT.not_found)

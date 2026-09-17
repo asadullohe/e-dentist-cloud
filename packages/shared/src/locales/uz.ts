@@ -613,6 +613,7 @@ export const PERMISSION_LABELS = {
   'payments.read': 'Toʻlovlar va qarzdorlik',
   'payments.write': 'Toʻlov qabul qilish',
   'schedule.write': 'Qabul jadvali',
+  'schedule.all': 'Jadval: hamma shifokorning qabullari',
   'services.manage': 'Narxnoma',
   'expenses.read': 'Xarajatlar',
   'reports.read': 'Hisobotlar',

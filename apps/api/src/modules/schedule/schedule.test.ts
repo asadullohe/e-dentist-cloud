@@ -265,6 +265,116 @@ describe('qabulni yakunlash — tashrif yoziladi', () => {
   })
 })
 
+// `schedule.all` yoʻq (shifokor shabloni): jadval faqat oʻz qabullari (10.7)
+describe('shifokor faqat oʻz qabullarini koʻradi', () => {
+  let doctorId = ''
+  let doctorCookie = ''
+  let ownId = ''
+  let othersId = ''
+
+  const asDoctor = (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) =>
+    h.app.inject({ method, url, payload, headers: { cookie: doctorCookie } })
+
+  beforeAll(async () => {
+    const roles = await h.ownerDb.role.findMany({ where: { clinicId: h.clinicId } })
+    const doctorRole = roles.find((role) => role.template === 'shifokor')
+    const email = `oz-jadval-${h.clinicId.slice(0, 8)}@sinov.uz`
+    const created = await call('POST', '/api/staff', {
+      email,
+      fullName: 'Oʻz Jadvali',
+      roleId: doctorRole?.id,
+      password: 'juda-yaxshi-parol',
+      payPercent: 40,
+    })
+    doctorId = created.json().data.id
+    const login = await h.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress: h.clientIp,
+      payload: { email, password: 'juda-yaxshi-parol' },
+    })
+    doctorCookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
+
+    // Egasi (schedule.all bor) ikki qabul yozadi: biri shu shifokorga, biri egasiga
+    ownId = (
+      await call('POST', '/api/appointments', {
+        patientId,
+        date: '2027-06-01',
+        time: '10:00',
+        doctorId,
+      })
+    ).json().data.id
+    othersId = (
+      await call('POST', '/api/appointments', {
+        patientId,
+        date: '2027-06-01',
+        time: '11:00',
+        doctorId: h.userId,
+      })
+    ).json().data.id
+  })
+
+  it('roʻyxatda faqat oʻzinikilar; shifokor filtri eʼtiborga olinmaydi', async () => {
+    const r = await asDoctor('GET', '/api/appointments?from=2027-06-01&to=2027-06-01')
+    const ids = r.json().data.map((row: { id: string }) => row.id)
+    expect(ids).toContain(ownId)
+    expect(ids).not.toContain(othersId)
+
+    const filtered = await asDoctor(
+      'GET',
+      `/api/appointments?from=2027-06-01&to=2027-06-01&doctorId=${h.userId}`,
+    )
+    expect(filtered.json().data.map((row: { id: string }) => row.id)).toEqual([ownId])
+  })
+
+  it('yangi qabul doim oʻziga yoziladi — boshqa shifokor berilsa ham', async () => {
+    const r = await asDoctor('POST', '/api/appointments', {
+      patientId,
+      date: '2027-06-02',
+      time: '10:00',
+      doctorId: h.userId,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.doctorId).toBe(doctorId)
+  })
+
+  it('boshqaning qabuli — topilmadi: tahrir, yakunlash, oʻchirish', async () => {
+    expect(
+      (await asDoctor('PATCH', `/api/appointments/${othersId}`, { note: 'x' })).statusCode,
+    ).toBe(404)
+    expect(
+      (
+        await asDoctor('POST', `/api/appointments/${othersId}/complete`, {
+          treatment: 'Koʻrik',
+          price: 0,
+        })
+      ).statusCode,
+    ).toBe(404)
+    expect((await asDoctor('DELETE', `/api/appointments/${othersId}`)).statusCode).toBe(404)
+    const row = await h.ownerDb.appointment.findUnique({ where: { id: othersId } })
+    expect(row?.status).toBe('scheduled')
+  })
+
+  it('oʻz qabulida shifokorni oʻzgartirib boʻlmaydi — oʻzida qoladi', async () => {
+    const r = await asDoctor('PATCH', `/api/appointments/${ownId}`, { doctorId: h.userId })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.doctorId).toBe(doctorId)
+  })
+
+  it('schedule.all berilsa hammasini koʻradi', async () => {
+    const roles = await h.ownerDb.role.findMany({ where: { clinicId: h.clinicId } })
+    const doctorRole = roles.find((role) => role.template === 'shifokor')
+    await call('PATCH', `/api/roles/${doctorRole?.id}`, {
+      permissions: [...(doctorRole?.permissions ?? []), 'schedule.all'],
+    })
+    const r = await asDoctor('GET', '/api/appointments?from=2027-06-01&to=2027-06-01')
+    expect(r.json().data.map((row: { id: string }) => row.id)).toContain(othersId)
+    await call('PATCH', `/api/roles/${doctorRole?.id}`, {
+      permissions: doctorRole?.permissions ?? [],
+    })
+  })
+})
+
 describe('oraliq boʻyicha roʻyxat', () => {
   it('faqat soʻralgan oraliqdagilar', async () => {
     const r = await call('GET', '/api/appointments?from=2026-09-01&to=2026-09-30')

@@ -1231,6 +1231,12 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       rad etiladi. Testlar: ulush snapshot, ikkinchi marta yakunlab
       boʻlmaydi, yaroqsiz shifokorda hech narsa yozilmaydi, kelajakdagi
       qabul → bugungi tashrif, begona klinika
+- [x] **10.7 Shifokor faqat oʻz jadvalini koʻradi** — yangi ruxsat
+      `schedule.all` (egasi, qabulxona; mavjud rollarga migratsiya). Usiz
+      roʻyxat, bosh sahifa faqat oʻz qabullari; yangi qabul oʻziga; boshqaning
+      qabuli «topilmadi»; kabinetda shifokor filtri va formadagi tanlov
+      yashiriladi. Testlar: roʻyxat, filtr eʼtiborsiz, POST oʻziga, PATCH/
+      complete/DELETE 404, ruxsat berilsa hammasi
 
 ---
 

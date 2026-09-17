@@ -46,6 +46,7 @@ export const PERMISSIONS = [
   'payments.read',
   'payments.write',
   'schedule.write',
+  'schedule.all',
   'services.manage',
   'expenses.read',
   'reports.read',

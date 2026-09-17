@@ -46,7 +46,8 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
     ],
   },
 
-  // «Bemorlar, qabullar, toʻlovlar» + navbatni boshqarish
+  // «Bemorlar, qabullar, toʻlovlar» + navbatni boshqarish. Jadvalda hamma
+  // shifokorni koʻradi (`schedule.all`) — shifokor esa faqat oʻzinikini
   qabulxona: {
     template: 'qabulxona',
     get label() {
@@ -57,6 +58,7 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'patients.read',
       'patients.write',
       'schedule.write',
+      'schedule.all',
       'payments.read',
       'payments.write',
       'queue.manage',
