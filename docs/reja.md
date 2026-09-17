@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 10.4 — tashrifda sukut shifokor
+**Hozirgi task:** yoʻq — 10-bosqich yopildi _(17/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1221,9 +1221,9 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       bemorlar roʻyxati va kartochkada «Navbatga qoʻshish» amali; SSE
       orqali ekran yangilanadi. Testlar: navbat yopiq boʻlsa rad, ikki marta
       qoʻshib boʻlmaydi
-- [ ] **10.4 Tashrifda sukut shifokor** — bemorning shifokori, boʻlmasa
+- [x] **10.4 Tashrifda sukut shifokor** — bemorning shifokori, boʻlmasa
       yozayotgan odam
-- [ ] **10.5 Hujjatlar va chiqarish** — tz.md (5, 14-boʻlim), CLAUDE.md
+- [x] **10.5 Hujjatlar va chiqarish** — tz.md (5, 14-boʻlim), CLAUDE.md; 17/09/2026 `master` ga
 
 ---
 

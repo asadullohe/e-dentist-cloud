@@ -41,6 +41,11 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   «Qayta hisoblash» amali bor. Shifokor **oʻz** hisobini va ishlarini koʻradi
   (`payroll.own`). Toʻlab berish → `expenses(salary)` + `staff_payouts`
   bogʻlanishi; summa faqat xarajatda
+- **Bemor → shifokor** _(qaror 17/09/2026, tz.md 14-boʻlim)_: bemorga
+  shifokor **biriktiriladi** (`patients.doctor_id`), tashrif va qabulda sukut
+  shu, oʻzgartirish mumkin. Qabulxona kabinetdan navbatga qoʻshadi
+  (`POST /queue`, darhol `waiting`); yangi bemor oynasida «Bugun navbatga
+  qoʻshish» sukut yoqilgan
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar
