@@ -4,6 +4,7 @@ import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import {
+  appointmentCompleteSchema,
   appointmentCreateSchema,
   appointmentListSchema,
   appointmentUpdateSchema,
@@ -36,6 +37,17 @@ export const scheduleRoutes: FastifyPluginAsync<ScheduleRouteOpts> = async (app,
     const { clinicId, userId } = clinicOf(req)
     const input = validateInput(appointmentCreateSchema, req.body)
     return ok(await service.create(opts.deps, clinicId, userId, input))
+  })
+
+  // Yakunlash = tashrif + holat (10.6). Ilgari kim «Yakunlandi» qoʻya olgan
+  // boʻlsa — jadval yurituvchi yoki navbat boshqaruvchi — hozir ham shu,
+  // faqat qilingan ish bilan. Tashrif qabulning shifokoriga yoziladi
+  const complete = { preHandler: app.requireAnyPermission('schedule.write', 'queue.manage') }
+  app.post('/appointments/:id/complete', complete, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(appointmentCompleteSchema, req.body)
+    return ok(await service.complete(opts.deps, clinicId, userId, id, input))
   })
 
   app.patch('/appointments/:id', write, async (req) => {

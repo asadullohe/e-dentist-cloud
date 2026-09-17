@@ -17,8 +17,10 @@ export const queueJoinSchema = z.object({
     }),
 })
 
+/// «Yakunlandi» bu yerda yoʻq: u qilingan ish bilan birga
+/// POST /appointments/:id/complete orqali qoʻyiladi (10.6)
 export const queueStatusSchema = z.object({
-  action: z.enum(['confirm', 'call', 'arrived', 'no_show', 'done']),
+  action: z.enum(['confirm', 'call', 'arrived', 'no_show']),
 })
 
 /// Kabinetdan navbatga qoʻshish: kartotekadagi bemor + shifokor (10.3)

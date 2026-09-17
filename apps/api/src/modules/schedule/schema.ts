@@ -1,5 +1,6 @@
 import { APPOINTMENT_TEXT, VALIDATION_TEXT } from '@e-dentist/shared'
 import { z } from 'zod'
+import { visitCreateSchema } from '../visits/service.js'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
@@ -47,6 +48,10 @@ export const appointmentUpdateSchema = z.object({
   note: z.string().trim().max(500).nullish(),
 })
 
+/// Qabulni yakunlash = tashrif yozish (visits sxemasi) + holat «done».
+/// Bemor va sana qabuldan olinadi, shifokor — berilmasa qabulniki
+export const appointmentCompleteSchema = visitCreateSchema.omit({ patientId: true, date: true })
+
 export const appointmentListSchema = z.object({
   from: isoDate,
   to: isoDate,
@@ -56,3 +61,4 @@ export const appointmentListSchema = z.object({
 export type AppointmentCreateInput = z.infer<typeof appointmentCreateSchema>
 export type AppointmentUpdateInput = z.infer<typeof appointmentUpdateSchema>
 export type AppointmentListInput = z.infer<typeof appointmentListSchema>
+export type AppointmentCompleteInput = z.infer<typeof appointmentCompleteSchema>

@@ -263,11 +263,15 @@ export function AppointmentFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.entries(APPOINTMENT_STATUS_LABELS).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>
-                            {label}
-                          </SelectItem>
-                        ))}
+                        {Object.entries(APPOINTMENT_STATUS_LABELS)
+                          // «Yakunlandi» tashrif orqali qoʻyiladi (10.6); tahrirda
+                          // faqat allaqachon yakunlangan qabulda koʻrinadi
+                          .filter(([key]) => key !== 'done' || appointment.status === 'done')
+                          .map(([key, label]) => (
+                            <SelectItem key={key} value={key}>
+                              {label}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

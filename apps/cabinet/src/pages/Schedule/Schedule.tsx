@@ -4,6 +4,7 @@ import {
   EXPENSE_UI,
   formatDate,
   formatUzPhone,
+  localISODate,
   MONTHS,
   SCHEDULE_UI,
   todayISO,
@@ -31,6 +32,7 @@ import {
   useDeleteAppointment,
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
+import { VisitFormDialog } from '@/features/visit-form'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,6 +101,8 @@ export function Schedule() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Appointment | undefined>(undefined)
   const [deleting, setDeleting] = useState<Appointment | null>(null)
+  // «Yakunlandi» — qilingan ish yoziladi, tashrif boʻladi (10.6)
+  const [completing, setCompleting] = useState<Appointment | null>(null)
 
   const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
@@ -333,7 +337,11 @@ export function Schedule() {
                           <DropdownMenuItem
                             key={status}
                             disabled={status === item.status}
-                            onClick={() => setStatus({ id: item.id, status })}
+                            onClick={() =>
+                              status === 'done'
+                                ? setCompleting(item)
+                                : setStatus({ id: item.id, status })
+                            }
                           >
                             <span className="flex-1">{APPOINTMENT_STATUS_LABELS[status]}</span>
                             {status === item.status && <CheckIcon className="size-4" />}
@@ -379,6 +387,19 @@ export function Schedule() {
           if (doctorFilter && saved.doctorId !== doctorFilter) setDoctorFilter('')
         }}
       />
+
+      {completing && (
+        <VisitFormDialog
+          open
+          onOpenChange={(open) => !open && setCompleting(null)}
+          patientId={completing.patientId}
+          appointment={{
+            id: completing.id,
+            doctorId: completing.doctorId,
+            date: localISODate(completing.at),
+          }}
+        />
+      )}
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>

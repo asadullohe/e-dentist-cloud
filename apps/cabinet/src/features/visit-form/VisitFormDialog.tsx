@@ -5,7 +5,9 @@ import {
   formatSom,
   moneyDigits,
   parseDisplayDate,
+  SCHEDULE_UI,
   SERVICE_UI,
+  todayISO,
   UI_TEXT,
 } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -23,6 +25,7 @@ import {
   DatePicker,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -41,8 +44,17 @@ import {
   SelectValue,
   Textarea,
 } from '@/shared/ui'
-import { useSaveVisit } from './hooks'
+import { useCompleteAppointment, useSaveVisit } from './hooks'
 import { EMPTY_VISIT, type VisitValues, visitSchema } from './model'
+
+/// Qabulni yakunlash rejimi: tashrif shu qabulga yoziladi, sana va shifokor
+/// qabuldan olinadi (10.6)
+export interface CompletingAppointment {
+  id: string
+  doctorId: string | null
+  /// YYYY-MM-DD
+  date: string
+}
 
 interface VisitFormDialogProps {
   open: boolean
@@ -50,9 +62,20 @@ interface VisitFormDialogProps {
   patientId: string
   /// Boʻsh boʻlsa — yangi tashrif
   visit?: Visit | undefined
+  /// Berilsa — «Qabulni yakunlash»: saqlash qabulni ham yakunlaydi
+  appointment?: CompletingAppointment | undefined
 }
 
-function toValues(visit: Visit | undefined): VisitValues {
+/// Tashrif sanasi — qabul kuni; kelajakdagi qabul bugun yakunlansa — bugun
+/// (server ham shunday qiladi)
+const visitDateOf = (appointment: CompletingAppointment) =>
+  appointment.date > todayISO() ? todayISO() : appointment.date
+
+function toValues(
+  visit: Visit | undefined,
+  appointment: CompletingAppointment | undefined,
+): VisitValues {
+  if (appointment) return { ...EMPTY_VISIT, date: formatDate(visitDateOf(appointment)) }
   if (!visit) return { ...EMPTY_VISIT, date: formatDate(new Date().toISOString().slice(0, 10)) }
   return {
     date: formatDate(visit.date.slice(0, 10)),
@@ -63,8 +86,16 @@ function toValues(visit: Visit | undefined): VisitValues {
   }
 }
 
-export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitFormDialogProps) {
-  const { mutateAsync, isPending } = useSaveVisit(visit?.id ?? null)
+export function VisitFormDialog({
+  open,
+  onOpenChange,
+  patientId,
+  visit,
+  appointment,
+}: VisitFormDialogProps) {
+  const save = useSaveVisit(visit?.id ?? null)
+  const complete = useCompleteAppointment()
+  const isPending = save.isPending || complete.isPending
   const { data: services } = useServices()
   const { data: doctors } = useDoctors()
   const { data: session } = useSession()
@@ -80,38 +111,47 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
   // shifokor boʻlmasa ham shu, tahrirda tanlab qoʻyiladi
   const { data: patientCard } = usePatient(patientId)
   const selfId = session?.user.id ?? ''
-  const defaultDoctorId = patientCard?.doctorId ?? selfId
+  // Yakunlashda — qabulning shifokori birinchi navbatda
+  const defaultDoctorId = appointment?.doctorId ?? patientCard?.doctorId ?? selfId
 
   const form = useForm<VisitValues>({
     resolver: zodResolver(visitSchema),
-    defaultValues: toValues(visit),
+    defaultValues: toValues(visit, appointment),
   })
 
   // Oyna qayta ochilganda maydonlar tanlangan tashrifga moslanadi
   useEffect(() => {
     if (open) {
-      form.reset(toValues(visit))
+      form.reset(toValues(visit, appointment))
       setFormError('')
       setServiceId(visit?.serviceId ?? null)
       setDoctorId(visit?.doctorId ?? defaultDoctorId)
       setDoctorError('')
     }
-  }, [open, visit, form, defaultDoctorId])
+  }, [open, visit, appointment, form, defaultDoctorId])
 
   async function onSubmit(values: VisitValues) {
     setFormError('')
     setDoctorError('')
+    const payload = {
+      doctorId,
+      treatment: values.treatment,
+      tooth: values.tooth ? Number(values.tooth) : null,
+      serviceId,
+      price: Number(moneyDigits(values.price) || 0),
+      note: values.note || null,
+    }
     try {
-      await mutateAsync({
-        ...(visit ? {} : { patientId }),
-        doctorId,
-        date: parseDisplayDate(values.date) as string,
-        treatment: values.treatment,
-        tooth: values.tooth ? Number(values.tooth) : null,
-        serviceId,
-        price: Number(moneyDigits(values.price) || 0),
-        note: values.note || null,
-      })
+      if (appointment) {
+        // Sana qabuldan — server oʻzi qoʻyadi
+        await complete.mutateAsync({ appointmentId: appointment.id, ...payload })
+      } else {
+        await save.mutateAsync({
+          ...(visit ? {} : { patientId }),
+          date: parseDisplayDate(values.date) as string,
+          ...payload,
+        })
+      }
       onOpenChange(false)
     } catch (error) {
       setDoctorError(fieldErrors(error).doctorId ?? '')
@@ -123,25 +163,35 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{visit ? CARD_UI.edit_visit : CARD_UI.add_visit}</DialogTitle>
+          <DialogTitle>
+            {appointment ? SCHEDULE_UI.complete : visit ? CARD_UI.edit_visit : CARD_UI.add_visit}
+          </DialogTitle>
+          {appointment && (
+            <DialogDescription>
+              {SCHEDULE_UI.complete_hint(formatDate(visitDateOf(appointment)))}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
             <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{CARD_UI.date}</FormLabel>
-                    <FormControl>
-                      <DatePicker {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Yakunlashda sana qabulniki — maydon koʻrsatilmaydi */}
+              {!appointment && (
+                <FormField
+                  control={form.control}
+                  name="date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{CARD_UI.date}</FormLabel>
+                      <FormControl>
+                        <DatePicker {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
               <FormField
                 control={form.control}
                 name="tooth"
@@ -258,7 +308,11 @@ export function VisitFormDialog({ open, onOpenChange, patientId, visit }: VisitF
                 {CARD_UI.cancel}
               </Button>
               <Button type="submit" disabled={isPending}>
-                {isPending ? UI_TEXT.loading : CARD_UI.save}
+                {isPending
+                  ? UI_TEXT.loading
+                  : appointment
+                    ? SCHEDULE_UI.complete_submit
+                    : CARD_UI.save}
               </Button>
             </DialogFooter>
           </form>

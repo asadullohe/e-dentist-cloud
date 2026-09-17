@@ -447,6 +447,7 @@ POST   /api/lab-orders
 PATCH  /api/lab-orders/:id/status     # tayyor | topshirildi | qaytarildi
 
 GET    /api/appointments?from=2026-09-01&to=2026-09-30
+POST   /api/appointments/:id/complete   # yakunlash = tashrif + «done»; schedule.write yoki queue.manage
 POST   /api/payments
 GET    /api/debtors
 GET    /api/reports?month=2026-09
@@ -472,7 +473,7 @@ GET    /api/n/:code/screen        # ochiq: kutish xonasi ekrani, ismsiz
 GET    /api/n/:code/stream        # ochiq: SSE, «navbat oʻzgardi»
 GET    /api/queue                 # kabinet: toʻliq roʻyxat, ismlari bilan
 POST   /api/queue                 # kabinet: bemor + shifokor → bugungi navbat (waiting)
-PATCH  /api/queue/:id             # tasdiqlash · chaqirish · keldi · kelmadi · yakunlandi
+PATCH  /api/queue/:id             # tasdiqlash · chaqirish · keldi · kelmadi (yakunlash — appointments/:id/complete)
 
 POST   /api/auth/register        # klinika + egasi, sinov boshlanadi
 POST   /api/auth/verify          # pochtani tasdiqlash
@@ -669,6 +670,7 @@ Qabulxona bemorni yaratganda uni shifokorga yoʻnaltiradi — tizimda buning oʻ
 - **Biriktirilgan shifokor** — `patients.doctor_id`, ixtiyoriy. Bemor oynasida tanlanadi, roʻyxatda ustun va filtr, kartochka sarlavhasida ism. Tashrif va qabulda **sukut** shu, lekin har safar boshqasini tanlash mumkin (shifokor taʼtilda)
 - **Qabulda shifokor** — `appointments.doctor_id` endi qabul formasida ham: berilmasa bemorniki olinadi; kunlik roʻyxatda ism, shifokor boʻyicha filtr
 - **Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`): bemor + shifokor → bugungi navbat, darhol `waiting` (qabulxona oʻzi qoʻshdi, tasdiqlash shart emas). Yangi bemor oynasida «Bugun navbatga qoʻshish» belgisi — sukut **yoqilgan** (bemor odatda oldida turadi); mavjud bemorga roʻyxat va kartochkadan alohida amal. Bir bemor bir kunda ikki marta qoʻshilmaydi. «Navbat yozuvi ochiq» sozlamasi faqat ochiq (QR) sahifaga tegishli — kabinetdan qoʻshishga tegmaydi
+- **Yakunlash = tashrif yozish** — «Yakunlandi» holati holat roʻyxatidan qoʻyilmaydi: jadvalda ham, navbat taxtasida ham u tashrif formasini ochadi (muolaja, tish, narx; sana va shifokor qabuldan, oʻzgartirish mumkin). `POST /appointments/:id/complete` bitta tranzaksiyada tashrifni yozadi (shifokor ulushi snapshot bilan), qabulni `done`, navbat yozuvini `finished` qiladi. `PATCH {status: done}` va navbatdagi `done` amali rad etiladi — qilingan ish yozilmay qabul yakunlanmaydi. Kelajakdagi qabul bugun yakunlansa tashrif sanasi bugun. Ruxsat — ilgari «Yakunlandi» qoʻya olganlar: `schedule.write` yoki `queue.manage` (qabulxona pulni oladi, narxni biladi)
 
 ## 15. Ish haqi
 

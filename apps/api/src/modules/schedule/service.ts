@@ -2,14 +2,17 @@
 
 import { APPOINTMENT_TEXT, PATIENT_TEXT } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
+import { type Bus, queueChannel } from '../../platform/bus.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
+import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
 import type {
+  AppointmentCompleteInput,
   AppointmentCreateInput,
   AppointmentListInput,
   AppointmentUpdateInput,
@@ -17,6 +20,9 @@ import type {
 
 export interface ScheduleDeps {
   db: Db
+  /// Navbatdagi qabul yakunlanganda ochiq sahifa va kutish xonasi ekrani
+  /// yangilanishi kerak
+  bus: Bus
 }
 
 /// `2026-09-01` + `14:30` → mahalliy vaqtdagi lahza.
@@ -159,6 +165,9 @@ export function update(
     try {
       const existing = await repo.findById(tx, id)
       if (!existing) throw errors.notFound(APPOINTMENT_TEXT.not_found)
+      // «Yakunlandi» faqat tashrif bilan birga qoʻyiladi — complete() (10.6)
+      if (input.status === 'done' && existing.status !== 'done')
+        throw errors.badRequest(APPOINTMENT_TEXT.done_needs_visit)
 
       // Sana yoki vaqtdan faqat bittasi kelsa, ikkinchisi eskisidan olinadi
       const at =
@@ -188,6 +197,65 @@ export function update(
       throw error
     }
   })
+}
+
+/// Qabulni yakunlash: nima qilingani tashrif boʻlib yoziladi va qabul
+/// «done» boʻladi — bitta tranzaksiyada. Navbatdagi qabul boʻlsa navbat ham
+/// tugaydi. Shifokor: berilgani → qabulniki → bemorniki; hech biri boʻlmasa
+/// tashrif xizmati «shifokorni tanlang» deydi (yozayotgan odam shifokor
+/// boʻlmasa)
+export function complete(
+  deps: ScheduleDeps,
+  clinicId: string,
+  userId: string,
+  id: string,
+  input: AppointmentCompleteInput,
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const existing = await repo.findQueueEntry(tx, id)
+    if (!existing) throw errors.notFound(APPOINTMENT_TEXT.not_found)
+    if (!existing.patientId) throw errors.badRequest(APPOINTMENT_TEXT.patient_required)
+    if (existing.status === 'done') throw errors.conflict(APPOINTMENT_TEXT.already_done)
+
+    const doctorId =
+      input.doctorId ??
+      existing.doctorId ??
+      (await patients.findByIds(tx, [existing.patientId]))[0]?.doctorId ??
+      undefined
+
+    const visit = await visits.createTx(tx, userId, {
+      ...input,
+      ...(doctorId ? { doctorId } : {}),
+      patientId: existing.patientId,
+      // Kelajakdagi qabul bugun yakunlansa — ish bugun qilingan: tashrif
+      // sanasi kelajakka tushmaydi
+      date: minDate(localDate(existing.at), localDate(new Date())),
+    })
+
+    const updated = await repo.update(tx, id, {
+      status: 'done',
+      ...(existing.queueStatus !== null ? { queueStatus: 'finished' } : {}),
+    })
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.appointment_changed,
+      entity: 'appointment',
+      entityId: id,
+      meta: { status: 'done', visitId: visit.id },
+    })
+    if (existing.queueStatus !== null) await deps.bus.publish(queueChannel(clinicId))
+
+    const [appointment] = await withPatients(tx, [updated])
+    return { appointment, visit }
+  })
+}
+
+/// Lahza → mahalliy sana (YYYY-MM-DD). Jarayon TZ si Asia/Tashkent
+const minDate = (a: string, b: string) => (a < b ? a : b)
+
+function localDate(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
 function formatLocalTime(date: Date): string {

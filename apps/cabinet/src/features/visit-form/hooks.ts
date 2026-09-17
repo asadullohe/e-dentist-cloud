@@ -16,6 +16,21 @@ export function useSaveVisit(id: string | null) {
   })
 }
 
+/// Qabulni yakunlash — tashrif yoziladi, qabul va navbat roʻyxatlari eskiradi
+export function useCompleteAppointment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ appointmentId, ...payload }: { appointmentId: string } & api.CompletePayload) =>
+      api.completeAppointment(appointmentId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: VISIT_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      queryClient.invalidateQueries({ queryKey: ['queue'] })
+    },
+    meta: { success: () => TOAST_TEXT.appointment_done, inlineErrors: true },
+  })
+}
+
 export function useDeleteVisit() {
   const queryClient = useQueryClient()
   return useMutation({

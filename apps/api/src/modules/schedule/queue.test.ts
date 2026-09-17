@@ -444,19 +444,25 @@ describe('kabinetdagi navbat', () => {
     expect(
       statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'call' })).json().data),
     ).toBe('called')
-    expect(
-      statusOf((await call('PATCH', `/api/queue/${joined.id}`, { action: 'done' })).json().data),
-    ).toBe('finished')
+    // Yakunlash — qilingan ish bilan, complete orqali (10.6). Navbatda
+    // «finished», qabulda «done», tashrif bemor kartochkasida
+    const done = await call('POST', `/api/appointments/${joined.id}/complete`, {
+      treatment: 'Koʻrik',
+      price: 50_000,
+    })
+    expect(done.statusCode).toBe(200)
+    expect(statusOf((await call('GET', '/api/queue')).json().data)).toBe('finished')
 
     const appointment = await h.ownerDb.appointment.findUnique({ where: { id: joined.id } })
     expect(appointment?.status).toBe('done')
+    expect(done.json().data.visit.patientId).toBe(appointment?.patientId)
   })
 
   it('bosqichni sakrab boʻlmaydi', async () => {
     const joined = (
       await open('POST', `/api/n/${code}/join`, { doctorId, fullName: 'Sakrash Bemori' })
     ).json().data
-    const r = await call('PATCH', `/api/queue/${joined.id}`, { action: 'done' })
+    const r = await call('PATCH', `/api/queue/${joined.id}`, { action: 'call' })
     expect(r.statusCode).toBe(400)
   })
 

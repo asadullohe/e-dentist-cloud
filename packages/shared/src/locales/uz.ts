@@ -513,7 +513,7 @@ export const TOAST_TEXT = {
   // Holat oʻzgarishi — qaysi holatga oʻtgani aytiladi
   appointment_arrived: 'Bemor keldi deb belgilandi',
   appointment_no_show: 'Bemor kelmadi deb belgilandi',
-  appointment_done: 'Qabul yakunlandi',
+  appointment_done: 'Qabul yakunlandi — tashrif yozildi',
   appointment_cancelled: 'Qabul bekor qilindi',
   appointment_scheduled: 'Qabul qayta rejalashtirildi',
   expense_created: 'Xarajat qoʻshildi',
@@ -1162,6 +1162,8 @@ export const APPOINTMENT_TEXT = {
   patient_required: 'Bemorni tanlang',
   time_required: 'Vaqt kiritilishi shart',
   time_invalid: 'Vaqtni oʻqib boʻlmadi — soat:daqiqa koʻrinishida yozing',
+  already_done: 'Bu qabul allaqachon yakunlangan',
+  done_needs_visit: 'Yakunlash uchun qilingan ishni yozing — «Yakunlandi» tashrif orqali qoʻyiladi',
 } as const
 
 /// Holat kalitlari bazada saqlanadi, shuning uchun oʻzgarmaydi
@@ -1196,6 +1198,11 @@ export const SCHEDULE_UI = {
   doctor: 'Shifokor',
   doctor_none: 'Shifokorsiz',
   all_doctors: 'Hamma shifokorlar',
+  // Yakunlash = tashrif yozish (10.6)
+  complete: 'Qabulni yakunlash',
+  complete_hint: (date: string) =>
+    `Qilingan ish ${date} sanasidagi tashrif sifatida bemor kartochkasiga tushadi, qabul «Yakunlandi» boʻladi.`,
+  complete_submit: 'Yakunlash',
 } as const
 
 // Sana formati uchun. `format.ts` shulardan oladi

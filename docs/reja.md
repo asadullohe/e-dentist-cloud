@@ -1224,6 +1224,13 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 - [x] **10.4 Tashrifda sukut shifokor** — bemorning shifokori, boʻlmasa
       yozayotgan odam
 - [x] **10.5 Hujjatlar va chiqarish** — tz.md (5, 14-boʻlim), CLAUDE.md; 17/09/2026 `master` ga
+- [x] **10.6 Yakunlash = tashrif** — «Yakunlandi» jadvalda ham, navbat
+      taxtasida ham tashrif formasini ochadi (sana va shifokor qabuldan);
+      `POST /appointments/:id/complete` bitta tranzaksiyada tashrif + `done`
+      + navbat `finished`; `PATCH {status: done}` va navbatdagi `done` amali
+      rad etiladi. Testlar: ulush snapshot, ikkinchi marta yakunlab
+      boʻlmaydi, yaroqsiz shifokorda hech narsa yozilmaydi, kelajakdagi
+      qabul → bugungi tashrif, begona klinika
 
 ---
 

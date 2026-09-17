@@ -494,7 +494,7 @@ export const ru: DeepPartial<Strings> = {
     appointment_deleted: 'Приём удалён',
     appointment_arrived: 'Отмечено: пациент пришёл',
     appointment_no_show: 'Отмечено: пациент не пришёл',
-    appointment_done: 'Приём завершён',
+    appointment_done: 'Приём завершён — визит записан',
     appointment_cancelled: 'Приём отменён',
     appointment_scheduled: 'Приём снова запланирован',
     expense_created: 'Расход добавлен',
@@ -1100,6 +1100,9 @@ export const ru: DeepPartial<Strings> = {
     patient_required: 'Выберите пациента',
     time_required: 'Укажите время',
     time_invalid: 'Не удалось прочитать время — укажите в виде часы:минуты',
+    already_done: 'Этот приём уже завершён',
+    done_needs_visit:
+      'Чтобы завершить приём, запишите выполненную работу — «Завершён» ставится через визит',
   },
 
   APPOINTMENT_STATUS_LABELS: {
@@ -1133,6 +1136,10 @@ export const ru: DeepPartial<Strings> = {
     doctor: 'Врач',
     doctor_none: 'Без врача',
     all_doctors: 'Все врачи',
+    complete: 'Завершить приём',
+    complete_hint: (date: string) =>
+      `Выполненная работа попадёт в карточку пациента как визит от ${date}, приём станет «Завершён».`,
+    complete_submit: 'Завершить',
   },
 
   MONTHS: [

@@ -399,13 +399,12 @@ export function enqueue(
 /// saqlaydi (tz.md 14-boʻlim, 4.1 dagi qaror)
 const FLOW: Record<
   QueueStatusInput['action'],
-  { from: QueueStatus[]; queueStatus: QueueStatus; status?: 'arrived' | 'no_show' | 'done' }
+  { from: QueueStatus[]; queueStatus: QueueStatus; status?: 'arrived' | 'no_show' }
 > = {
   confirm: { from: ['unconfirmed'], queueStatus: 'waiting' },
   call: { from: ['waiting'], queueStatus: 'called' },
   arrived: { from: ['called'], queueStatus: 'finished', status: 'arrived' },
   no_show: { from: ['waiting', 'called'], queueStatus: 'finished', status: 'no_show' },
-  done: { from: ['called'], queueStatus: 'finished', status: 'done' },
 }
 
 export function act(
