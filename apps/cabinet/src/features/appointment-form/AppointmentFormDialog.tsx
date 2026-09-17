@@ -1,16 +1,21 @@
 import {
   APPOINTMENT_STATUS_LABELS,
+  APPOINTMENT_TEXT,
   CARD_UI,
   formatDate,
   parseDisplayDate,
   SCHEDULE_UI,
   UI_TEXT,
+  VALIDATION_TEXT,
 } from '@e-dentist/shared'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
 import { PatientPicker } from '@/entities/patient'
 import { useDoctors } from '@/entities/staff'
-import { ApiError } from '@/shared/api'
+import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
   DatePicker,
@@ -19,8 +24,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
   Input,
-  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -32,6 +42,33 @@ import { useSaveAppointment } from './hooks'
 
 /// Radix Select boʻsh satrni qabul qilmaydi — «shifokorsiz» uchun belgi
 const NO_DOCTOR = '__none__'
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
+
+/// Maydon nomlari server sxemasi bilan bir xil — serverdan kelgan xato
+/// (`fields.time`) toʻgʻri maydon ostiga tushadi (applyServerErrors)
+const schema = z.object({
+  /// Yangi qabulda majburiy; tahrirda bemor oʻzgarmaydi
+  patientId: z.string(),
+  /// Boʻsh — shifokorsiz
+  doctorId: z.string(),
+  // Ekranda KK/OO/YYYY, serverga YYYY-MM-DD
+  date: z
+    .string()
+    .trim()
+    .min(1, { error: () => VALIDATION_TEXT.date_invalid })
+    .refine((value) => parseDisplayDate(value) !== null, {
+      error: () => VALIDATION_TEXT.date_invalid,
+    }),
+  time: z
+    .string()
+    .trim()
+    .min(1, { error: () => APPOINTMENT_TEXT.time_required })
+    .regex(TIME, { error: () => APPOINTMENT_TEXT.time_invalid }),
+  status: z.enum(['scheduled', 'arrived', 'no_show', 'done', 'cancelled']),
+  note: z.string().trim().max(500),
+})
+
+type Values = z.infer<typeof schema>
 
 interface AppointmentFormDialogProps {
   open: boolean
@@ -47,6 +84,27 @@ function localTime(iso: string): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+function toValues(appointment: Appointment | undefined, defaultDate: string): Values {
+  if (!appointment) {
+    return {
+      patientId: '',
+      doctorId: '',
+      date: formatDate(defaultDate),
+      time: '',
+      status: 'scheduled',
+      note: '',
+    }
+  }
+  return {
+    patientId: appointment.patientId,
+    doctorId: appointment.doctorId ?? '',
+    date: formatDate(appointment.at.slice(0, 10)),
+    time: localTime(appointment.at),
+    status: appointment.status,
+    note: appointment.note ?? '',
+  }
+}
+
 export function AppointmentFormDialog({
   open,
   onOpenChange,
@@ -54,58 +112,40 @@ export function AppointmentFormDialog({
   appointment,
 }: AppointmentFormDialogProps) {
   const { mutateAsync, isPending } = useSaveAppointment(appointment?.id ?? null)
-
-  const [patientId, setPatientId] = useState<string | null>(null)
-  const [patientName, setPatientName] = useState('')
-  const [date, setDate] = useState('')
-  const [time, setTime] = useState('')
-  const [status, setStatus] = useState<AppointmentStatus>('scheduled')
-  const [note, setNote] = useState('')
-  // Boʻsh — shifokorsiz. Bemor tanlanganda uning biriktirilgan shifokori
-  // qoʻyiladi, keyin qoʻlda oʻzgartirish mumkin (shifokor taʼtilda)
-  const [doctorId, setDoctorId] = useState('')
-  const [error, setError] = useState('')
   const { data: doctors } = useDoctors()
+  const [patientName, setPatientName] = useState('')
+  const [formError, setFormError] = useState('')
+
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: toValues(appointment, defaultDate),
+  })
 
   useEffect(() => {
-    if (!open) return
-    setError('')
-    if (appointment) {
-      setPatientId(appointment.patientId)
-      setPatientName(appointment.fio)
-      setDate(formatDate(appointment.at.slice(0, 10)))
-      setTime(localTime(appointment.at))
-      setStatus(appointment.status)
-      setNote(appointment.note ?? '')
-      setDoctorId(appointment.doctorId ?? '')
-    } else {
-      setPatientId(null)
-      setPatientName('')
-      setDate(formatDate(defaultDate))
-      setTime('')
-      setStatus('scheduled')
-      setNote('')
-      setDoctorId('')
+    if (open) {
+      form.reset(toValues(appointment, defaultDate))
+      setPatientName(appointment?.fio ?? '')
+      setFormError('')
     }
-  }, [open, appointment, defaultDate])
+  }, [open, appointment, defaultDate, form])
 
-  async function save() {
-    setError('')
-    const iso = parseDisplayDate(date)
-    if (!iso) return setError(SCHEDULE_UI.date_unreadable)
-    if (!appointment && !patientId) return setError(SCHEDULE_UI.pick_patient)
-
+  async function onSubmit(values: Values) {
+    setFormError('')
+    if (!appointment && !values.patientId) {
+      form.setError('patientId', { message: APPOINTMENT_TEXT.patient_required })
+      return
+    }
     try {
       await mutateAsync({
-        ...(appointment ? { status } : { patientId: patientId as string }),
-        doctorId: doctorId || null,
-        date: iso,
-        time,
-        note: note || null,
+        ...(appointment ? { status: values.status } : { patientId: values.patientId }),
+        doctorId: values.doctorId || null,
+        date: parseDisplayDate(values.date) as string,
+        time: values.time,
+        note: values.note || null,
       })
       onOpenChange(false)
-    } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : UI_TEXT.offline)
+    } catch (error) {
+      setFormError(applyServerErrors(form, error))
     }
   }
 
@@ -116,97 +156,148 @@ export function AppointmentFormDialog({
           <DialogTitle>{appointment ? SCHEDULE_UI.edit : SCHEDULE_UI.add}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3.5">
-          {!appointment && (
-            <div className="space-y-1.5">
-              <Label>{SCHEDULE_UI.patient}</Label>
-              <PatientPicker
-                value={patientId}
-                label={patientName}
-                onPick={(id, fio, patient) => {
-                  setPatientId(id)
-                  setPatientName(fio)
-                  setDoctorId(patient.doctorId ?? '')
-                }}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+            {!appointment && (
+              <FormField
+                control={form.control}
+                name="patientId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SCHEDULE_UI.patient}</FormLabel>
+                    <FormControl>
+                      <PatientPicker
+                        value={field.value || null}
+                        label={patientName}
+                        onPick={(id, fio, patient) => {
+                          field.onChange(id)
+                          setPatientName(fio)
+                          // Bemorning biriktirilgan shifokori — sukut (10.2)
+                          form.setValue('doctorId', patient.doctorId ?? '')
+                          form.clearErrors('patientId')
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          )}
+            )}
 
-          <div className="space-y-1.5">
-            <Label htmlFor="appointment-doctor">{SCHEDULE_UI.doctor}</Label>
-            <Select
-              value={doctorId || NO_DOCTOR}
-              onValueChange={(value) => setDoctorId(value === NO_DOCTOR ? '' : value)}
-            >
-              <SelectTrigger id="appointment-doctor" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_DOCTOR}>{SCHEDULE_UI.doctor_none}</SelectItem>
-                {doctors?.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="appointment-date">{SCHEDULE_UI.date}</Label>
-              <DatePicker id="appointment-date" value={date} onChange={setDate} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="appointment-time">{SCHEDULE_UI.time}</Label>
-              <Input
-                id="appointment-time"
-                type="time"
-                value={time}
-                onChange={(event) => setTime(event.target.value)}
-              />
-            </div>
-          </div>
-
-          {appointment && (
-            <div className="space-y-1.5">
-              <Label htmlFor="appointment-status">{SCHEDULE_UI.status}</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as AppointmentStatus)}>
-                <SelectTrigger id="appointment-status" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(APPOINTMENT_STATUS_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="appointment-note">{SCHEDULE_UI.note}</Label>
-            <Textarea
-              id="appointment-note"
-              rows={2}
-              value={note}
-              onChange={(event) => setNote(event.target.value)}
+            <FormField
+              control={form.control}
+              name="doctorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{SCHEDULE_UI.doctor}</FormLabel>
+                  <Select
+                    value={field.value || NO_DOCTOR}
+                    onValueChange={(value) => field.onChange(value === NO_DOCTOR ? '' : value)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_DOCTOR}>{SCHEDULE_UI.doctor_none}</SelectItem>
+                      {doctors?.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          {error && <p className="text-destructive text-sm font-medium">{error}</p>}
-        </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SCHEDULE_UI.date}</FormLabel>
+                    <FormControl>
+                      <DatePicker {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SCHEDULE_UI.time}</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            {CARD_UI.cancel}
-          </Button>
-          <Button type="button" onClick={save} disabled={isPending}>
-            {isPending ? UI_TEXT.loading : CARD_UI.save}
-          </Button>
-        </DialogFooter>
+            {appointment && (
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SCHEDULE_UI.status}</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => field.onChange(value as AppointmentStatus)}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.entries(APPOINTMENT_STATUS_LABELS).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name="note"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{SCHEDULE_UI.note}</FormLabel>
+                  <FormControl>
+                    <Textarea rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                {CARD_UI.cancel}
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? UI_TEXT.loading : CARD_UI.save}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )
