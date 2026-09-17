@@ -67,11 +67,14 @@
         background: radial-gradient(ellipse at center, var(--splash-shadow) 0%, transparent 70%);
         animation: splash-shadow 2.6s ease-in-out infinite;
       }
+      /* Nom — payme belgisi uslubida: kichik harflar, eng qalin, biroz qiya.
+         Inter Variable 900 gacha ogʻirlikni oʻzida oladi — yangi shrift yoʻq */
       #splash .name {
         margin-top: 14px;
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: -0.02em;
+        font-size: 24px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        transform: skewX(-8deg);
       }
       #splash .dots {
         display: flex;
@@ -135,7 +138,7 @@
           <path d="M12 5.5l3 1.5" />
         </svg>
         <div class="shadow"></div>
-        <div class="name">E-Dentist</div>
+        <div class="name">e-dentist</div>
         <div class="dots"><span></span><span></span><span></span></div>
       </div>
     </div>
