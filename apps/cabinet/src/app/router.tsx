@@ -19,6 +19,7 @@ import { Patients } from '@/pages/Patients'
 import { Payroll } from '@/pages/Payroll'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
+import { QueuePoster } from '@/pages/QueuePoster'
 import { QueueScreen } from '@/pages/QueueScreen'
 import { Register } from '@/pages/Register'
 import { Reports } from '@/pages/Reports'
@@ -82,6 +83,10 @@ export function Router() {
       <Route path="/n/:code/ekran" element={<QueueScreen />} />
 
       <Route element={<RequireAuth />}>
+        {/* Eshikka osiladigan QR varaq — chop etish uchun yon menyusiz (10.8) */}
+        <Route element={<RequirePermission anyOf={['staff.manage']} />}>
+          <Route path="/navbat-varaq" element={<QueuePoster />} />
+        </Route>
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Home />} />
 

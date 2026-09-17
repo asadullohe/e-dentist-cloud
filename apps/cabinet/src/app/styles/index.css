@@ -185,4 +185,17 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
+  /* Chop etish — hozircha faqat navbat QR varagʻi (10.8): A4, tor hoshiya,
+     qorongʻi rejim fonlari qogʻozga tushmasin */
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  @media print {
+    body {
+      background: #fff;
+      color: #171717;
+    }
+  }
 }

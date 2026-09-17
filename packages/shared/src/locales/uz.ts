@@ -868,6 +868,17 @@ export const QUEUE_CABINET_UI = {
   address: 'Sahifa manzili',
   copy: 'Nusxalash',
   copied: 'Nusxalandi',
+  // Eshikka osiladigan QR (10.8)
+  qr: 'QR kod',
+  qr_hint: 'Telefon kamerasi bilan skanerlab tekshiring — shu manzilga olib boradi',
+  poster: 'Chop etish — A4 varaq',
+  poster_scan: 'Telefon kamerasini QR kodga tuting',
+  poster_steps:
+    'Shifokorni tanlang, ismingizni yozing — navbat raqamini olasiz. Ilova oʻrnatish shart emas.',
+  poster_disabled:
+    'Navbat yozuvi hozir yopiq — bu varaq ishlamaydi. Sozlamalar → Navbat boʻlimida yoqing.',
+  poster_print: 'Chop etish',
+  poster_back: 'Sozlamalarga qaytish',
 } as const
 
 /// Navbat holatlari — kabinetda koʻrinadigan nomlar

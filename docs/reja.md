@@ -1237,6 +1237,10 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       qabuli «topilmadi»; kabinetda shifokor filtri va formadagi tanlov
       yashiriladi. Testlar: roʻyxat, filtr eʼtiborsiz, POST oʻziga, PATCH/
       complete/DELETE 404, ruxsat berilsa hammasi
+- [x] **10.8 Eshik uchun QR** — Sozlamalar → Navbat da QR koʻrinishi
+      (`qrcode.react`, brauzerda), «Chop etish — A4 varaq»: yon menyusiz
+      sahifa `/navbat-varaq` (klinika nomi, logotip, katta QR, yoʻriqnoma,
+      manzil), `@page A4`; navbat yopiq boʻlsa ogohlantirish
 
 ---
 

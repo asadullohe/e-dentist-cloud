@@ -1,5 +1,6 @@
 import { QUEUE_CABINET_UI, UI_TEXT } from '@e-dentist/shared'
-import { CheckIcon, CopyIcon, ExternalLinkIcon } from 'lucide-react'
+import { CheckIcon, CopyIcon, ExternalLinkIcon, PrinterIcon } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 import { useSession } from '@/entities/session'
 import { useSetQueueEnabled } from '@/features/queue-manage'
@@ -69,6 +70,26 @@ export function QueueTab() {
           </Button>
         </div>
         <p className="text-muted-foreground text-xs">{QUEUE_CABINET_UI.code_hint}</p>
+      </div>
+
+      {/* QR shu yerda yasaladi — tashqi xizmat yoʻq, kod tashqariga chiqmaydi.
+          Oq fon qotirilgan: qorongʻi rejimda ham skanerlanadi (10.8) */}
+      <div className="space-y-1.5">
+        <Label>{QUEUE_CABINET_UI.qr}</Label>
+        <div className="flex flex-wrap items-start gap-4">
+          <div className="rounded-lg border bg-white p-3">
+            <QRCodeSVG value={address} size={144} level="M" marginSize={0} />
+          </div>
+          <div className="space-y-2">
+            <p className="text-muted-foreground max-w-xs text-xs">{QUEUE_CABINET_UI.qr_hint}</p>
+            <Button asChild variant="outline" size="sm">
+              <a href="/navbat-varaq" target="_blank" rel="noreferrer">
+                <PrinterIcon />
+                {QUEUE_CABINET_UI.poster}
+              </a>
+            </Button>
+          </div>
+        </div>
       </div>
 
       {error && <p className="text-destructive text-sm font-medium">{error}</p>}

@@ -652,6 +652,8 @@ televizor | Kutish xonasi | Katta shriftda: hozir chaqirilgan raqam va keyingi u
 >
 > **Klinika kodi taxmin qilib boʻlmaydi** — 8 belgili tasodifiy, URL da klinika raqami koʻrinmaydi. QR faqat eshikda.
 >
+> **QR ni tizim oʻzi yasaydi** _(10.8)_: Sozlamalar → Navbat da manzil yonida QR koʻrinadi, «Chop etish — A4 varaq» alohida sahifa (`/navbat-varaq`, `staff.manage`) ochadi: klinika nomi va logotipi, katta QR, «Telefon kamerasini QR kodga tuting» yoʻriqnomasi, pastida manzil. QR brauzerda yasaladi (`qrcode.react`) — tashqi xizmat yoʻq, kod tashqariga chiqmaydi. Navbat yozuvi yopiq boʻlsa varaqda ogohlantirish.
+>
 > **Cheklov:** bitta qurilmadan kuniga 2 ta, bitta IP dan soatiga 5 ta yozuv.
 >
 > **Tasdiqlash qabulxonada.** Yozilgan bemor «tasdiqlanmagan» holatda turadi, qabulxona uni koʻradi va tasdiqlaydi. Soxta yozuv navbatni buzmaydi.
