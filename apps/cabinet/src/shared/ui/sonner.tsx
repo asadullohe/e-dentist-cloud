@@ -23,6 +23,9 @@ function Toaster(props: ToasterProps) {
       // xato qizil. Ranglar ilovaning oʻz tokenlaridan (pastdagi style) —
       // Sonner ning oʻz palitrasi emas
       richColors
+      // Sukut boʻyicha 16 px boʻshliq — 54 px balandlik; bir qatorli xabar
+      // uchun ortiqcha. 10/14 px → ~40 px
+      toastOptions={{ style: { padding: '10px 14px' } }}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4" />,
@@ -37,22 +40,21 @@ function Toaster(props: ToasterProps) {
           '--normal-text': 'var(--popover-foreground)',
           '--normal-border': 'var(--border)',
           '--border-radius': 'var(--radius)',
-          // Fon — rangning yengil toni (popover ustida), chegara — kuchliroq,
-          // matn va belgi — rangning oʻzi. Ikkala rejimda token oʻzi almashadi.
-          // Aralashtirish srgb da: oklch da sariq (84°) bilan koʻkimtir fon
-          // (264°) aralashganda hue aylanib, ogohlantirish pushti chiqardi
-          '--success-bg': 'color-mix(in srgb, var(--ok) 14%, var(--popover))',
-          '--success-border': 'color-mix(in srgb, var(--ok) 45%, var(--popover))',
-          '--success-text': 'var(--ok)',
-          '--warning-bg': 'color-mix(in srgb, var(--warn) 16%, var(--popover))',
-          '--warning-border': 'color-mix(in srgb, var(--warn) 50%, var(--popover))',
-          '--warning-text': 'color-mix(in srgb, var(--warn) 70%, var(--foreground))',
-          '--error-bg': 'color-mix(in srgb, var(--destructive) 14%, var(--popover))',
-          '--error-border': 'color-mix(in srgb, var(--destructive) 45%, var(--popover))',
-          '--error-text': 'var(--destructive)',
-          '--info-bg': 'color-mix(in srgb, var(--info) 14%, var(--popover))',
-          '--info-border': 'color-mix(in srgb, var(--info) 45%, var(--popover))',
-          '--info-text': 'var(--info)',
+          // Fon — turning oʻz rangi (toʻliq), matn va belgi oq — antd uslubi.
+          // Ranglar rejimga bogʻlanmagan: qorongʻi rejimdagi tokenlar ochroq,
+          // ularda oq matn oʻqilmaydi — shuning uchun qotirilgan toʻq tonlar
+          '--success-bg': 'oklch(0.58 0.15 163)',
+          '--success-border': 'oklch(0.58 0.15 163)',
+          '--success-text': '#fff',
+          '--warning-bg': 'oklch(0.66 0.19 48)',
+          '--warning-border': 'oklch(0.66 0.19 48)',
+          '--warning-text': '#fff',
+          '--error-bg': 'oklch(0.58 0.22 27)',
+          '--error-border': 'oklch(0.58 0.22 27)',
+          '--error-text': '#fff',
+          '--info-bg': 'oklch(0.58 0.16 242)',
+          '--info-border': 'oklch(0.58 0.16 242)',
+          '--info-text': '#fff',
         } as CSSProperties
       }
       {...props}
