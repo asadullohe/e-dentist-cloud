@@ -542,6 +542,7 @@ export const TOAST_TEXT = {
   logo_removed: 'Logotip olib tashlandi',
   queue_enabled: 'Navbat yoqildi',
   queue_disabled: 'Navbat oʻchirildi',
+  enqueued: (name: string, number: number) => `${name} navbatga qoʻshildi — №${number}`,
   import_done: (added: number, updated: number) =>
     `Yuklandi: ${added} ta yangi, ${updated} ta yangilandi`,
 } as const
@@ -810,6 +811,7 @@ export const QUEUE_TEXT = {
   too_many: 'Bu qurilmadan bugun juda koʻp yozuv boʻldi',
   not_in_queue: 'Bu yozuv navbatda emas',
   status_flow: 'Navbat holatini bu bosqichdan oʻzgartirib boʻlmaydi',
+  already_in_queue: 'Bu bemor bugun allaqachon navbatda',
 } as const
 
 // Ochiq navbat sahifasi
@@ -835,6 +837,12 @@ export const QUEUE_UI = {
 // Kabinetdagi navbat
 export const QUEUE_CABINET_UI = {
   title: 'Navbat',
+  // Kabinetdan navbatga qoʻshish (10.3)
+  enqueue: 'Navbatga qoʻshish',
+  enqueue_title: (name: string) => `Navbatga qoʻshish — ${name}`,
+  enqueue_hint: 'Bemor bugungi navbatga tanlangan shifokorga tushadi, tasdiqlash shart emas.',
+  enqueue_on_create: 'Bugun navbatga qoʻshish',
+  enqueue_needs_doctor: 'Navbatga qoʻshish uchun shifokorni tanlang',
   empty: 'Bugun navbat boʻsh',
   number: 'Raqam',
   patient: 'Bemor',

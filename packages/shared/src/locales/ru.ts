@@ -523,6 +523,7 @@ export const ru: DeepPartial<Strings> = {
     logo_removed: 'Логотип удалён',
     queue_enabled: 'Очередь включена',
     queue_disabled: 'Очередь выключена',
+    enqueued: (name: string, number: number) => `${name} добавлен в очередь — №${number}`,
     import_done: (added: number, updated: number) =>
       `Загружено: новых ${added}, обновлено ${updated}`,
   },
@@ -760,6 +761,7 @@ export const ru: DeepPartial<Strings> = {
     too_many: 'С этого устройства сегодня слишком много записей',
     not_in_queue: 'Этой записи нет в очереди',
     status_flow: 'Статус очереди нельзя изменить с этого этапа',
+    already_in_queue: 'Этот пациент сегодня уже в очереди',
   },
 
   QUEUE_UI: {
@@ -783,6 +785,12 @@ export const ru: DeepPartial<Strings> = {
 
   QUEUE_CABINET_UI: {
     title: 'Очередь',
+    enqueue: 'Добавить в очередь',
+    enqueue_title: (name: string) => `В очередь — ${name}`,
+    enqueue_hint:
+      'Пациент попадёт в сегодняшнюю очередь к выбранному врачу, подтверждение не нужно.',
+    enqueue_on_create: 'Добавить в очередь сегодня',
+    enqueue_needs_doctor: 'Чтобы добавить в очередь, выберите врача',
     empty: 'Сегодня очередь пуста',
     number: 'Номер',
     patient: 'Пациент',

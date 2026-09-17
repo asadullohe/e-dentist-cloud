@@ -12,7 +12,7 @@ import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import * as queue from './queue.js'
-import { queueJoinSchema, queueStatusSchema } from './queueSchema.js'
+import { queueEnqueueSchema, queueJoinSchema, queueStatusSchema } from './queueSchema.js'
 
 function clinicOf(req: FastifyRequest): { clinicId: string; userId: string } {
   const session = requireAuth(req)
@@ -133,6 +133,12 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
   app.get('/queue', manage, async (req) => {
     const { clinicId } = clinicOf(req)
     return ok(await queue.list(opts.deps, clinicId))
+  })
+
+  app.post('/queue', manage, async (req) => {
+    const { clinicId, userId } = clinicOf(req)
+    const input = validateInput(queueEnqueueSchema, req.body)
+    return ok(await queue.enqueue(opts.deps, clinicId, userId, input))
   })
 
   app.patch('/queue/:id', manage, async (req) => {

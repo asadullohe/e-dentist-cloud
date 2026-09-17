@@ -1,2 +1,3 @@
 export type { QueueAction } from './api'
-export { useQueue, useQueueAction, useSetQueueEnabled } from './hooks'
+export { EnqueueDialog } from './EnqueueDialog'
+export { useEnqueue, useQueue, useQueueAction, useSetQueueEnabled } from './hooks'

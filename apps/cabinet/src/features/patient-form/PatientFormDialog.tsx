@@ -1,4 +1,10 @@
-import { formatDate, formatUzPhone, PATIENT_UI, parseDisplayDate } from '@e-dentist/shared'
+import {
+  formatDate,
+  formatUzPhone,
+  PATIENT_UI,
+  parseDisplayDate,
+  QUEUE_CABINET_UI,
+} from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -7,6 +13,7 @@ import { useDoctors } from '@/entities/staff'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
+  Checkbox,
   DatePicker,
   Dialog,
   DialogContent,
@@ -21,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -36,6 +44,10 @@ interface PatientFormDialogProps {
   onOpenChange(open: boolean): void
   /// Boʻsh boʻlsa — yangi bemor
   patient?: Patient | undefined
+  /// «Bugun navbatga qoʻshish» belgisi (faqat yaratishda). Navbatga
+  /// qoʻshishning oʻzi sahifada — feature boshqa feature'ni import qilmaydi
+  enqueueOption?: boolean
+  onCreated?(patient: Patient, options: { enqueueToday: boolean }): void
 }
 
 function toValues(patient: Patient | undefined): PatientValues {
@@ -53,10 +65,20 @@ function toValues(patient: Patient | undefined): PatientValues {
 /// Radix Select boʻsh satrni qabul qilmaydi — «biriktirilmagan» uchun belgi
 const NO_DOCTOR = '__none__'
 
-export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDialogProps) {
+export function PatientFormDialog({
+  open,
+  onOpenChange,
+  patient,
+  enqueueOption = false,
+  onCreated,
+}: PatientFormDialogProps) {
   const { mutateAsync, isPending } = useSavePatient(patient?.id ?? null)
   const { data: doctors } = useDoctors()
   const [formError, setFormError] = useState('')
+  // Yangi bemor odatda oldida turadi — qabulxona uni darhol shifokor
+  // navbatiga qoʻyadi. Sukut yoqilgan; tahrirda koʻrinmaydi (10.3)
+  const canEnqueue = !patient && enqueueOption
+  const [enqueueToday, setEnqueueToday] = useState(true)
 
   const form = useForm<PatientValues>({
     resolver: zodResolver(patientSchema),
@@ -68,13 +90,18 @@ export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDi
     if (open) {
       form.reset(toValues(patient))
       setFormError('')
+      setEnqueueToday(true)
     }
   }, [open, patient, form])
 
   async function onSubmit(values: PatientValues) {
     setFormError('')
+    if (canEnqueue && enqueueToday && !values.doctorId) {
+      form.setError('doctorId', { message: QUEUE_CABINET_UI.enqueue_needs_doctor })
+      return
+    }
     try {
-      await mutateAsync({
+      const saved = await mutateAsync({
         fio: values.fio,
         phone: values.phone || undefined,
         birthDate: values.birthDate ? (parseDisplayDate(values.birthDate) ?? undefined) : undefined,
@@ -83,6 +110,7 @@ export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDi
         doctorId: values.doctorId || null,
       })
       onOpenChange(false)
+      if (!patient) onCreated?.(saved, { enqueueToday: canEnqueue && enqueueToday })
     } catch (error) {
       setFormError(applyServerErrors(form, error))
     }
@@ -173,6 +201,19 @@ export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDi
                 </FormItem>
               )}
             />
+
+            {canEnqueue && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="patient-enqueue"
+                  checked={enqueueToday}
+                  onCheckedChange={(state) => setEnqueueToday(state === true)}
+                />
+                <Label htmlFor="patient-enqueue" className="font-normal">
+                  {QUEUE_CABINET_UI.enqueue_on_create}
+                </Label>
+              </div>
+            )}
 
             <FormField
               control={form.control}

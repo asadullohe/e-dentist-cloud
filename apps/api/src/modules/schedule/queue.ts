@@ -5,7 +5,7 @@
 // parallel tizim qurilmaydi, shuning uchun mantiq jadval egasi — `schedule`
 // modulida, faqat alohida faylda turadi.
 
-import { normalizePhone, QUEUE_TEXT } from '@e-dentist/shared'
+import { normalizePhone, PATIENT_TEXT, QUEUE_TEXT } from '@e-dentist/shared'
 import type { QueueStatus } from '../../../generated/prisma/client.js'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import { type Bus, queueChannel } from '../../platform/bus.js'
@@ -17,7 +17,7 @@ import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as clinics from '../clinics/service.js'
 import * as patients from '../patients/service.js'
-import type { QueueJoinInput, QueueStatusInput } from './queueSchema.js'
+import type { QueueEnqueueInput, QueueJoinInput, QueueStatusInput } from './queueSchema.js'
 import * as repo from './repo.js'
 
 export interface QueueDeps {
@@ -341,6 +341,56 @@ async function entries(tx: ClinicTx): Promise<QueueEntry[]> {
 
 export function list(deps: QueueDeps, clinicId: string): Promise<QueueEntry[]> {
   return withClinic(deps.db, clinicId, (tx) => entries(tx))
+}
+
+/// Kabinetdan navbatga qoʻshish (10.3): qabulxona bemorni yaratib yoki
+/// kartotekadan topib, shifokorga yoʻnaltiradi. Ochiq sahifadagi yozuvdan
+/// farqi — darhol «waiting»: tasdiqlash kerak emas, qabulxona oʻzi qoʻshdi.
+/// «Navbat yozuvi ochiq» sozlamasi ochiq sahifaga tegishli — bu yerga emas
+export function enqueue(
+  deps: QueueDeps,
+  clinicId: string,
+  userId: string,
+  input: QueueEnqueueInput,
+): Promise<QueueEntry[]> {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const [person] = await patients.findByIds(tx, [input.patientId])
+    if (!person) throw errors.notFound(PATIENT_TEXT.not_found)
+    if (!(await auth.isDoctorTx(tx, input.doctorId))) {
+      throw errors.validation(
+        { doctorId: QUEUE_TEXT.doctor_not_found },
+        QUEUE_TEXT.doctor_not_found,
+      )
+    }
+
+    const { from, to } = today()
+    if (await repo.activeQueueEntryOfPatient(tx, from, to, input.patientId)) {
+      throw errors.conflict(QUEUE_TEXT.already_in_queue)
+    }
+
+    await repo.lockQueueNumbering(tx, clinicId)
+    const number = (await repo.lastQueueNumber(tx, from, to)) + 1
+    const created = await repo.createQueueEntry(tx, uuidV7(), {
+      doctorId: input.doctorId,
+      at: new Date(),
+      queueNumber: number,
+      queueStatus: 'waiting',
+      guestName: person.fio,
+      guestPhone: person.phone,
+      patientId: person.id,
+    })
+
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.queue_changed,
+      entity: 'appointment',
+      entityId: created.id,
+      meta: { action: 'enqueue', patientId: person.id, doctorId: input.doctorId },
+    })
+    await deps.bus.publish(queueChannel(clinicId))
+
+    return entries(tx)
+  })
 }
 
 /// Amal → yangi navbat holati va qabul natijasi.

@@ -7,10 +7,12 @@ import {
   LAB_UI,
   PATIENT_UI,
   PAYMENT_UI,
+  QUEUE_CABINET_UI,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
 import {
   ArrowLeftIcon,
+  BellPlusIcon,
   CalendarIcon,
   CreditCardIcon,
   FlaskConicalIcon,
@@ -27,6 +29,7 @@ import { useHasPermission } from '@/entities/session'
 import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
 import { BridgeFormDialog, useDeleteBridge } from '@/features/bridge-form'
 import { PatientFormDialog } from '@/features/patient-form'
+import { EnqueueDialog } from '@/features/queue-manage'
 import { ToothEditDialog } from '@/features/tooth-edit'
 import {
   AlertDialog,
@@ -219,6 +222,7 @@ export function PatientCard() {
   const { data: patient, isPending } = usePatient(id)
   const hasPermission = useHasPermission()
   const [editOpen, setEditOpen] = useState(false)
+  const [enqueueOpen, setEnqueueOpen] = useState(false)
 
   if (isPending) {
     return (
@@ -249,12 +253,20 @@ export function PatientCard() {
             {patient?.doctorName && ` · ${PATIENT_UI.doctor}: ${patient.doctorName}`}
           </p>
         </div>
-        {hasPermission('patients.write') && (
-          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-            <PencilIcon />
-            {CARD_UI.edit}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {hasPermission('queue.manage') && (
+            <Button variant="outline" size="sm" onClick={() => setEnqueueOpen(true)}>
+              <BellPlusIcon />
+              {QUEUE_CABINET_UI.enqueue}
+            </Button>
+          )}
+          {hasPermission('patients.write') && (
+            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
+              <PencilIcon />
+              {CARD_UI.edit}
+            </Button>
+          )}
+        </div>
       </div>
 
       <Separator className="mb-4" />
@@ -272,6 +284,10 @@ export function PatientCard() {
       </SideNavLayout>
 
       <PatientFormDialog open={editOpen} onOpenChange={setEditOpen} patient={patient} />
+      <EnqueueDialog
+        patient={enqueueOpen && patient ? patient : null}
+        onClose={() => setEnqueueOpen(false)}
+      />
     </>
   )
 }

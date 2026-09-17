@@ -1,8 +1,8 @@
 import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { QUEUE_KEYS } from '@/entities/queue'
+import { QUEUE_KEYS, type QueueEntry } from '@/entities/queue'
 import { SESSION_QUERY_KEY } from '@/entities/session'
-import { actOnQueue, fetchQueue, type QueueAction, setQueueEnabled } from './api'
+import { actOnQueue, enqueue, fetchQueue, type QueueAction, setQueueEnabled } from './api'
 
 export function useQueue() {
   return useQuery({
@@ -22,6 +22,22 @@ export function useQueueAction() {
       queryClient.setQueryData(QUEUE_KEYS.cabinet, entries)
       // Tasdiqlashda kartotekada yangi bemor paydo boʻlishi mumkin
       queryClient.invalidateQueries({ queryKey: ['patients'] })
+    },
+  })
+}
+
+/// Navbatga qoʻshish. Toast matnida raqam — javobdagi roʻyxatdan topiladi
+export function useEnqueue() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ patientId, doctorId }: { patientId: string; doctorId: string }) =>
+      enqueue(patientId, doctorId),
+    onSuccess: (entries) => queryClient.setQueryData(QUEUE_KEYS.cabinet, entries),
+    meta: {
+      success: (entries: QueueEntry[], { patientId }: { patientId: string }) => {
+        const mine = entries.find((entry) => entry.patientId === patientId)
+        return TOAST_TEXT.enqueued(mine?.fio ?? '', mine?.number ?? 0)
+      },
     },
   })
 }

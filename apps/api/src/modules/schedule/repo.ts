@@ -105,6 +105,19 @@ export function updateQueueEntry(tx: ClinicTx, id: string, data: Prisma.Appointm
   return tx.appointment.update({ where: { id }, data, select: QUEUE_SELECT })
 }
 
+/// Bemor bugun navbatda turibdimi (tugallanmagan yozuv) — ikki marta
+/// qoʻshib boʻlmasin
+export function activeQueueEntryOfPatient(tx: ClinicTx, from: Date, to: Date, patientId: string) {
+  return tx.appointment.findFirst({
+    where: {
+      patientId,
+      at: { gte: from, lte: to },
+      queueStatus: { in: ['unconfirmed', 'waiting', 'called'] },
+    },
+    select: { id: true },
+  })
+}
+
 /// Kunning eng katta raqami. Yangi yozuv shundan keyingisini oladi
 export async function lastQueueNumber(tx: ClinicTx, from: Date, to: Date): Promise<number> {
   const row = await tx.appointment.aggregate({

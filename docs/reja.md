@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 10.3 — kabinetdan navbatga qoʻshish
+**Hozirgi task:** 10.4 — tashrifda sukut shifokor
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1215,7 +1215,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 - [x] **10.2 Qabulda shifokor** — `POST/PATCH /appointments` da `doctorId`
       (sukut — bemorning shifokori); formada tanlov; kunlik roʻyxatda ism;
       shifokor boʻyicha filtr; bosh sahifadagi bugungi qabullarda ism
-- [ ] **10.3 Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`):
+- [x] **10.3 Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`):
       bemor + shifokor → bugungi navbat, tasdiqlangan holatda (qabulxona
       oʻzi qoʻshdi); yangi bemor oynasida «Bugun navbatga qoʻshish» belgisi;
       bemorlar roʻyxati va kartochkada «Navbatga qoʻshish» amali; SSE
