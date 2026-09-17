@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** yoʻq — 9-bosqich yopildi _(16/09/2026)_
+**Hozirgi task:** 10.1 — bemorga shifokor biriktirish
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1189,6 +1189,41 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > keyin toʻladi; jami ~2 s. Ilova tayyor boʻlishi bilan yopiladi —
 > animatsiya tugashini kutmaydi (foydalanuvchi qarori: «kutish shart
 > emas»). `prefers-reduced-motion` da hammasi darhol, harakatsiz
+
+---
+
+## Bosqich 10 — Bemor → shifokor → navbat/qabul · ~3 kun
+
+> **Nega** _(qaror 17/09/2026)_
+>
+> Qabulxona bemorni yaratganda uni shifokorga yoʻnaltiradi — lekin tizimda
+> bemorda shifokor yoʻq edi, qabul formasi shifokorni soʻramas edi (bazada
+> `doctor_id` bor, ishlatilmagan), navbatga faqat QR sahifadan yozilardi —
+> kabinetdan qoʻshib boʻlmasdi. Mavjud bemor kelganda «kimning bemori»
+> koʻrinmasdi.
+>
+> Qarorlar: shifokor bemorga **biriktiriladi** (`patients.doctor_id`,
+> kartochkada oʻzgartirish mumkin); tashrif va qabulda shu **sukut**, lekin
+> har safar boshqasini tanlash mumkin (shifokor taʼtilda). Yangi bemor
+> oynasida «Bugun navbatga qoʻshish» belgisi — qabulxona uchun sukut
+> **yoqilgan** (bemor odatda oldida turadi); mavjud bemorga alohida amal.
+
+- [ ] **10.1 Bemorga shifokor** — `patients.doctor_id` (ixtiyoriy, faol
+      `visits.write` li xodim); bemor oynasida «Shifokor» tanlovi; roʻyxatda
+      ustun va filtr; kartochka sarlavhasida ism; API javobida `doctorName`.
+      Testlar: begona klinika xodimi rad, koʻp ijarachilik
+- [ ] **10.2 Qabulda shifokor** — `POST/PATCH /appointments` da `doctorId`
+      (sukut — bemorning shifokori); formada tanlov; kunlik roʻyxatda ism;
+      shifokor boʻyicha filtr; bosh sahifadagi bugungi qabullarda ism
+- [ ] **10.3 Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`):
+      bemor + shifokor → bugungi navbat, tasdiqlangan holatda (qabulxona
+      oʻzi qoʻshdi); yangi bemor oynasida «Bugun navbatga qoʻshish» belgisi;
+      bemorlar roʻyxati va kartochkada «Navbatga qoʻshish» amali; SSE
+      orqali ekran yangilanadi. Testlar: navbat yopiq boʻlsa rad, ikki marta
+      qoʻshib boʻlmaydi
+- [ ] **10.4 Tashrifda sukut shifokor** — bemorning shifokori, boʻlmasa
+      yozayotgan odam
+- [ ] **10.5 Hujjatlar va chiqarish** — tz.md (5, 14-boʻlim), CLAUDE.md
 
 ---
 
