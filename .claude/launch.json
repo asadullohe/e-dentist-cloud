@@ -19,21 +19,13 @@
     {
       "name": "api",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
+      "runtimeArgs": ["run", "dev"],
       "port": 3000
     },
     {
       "name": "panel",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev",
-        "-w",
-        "@e-dentist/admin"
-      ],
+      "runtimeArgs": ["run", "dev", "-w", "@e-dentist/admin"],
       "port": 5174
     }
   ]
