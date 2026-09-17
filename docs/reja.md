@@ -1167,12 +1167,21 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       qabul va naryad holatlari («Bemor keldi deb belgilandi», «Naryad
       topshirildi»); navbat yoqildi/oʻchirildi
 - [x] **9.8 Yuklanish splashi** _(foydalanuvchi taklifi, 17/09/2026)_ —
-      `shared/ui/splash.tsx`: koʻk tish (Tabler `dental`, inline SVG — lucide
-      da tish yoʻq) suzadi, ostida soyasi, nom, uch nuqta. Faqat 200 ms dan
-      keyin koʻrinadi — sessiya tez kelsa miltillamaydi. `RequireAuth` da
-      «Yuklanmoqda…» matni oʻrniga. Animatsiyalar `index.css` `@theme` da
-      (`--animate-float`, `--animate-dot`). Uch tur variantdan (12 ta koʻrinish)
-      tanlandi
+      koʻk tish (Tabler `dental`, inline SVG — lucide da tish yoʻq) suzadi,
+      ostida soyasi, nom, uch nuqta. Uch tur variantdan (12 ta koʻrinish)
+      tanlandi.
+
+> **Splash `index.html` da, React da emas**
+>
+> Birinchi urinish React komponenti edi — JS yuklanguncha oq ekran qolardi
+> (foydalanuvchi my.adliya.uz ni misol keltirdi: u yerda yuklanish darhol
+> koʻrinadi). Endi belgi va CSS `index.html` ning oʻzida: HTML kelishi bilan
+> koʻrinadi. `shared/ui/splash.tsx` faqat boshqaradi — `<Splash/>` chizilib
+> turgan ekan ekran ochiq (sessiya kutilmoqda), App birinchi chizilgach
+> hech kim ushlamagan boʻlsa yopiladi. Belgi ikki joyda takrorlanmaydi,
+> almashinuvda animatsiya sakramaydi. Yoʻl-yoʻlakay: tema klassi ham
+> inline skriptda birinchi boʻyoqdan oldin — qorongʻi rejimda oq
+> miltillash yoʻqoldi
 
 ---
 
