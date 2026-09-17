@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 10.1 — bemorga shifokor biriktirish
+**Hozirgi task:** 10.2 — qabulda shifokor
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1208,7 +1208,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > oynasida «Bugun navbatga qoʻshish» belgisi — qabulxona uchun sukut
 > **yoqilgan** (bemor odatda oldida turadi); mavjud bemorga alohida amal.
 
-- [ ] **10.1 Bemorga shifokor** — `patients.doctor_id` (ixtiyoriy, faol
+- [x] **10.1 Bemorga shifokor** — `patients.doctor_id` (ixtiyoriy, faol
       `visits.write` li xodim); bemor oynasida «Shifokor» tanlovi; roʻyxatda
       ustun va filtr; kartochka sarlavhasida ism; API javobida `doctorName`.
       Testlar: begona klinika xodimi rad, koʻp ijarachilik

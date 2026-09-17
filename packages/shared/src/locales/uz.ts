@@ -30,6 +30,7 @@ export const VALIDATION_TEXT = {
   fio_letters_only: 'Ismda faqat harflar boʻlishi mumkin',
   phone_incomplete: 'Raqam toʻliq emas: +998 XX XXX XX XX',
   date_invalid: 'Sana notoʻgʻri',
+  doctor_invalid: 'Shifokor notoʻgʻri',
   date_in_future: 'Sana kelajakda boʻlishi mumkin emas',
   date_too_old: 'Sana juda qadimgi',
 } as const
@@ -149,6 +150,7 @@ export const PATIENT_TEXT = {
   created: 'Bemor qoʻshildi',
   updated: 'Bemor maʼlumoti yangilandi',
   deleted: 'Bemor oʻchirildi',
+  doctor_not_found: 'Bu xodim shifokor emas yoki faol emas',
 } as const
 
 // Bemorlar sahifasi
@@ -164,6 +166,10 @@ export const PATIENT_UI = {
   col_phone: 'Telefon',
   col_age: 'Yoshi',
   col_address: 'Manzil',
+  col_doctor: 'Shifokor',
+  doctor: 'Shifokor',
+  doctor_none: 'Biriktirilmagan',
+  doctor_hint: 'Tashrif va qabulda shu shifokor sukut boʻyicha tanlanadi',
   fio: 'F.I.O.',
   phone: 'Telefon',
   birth_date: 'Tugʻilgan sana',

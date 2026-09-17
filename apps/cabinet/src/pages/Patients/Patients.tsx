@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
 import { useHasPermission } from '@/entities/session'
+import { useDoctors } from '@/entities/staff'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { PatientImportDialog } from '@/features/patient-import'
 import { ApiError, downloadFile } from '@/shared/api'
@@ -79,6 +80,7 @@ export function Patients() {
     fio: filterOf('fio'),
     phone: filterOf('phone'),
     address: filterOf('address'),
+    doctorId: filterOf('doctorId'),
     ageFrom: ageRange?.[0],
     ageTo: ageRange?.[1],
     page: pagination.pageIndex + 1,
@@ -90,10 +92,20 @@ export function Patients() {
   const hasPermission = useHasPermission()
   // Kuzatuvchi roʻyxatni koʻradi va Excelga chiqaradi, lekin yozmaydi
   const canWrite = hasPermission('patients.write')
+  const { data: doctors } = useDoctors()
+  const doctorOptions = (doctors ?? []).map((item) => ({
+    value: item.id,
+    label: item.fullName ?? '',
+  }))
 
   const table = useReactTable({
     data: data?.items ?? [],
-    columns: patientColumns({ onEdit: openEdit, onRemove: setRemoving, canEdit: canWrite }),
+    columns: patientColumns({
+      onEdit: openEdit,
+      onRemove: setRemoving,
+      canEdit: canWrite,
+      doctorOptions,
+    }),
     pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
     state: { pagination, sorting, columnVisibility, columnFilters },
     manualPagination: true,

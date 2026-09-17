@@ -7,6 +7,8 @@ export interface PatientPayload {
   birthDate?: string | undefined
   address?: string | undefined
   note?: string | undefined
+  /// `null` — biriktirilmagan (tahrirda olib tashlash)
+  doctorId?: string | null
 }
 
 export const createPatient = (payload: PatientPayload) =>

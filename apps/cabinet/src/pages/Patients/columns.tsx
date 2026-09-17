@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  type FacetOption,
 } from '@/shared/ui'
 
 interface Actions {
@@ -17,10 +18,17 @@ interface Actions {
   onRemove: (patient: Patient) => void
   /// `patients.write` boʻlmasa amallar ustuni chiqmaydi (kuzatuvchi)
   canEdit: boolean
+  /// thead filtri uchun shifokorlar roʻyxati
+  doctorOptions: readonly FacetOption[]
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
-export function patientColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<Patient>[] {
+export function patientColumns({
+  onEdit,
+  onRemove,
+  canEdit,
+  doctorOptions,
+}: Actions): ColumnDef<Patient>[] {
   const columns: ColumnDef<Patient>[] = [
     {
       accessorKey: 'fio',
@@ -71,6 +79,23 @@ export function patientColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDe
           </>
         )
       },
+    },
+    {
+      // Biriktirilgan shifokor. Filtr serverda (`doctorId`)
+      accessorKey: 'doctorId',
+      meta: {
+        title: PATIENT_UI.col_doctor,
+        className: 'hidden w-44 md:table-cell',
+        filter: doctorOptions.length ? { type: 'select', options: doctorOptions } : undefined,
+      } satisfies ColumnMeta,
+      header: PATIENT_UI.col_doctor,
+      enableSorting: false,
+      cell: ({ row }) =>
+        row.original.doctorName ? (
+          <span>{row.original.doctorName}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     {
       accessorKey: 'address',

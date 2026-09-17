@@ -33,6 +33,12 @@ export const patientCreateSchema = z.object({
   birthDate: birthDate.optional(),
   address: z.string().trim().max(300).optional(),
   note: z.string().trim().max(2000).optional(),
+  /// Biriktirilgan shifokor. `null` — biriktirilmagan (tahrirda olib tashlash)
+  doctorId: z
+    .string()
+    .uuid({ error: () => VALIDATION_TEXT.doctor_invalid })
+    .nullable()
+    .optional(),
 })
 
 export const patientUpdateSchema = patientCreateSchema.partial()
@@ -46,6 +52,7 @@ export const patientListSchema = z.object({
   fio: z.string().trim().max(100).optional(),
   phone: z.string().trim().max(30).optional(),
   address: z.string().trim().max(100).optional(),
+  doctorId: z.string().uuid().optional(),
   // Yosh oraligʻi (toʻliq yil) — tugʻilgan sana chegaralariga aylanadi
   ageFrom: z.coerce.number().int().min(0).max(150).optional(),
   ageTo: z.coerce.number().int().min(0).max(150).optional(),

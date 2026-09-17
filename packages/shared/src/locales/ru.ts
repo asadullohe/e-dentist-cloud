@@ -47,6 +47,7 @@ export const ru: DeepPartial<Strings> = {
     fio_letters_only: 'В имени могут быть только буквы',
     phone_incomplete: 'Номер неполный: +998 XX XXX XX XX',
     date_invalid: 'Неверная дата',
+    doctor_invalid: 'Неверный врач',
     date_in_future: 'Дата не может быть в будущем',
     date_too_old: 'Слишком давняя дата',
   },
@@ -153,6 +154,7 @@ export const ru: DeepPartial<Strings> = {
     created: 'Пациент добавлен',
     updated: 'Данные пациента обновлены',
     deleted: 'Пациент удалён',
+    doctor_not_found: 'Этот сотрудник не врач или не активен',
   },
 
   PATIENT_UI: {
@@ -167,6 +169,10 @@ export const ru: DeepPartial<Strings> = {
     col_phone: 'Телефон',
     col_age: 'Возраст',
     col_address: 'Адрес',
+    col_doctor: 'Врач',
+    doctor: 'Врач',
+    doctor_none: 'Не закреплён',
+    doctor_hint: 'В визите и приёме этот врач будет выбран по умолчанию',
     fio: 'Ф.И.О.',
     phone: 'Телефон',
     birth_date: 'Дата рождения',

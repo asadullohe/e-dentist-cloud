@@ -205,6 +205,9 @@ model Patient {
   address   String?
   /// Allergiya, surunkali kasalliklar
   note      String?
+  /// Biriktirilgan shifokor (tz.md 14-boʻlim). Qabulxona bemorni yaratganda
+  /// yoʻnaltiradi; tashrif va qabulda sukut shu, lekin oʻzgartirish mumkin
+  doctorId  String?   @map("doctor_id") @db.Uuid
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
@@ -219,6 +222,7 @@ model Patient {
 
   @@index([clinicId, fioSearch])
   @@index([clinicId, phone])
+  @@index([clinicId, doctorId])
   @@map("patients")
 }
 

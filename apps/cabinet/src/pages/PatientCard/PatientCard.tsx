@@ -5,6 +5,7 @@ import {
   formatUzPhone,
   IMAGE_UI,
   LAB_UI,
+  PATIENT_UI,
   PAYMENT_UI,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
@@ -245,6 +246,7 @@ export function PatientCard() {
           <p className="text-muted-foreground mt-1 text-sm">
             {patient?.phone ? formatUzPhone(patient.phone) : CARD_UI.no_phone}
             {years !== null && ` · ${CARD_UI.age_years(years)}`}
+            {patient?.doctorName && ` · ${PATIENT_UI.doctor}: ${patient.doctorName}`}
           </p>
         </div>
         {hasPermission('patients.write') && (

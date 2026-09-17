@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { Patient } from '@/entities/patient'
+import { useDoctors } from '@/entities/staff'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
@@ -20,6 +21,11 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Textarea,
 } from '@/shared/ui'
 import { useSavePatient } from './hooks'
@@ -40,11 +46,16 @@ function toValues(patient: Patient | undefined): PatientValues {
     birthDate: patient.birthDate ? formatDate(patient.birthDate.slice(0, 10)) : '',
     address: patient.address ?? '',
     note: patient.note ?? '',
+    doctorId: patient.doctorId ?? '',
   }
 }
 
+/// Radix Select boʻsh satrni qabul qilmaydi — «biriktirilmagan» uchun belgi
+const NO_DOCTOR = '__none__'
+
 export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDialogProps) {
   const { mutateAsync, isPending } = useSavePatient(patient?.id ?? null)
+  const { data: doctors } = useDoctors()
   const [formError, setFormError] = useState('')
 
   const form = useForm<PatientValues>({
@@ -69,6 +80,7 @@ export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDi
         birthDate: values.birthDate ? (parseDisplayDate(values.birthDate) ?? undefined) : undefined,
         address: values.address || undefined,
         note: values.note || undefined,
+        doctorId: values.doctorId || null,
       })
       onOpenChange(false)
     } catch (error) {
@@ -132,6 +144,36 @@ export function PatientFormDialog({ open, onOpenChange, patient }: PatientFormDi
                 )}
               />
             </div>
+            <FormField
+              control={form.control}
+              name="doctorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{PATIENT_UI.doctor}</FormLabel>
+                  <Select
+                    value={field.value || NO_DOCTOR}
+                    onValueChange={(value) => field.onChange(value === NO_DOCTOR ? '' : value)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value={NO_DOCTOR}>{PATIENT_UI.doctor_none}</SelectItem>
+                      {doctors?.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.fullName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>{PATIENT_UI.doctor_hint}</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="address"

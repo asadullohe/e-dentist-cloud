@@ -16,6 +16,7 @@ import type { ImportStore } from '../../platform/importStore.js'
 import { imageKey, type Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
+import * as auth from '../auth/service.js'
 import { buildErrorReport, buildExport, buildTemplate } from './excel.js'
 import {
   type CellValue,
@@ -48,7 +49,34 @@ function fields(input: PatientCreateInput | PatientUpdateInput) {
     ...(input.birthDate === undefined ? {} : { birthDate: toDate(input.birthDate) }),
     ...(input.address === undefined ? {} : { address: input.address || null }),
     ...(input.note === undefined ? {} : { note: input.note || null }),
+    ...(input.doctorId === undefined ? {} : { doctorId: input.doctorId }),
   }
+}
+
+/// Biriktirilgan shifokor faol va `visits.write` li xodim boʻlishi shart.
+/// Tashqi kalit yoʻq — begona klinika xodimining id si shu tekshiruvsiz
+/// oʻtib ketardi
+async function assertDoctor(tx: ClinicTx, doctorId: string | null | undefined): Promise<void> {
+  if (!doctorId) return
+  if (!(await auth.isDoctorTx(tx, doctorId))) {
+    throw errors.validation(
+      { doctorId: PATIENT_TEXT.doctor_not_found },
+      PATIENT_TEXT.doctor_not_found,
+    )
+  }
+}
+
+/// Javobga shifokor ismi qoʻshiladi — roʻyxat va kartochkada id emas, ism
+async function withDoctorNames<T extends { doctorId: string | null }>(
+  tx: ClinicTx,
+  rows: T[],
+): Promise<(T & { doctorName: string | null })[]> {
+  const ids = [...new Set(rows.map((row) => row.doctorId).filter((id): id is string => !!id))]
+  const names = await auth.staffNamesTx(tx, ids)
+  return rows.map((row) => ({
+    ...row,
+    doctorName: row.doctorId ? (names.get(row.doctorId) ?? null) : null,
+  }))
 }
 
 function isMissing(error: unknown): boolean {
@@ -89,7 +117,12 @@ export function countCreatedTx(tx: ClinicTx, from: Date, to: Date): Promise<numb
 export function list(deps: PatientDeps, clinicId: string, input: PatientListInput) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const { items, total } = await repo.list(tx, input)
-    return { items, total, page: input.page, pageSize: input.pageSize }
+    return {
+      items: await withDoctorNames(tx, items),
+      total,
+      page: input.page,
+      pageSize: input.pageSize,
+    }
   })
 }
 
@@ -106,7 +139,8 @@ export function get(deps: PatientDeps, clinicId: string, userId: string, id: str
       entity: 'patient',
       entityId: id,
     })
-    return patient
+    const [row] = await withDoctorNames(tx, [patient])
+    return row
   })
 }
 
@@ -118,14 +152,17 @@ export function create(
 ) {
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
+    await assertDoctor(tx, input.doctorId)
     const patient = await repo.create(tx, id, { ...fields(input), fio: input.fio })
     await writeAudit(tx, {
       userId,
       action: AUDIT_ACTION.patient_created,
       entity: 'patient',
       entityId: id,
+      meta: input.doctorId ? { doctorId: input.doctorId } : undefined,
     })
-    return patient
+    const [row] = await withDoctorNames(tx, [patient])
+    return row
   })
 }
 
@@ -137,6 +174,7 @@ export function update(
   input: PatientUpdateInput,
 ) {
   return withClinic(deps.db, clinicId, async (tx) => {
+    await assertDoctor(tx, input.doctorId)
     try {
       const patient = await repo.update(tx, id, fields(input))
       await writeAudit(tx, {
@@ -145,7 +183,8 @@ export function update(
         entity: 'patient',
         entityId: id,
       })
-      return patient
+      const [row] = await withDoctorNames(tx, [patient])
+      return row
     } catch (error) {
       if (isMissing(error)) throw errors.notFound(PATIENT_TEXT.not_found)
       throw error
