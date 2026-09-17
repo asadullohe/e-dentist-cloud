@@ -76,6 +76,8 @@ interface AppointmentFormDialogProps {
   /// Boʻsh boʻlsa — yangi qabul. Kalendarda bosilgan kun shu yerga keladi
   defaultDate: string
   appointment?: Appointment | undefined
+  /// Saqlangan qabul — sahifa kalendarni oʻsha kunga oʻtkazadi
+  onSaved?(appointment: Appointment): void
 }
 
 function localTime(iso: string): string {
@@ -110,6 +112,7 @@ export function AppointmentFormDialog({
   onOpenChange,
   defaultDate,
   appointment,
+  onSaved,
 }: AppointmentFormDialogProps) {
   const { mutateAsync, isPending } = useSaveAppointment(appointment?.id ?? null)
   const { data: doctors } = useDoctors()
@@ -136,7 +139,7 @@ export function AppointmentFormDialog({
       return
     }
     try {
-      await mutateAsync({
+      const saved = await mutateAsync({
         ...(appointment ? { status: values.status } : { patientId: values.patientId }),
         doctorId: values.doctorId || null,
         date: parseDisplayDate(values.date) as string,
@@ -144,6 +147,7 @@ export function AppointmentFormDialog({
         note: values.note || null,
       })
       onOpenChange(false)
+      onSaved?.(saved)
     } catch (error) {
       setFormError(applyServerErrors(form, error))
     }

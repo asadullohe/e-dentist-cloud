@@ -369,6 +369,15 @@ export function Schedule() {
         onOpenChange={setFormOpen}
         defaultDate={selected}
         appointment={editing}
+        onSaved={(saved) => {
+          // Yozilgan qabul doim koʻrinsin: uning kuniga oʻtamiz; shifokor
+          // filtri uni yashirsa — filtr olib tashlanadi
+          const day = saved.at.slice(0, 10)
+          const date = new Date(saved.at)
+          setCursor({ year: date.getFullYear(), month: date.getMonth() })
+          setSelected(day)
+          if (doctorFilter && saved.doctorId !== doctorFilter) setDoctorFilter('')
+        }}
       />
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
