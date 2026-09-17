@@ -35,13 +35,13 @@
         color: oklch(0.129 0.042 264.695);
         font-family: "Inter Variable", Inter, system-ui, sans-serif;
         --splash-primary: oklch(0.55 0.2 255);
-        --splash-shadow: oklch(0.929 0.013 255.508);
+        --splash-shadow: oklch(0.129 0.042 264.695 / 18%);
       }
       html.dark #splash {
         background: oklch(0.129 0.042 264.695);
         color: oklch(0.984 0.003 247.858);
         --splash-primary: oklch(0.72 0.16 250);
-        --splash-shadow: oklch(1 0 0 / 10%);
+        --splash-shadow: oklch(1 0 0 / 22%);
       }
       #splash[hidden] {
         display: none;
@@ -57,12 +57,14 @@
         color: var(--splash-primary);
         animation: splash-float 2.6s ease-in-out infinite;
       }
+      /* Soya — chetlari xira ellips, tekis chiziq emas: tish koʻtarilganda
+         torayadi va xiralashadi */
       #splash .shadow {
-        width: 36px;
-        height: 6px;
-        margin-top: 6px;
-        border-radius: 999px;
-        background: var(--splash-shadow);
+        width: 48px;
+        height: 10px;
+        margin-top: 4px;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at center, var(--splash-shadow) 0%, transparent 70%);
         animation: splash-shadow 2.6s ease-in-out infinite;
       }
       #splash .name {
@@ -96,8 +98,8 @@
       }
       @keyframes splash-shadow {
         50% {
-          transform: scaleX(0.7);
-          opacity: 0.5;
+          transform: scale(0.72, 0.8);
+          opacity: 0.45;
         }
       }
       @keyframes splash-dot {
