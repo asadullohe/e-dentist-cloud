@@ -15,6 +15,8 @@ Oflayn ilova (Windows/macOS/Android) 18/09/2026 dan saytda yoʻq — u alohida m
 
 ## Fayllar
 
+- `styles.css` yoki `app.js` oʻzgarsa ikkala HTML dagi `?v=…` ni yangilang — Cloudflare
+  eski faylni 4 soatgacha keshlaydi, yangi manzil buni chetlab oʻtadi
 - `index.html` (oʻzbekcha) va `ru/index.html` (ruscha) — ikkalasi bir xil tuzilishda, matn
   oʻzgarsa **ikkalasini** tuzating. `styles.css`, `app.js` umumiy; `app.js` tish nomlarini
   `<html lang>` dan oladi. Ruscha sahifada yoʻllar absolyut (`/img/…`, `/styles.css`)

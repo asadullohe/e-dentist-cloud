@@ -76,9 +76,13 @@ www.{$DOMAIN} {
 	@img path /img/*
 	header @img Cache-Control "public, max-age=604800"
 
-	# Qidiruv tizimlari uchun: sahifaning oʻzi va sitemap qisqa keshlanadi
-	@seo path / /index.html /sitemap.xml /robots.txt
+	# Sahifaning oʻzi va sitemap qisqa keshlanadi — chiqarishdan keyin bir
+	# soat ichida yangilanadi. CSS/JS HTML dan ?v=... bilan chaqiriladi:
+	# yangi chiqarish = yangi manzil, Cloudflare keshi xalaqit bermaydi
+	@seo path / /index.html /ru/ /ru/index.html /sitemap.xml /robots.txt
 	header @seo Cache-Control "public, max-age=3600"
+	@code path /app.js /styles.css
+	header @code Cache-Control "public, max-age=604800"
 
 	file_server
 }
