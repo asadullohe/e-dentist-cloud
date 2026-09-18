@@ -1241,6 +1241,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       (`qrcode.react`, brauzerda), «Chop etish — A4 varaq»: yon menyusiz
       sahifa `/navbat-varaq` (klinika nomi, logotip, katta QR, yoʻriqnoma,
       manzil), `@page A4`; navbat yopiq boʻlsa ogohlantirish
+- [x] **10.9 Landing (e-dentist.uz)** — oflayn ilova sahifasi onlayn versiya
+      uchun qayta yozildi (`e-dentist` repo, `web/`): CTA → `cabinet…/register`,
+      boʻlimlar: imkoniyatlar, QR navbat, jamoa, xavfsizlik, narx (raqamsiz —
+      Telegram), savollar. Skrinshotlar demo maʼlumot bilan —
+      `scripts/landing/` (seed + Playwright). 18/09/2026
 
 ---
 
