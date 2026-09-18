@@ -10,10 +10,12 @@
 3. Rasmlar: `npm i --no-save playwright-core` (ildizda), brauzer yoʻq boʻlsa
    `npx playwright-core install chromium-headless-shell`, keyin
    `node scripts/landing/shots.mjs ./shots` — `patients, teeth, visits, calendar, queue,
-   reports, dashboard, queue-phone, queue-screen`.
+   reports, dashboard, queue-phone, queue-screen`. Ruscha interfeys uchun (`img/ru/`):
+   `node scripts/landing/shots.mjs ./shots-ru ru`.
 4. WebP: `cwebp -q 82 -resize 1600 0 shots/patients.png -o apps/landing/img/patients.webp`
    (telefon: `-resize 780 0`, keyin `-crop 0 0 780 1180`).
 
-`img/og.png` (1200×630, ijtimoiy tarmoq uchun) — `og.html` shabloni shu papkada:
+`img/og.png` / `img/og-ru.png` (1200×630, ijtimoiy tarmoq uchun) — `og.html` / `og-ru.html`
+shabloni shu papkada:
 `apps/landing` ni 5191 portda ochib (`python3 -m http.server 5191`), `og.html` ni oʻsha
 papkaga vaqtincha koʻchirib, `node scripts/landing/og.mjs apps/landing/img/og.png`.

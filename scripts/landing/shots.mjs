@@ -13,6 +13,8 @@ import { chromium } from 'playwright-core'
 const OUT = process.argv[2] ?? './shots'
 mkdirSync(OUT, { recursive: true })
 const BASE = 'http://localhost:5175'
+// Interfeys tili: `node shots.mjs ./shots ru` — ruscha landing (/ru/) uchun
+const LOCALE = process.argv[3] === 'ru' ? 'ru' : 'uz'
 
 // PLAYWRIGHT_CHROMIUM — keshdagi headless shell yoʻli; berilmasa Playwright oʻzi topadi
 const browser = await chromium.launch(
@@ -21,15 +23,16 @@ const browser = await chromium.launch(
 const context = await browser.newContext({
   viewport: { width: 1280, height: 800 },
   deviceScaleFactor: 2,
-  locale: 'uz',
+  locale: LOCALE,
   colorScheme: 'light',
 })
-// Yorugʻ rejim: inline skript localStorage dan oʻqiydi
-await context.addInitScript(() => {
+// Yorugʻ rejim va til: ilova ikkalasini localStorage dan oʻqiydi
+await context.addInitScript((locale) => {
   try {
     localStorage.setItem('edentist-cabinet-theme', 'light')
+    localStorage.setItem('edentist-locale', locale)
   } catch {}
-})
+}, LOCALE)
 const page = await context.newPage()
 
 // Kirish — API orqali, cookie kontekstga tushadi
@@ -85,9 +88,14 @@ const phone = await browser.newContext({
   deviceScaleFactor: 2,
   isMobile: true,
   hasTouch: true,
-  locale: 'uz',
+  locale: LOCALE,
   colorScheme: 'light',
 })
+await phone.addInitScript((locale) => {
+  try {
+    localStorage.setItem('edentist-locale', locale)
+  } catch {}
+}, LOCALE)
 const pp = await phone.newPage()
 await pp.goto(`${BASE}/n/${code}`, { waitUntil: 'load' })
 await pp.waitForTimeout(1200)
@@ -110,8 +118,13 @@ console.log('✓ queue-phone')
 const tv = await browser.newContext({
   viewport: { width: 1280, height: 720 },
   deviceScaleFactor: 2,
-  locale: 'uz',
+  locale: LOCALE,
 })
+await tv.addInitScript((locale) => {
+  try {
+    localStorage.setItem('edentist-locale', locale)
+  } catch {}
+}, LOCALE)
 const tp = await tv.newPage()
 await tp.goto(`${BASE}/n/${code}/ekran`, { waitUntil: 'load' })
 await tp.waitForTimeout(1500)

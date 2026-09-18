@@ -15,13 +15,19 @@ const SHAPES = {
     'M -20 -28 C -17 -35 -12 -36 -9 -31 C -6 -36 -2 -36 0 -31 C 2 -36 6 -36 9 -31 C 12 -36 17 -35 20 -28 C 22 -20 22 -10 20 -2 C 18 4 15 7 12 9 C 12 18 11 30 8 30 C 5 30 5 20 3 14 C 2 12 -2 12 -3 14 C -5 20 -5 30 -8 30 C -11 30 -12 18 -12 9 C -15 7 -18 4 -20 -2 C -22 -10 -22 -20 -20 -28 Z'
 }
 
+// Sahifa tili: <html lang="uz"> yoki "ru" (/ru/) — nomlar shunga qarab
+const RU = document.documentElement.lang === 'ru'
+const LABELS = RU
+  ? { soglom: 'Здоровый', karies: 'Кариес', plomba: 'Пломба', koronka: 'Коронка', implant: 'Имплант', olingan: 'Удалён', chart: 'Пример зубной карты' }
+  : { soglom: 'Sogʻlom', karies: 'Karies', plomba: 'Plomba', koronka: 'Koronka', implant: 'Implant', olingan: 'Olib tashlangan', chart: 'Tish xaritasi namunasi' }
+
 const STATUSES = [
-  { key: 'soglom', label: 'Sogʻlom', grad: ['#fffdf6', '#eae0c6'], stroke: '#c3b89e' },
-  { key: 'karies', label: 'Karies', grad: ['#f7e7bd', '#dcae4f'], stroke: '#b97f10' },
-  { key: 'plomba', label: 'Plomba', grad: ['#dcebf8', '#8fb8d9'], stroke: '#2b6ca3' },
-  { key: 'koronka', label: 'Koronka', grad: ['#fdfbf2', '#d6c79c'], stroke: '#9a8340' },
-  { key: 'implant', label: 'Implant', grad: ['#d8efe9', '#7dbfae'], stroke: '#0e5e54' },
-  { key: 'olingan', label: 'Olib tashlangan', grad: ['#f2eee5', '#e0d9c8'], stroke: '#b6ad99' }
+  { key: 'soglom', label: LABELS.soglom, grad: ['#fffdf6', '#eae0c6'], stroke: '#c3b89e' },
+  { key: 'karies', label: LABELS.karies, grad: ['#f7e7bd', '#dcae4f'], stroke: '#b97f10' },
+  { key: 'plomba', label: LABELS.plomba, grad: ['#dcebf8', '#8fb8d9'], stroke: '#2b6ca3' },
+  { key: 'koronka', label: LABELS.koronka, grad: ['#fdfbf2', '#d6c79c'], stroke: '#9a8340' },
+  { key: 'implant', label: LABELS.implant, grad: ['#d8efe9', '#7dbfae'], stroke: '#0e5e54' },
+  { key: 'olingan', label: LABELS.olingan, grad: ['#f2eee5', '#e0d9c8'], stroke: '#b6ad99' }
 ]
 const STYLE = Object.fromEntries(STATUSES.map((s) => [s.key, s]))
 
@@ -150,7 +156,7 @@ function drawTooth(g, no, upper, x, y, rot, index) {
 
 function render() {
   const host = document.getElementById('chart')
-  const svg = el('svg', { viewBox: '0 0 760 424', 'aria-label': 'Tish xaritasi namunasi' })
+  const svg = el('svg', { viewBox: '0 0 760 424', 'aria-label': LABELS.chart })
 
   const defs = el('defs')
   for (const s of STATUSES) {

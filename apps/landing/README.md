@@ -15,11 +15,14 @@ Oflayn ilova (Windows/macOS/Android) 18/09/2026 dan saytda yoʻq — u alohida m
 
 ## Fayllar
 
-- `index.html` — bitta sahifa; `styles.css`, `app.js` (sarlavhadagi interaktiv tish xaritasi)
-- `img/*.webp` — kabinetning haqiqiy skrinshotlari, demo maʼlumot bilan (1600 px; telefon 780 px).
-  Yangilash: `scripts/landing/` (seed + Playwright), keyin `cwebp -q 82`
-- `img/og.png` — ijtimoiy tarmoq/Telegram uchun 1200×630 rasm. Yangilash: matn yoki logo
-  oʻzgarsa, `scripts/landing/README.md`
+- `index.html` (oʻzbekcha) va `ru/index.html` (ruscha) — ikkalasi bir xil tuzilishda, matn
+  oʻzgarsa **ikkalasini** tuzating. `styles.css`, `app.js` umumiy; `app.js` tish nomlarini
+  `<html lang>` dan oladi. Ruscha sahifada yoʻllar absolyut (`/img/…`, `/styles.css`)
+- `img/*.webp` — oʻzbekcha, `img/ru/*.webp` — ruscha interfeys skrinshotlari, demo maʼlumot
+  bilan (1600 px; telefon 780 px). Yangilash: `scripts/landing/` (seed + Playwright,
+  `shots.mjs ./shots ru`), keyin `cwebp -q 82`
+- `img/og.png`, `img/og-ru.png` — ijtimoiy tarmoq/Telegram uchun 1200×630. Yangilash: matn
+  yoki logo oʻzgarsa, `scripts/landing/README.md`
 - `robots.txt`, `sitemap.xml` — `lastmod` ni sahifa oʻzgarganda yangilang
 - `fonts/` — shriftlar shu yerda, tashqi xizmat yoʻq
 
@@ -27,15 +30,13 @@ Oflayn ilova (Windows/macOS/Android) 18/09/2026 dan saytda yoʻq — u alohida m
 
 - `<title>` va `description` da kalit soʻzlar: «stomatologiya klinikasi uchun dastur»,
   «stomatologiya CRM», «bemorlar kartotekasi», «tish xaritasi», «QR navbat». H1 da ham shu
-- `canonical`, `hreflang=uz`, Open Graph + Twitter card (`og.png`), `theme-color`
+- `canonical`, `hreflang` juftligi (`uz` ↔ `ru`, `x-default` → uz) ikkala sahifada va
+  `sitemap.xml` da, Open Graph + Twitter card (`og.png` / `og-ru.png`), `theme-color`
 - JSON-LD (`@graph`): Organization · WebSite · SoftwareApplication (featureList, 14 kun bepul
   offer) · FAQPage — savollar boʻlimidagi matn bilan **bir xil** boʻlishi shart, savol
   oʻzgarsa ikkalasini tuzating
 - Rasmlar: `width/height`, `alt`, `loading="lazy"`; shriftlar `preload`
 - Kabinet va panel `noindex` — qidiruvda faqat landing chiqadi
-
-Keyingi qadam (qilinmagan): ruscha sahifa `/ru/` — Oʻzbekistonda «программа для
-стоматологии» soʻrovi koʻp; `hreflang` juftligi bilan.
 
 > Bu papka biome tekshiruvidan chetda (`biome.json`): sayt alohida yozilgan va uning
 > uslubi ilova kodiga tegishli emas.

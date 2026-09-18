@@ -1250,7 +1250,11 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       canonical + hreflang, Open Graph/Twitter (`img/og.png` 1200×630),
       JSON-LD (Organization, WebSite, SoftwareApplication, FAQPage),
       `robots.txt`, `sitemap.xml`, shrift preload; kabinet va panel
-      `X-Robots-Tag: noindex`. Qolgan: ruscha sahifa `/ru/` (hreflang)
+      `X-Robots-Tag: noindex`
+- [x] **10.11 Ruscha landing `/ru/`** — toʻliq tarjima, ruscha interfeys
+      skrinshotlari (`img/ru/`), `og-ru.png`, `hreflang` juftligi ikkala
+      sahifada va sitemap da, JSON-LD (FAQPage ru), sarlavhada UZ ↔ RU
+      almashtirgich; `app.js` tish nomlarini `<html lang>` dan oladi
 
 ---
 
