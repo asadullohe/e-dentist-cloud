@@ -121,6 +121,7 @@ h1, h2, h3 {
   font-weight: 700;
   letter-spacing: -0.03em;
   text-decoration: none;
+  white-space: nowrap;
 }
 .logo span { color: var(--gold); }
 .top nav {
@@ -137,16 +138,31 @@ h1, h2, h3 {
 }
 .top nav a:hover { color: var(--ink); }
 .top-actions { display: flex; gap: 8px; margin-left: auto; align-items: center; }
-/* Til almashtirgich: UZ ↔ RU */
-.top-actions .lang {
-  font-size: 13.5px;
+/* Til almashtirgich: ikki boʻlakli tugma, joriy til toʻldirilgan */
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  margin-right: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  line-height: 1;
+}
+.lang-switch a {
+  padding: 6px 10px;
+  border-radius: 999px;
   color: var(--ink-soft);
   text-decoration: none;
-  padding: 6px 8px;
+  transition: color 0.15s, background 0.15s;
 }
-.top-actions .lang:hover { color: var(--ink); }
+.lang-switch a:hover { color: var(--ink); }
+.lang-switch a.on {
+  background: var(--indigo);
+  color: #0d1020;
+}
 .top nav + .top-actions { margin-left: 0; }
 @media (max-width: 960px) { .top nav { display: none; } }
 @media (max-width: 480px) { .top-actions .ghost { display: none; } }
@@ -201,7 +217,13 @@ h1, h2, h3 {
 }
 .btn.ghost:hover { background: var(--panel-2); }
 .btn small { font-weight: 500; opacity: 0.7; }
-.btn.sm { padding: 9px 15px; border-radius: 11px; font-size: 14.5px; }
+.btn.sm { padding: 9px 15px; border-radius: 11px; font-size: 14.5px; white-space: nowrap; }
+/* Tor ekranda tugma matni qisqaradi: «Bepul boshlash» → «Boshlash» */
+.s-short { display: none; }
+@media (max-width: 480px) {
+  .s-long { display: none; }
+  .s-short { display: inline; }
+}
 .cta-row.center { justify-content: center; margin-top: 36px; }
 
 .hero .note {

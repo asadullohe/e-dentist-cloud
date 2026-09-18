@@ -31,7 +31,7 @@
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
 <link rel="preload" href="fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="preload" href="fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260918b" />
+<link rel="stylesheet" href="styles.css?v=20260918c" />
 
 <script type="application/ld+json">
 {
@@ -153,9 +153,12 @@
       <a href="#savollar">Savollar</a>
     </nav>
     <div class="top-actions">
-      <a class="lang" href="/ru/" lang="ru" hreflang="ru" title="Русская версия">RU</a>
+      <div class="lang-switch" aria-label="Til">
+        <a href="/" class="on" aria-current="page">UZ</a>
+        <a href="/ru/" lang="ru" hreflang="ru" title="Русская версия">RU</a>
+      </div>
       <a class="btn ghost sm" href="https://cabinet.e-dentist.uz/login">Kirish</a>
-      <a class="btn sm" href="https://cabinet.e-dentist.uz/register">Bepul boshlash</a>
+      <a class="btn sm" href="https://cabinet.e-dentist.uz/register"><span class="s-long">Bepul boshlash</span><span class="s-short">Boshlash</span></a>
     </div>
   </div>
 </header>
@@ -437,6 +440,6 @@
   </div>
 </footer>
 
-<script src="app.js?v=20260918b"></script>
+<script src="app.js?v=20260918c"></script>
 </body>
 </html>
