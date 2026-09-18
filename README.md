@@ -31,5 +31,5 @@ Batafsil va joriy holat — [`docs/reja.md`](docs/reja.md).
 Hozircha server yoʻq: ishlab chiqish notebookda, Docker Compose bilan.
 Server bosqich 5.6 da olinadi — **Hetzner Cloud**, Ubuntu 24.04, CX32 atrofida.
 
-Domen: `e-dentist.uz` — landing Netlify'da apex'da qoladi, ilova
+Domen: `e-dentist.uz` — landing (`apps/landing/`, shu serverda), ilova
 `cabinet.e-dentist.uz`, boshqaruv paneli `admin.e-dentist.uz`.

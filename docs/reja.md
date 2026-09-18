@@ -1242,10 +1242,15 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       sahifa `/navbat-varaq` (klinika nomi, logotip, katta QR, yoʻriqnoma,
       manzil), `@page A4`; navbat yopiq boʻlsa ogohlantirish
 - [x] **10.9 Landing (e-dentist.uz)** — oflayn ilova sahifasi onlayn versiya
-      uchun qayta yozildi (`e-dentist` repo, `web/`): CTA → `cabinet…/register`,
-      boʻlimlar: imkoniyatlar, QR navbat, jamoa, xavfsizlik, narx (raqamsiz —
-      Telegram), savollar. Skrinshotlar demo maʼlumot bilan —
-      `scripts/landing/` (seed + Playwright). 18/09/2026
+      uchun qayta yozildi (`apps/landing/`, serverda Caddy tarqatadi): CTA →
+      `cabinet…/register`, boʻlimlar: imkoniyatlar, QR navbat, jamoa,
+      xavfsizlik, narx (raqamsiz — Telegram), savollar. Skrinshotlar demo
+      maʼlumot bilan — `scripts/landing/` (seed + Playwright). 18/09/2026
+- [x] **10.10 Landing SEO** — title/description kalit soʻzlar bilan, H1,
+      canonical + hreflang, Open Graph/Twitter (`img/og.png` 1200×630),
+      JSON-LD (Organization, WebSite, SoftwareApplication, FAQPage),
+      `robots.txt`, `sitemap.xml`, shrift preload; kabinet va panel
+      `X-Robots-Tag: noindex`. Qolgan: ruscha sahifa `/ru/` (hreflang)
 
 ---
 

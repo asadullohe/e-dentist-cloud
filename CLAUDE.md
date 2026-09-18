@@ -153,8 +153,8 @@ toʻgʻridan-toʻgʻri Postgres oʻrnatilmaydi, aks holda «menda ishlayapti» m
 Keyin: **Hetzner Cloud**, Ubuntu 24.04, tavsiya CX32 (4 vCPU / 8 GB / 80 GB),
 Falkenstein yoki Helsinki. Konteynerlar: api · postgres · redis · garage · caddy.
 
-Domen `e-dentist.uz`: apex va `www` — Netlify'dagi landing (tegilmaydi),
-`kabinet.` va `admin.` — shu server.
+Domen `e-dentist.uz`: apex va `www` — landing (`apps/landing/`, statik, Caddy
+tarqatadi), `cabinet.` va `admin.` — ilova. Hammasi bitta serverda.
 
 Joylashtirish **koʻchma** boʻlishi shart: hech qanday provayderga xos xizmat
 ishlatilmaydi, hammasi Docker Compose da. Server Oʻzbekistonga koʻchirilishi

@@ -1,15 +1,5 @@
-// Sayt uchun kichik skript: sarlavhadagi odontogramma va yuklab olish tugmasi.
-// Tish shakllari dasturdagi ToothChart bilan bir xil — bir xil koʻrinsin.
-
-// ---- Yuklab olish havolalari (faqat shu yerni oʻzgartirasiz) ----
-// Oʻrnatuvchi fayllar (81–98 MB) saytga sigʻmaydi — hammasi GitHub Releases'da turadi.
-// Yangi versiyada faqat quyidagi tag raqamini almashtirasiz.
-const RELEASE = 'https://github.com/asadullohe/e-dentist-repo/releases/download/v1.2.0'
-const DOWNLOADS = {
-  win: `${RELEASE}/E-Dentist-Setup-1.2.0.exe`,
-  mac: `${RELEASE}/E-Dentist-1.2.0-arm64.dmg`,
-  android: `${RELEASE}/E-Dentist-1.2.0.apk`,
-}
+// Sayt uchun kichik skript: sarlavhadagi odontogramma va tepa panel.
+// Tish shakllari kabinetdagi ToothChart bilan bir xil — bir xil koʻrinsin.
 
 const UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
 const LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
@@ -22,7 +12,7 @@ const SHAPES = {
   premolar:
     'M -14 -30 C -10 -37 -4 -37 0 -32 C 4 -37 10 -37 14 -30 C 16 -22 16 -10 13 -2 C 11 4 8 8 5 10 C 4 20 2 33 0 33 C -2 33 -4 20 -5 10 C -8 8 -11 4 -13 -2 C -16 -10 -16 -22 -14 -30 Z',
   molar:
-    'M -20 -28 C -17 -35 -12 -36 -9 -31 C -6 -36 -2 -36 0 -31 C 2 -36 6 -36 9 -31 C 12 -36 17 -35 20 -28 C 22 -20 22 -10 20 -2 C 18 4 15 7 12 9 C 12 18 11 30 8 30 C 5 30 5 20 3 14 C 2 12 -2 12 -3 14 C -5 20 -5 30 -8 30 C -11 30 -12 18 -12 9 C -15 7 -18 4 -20 -2 C -22 -10 -22 -20 -20 -28 Z',
+    'M -20 -28 C -17 -35 -12 -36 -9 -31 C -6 -36 -2 -36 0 -31 C 2 -36 6 -36 9 -31 C 12 -36 17 -35 20 -28 C 22 -20 22 -10 20 -2 C 18 4 15 7 12 9 C 12 18 11 30 8 30 C 5 30 5 20 3 14 C 2 12 -2 12 -3 14 C -5 20 -5 30 -8 30 C -11 30 -12 18 -12 9 C -15 7 -18 4 -20 -2 C -22 -10 -22 -20 -20 -28 Z'
 }
 
 const STATUSES = [
@@ -31,7 +21,7 @@ const STATUSES = [
   { key: 'plomba', label: 'Plomba', grad: ['#dcebf8', '#8fb8d9'], stroke: '#2b6ca3' },
   { key: 'koronka', label: 'Koronka', grad: ['#fdfbf2', '#d6c79c'], stroke: '#9a8340' },
   { key: 'implant', label: 'Implant', grad: ['#d8efe9', '#7dbfae'], stroke: '#0e5e54' },
-  { key: 'olingan', label: 'Olib tashlangan', grad: ['#f2eee5', '#e0d9c8'], stroke: '#b6ad99' },
+  { key: 'olingan', label: 'Olib tashlangan', grad: ['#f2eee5', '#e0d9c8'], stroke: '#b6ad99' }
 ]
 const STYLE = Object.fromEntries(STATUSES.map((s) => [s.key, s]))
 
@@ -97,7 +87,7 @@ function drawTooth(g, no, upper, x, y, rot, index) {
   // bekor qilib yubormasligi uchun bu guruhda transform atributi boʻlmasligi shart
   const lift = el('g', { class: 'tooth-lift' })
   const scaled = el('g', {
-    transform: `scale(${TYPE_SCALE[type] * 0.95} ${upper ? -0.95 : 0.95})`,
+    transform: `scale(${TYPE_SCALE[type] * 0.95} ${upper ? -0.95 : 0.95})`
   })
   const path = el('path', {
     class: 'crown-shape',
@@ -105,7 +95,7 @@ function drawTooth(g, no, upper, x, y, rot, index) {
     fill: `url(#g-${status})`,
     stroke: st.stroke,
     'stroke-width': removed ? 1.4 : 1.1,
-    'vector-effect': 'non-scaling-stroke',
+    'vector-effect': 'non-scaling-stroke'
   })
   if (removed) path.setAttribute('stroke-dasharray', '4 3')
   scaled.appendChild(path)
@@ -115,20 +105,15 @@ function drawTooth(g, no, upper, x, y, rot, index) {
         d: 'M -9 -30 L 9 -12 M 9 -30 L -9 -12',
         stroke: st.stroke,
         'stroke-width': '2',
-        'stroke-linecap': 'round',
-      }),
+        'stroke-linecap': 'round'
+      })
     )
   } else {
     scaled.appendChild(
       el('ellipse', {
-        cx: '-5',
-        cy: '-24',
-        rx: '4.5',
-        ry: '7',
-        fill: '#fff',
-        opacity: '0.5',
-        transform: 'rotate(-18 -5 -24)',
-      }),
+        cx: '-5', cy: '-24', rx: '4.5', ry: '7',
+        fill: '#fff', opacity: '0.5', transform: 'rotate(-18 -5 -24)'
+      })
     )
   }
   lift.appendChild(scaled)
@@ -144,7 +129,7 @@ function drawTooth(g, no, upper, x, y, rot, index) {
     'font-size': '11.5',
     'font-weight': '700',
     fill: status === 'soglom' ? '#8f98bd' : st.stroke,
-    style: 'font-variant-numeric: tabular-nums; pointer-events:none',
+    style: 'font-variant-numeric: tabular-nums; pointer-events:none'
   })
   label.textContent = no
   group.appendChild(label)
@@ -178,13 +163,9 @@ function render() {
 
   svg.appendChild(
     el('line', {
-      x1: '150',
-      y1: '240',
-      x2: '610',
-      y2: '240',
-      stroke: '#2b3357',
-      'stroke-dasharray': '3 5',
-    }),
+      x1: '150', y1: '240', x2: '610', y2: '240',
+      stroke: '#2b3357', 'stroke-dasharray': '3 5'
+    })
   )
 
   const layoutU = archLayout(UPPER)
@@ -218,36 +199,12 @@ function renderLegend() {
         renderLegend()
       })
       return b
-    }),
+    })
   )
 }
 
 render()
 renderLegend()
-
-// Qaysi tizim ekanini aniqlab, asosiy tugmani oʻshanga qaratamiz
-// Kartalardagi havolalar ham shu roʻyxatdan olinadi
-for (const [id, href] of Object.entries(DOWNLOADS)) {
-  const link = document.querySelector(`#dl-${id} .btn`)
-  if (link) link.href = href
-}
-
-const ua = navigator.userAgent
-const os = /Android/i.test(ua)
-  ? { id: 'android', label: 'Android uchun yuklab olish', file: DOWNLOADS.android }
-  : /Mac/i.test(ua) && !/iPhone|iPad/i.test(ua)
-    ? { id: 'mac', label: 'macOS uchun yuklab olish', file: DOWNLOADS.mac }
-    : /Win/i.test(ua)
-      ? { id: 'win', label: 'Windows uchun yuklab olish', file: DOWNLOADS.win }
-      : null
-
-const hero = document.getElementById('heroDownload')
-if (os) {
-  hero.textContent = os.label
-  hero.href = os.file
-  hero.setAttribute('download', '')
-  document.getElementById(`dl-${os.id}`)?.classList.add('primary')
-}
 
 // Tepa panelga chegara — sahifa suringanda
 const topBar = document.getElementById('top')

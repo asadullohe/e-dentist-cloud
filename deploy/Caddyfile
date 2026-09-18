@@ -69,13 +69,16 @@ www.{$DOMAIN} {
 	root * /srv/landing
 	encode gzip zstd
 
-	# Shrift va rasmlar nom bilan versiyalanadi — uzoq keshlanadi
-	@statik path /fonts/* /img/*
-	header @statik Cache-Control "public, max-age=604800"
+	# Shriftlar oʻzgarmaydi — bir yil; rasmlar (skrinshotlar, og.png)
+	# yangilanib turadi — bir hafta
+	@fonts path /fonts/*
+	header @fonts Cache-Control "public, max-age=31536000, immutable"
+	@img path /img/*
+	header @img Cache-Control "public, max-age=604800"
 
-	# APK ni brauzer matn deb ochib yubormasin
-	@apk path /downloads/*.apk
-	header @apk Content-Type "application/vnd.android.package-archive"
+	# Qidiruv tizimlari uchun: sahifaning oʻzi va sitemap qisqa keshlanadi
+	@seo path / /index.html /sitemap.xml /robots.txt
+	header @seo Cache-Control "public, max-age=3600"
 
 	file_server
 }
@@ -85,6 +88,9 @@ www.{$DOMAIN} {
 cabinet.{$DOMAIN} {
 	import xavfsizlik
 	import api
+	# Ilova sahifalari (kirish, navbat /n/<kod>) qidiruvga chiqmasin —
+	# qidiruvda faqat landing koʻrinadi
+	header X-Robots-Tag "noindex, nofollow"
 
 	handle {
 		root * /srv/kabinet
@@ -98,6 +104,7 @@ cabinet.{$DOMAIN} {
 admin.{$DOMAIN} {
 	import xavfsizlik
 	import api
+	header X-Robots-Tag "noindex, nofollow"
 
 	handle {
 		root * /srv/admin
