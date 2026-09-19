@@ -60,7 +60,7 @@ export function StaffTab() {
             <TableRow>
               <TableHead>{STAFF_UI.name}</TableHead>
               <TableHead className="hidden w-48 xl:table-cell">{STAFF_UI.last_login}</TableHead>
-              <TableHead className="w-44">{STAFF_UI.role}</TableHead>
+              <TableHead className="sm:w-44">{STAFF_UI.role}</TableHead>
               <TableHead className="hidden w-44 sm:table-cell">{STAFF_UI.pay}</TableHead>
               <TableHead className="w-14 text-right xl:w-40">{STAFF_UI.status}</TableHead>
             </TableRow>
@@ -70,7 +70,7 @@ export function StaffTab() {
               const isSelf = person.id === session?.user.id
               return (
                 <TableRow key={person.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium whitespace-normal">
                     {person.fullName ?? '—'}
                     {isSelf && (
                       <Badge variant="secondary" className="ml-2">

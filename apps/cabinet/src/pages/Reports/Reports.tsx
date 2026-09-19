@@ -20,7 +20,7 @@ import {
   UserPlusIcon,
   WalletIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useReport } from '@/entities/report'
 import {
   Button,
@@ -29,6 +29,7 @@ import {
   CardHeader,
   CardTitle,
   EmptyState,
+  Money,
   Skeleton,
   Table,
   TableBody,
@@ -49,22 +50,31 @@ function shiftMonth(month: string, by: number): string {
 
 interface StatProps {
   label: string
-  value: string
+  value: ReactNode
   icon: LucideIcon
   /// Faqat salbiy natija ajratiladi (zarar) — qolgani neytral
   negative?: boolean
+  /// Pul summasi telefonda yarim ustunga sigʻmaydi — butun qatorni oladi
+  wide?: boolean
 }
 
 /// Koʻrsatkich kartasi: sarlavha va ikonka tepada, raqam pastda
-function Stat({ label, value, icon: Icon, negative = false }: StatProps) {
+function Stat({ label, value, icon: Icon, negative = false, wide = false }: StatProps) {
   return (
-    <Card className="gap-2 py-5">
+    <Card
+      className={cn('min-w-0 gap-1.5 py-4 sm:gap-2 sm:py-5', wide && 'col-span-2 sm:col-span-1')}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm font-medium">{label}</CardTitle>
-        <Icon className="text-muted-foreground size-4" aria-hidden="true" />
+        <CardTitle className="truncate text-xs font-medium sm:text-sm">{label}</CardTitle>
+        <Icon className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
       </CardHeader>
       <CardContent>
-        <div className={cn('text-2xl font-bold tabular-nums', negative && 'text-destructive')}>
+        <div
+          className={cn(
+            'truncate text-xl font-bold tabular-nums sm:text-2xl',
+            negative && 'text-destructive',
+          )}
+        >
           {value}
         </div>
       </CardContent>
@@ -112,31 +122,46 @@ export function Reports() {
       </div>
 
       {isPending || !summary ? (
-        <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {['visits', 'charges', 'payments', 'expenses', 'profit', 'new'].map((key) => (
-            <Skeleton key={key} className="h-28 w-full" />
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {['visits', 'new', 'charges', 'payments', 'expenses', 'profit'].map((key, i) => (
+            <Skeleton
+              key={key}
+              className={cn('h-24 w-full', i > 1 && 'col-span-2 sm:col-span-1')}
+            />
           ))}
         </div>
       ) : (
-        <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           <Stat label={REPORT_UI.visits} value={String(summary.visits)} icon={CalendarCheckIcon} />
-          <Stat
-            label={REPORT_UI.charges}
-            value={formatSom(summary.charges)}
-            icon={StethoscopeIcon}
-          />
-          <Stat label={REPORT_UI.payments} value={formatSom(summary.payments)} icon={WalletIcon} />
-          <Stat label={REPORT_UI.expenses} value={formatSom(summary.expenses)} icon={ReceiptIcon} />
-          <Stat
-            label={REPORT_UI.profit}
-            value={formatSom(summary.profit)}
-            icon={summary.profit >= 0 ? TrendingUpIcon : TrendingDownIcon}
-            negative={summary.profit < 0}
-          />
           <Stat
             label={REPORT_UI.new_patients}
             value={String(summary.newPatients)}
             icon={UserPlusIcon}
+          />
+          <Stat
+            label={REPORT_UI.charges}
+            value={<Money value={summary.charges} />}
+            icon={StethoscopeIcon}
+            wide
+          />
+          <Stat
+            label={REPORT_UI.payments}
+            value={<Money value={summary.payments} />}
+            icon={WalletIcon}
+            wide
+          />
+          <Stat
+            label={REPORT_UI.expenses}
+            value={<Money value={summary.expenses} />}
+            icon={ReceiptIcon}
+            wide
+          />
+          <Stat
+            label={REPORT_UI.profit}
+            value={<Money value={summary.profit} />}
+            icon={summary.profit >= 0 ? TrendingUpIcon : TrendingDownIcon}
+            negative={summary.profit < 0}
+            wide
           />
         </div>
       )}
@@ -166,15 +191,18 @@ export function Reports() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{REPORT_UI.treatment}</TableHead>
-                  <TableHead className="w-20 text-right">{REPORT_UI.count}</TableHead>
-                  <TableHead className="w-36 text-right">{REPORT_UI.total}</TableHead>
+                  <TableHead className="hidden w-20 text-right sm:table-cell">
+                    {REPORT_UI.count}
+                  </TableHead>
+                  <TableHead className="text-right sm:w-36">{REPORT_UI.total}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data?.topTreatments.map((row) => (
                   <TableRow key={row.treatment}>
-                    <TableCell className="font-medium">{row.treatment}</TableCell>
-                    <TableCell className="text-muted-foreground text-right tabular-nums">
+                    {/* Uzun muolaja nomi oʻraladi — jadval ekrandan chiqmaydi */}
+                    <TableCell className="font-medium whitespace-normal">{row.treatment}</TableCell>
+                    <TableCell className="text-muted-foreground hidden text-right tabular-nums sm:table-cell">
                       {row.count}
                     </TableCell>
                     <TableCell className="text-right font-semibold tabular-nums">
@@ -198,17 +226,19 @@ export function Reports() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{REPORT_UI.category}</TableHead>
-                  <TableHead className="w-20 text-right">{REPORT_UI.count}</TableHead>
-                  <TableHead className="w-36 text-right">{REPORT_UI.total}</TableHead>
+                  <TableHead className="hidden w-20 text-right sm:table-cell">
+                    {REPORT_UI.count}
+                  </TableHead>
+                  <TableHead className="text-right sm:w-36">{REPORT_UI.total}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data?.topExpenses.map((row) => (
                   <TableRow key={row.category}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium whitespace-normal">
                       {EXPENSE_CATEGORY_LABELS[row.category]}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-right tabular-nums">
+                    <TableCell className="text-muted-foreground hidden text-right tabular-nums sm:table-cell">
                       {row.count}
                     </TableCell>
                     <TableCell className="text-right font-semibold tabular-nums">

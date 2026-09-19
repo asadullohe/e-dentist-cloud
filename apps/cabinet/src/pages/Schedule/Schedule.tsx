@@ -194,7 +194,7 @@ export function Schedule() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_22rem] [&>*]:min-w-0">
         <Card className="gap-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
@@ -230,7 +230,7 @@ export function Schedule() {
             </div>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="px-3 sm:px-6">
             <div className="text-muted-foreground grid grid-cols-7 gap-1 text-center text-xs font-medium">
               {WEEKDAYS.map((day) => (
                 <div key={day} className="py-1">
@@ -242,7 +242,7 @@ export function Schedule() {
             {isPending && !appointments ? (
               <Skeleton className="mt-1 h-72 w-full" />
             ) : (
-              <div className="mt-1 grid grid-cols-7 gap-1">
+              <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
                 {cells.map(({ key, day }) => {
                   if (day === null) return <div key={key} />
                   const count = byDay.get(key)?.length ?? 0
@@ -257,7 +257,7 @@ export function Schedule() {
                       onClick={() => setSelected(key)}
                       aria-pressed={isSelected}
                       className={cn(
-                        'flex min-h-14 flex-col items-start gap-1 rounded-md border p-1.5 text-left text-sm transition-colors sm:min-h-16',
+                        'flex min-h-14 min-w-0 flex-col items-start gap-1 rounded-md border p-1 text-left text-sm transition-colors sm:min-h-16 sm:p-1.5',
                         isSelected
                           ? 'border-primary bg-primary/5'
                           : 'hover:bg-accent border-transparent',
@@ -272,8 +272,9 @@ export function Schedule() {
                         {day}
                       </span>
                       {count > 0 && (
-                        <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-[11px] leading-none font-medium tabular-nums">
-                          {SCHEDULE_UI.day_total(count)}
+                        <span className="bg-primary/10 text-primary rounded px-1 py-0.5 text-[10px] leading-none font-medium whitespace-nowrap tabular-nums sm:px-1.5 sm:text-[11px]">
+                          <span className="sm:hidden">{count}</span>
+                          <span className="hidden sm:inline">{SCHEDULE_UI.day_total(count)}</span>
                         </span>
                       )}
                     </button>

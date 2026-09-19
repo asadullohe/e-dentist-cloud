@@ -43,7 +43,8 @@ export function patientColumns({
   const columns: ColumnDef<Patient>[] = [
     {
       accessorKey: 'fio',
-      meta: { title: PATIENT_UI.col_fio, filter: { type: 'text' } } satisfies ColumnMeta,
+      // Filtr yoʻq: sahifa tepasidagi qidiruv (ism yoki telefon) uni qamrab oladi
+      meta: { title: PATIENT_UI.col_fio, className: 'whitespace-normal' } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={PATIENT_UI.col_fio} />,
       enableHiding: false,
       cell: ({ row }) => (

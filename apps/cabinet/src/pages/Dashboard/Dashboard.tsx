@@ -24,7 +24,16 @@ import { useDebtors } from '@/entities/debtor'
 import { usePatients } from '@/entities/patient'
 import { useReport } from '@/entities/report'
 import { useHasPermission, useSession } from '@/entities/session'
-import { Button, Card, CardContent, CardHeader, CardTitle, EmptyState, Skeleton } from '@/shared/ui'
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  Money,
+  Skeleton,
+} from '@/shared/ui'
 
 interface StatProps {
   label: string
@@ -32,23 +41,28 @@ interface StatProps {
   value: ReactNode
   hint?: ReactNode
   loading?: boolean
+  /// Pul summasi telefonda yarim ustunga sigʻmaydi — butun qatorni oladi
+  wide?: boolean
 }
 
 /// Koʻrsatkich kartasi — Hisobotlar sahifasidagi bilan bir shaklda
-function Stat({ label, icon: Icon, value, hint, loading = false }: StatProps) {
+/// Telefonda ikki ustun va ixcham: toʻrt karta bir ekranga sigʻadi
+function Stat({ label, icon: Icon, value, hint, loading = false, wide = false }: StatProps) {
   return (
-    <Card className="gap-2 py-5">
+    <Card
+      className={cn('min-w-0 gap-1.5 py-4 sm:gap-2 sm:py-5', wide && 'col-span-2 sm:col-span-1')}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm font-medium">{label}</CardTitle>
-        <Icon className="text-muted-foreground size-4" aria-hidden="true" />
+        <CardTitle className="truncate text-xs font-medium sm:text-sm">{label}</CardTitle>
+        <Icon className="text-muted-foreground size-4 shrink-0" aria-hidden="true" />
       </CardHeader>
       <CardContent>
         {loading ? (
-          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-7 w-24 sm:h-8 sm:w-28" />
         ) : (
-          <div className="text-2xl font-bold tabular-nums">{value}</div>
+          <div className="truncate text-xl font-bold tabular-nums sm:text-2xl">{value}</div>
         )}
-        {hint && !loading && <p className="text-muted-foreground mt-1 text-xs">{hint}</p>}
+        {hint && !loading && <p className="text-muted-foreground mt-1 truncate text-xs">{hint}</p>}
       </CardContent>
     </Card>
   )
@@ -108,7 +122,8 @@ function IncomeStat({ month }: { month: string }) {
     <Stat
       label={HOME_UI.month_income}
       icon={WalletIcon}
-      value={formatSom(data?.summary.payments ?? 0)}
+      wide
+      value={<Money value={data?.summary.payments ?? 0} />}
       hint={HOME_UI.month_visits(data?.summary.visits ?? 0)}
       loading={isPending}
     />
@@ -123,7 +138,8 @@ function DebtStat() {
     <Stat
       label={HOME_UI.debt}
       icon={CreditCardIcon}
-      value={formatSom(data?.totalDebt ?? 0)}
+      wide
+      value={<Money value={data?.totalDebt ?? 0} />}
       hint={HOME_UI.debtors(data?.total ?? 0)}
       loading={isPending}
     />
@@ -165,19 +181,19 @@ function TodayList({ today, className }: { today: string; className?: string }) 
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/patients/${item.patientId}`}
-                    className="block truncate font-medium hover:underline"
+                    className="block font-medium hover:underline"
                   >
                     {item.fio}
                   </Link>
                   {(item.phone || item.doctorName) && (
-                    <div className="text-muted-foreground truncate text-xs">
+                    <div className="text-muted-foreground text-xs">
                       {[item.phone && formatUzPhone(item.phone), item.doctorName]
                         .filter(Boolean)
                         .join(' · ')}
                     </div>
                   )}
                 </div>
-                <span className="text-muted-foreground shrink-0 text-xs">
+                <span className="text-muted-foreground hidden shrink-0 text-xs sm:inline">
                   {APPOINTMENT_STATUS_LABELS[item.status]}
                 </span>
               </li>
@@ -219,14 +235,12 @@ function TopDebtors({ className }: { className?: string }) {
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/patients/${item.patientId}/tolovlar`}
-                    className="block truncate font-medium hover:underline"
+                    className="block font-medium hover:underline"
                   >
                     {item.fio}
                   </Link>
                   {item.phone && (
-                    <div className="text-muted-foreground truncate text-xs">
-                      {formatUzPhone(item.phone)}
-                    </div>
+                    <div className="text-muted-foreground text-xs">{formatUzPhone(item.phone)}</div>
                   )}
                 </div>
                 <span className="text-destructive shrink-0 font-semibold tabular-nums">
@@ -265,14 +279,16 @@ export function Dashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Toʻrt ustun faqat keng ekranda — pul summasi tor kartaga sigʻmaydi */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {canSchedule && <TodayStat today={today} />}
         {canPatients && <PatientsStat month={month} canReports={canReports} />}
         {canReports && <IncomeStat month={month} />}
         {canPayments && <DebtStat />}
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-7">
+      {/* min-w-0: karta ichidagi uzun ism kartani ekrandan chiqarib yubormasin */}
+      <div className="mt-4 grid gap-4 lg:grid-cols-7 [&>*]:min-w-0">
         {canSchedule && <TodayList today={today} className="lg:col-span-4" />}
         {canPayments && <TopDebtors className={canSchedule ? 'lg:col-span-3' : 'lg:col-span-7'} />}
       </div>

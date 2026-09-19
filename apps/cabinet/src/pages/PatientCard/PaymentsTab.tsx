@@ -19,9 +19,19 @@ import { CancelPaymentDialog, PaymentFormDialog } from '@/features/payment-form'
 import { Button, DataTable, DataTablePagination } from '@/shared/ui'
 import { paymentColumns } from './paymentColumns'
 
-function BalanceRow({ label, value, tone }: { label: string; value: number; tone?: string }) {
+function BalanceRow({
+  label,
+  value,
+  tone,
+  className,
+}: {
+  label: string
+  value: number
+  tone?: string
+  className?: string
+}) {
   return (
-    <div className="flex flex-col">
+    <div className={cn('flex flex-col', className)}>
       <span className="text-muted-foreground text-xs">{label}</span>
       <span className={cn('font-semibold tabular-nums', tone)}>{formatSom(value)}</span>
     </div>
@@ -71,7 +81,8 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
   return (
     <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-6">
+        {/* Telefonda ikki ustun: tashrif va toʻlangan yonma-yon, qarz alohida qatorda */}
+        <div className="grid w-full grid-cols-2 gap-x-4 gap-y-2 sm:flex sm:w-auto sm:flex-wrap sm:gap-6">
           <BalanceRow label={PAYMENT_UI.charges} value={balance?.charges ?? 0} />
           <BalanceRow label={PAYMENT_UI.paid} value={balance?.paid ?? 0} />
           <BalanceRow
@@ -79,6 +90,7 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
             label={debt < 0 ? PAYMENT_UI.prepaid : PAYMENT_UI.debt}
             value={Math.abs(debt)}
             tone={debt > 0 ? 'text-destructive' : debt < 0 ? 'text-ok' : undefined}
+            className="col-span-2 sm:col-span-1"
           />
         </div>
         {/* Kuzatuvchi (payments.read) koʻradi, lekin qabul qilmaydi */}

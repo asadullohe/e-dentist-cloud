@@ -1,5 +1,6 @@
 import { TABLE_UI } from '@e-dentist/shared'
 import type { Column, Table as TableInstance } from '@tanstack/react-table'
+import { cn } from 'cn'
 import { XIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../button'
@@ -158,18 +159,46 @@ function SelectFilter<TData>({
   )
 }
 
+const BREAKPOINTS = ['sm', 'md', 'lg', 'xl'] as const
+type Breakpoint = (typeof BREAKPOINTS)[number]
+/// Sinflar toʻliq yozilgan — Tailwind ularni shu yerdan topadi
+const HIDE_BELOW: Record<Breakpoint, string> = {
+  sm: 'max-sm:hidden',
+  md: 'max-md:hidden',
+  lg: 'max-lg:hidden',
+  xl: 'max-xl:hidden',
+}
+
+/// Ustun qaysi kenglikdan koʻrinadi: `hidden md:table-cell` → md.
+/// 0 — doim koʻrinadi, `BREAKPOINTS.length` — hech qachon
+function visibleFrom(className?: string): number {
+  if (!className || !/\bhidden\b/.test(className)) return 0
+  const match = className.match(/\b(sm|md|lg|xl):table-cell\b/)
+  return match ? BREAKPOINTS.indexOf(match[1] as Breakpoint) + 1 : BREAKPOINTS.length
+}
+
+function classNameOf<TData>(column: Column<TData>): string | undefined {
+  return (column.columnDef.meta as { className?: string } | undefined)?.className
+}
+
 /// Sarlavha ostidagi filtr qatori: filtri bor ustunda maydon, qolganida boʻsh
-/// katak. Birorta ustunda filtr boʻlmasa qator umuman chizilmaydi
+/// katak. Birorta ustunda filtr boʻlmasa qator umuman chizilmaydi.
+/// Filtrli ustunlarning hammasi tor ekranda yashirin boʻlsa — boʻsh qator
+/// qolmasin: qator ham eng kichik koʻrinish kengligigacha yashirinadi
 export function DataTableFilterRow<TData>({ table }: { table: TableInstance<TData> }) {
   const columns = table.getVisibleLeafColumns()
-  const hasFilters = columns.some((column) => filterMeta(column) !== undefined)
-  if (!hasFilters) return null
+  const filtered = columns.filter((column) => filterMeta(column) !== undefined)
+  if (filtered.length === 0) return null
+
+  const from = Math.min(...filtered.map((column) => visibleFrom(classNameOf(column))))
+  const breakpoint = from > 0 ? BREAKPOINTS[from - 1] : undefined
+  const hideBelow = breakpoint ? HIDE_BELOW[breakpoint] : ''
 
   return (
-    <TableRow className="hover:bg-transparent">
+    <TableRow className={cn('hover:bg-transparent', hideBelow)}>
       {columns.map((column) => {
         const meta = filterMeta(column)
-        const className = (column.columnDef.meta as { className?: string } | undefined)?.className
+        const className = classNameOf(column)
         return (
           <TableHead key={column.id} className={className}>
             {meta?.type === 'text' && <TextFilter column={column} placeholder={meta.placeholder} />}

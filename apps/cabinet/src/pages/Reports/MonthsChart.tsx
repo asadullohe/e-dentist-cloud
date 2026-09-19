@@ -112,6 +112,8 @@ export function MonthsChart({ months, selected, onPick }: MonthsChartProps) {
             axisLine={false}
             tickMargin={8}
             fontSize={12}
+            // Tor ekranda oy nomlari sigʻmasa — tekis oraliq bilan siyraklashadi
+            minTickGap={16}
             stroke="var(--muted-foreground)"
           />
           <YAxis

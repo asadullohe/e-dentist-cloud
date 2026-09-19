@@ -7,7 +7,15 @@ import {
   useReactTable,
   type VisibilityState,
 } from '@tanstack/react-table'
-import { FileDownIcon, PlusIcon, SearchIcon, SheetIcon, UploadIcon, XIcon } from 'lucide-react'
+import {
+  FileDownIcon,
+  MoreHorizontalIcon,
+  PlusIcon,
+  SearchIcon,
+  SheetIcon,
+  UploadIcon,
+  XIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
@@ -31,6 +39,10 @@ import {
   DataTable,
   DataTablePagination,
   DataTableViewOptions,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Input,
 } from '@/shared/ui'
 import { patientColumns } from './columns'
@@ -78,7 +90,6 @@ export function Patients() {
     | undefined
   const { data, isPending, isFetching } = usePatients({
     q: debouncedSearch || undefined,
-    fio: filterOf('fio'),
     phone: filterOf('phone'),
     address: filterOf('address'),
     doctorId: filterOf('doctorId'),
@@ -152,33 +163,67 @@ export function Patients() {
           <h1 className="text-2xl font-semibold tracking-tight">{PATIENT_UI.title}</h1>
           {data && <p className="text-muted-foreground text-sm">{PATIENT_UI.total(data.total)}</p>}
         </div>
-        <div className="flex flex-wrap gap-2">
-          {canWrite && (
-            <>
+        <div className="flex gap-2">
+          {/* Excel amallari telefonda «⋯» menyuda — asosiy tugma bitta qoladi */}
+          <div className="hidden gap-2 sm:flex">
+            {canWrite && (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy !== null}
+                  onClick={() => download('template')}
+                >
+                  <FileDownIcon />
+                  {busy === 'template' ? EXCEL_UI.downloading : EXCEL_UI.template}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+                  <UploadIcon />
+                  {IMPORT_UI.title}
+                </Button>
+              </>
+            )}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={busy !== null}
+              onClick={() => download('export')}
+            >
+              <SheetIcon />
+              {busy === 'export' ? EXCEL_UI.downloading : EXCEL_UI.export}
+            </Button>
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 size="sm"
                 variant="outline"
+                className="sm:hidden"
+                aria-label={TABLE_UI.actions}
                 disabled={busy !== null}
-                onClick={() => download('template')}
               >
-                <FileDownIcon />
-                {busy === 'template' ? EXCEL_UI.downloading : EXCEL_UI.template}
+                <MoreHorizontalIcon />
               </Button>
-              <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-                <UploadIcon />
-                {IMPORT_UI.title}
-              </Button>
-            </>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={busy !== null}
-            onClick={() => download('export')}
-          >
-            <SheetIcon />
-            {busy === 'export' ? EXCEL_UI.downloading : EXCEL_UI.export}
-          </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {canWrite && (
+                <>
+                  <DropdownMenuItem onClick={() => download('template')}>
+                    <FileDownIcon />
+                    {EXCEL_UI.template}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setImportOpen(true)}>
+                    <UploadIcon />
+                    {IMPORT_UI.title}
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuItem onClick={() => download('export')}>
+                <SheetIcon />
+                {EXCEL_UI.export}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           {canWrite && (
             <Button size="sm" onClick={openNew}>
               <PlusIcon />
@@ -189,7 +234,7 @@ export function Patients() {
       </div>
 
       <div className="mb-3 flex items-center gap-2">
-        <div className="relative w-full max-w-xs">
+        <div className="relative w-full sm:max-w-xs">
           <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
             value={search}

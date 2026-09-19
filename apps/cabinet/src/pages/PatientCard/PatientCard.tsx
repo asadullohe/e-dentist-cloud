@@ -272,7 +272,7 @@ export function PatientCard() {
         </div>
       </div>
 
-      <Separator className="mb-4" />
+      <Separator className="mb-4 hidden lg:block" />
       <SideNavLayout
         nav={
           <SideNav

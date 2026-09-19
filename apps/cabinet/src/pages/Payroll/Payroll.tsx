@@ -16,7 +16,7 @@ import {
   MoreHorizontalIcon,
   RefreshCwIcon,
 } from 'lucide-react'
-import { Fragment, useState } from 'react'
+import { Fragment, type ReactNode, useState } from 'react'
 import { type PayrollRow, usePayroll } from '@/entities/payroll'
 import { useHasPermission } from '@/entities/session'
 import { PayoutsDialog, RecalculateDialog } from '@/features/payroll-manage'
@@ -31,6 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   EmptyState,
+  Money,
   Skeleton,
   Table,
   TableBody,
@@ -121,15 +122,20 @@ export function Payroll() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{PAYROLL_UI.staff}</TableHead>
-                  <TableHead className="w-16 text-right">{PAYROLL_UI.visits}</TableHead>
+                  {/* Telefonda faqat xodim va jami — qolgani ochilganda */}
+                  <TableHead className="hidden w-16 text-right sm:table-cell">
+                    {PAYROLL_UI.visits}
+                  </TableHead>
                   <TableHead className="hidden w-32 text-right xl:table-cell">
                     {PAYROLL_UI.charges}
                   </TableHead>
-                  <TableHead className="w-32 text-right">{PAYROLL_UI.share}</TableHead>
+                  <TableHead className="hidden w-32 text-right sm:table-cell">
+                    {PAYROLL_UI.share}
+                  </TableHead>
                   <TableHead className="hidden w-32 text-right md:table-cell">
                     {PAYROLL_UI.salary}
                   </TableHead>
-                  <TableHead className="w-32 text-right">{PAYROLL_UI.total}</TableHead>
+                  <TableHead className="text-right sm:w-32">{PAYROLL_UI.total}</TableHead>
                   <TableHead className="hidden w-32 text-right xl:table-cell">
                     {PAYROLL_UI.paid}
                   </TableHead>
@@ -148,7 +154,7 @@ export function Payroll() {
                         className={cn('cursor-pointer', row.status === 'disabled' && 'opacity-60')}
                         onClick={() => setOpenRow(opened ? null : row.userId)}
                       >
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium whitespace-normal">
                           <span className="flex items-center gap-2">
                             <ChevronDownIcon
                               className={cn(
@@ -167,12 +173,17 @@ export function Payroll() {
                             </span>
                           </span>
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">{row.visits}</TableCell>
+                        <TableCell className="hidden text-right tabular-nums sm:table-cell">
+                          {row.visits}
+                        </TableCell>
                         <TableCell className="hidden text-right tabular-nums xl:table-cell">
                           {formatSom(row.charges)}
                         </TableCell>
                         <TableCell
-                          className={cn('text-right tabular-nums', needsRecalc(row) && 'text-warn')}
+                          className={cn(
+                            'hidden text-right tabular-nums sm:table-cell',
+                            needsRecalc(row) && 'text-warn',
+                          )}
                         >
                           {row.percent > 0 || row.share > 0 ? formatSom(row.share) : '—'}
                           {row.percent > 0 && (
@@ -248,11 +259,11 @@ export function Payroll() {
                 })}
                 <TableRow className="bg-muted/40 font-semibold hover:bg-muted/40">
                   <TableCell>{PAYROLL_UI.totals}</TableCell>
-                  <TableCell />
+                  <TableCell className="hidden sm:table-cell" />
                   <TableCell className="hidden text-right tabular-nums xl:table-cell">
                     {formatSom(data.totals.charges)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="hidden text-right tabular-nums sm:table-cell">
                     {formatSom(data.totals.share)}
                   </TableCell>
                   <TableCell className="hidden text-right tabular-nums md:table-cell">
@@ -285,29 +296,42 @@ export function Payroll() {
 
 /// Shifokorning oʻz koʻrinishi: koʻrsatkichlar tepada, ishlar roʻyxati pastda
 function OwnView({ month, row }: { month: string; row: PayrollRow }) {
-  const stats: { label: string; value: string }[] = [
+  // Pul summasi telefonda yarim ustunga sigʻmaydi — butun qatorni oladi
+  const money = (label: string, value: number) => ({
+    label,
+    value: <Money value={value} />,
+    wide: true,
+  })
+  const stats: { label: string; value: ReactNode; wide?: boolean }[] = [
     { label: PAYROLL_UI.visits, value: String(row.visits) },
-    { label: PAYROLL_UI.charges, value: formatSom(row.charges) },
-    { label: PAYROLL_UI.share, value: formatSom(row.share) },
-    ...(row.salary > 0 ? [{ label: PAYROLL_UI.salary, value: formatSom(row.salary) }] : []),
-    { label: PAYROLL_UI.total, value: formatSom(row.total) },
+    money(PAYROLL_UI.charges, row.charges),
+    money(PAYROLL_UI.share, row.share),
+    ...(row.salary > 0 ? [money(PAYROLL_UI.salary, row.salary)] : []),
+    money(PAYROLL_UI.total, row.total),
     ...(row.paid > 0
-      ? [
-          { label: PAYROLL_UI.paid, value: formatSom(row.paid) },
-          { label: PAYROLL_UI.remaining, value: formatSom(row.remaining) },
-        ]
+      ? [money(PAYROLL_UI.paid, row.paid), money(PAYROLL_UI.remaining, row.remaining)]
       : []),
   ]
   return (
     <>
-      <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className="gap-2 py-5">
+          <Card
+            key={stat.label}
+            className={cn(
+              'min-w-0 gap-1.5 py-4 sm:gap-2 sm:py-5',
+              stat.wide && 'col-span-2 sm:col-span-1',
+            )}
+          >
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+              <CardTitle className="truncate text-xs font-medium sm:text-sm">
+                {stat.label}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold tabular-nums">{stat.value}</div>
+              <div className="truncate text-xl font-bold tabular-nums sm:text-2xl">
+                {stat.value}
+              </div>
             </CardContent>
           </Card>
         ))}

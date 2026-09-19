@@ -65,6 +65,7 @@ export {
 } from './form'
 export { Input } from './input'
 export { Label } from './label'
+export { Money } from './money'
 export { Popover, PopoverContent, PopoverTrigger } from './popover'
 export {
   Select,

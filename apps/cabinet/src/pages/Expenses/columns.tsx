@@ -30,7 +30,7 @@ export function expenseColumns({ onEdit, onRemove }: Actions): ColumnDef<Expense
   return [
     {
       accessorKey: 'date',
-      meta: { title: EXPENSE_UI.date, className: 'w-28' } satisfies ColumnMeta,
+      meta: { title: EXPENSE_UI.date, className: 'hidden w-28 sm:table-cell' } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={EXPENSE_UI.date} />,
       cell: ({ row }) => (
         <span className="text-muted-foreground">{formatDate(row.original.date)}</span>
@@ -58,23 +58,28 @@ export function expenseColumns({ onEdit, onRemove }: Actions): ColumnDef<Expense
     },
     {
       accessorKey: 'description',
-      meta: { title: EXPENSE_UI.description, filter: { type: 'text' } } satisfies ColumnMeta,
+      meta: {
+        title: EXPENSE_UI.description,
+        className: 'whitespace-normal',
+        filter: { type: 'text' },
+      } satisfies ColumnMeta,
       header: EXPENSE_UI.description,
       filterFn: 'includesString',
       enableSorting: false,
       enableHiding: false,
+      // Tor ekranda sana va turkum ustunlari yashirin — shu yerda qator ostida
       cell: ({ row }) => (
         <div className="font-medium">
           {row.original.description}
           <span className="text-muted-foreground block text-xs sm:hidden">
-            {EXPENSE_CATEGORY_LABELS[row.original.category]}
+            {formatDate(row.original.date)} · {EXPENSE_CATEGORY_LABELS[row.original.category]}
           </span>
         </div>
       ),
     },
     {
       accessorKey: 'amount',
-      meta: { title: EXPENSE_UI.amount, className: 'w-40 text-right' } satisfies ColumnMeta,
+      meta: { title: EXPENSE_UI.amount, className: 'text-right sm:w-40' } satisfies ColumnMeta,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={EXPENSE_UI.amount} className="justify-end" />
       ),

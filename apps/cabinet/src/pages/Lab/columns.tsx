@@ -52,17 +52,41 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
   const columns: ColumnDef<LabOrder>[] = [
     {
       accessorKey: 'fio',
-      meta: { title: LAB_UI.patient, filter: { type: 'text' } } satisfies ColumnMeta,
+      meta: {
+        title: LAB_UI.patient,
+        className: 'whitespace-normal',
+        filter: { type: 'text' },
+      } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={LAB_UI.patient} />,
       enableHiding: false,
       filterFn: 'includesString',
-      cell: ({ row }) => <span className="font-medium">{row.original.fio}</span>,
+      // Tor ekranda ish turi va muddat ustunlari yashirin — shu yerda qator ostida
+      cell: ({ row }) => {
+        const o = row.original
+        return (
+          <div className="min-w-0">
+            <div className="font-medium">{o.fio}</div>
+            <div className="text-muted-foreground text-xs sm:hidden">
+              {LAB_WORK_TYPE_LABELS[o.workType]} · {LAB_MATERIAL_LABELS[o.material]}
+            </div>
+            <div
+              className={cn(
+                'text-muted-foreground text-xs tabular-nums md:hidden',
+                o.overdue && 'text-destructive font-medium',
+              )}
+            >
+              {LAB_UI.due}: {formatDate(o.dueDate)}
+            </div>
+          </div>
+        )
+      },
     },
     {
       id: 'work',
       accessorFn: (order) => order.workType,
       meta: {
         title: LAB_UI.work_type,
+        className: 'hidden sm:table-cell',
         filter: {
           type: 'select',
           options: Object.entries(LAB_WORK_TYPE_LABELS).map(([value, label]) => ({ value, label })),
@@ -108,7 +132,7 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
     },
     {
       accessorKey: 'dueDate',
-      meta: { title: LAB_UI.due, className: 'w-28' } satisfies ColumnMeta,
+      meta: { title: LAB_UI.due, className: 'hidden w-28 md:table-cell' } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={LAB_UI.due} />,
       cell: ({ row }) => (
         <span

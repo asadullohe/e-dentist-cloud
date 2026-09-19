@@ -25,7 +25,7 @@ export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<
   const columns: ColumnDef<Visit>[] = [
     {
       accessorKey: 'date',
-      meta: { title: CARD_UI.date, className: 'w-28' } satisfies ColumnMeta,
+      meta: { title: CARD_UI.date, className: 'hidden w-28 sm:table-cell' } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={CARD_UI.date} />,
       cell: ({ row }) => (
         <span className="tabular-nums">{formatDate(row.original.date.slice(0, 10))}</span>
@@ -33,19 +33,29 @@ export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<
     },
     {
       accessorKey: 'treatment',
-      meta: { title: CARD_UI.treatment, filter: { type: 'text' } } satisfies ColumnMeta,
+      meta: {
+        title: CARD_UI.treatment,
+        className: 'whitespace-normal',
+        filter: { type: 'text' },
+      } satisfies ColumnMeta,
       header: CARD_UI.treatment,
       enableSorting: false,
       filterFn: 'includesString',
       enableHiding: false,
-      cell: ({ row }) => (
-        <div>
-          {row.original.treatment}
-          {row.original.note && (
-            <div className="text-muted-foreground text-xs">{row.original.note}</div>
-          )}
-        </div>
-      ),
+      // Tor ekranda sana va tish ustunlari yashirin — shu yerda qator ostida
+      cell: ({ row }) => {
+        const visit = row.original
+        return (
+          <div>
+            {visit.treatment}
+            <div className="text-muted-foreground text-xs tabular-nums sm:hidden">
+              {formatDate(visit.date.slice(0, 10))}
+              {visit.tooth !== null && ` · ${CARD_UI.tooth} ${visit.tooth}`}
+            </div>
+            {visit.note && <div className="text-muted-foreground text-xs">{visit.note}</div>}
+          </div>
+        )
+      },
     },
     {
       accessorKey: 'doctorName',
@@ -60,14 +70,14 @@ export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<
     },
     {
       accessorKey: 'tooth',
-      meta: { title: CARD_UI.tooth, className: 'w-20' } satisfies ColumnMeta,
+      meta: { title: CARD_UI.tooth, className: 'hidden w-20 sm:table-cell' } satisfies ColumnMeta,
       header: CARD_UI.tooth,
       enableSorting: false,
       cell: ({ row }) => <span className="tabular-nums">{row.original.tooth ?? '—'}</span>,
     },
     {
       accessorKey: 'price',
-      meta: { title: CARD_UI.price, className: 'w-36 text-right' } satisfies ColumnMeta,
+      meta: { title: CARD_UI.price, className: 'text-right sm:w-36' } satisfies ColumnMeta,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={CARD_UI.price} className="justify-end" />
       ),

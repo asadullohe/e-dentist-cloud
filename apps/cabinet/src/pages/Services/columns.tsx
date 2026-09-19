@@ -24,6 +24,7 @@ export function serviceColumns({ onEdit, onRemove }: Actions): ColumnDef<Service
       accessorKey: 'name',
       meta: {
         title: SERVICE_UI.name,
+        className: 'whitespace-normal',
         filter: { type: 'text', placeholder: SERVICE_UI.search },
       } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={SERVICE_UI.name} />,
@@ -33,7 +34,7 @@ export function serviceColumns({ onEdit, onRemove }: Actions): ColumnDef<Service
     },
     {
       accessorKey: 'price',
-      meta: { title: SERVICE_UI.price, className: 'w-44 text-right' } satisfies ColumnMeta,
+      meta: { title: SERVICE_UI.price, className: 'text-right sm:w-44' } satisfies ColumnMeta,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={SERVICE_UI.price} className="justify-end" />
       ),

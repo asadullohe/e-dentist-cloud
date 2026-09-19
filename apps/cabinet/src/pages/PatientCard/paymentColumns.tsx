@@ -32,7 +32,7 @@ export function paymentColumns({ onEdit, onCancel, canEdit }: Actions): ColumnDe
   const columns: ColumnDef<Payment>[] = [
     {
       accessorKey: 'date',
-      meta: { title: PAYMENT_UI.date, className: 'w-28' } satisfies ColumnMeta,
+      meta: { title: PAYMENT_UI.date, className: 'hidden w-28 sm:table-cell' } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={PAYMENT_UI.date} />,
       cell: ({ row }) => (
         <span className={cn('tabular-nums', cancelled(row.original) && 'text-muted-foreground')}>
@@ -42,7 +42,11 @@ export function paymentColumns({ onEdit, onCancel, canEdit }: Actions): ColumnDe
     },
     {
       accessorKey: 'note',
-      meta: { title: PAYMENT_UI.note, filter: { type: 'text' } } satisfies ColumnMeta,
+      meta: {
+        title: PAYMENT_UI.note,
+        className: 'whitespace-normal',
+        filter: { type: 'text' },
+      } satisfies ColumnMeta,
       header: PAYMENT_UI.note,
       enableSorting: false,
       filterFn: 'includesString',
@@ -51,7 +55,15 @@ export function paymentColumns({ onEdit, onCancel, canEdit }: Actions): ColumnDe
         const payment = row.original
         return (
           <div className="space-y-1">
-            <div className="text-muted-foreground">{payment.note ?? '—'}</div>
+            {/* Tor ekranda sana ustuni yashirin — shu yerda */}
+            <div className="text-xs tabular-nums sm:hidden">
+              {formatDate(payment.date.slice(0, 10))}
+            </div>
+            {payment.note ? (
+              <div className="text-muted-foreground">{payment.note}</div>
+            ) : (
+              <div className="text-muted-foreground hidden sm:block">—</div>
+            )}
             {payment.createdByName && (
               <div className="text-muted-foreground text-xs">
                 {PAYMENT_UI.received_by}: {payment.createdByName}
@@ -75,7 +87,7 @@ export function paymentColumns({ onEdit, onCancel, canEdit }: Actions): ColumnDe
     },
     {
       accessorKey: 'amount',
-      meta: { title: PAYMENT_UI.amount, className: 'w-36 text-right' } satisfies ColumnMeta,
+      meta: { title: PAYMENT_UI.amount, className: 'text-right sm:w-36' } satisfies ColumnMeta,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={PAYMENT_UI.amount} className="justify-end" />
       ),

@@ -18,17 +18,20 @@ export function SideNav({ items }: { items: readonly SideNavItem[] }) {
   const { pathname } = useLocation()
   const strip = useRef<HTMLDivElement>(null)
 
-  // Joriy tab ekrandan tashqarida qolsa — koʻrinadigan joyga suriladi
+  // Joriy tab ekrandan tashqarida qolsa — koʻrinadigan joyga suriladi.
+  // Manzil oʻzgarganda ham: chetdagi tab bosilsa, oʻrtaga keladi
   useEffect(() => {
-    const active = strip.current?.querySelector<HTMLElement>('[aria-current="page"]')
+    const active = strip.current?.querySelector<HTMLElement>(
+      `a[aria-current="page"][href="${CSS.escape(pathname)}"], a[aria-current="page"]`,
+    )
     active?.scrollIntoView({ inline: 'center', block: 'nearest' })
-  }, [])
+  }, [pathname])
 
   return (
     <>
       <div
         ref={strip}
-        className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+        className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] lg:hidden [&::-webkit-scrollbar]:hidden"
       >
         <div className="flex gap-1 border-b">
           {items.map(({ to, label, icon: Icon }) => (
@@ -52,7 +55,7 @@ export function SideNav({ items }: { items: readonly SideNavItem[] }) {
         </div>
       </div>
 
-      <nav className="hidden flex-col gap-1 md:flex">
+      <nav className="hidden flex-col gap-1 lg:flex">
         {items.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

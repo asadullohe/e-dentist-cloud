@@ -9,7 +9,11 @@ export function debtorColumns(): ColumnDef<Debtor>[] {
     {
       accessorKey: 'fio',
       // Filtr serverda: ism yoki telefon boʻyicha (Debtors.tsx `q` ga uzatadi)
-      meta: { title: DEBTORS_UI.patient, filter: { type: 'text' } } satisfies ColumnMeta,
+      meta: {
+        title: DEBTORS_UI.patient,
+        className: 'whitespace-normal',
+        filter: { type: 'text' },
+      } satisfies ColumnMeta,
       header: DEBTORS_UI.patient,
       // Ism serverda sahifalashdan keyin olinadi — u boʻyicha saralab boʻlmaydi
       enableSorting: false,
@@ -63,7 +67,7 @@ export function debtorColumns(): ColumnDef<Debtor>[] {
     },
     {
       accessorKey: 'debt',
-      meta: { title: PAYMENT_UI.debt, className: 'w-36 text-right' } satisfies ColumnMeta,
+      meta: { title: PAYMENT_UI.debt, className: 'text-right sm:w-36' } satisfies ColumnMeta,
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={PAYMENT_UI.debt} className="justify-end" />
       ),

@@ -23,9 +23,11 @@ export function ContentSection({
   heading = 'section',
   children,
 }: ContentSectionProps) {
+  // `section` sarlavhasi tor ekranda tab nomini takrorlaydi — u yerda yashirin
+  const compact = heading === 'section'
   return (
     <div className="flex min-w-0 flex-1 flex-col">
-      <div>
+      <div className={cn(compact && 'hidden lg:block')}>
         {heading === 'page' ? (
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         ) : (
@@ -33,7 +35,7 @@ export function ContentSection({
         )}
         <p className="text-muted-foreground text-sm">{desc}</p>
       </div>
-      <Separator className="my-4" />
+      <Separator className={cn('my-4', compact && 'hidden lg:block')} />
       <div className={cn(!wide && 'lg:max-w-xl')}>{children}</div>
     </div>
   )

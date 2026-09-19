@@ -131,7 +131,7 @@ export function Expenses() {
             {EXPENSE_UI.this_month}
           </Button>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto max-sm:basis-full">
           {/* Yuklanayotganda «0 soʻm» koʻrsatilmasin — bu yolgʻon raqam */}
           {data ? (
             <Badge variant="secondary" className="text-sm">
@@ -144,13 +144,15 @@ export function Expenses() {
       </div>
 
       {data && data.byCategory.length > 0 && (
-        <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
           {data.byCategory.slice(0, 4).map((row) => (
-            <Card key={row.category} className="gap-1 p-3">
-              <div className="text-muted-foreground text-xs">
+            <Card key={row.category} className="min-w-0 gap-0.5 p-3 sm:gap-1">
+              <div className="text-muted-foreground truncate text-xs">
                 {EXPENSE_CATEGORY_LABELS[row.category]}
               </div>
-              <div className="text-lg font-semibold tabular-nums">{formatSom(row.total)}</div>
+              <div className="truncate text-base font-semibold tabular-nums sm:text-lg">
+                {formatSom(row.total)}
+              </div>
             </Card>
           ))}
         </div>
