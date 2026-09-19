@@ -244,8 +244,9 @@ export function PatientCard() {
         </Link>
       </Button>
 
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
+      {/* Telefonda tugmalar ism ostiga tushadi — kesilib qolmasin */}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">{patient?.fio}</h1>
           <p className="text-muted-foreground mt-1 text-sm">
             {patient?.phone ? formatUzPhone(patient.phone) : CARD_UI.no_phone}
@@ -253,7 +254,7 @@ export function PatientCard() {
             {patient?.doctorName && ` · ${PATIENT_UI.doctor}: ${patient.doctorName}`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {hasPermission('queue.manage') && (
             <Button variant="outline" size="sm" onClick={() => setEnqueueOpen(true)}>
               <BellPlusIcon />

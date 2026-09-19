@@ -1,8 +1,8 @@
 import { cn } from 'cn'
 import type { LucideIcon } from 'lucide-react'
-import { NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { buttonVariants } from './button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select'
 
 export interface SideNavItem {
   to: string
@@ -10,32 +10,46 @@ export interface SideNavItem {
   icon: LucideIcon
 }
 
-/// Sahifa ichidagi chap navigatsiya. Katta ekranda tik roʻyxat, telefonda
-/// tanlov qutisi — beshta-oltita tugma tor ekranga sigʻmaydi.
-/// Har boʻlim oʻz manziliga ega: havola ulashiladi, «orqaga» ishlaydi
+/// Sahifa ichidagi navigatsiya. Katta ekranda chapda tik roʻyxat, telefonda
+/// gorizontal aylanadigan tablar — hamma boʻlim koʻrinib turadi, joriysi
+/// chizilgan (tanlov qutisi tushunarsiz edi). Har boʻlim oʻz manziliga
+/// ega: havola ulashiladi, «orqaga» ishlaydi
 export function SideNav({ items }: { items: readonly SideNavItem[] }) {
   const { pathname } = useLocation()
-  const navigate = useNavigate()
-  const current = items.find((item) => item.to === pathname)?.to ?? items[0]?.to ?? ''
+  const strip = useRef<HTMLDivElement>(null)
+
+  // Joriy tab ekrandan tashqarida qolsa — koʻrinadigan joyga suriladi
+  useEffect(() => {
+    const active = strip.current?.querySelector<HTMLElement>('[aria-current="page"]')
+    active?.scrollIntoView({ inline: 'center', block: 'nearest' })
+  }, [])
 
   return (
     <>
-      <div className="md:hidden">
-        <Select value={current} onValueChange={(to) => navigate(to)}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {items.map(({ to, label, icon: Icon }) => (
-              <SelectItem key={to} value={to}>
-                <span className="flex items-center gap-2">
-                  <Icon className="size-4" />
-                  {label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div
+        ref={strip}
+        className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex gap-1 border-b">
+          {items.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end
+              className={({ isActive }) =>
+                cn(
+                  '-mb-px flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors',
+                  isActive
+                    ? 'border-primary text-foreground'
+                    : 'text-muted-foreground hover:text-foreground border-transparent',
+                )
+              }
+            >
+              <Icon className="size-4" />
+              {label}
+            </NavLink>
+          ))}
+        </div>
       </div>
 
       <nav className="hidden flex-col gap-1 md:flex">
