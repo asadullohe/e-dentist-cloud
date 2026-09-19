@@ -5,6 +5,7 @@ import { bridgeSpan } from '@e-dentist/teeth'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import type { ScopedViewer } from '../../platform/guards.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -38,8 +39,11 @@ function isMissing(error: unknown): boolean {
 /// Bemor shu klinikaniki ekanini tasdiqlaydi. Tashqi kalit tekshiruvi RLS ni
 /// chetlab oʻtadi, shuning uchun bu tekshiruvsiz begona bemorga yozuv
 /// bogʻlab qoʻyish mumkin boʻlardi
-async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
-  if (!(await patients.existsInClinic(tx, patientId))) {
+/// Bemor shu klinikaniki va shu koʻruvchiga koʻrinadi. Shifokor
+/// (patients.all yoʻq) boshqaning bemoriga tashrif yozolmaydi — u uchun
+/// bemor «topilmadi» (tz.md 14-boʻlim)
+async function assertPatient(tx: ClinicTx, viewer: ScopedViewer, patientId: string): Promise<void> {
+  if (!(await patients.isVisibleTx(tx, viewer, patientId))) {
     throw errors.notFound(PATIENT_TEXT.not_found)
   }
 }
@@ -148,10 +152,18 @@ async function withDoctorNames<T extends { doctorId: string | null }>(
   }))
 }
 
-export function listVisits(deps: VisitDeps, clinicId: string, patientId: string) {
+/// Kartochkadagi tashriflar. Shifokor faqat oʻzinikini koʻradi —
+/// boshqa shifokorning muolajasi va narxi unga koʻrinmaydi
+export function listVisits(
+  deps: VisitDeps,
+  clinicId: string,
+  viewer: ScopedViewer,
+  patientId: string,
+) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, patientId)
-    return withDoctorNames(tx, await repo.listVisits(tx, patientId))
+    await assertPatient(tx, viewer, patientId)
+    const rows = await repo.listVisits(tx, patientId, viewer.all ? undefined : viewer.userId)
+    return withDoctorNames(tx, rows)
   })
 }
 
@@ -160,14 +172,16 @@ export function listVisits(deps: VisitDeps, clinicId: string, patientId: string)
 /// tranzaksiyada — tashrif yozilib, qabul yakunlanmay qolmasin)
 export async function createTx(
   tx: ClinicTx,
-  userId: string,
+  viewer: ScopedViewer,
   input: VisitCreateInput,
 ): Promise<VisitRow> {
+  const { userId } = viewer
   const id = uuidV7()
-  await assertPatient(tx, input.patientId)
+  await assertPatient(tx, viewer, input.patientId)
   // Sukut — yozayotgan odamning oʻzi: u `visits.write` bilan kirgan,
-  // demak shifokorlar roʻyxatida bor
-  const doctorId = input.doctorId ?? userId
+  // demak shifokorlar roʻyxatida bor. Cheklangan koʻruvchi (shifokor)
+  // faqat oʻz nomidan yozadi — aks holda oʻzi koʻrolmaydigan tashrif chiqardi
+  const doctorId = viewer.all ? (input.doctorId ?? userId) : userId
   await assertDoctor(tx, doctorId)
   // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
   const { payPercent } = await auth.payTermsTx(tx, doctorId)
@@ -200,22 +214,31 @@ export type VisitRow = Awaited<ReturnType<typeof repo.createVisit>> & { doctorNa
 export function createVisit(
   deps: VisitDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScopedViewer,
   input: VisitCreateInput,
 ) {
-  return withClinic(deps.db, clinicId, (tx) => createTx(tx, userId, input))
+  return withClinic(deps.db, clinicId, (tx) => createTx(tx, viewer, input))
+}
+
+/// Boshqa shifokorning tashrifi cheklangan koʻruvchi uchun yoʻq
+function assertOwnVisit(viewer: ScopedViewer, visit: { doctorId: string | null }): void {
+  if (!viewer.all && visit.doctorId !== viewer.userId) throw errors.notFound(VISIT_TEXT.not_found)
 }
 
 export function updateVisit(
   deps: VisitDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScopedViewer,
   id: string,
   input: VisitUpdateInput,
 ) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
     const current = await repo.findVisit(tx, id)
     if (!current) throw errors.notFound(VISIT_TEXT.not_found)
+    assertOwnVisit(viewer, current)
+    // Cheklangan koʻruvchi shifokorni oʻzgartira olmaydi — tashrif oʻzida qoladi
+    if (!viewer.all) input = { ...input, doctorId: undefined }
 
     // Ulush qachon qayta sanaladi: shifokor almashsa — yangi shifokorning
     // joriy foizi; faqat narx oʻzgarsa — saqlangan foiz (snapshot buzilmaydi)
@@ -254,8 +277,14 @@ export function updateVisit(
   })
 }
 
-export function removeVisit(deps: VisitDeps, clinicId: string, userId: string, id: string) {
+export function removeVisit(deps: VisitDeps, clinicId: string, viewer: ScopedViewer, id: string) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
+    if (!viewer.all) {
+      const current = await repo.findVisit(tx, id)
+      if (!current) throw errors.notFound(VISIT_TEXT.not_found)
+      assertOwnVisit(viewer, current)
+    }
     try {
       await repo.removeVisit(tx, id)
     } catch (error) {
@@ -271,9 +300,11 @@ export function removeVisit(deps: VisitDeps, clinicId: string, userId: string, i
   })
 }
 
-export function chart(deps: VisitDeps, clinicId: string, patientId: string) {
+/// Tish xaritasi umumiy: bemorni koʻra olgan har kim toʻliq xaritani
+/// koʻradi — ikkinchi shifokor 16-tishda plomba borligini bilishi kerak
+export function chart(deps: VisitDeps, clinicId: string, viewer: ScopedViewer, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, patientId)
+    await assertPatient(tx, viewer, patientId)
     return repo.chart(tx, patientId)
   })
 }
@@ -296,13 +327,14 @@ export async function setToothTx(
 export function setTooth(
   deps: VisitDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScopedViewer,
   patientId: string,
   tooth: number,
   input: ToothUpdateInput,
 ) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, patientId)
+    await assertPatient(tx, viewer, patientId)
 
     const material = input.material ?? ''
     const note = input.note ?? null
@@ -333,13 +365,14 @@ function defaultRole(status: string | undefined): 'koronka' | 'koprik' {
 export function createBridge(
   deps: VisitDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScopedViewer,
   patientId: string,
   input: BridgeCreateInput,
 ) {
+  const { userId } = viewer
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, patientId)
+    await assertPatient(tx, viewer, patientId)
 
     // Ikkala tish bitta jagʻda boʻlishi shart — boʻlmasa oraliq boʻsh qaytadi
     const span = bridgeSpan(input.from, input.to)
@@ -374,10 +407,12 @@ export function createBridge(
 
 /// Oʻchirilganda tishlar holati qaytariladi: quyma tish oʻrnida tish yoʻq
 /// edi — «olib tashlangan» boʻladi; tayanch tish esa «sogʻlom» ga qaytadi
-export function removeBridge(deps: VisitDeps, clinicId: string, userId: string, id: string) {
+export function removeBridge(deps: VisitDeps, clinicId: string, viewer: ScopedViewer, id: string) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
     const bridge = await repo.findBridge(tx, id)
     if (!bridge) throw errors.notFound(VISIT_TEXT.bridge_not_found)
+    await assertPatient(tx, viewer, bridge.patientId)
 
     const { teeth } = await repo.chart(tx, bridge.patientId)
     const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))

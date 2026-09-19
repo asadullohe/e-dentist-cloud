@@ -39,8 +39,14 @@ function isMissing(error: unknown): boolean {
   )
 }
 
-async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
-  if (!(await patients.existsInClinic(tx, patientId))) {
+/// Bemor shu klinikaniki va koʻruvchiga koʻrinadi (patients.all yoʻq
+/// shifokor boshqaning bemoriga qabul yoza olmaydi)
+async function assertPatient(
+  tx: ClinicTx,
+  viewer: ScheduleViewer,
+  patientId: string,
+): Promise<void> {
+  if (!(await patients.isVisibleTx(tx, patientViewerOf(viewer), patientId))) {
     throw errors.notFound(PATIENT_TEXT.not_found)
   }
 }
@@ -76,8 +82,17 @@ export interface Appointment {
 /// oʻziga yoziladi, boshqaning qabuli «topilmadi» (10.7)
 export interface ScheduleViewer {
   userId: string
+  /// `schedule.all` — hamma shifokorning qabullari
   all: boolean
+  /// `patients.all` — bemorlar tekshiruvi uchun (qabul yozish, yakunlash):
+  /// shifokor faqat oʻziga koʻrinadigan bemorga qabul yozadi
+  patientsAll: boolean
 }
+
+const patientViewerOf = (viewer: ScheduleViewer) => ({
+  userId: viewer.userId,
+  all: viewer.patientsAll,
+})
 
 /// Boshqa shifokorning qabuli — cheklangan koʻruvchi uchun yoʻq
 function assertVisible(viewer: ScheduleViewer, row: { doctorId: string | null }): void {
@@ -151,7 +166,7 @@ export function create(
   const { userId } = viewer
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, input.patientId)
+    await assertPatient(tx, viewer, input.patientId)
     // Shifokor berilmasa — bemorning biriktirilgan shifokori (10.2).
     // Cheklangan koʻruvchi (shifokor) faqat oʻziga yozadi — aks holda qabul
     // oʻz jadvalidan gʻoyib boʻlardi
@@ -254,7 +269,7 @@ export function complete(
       (await patients.findByIds(tx, [existing.patientId]))[0]?.doctorId ??
       undefined
 
-    const visit = await visits.createTx(tx, userId, {
+    const visit = await visits.createTx(tx, patientViewerOf(viewer), {
       ...input,
       ...(doctorId ? { doctorId } : {}),
       patientId: existing.patientId,

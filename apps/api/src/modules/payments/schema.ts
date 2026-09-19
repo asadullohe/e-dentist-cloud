@@ -26,7 +26,20 @@ export const paymentCreateSchema = z.object({
   note: z.string().trim().max(500).nullish(),
 })
 
-export const paymentUpdateSchema = paymentCreateSchema.omit({ patientId: true }).partial()
+/// Toʻlov oʻzgarmas: summa va sana tahrirlanmaydi — xato boʻlsa bekor qilib
+/// yangisi kiritiladi. Faqat izoh tuzatiladi (qaror 19/09/2026)
+export const paymentUpdateSchema = z.object({
+  note: z.string().trim().max(500).nullish(),
+})
+
+/// Bekor qilish — sabab majburiy, u toʻlov yonida koʻrinib turadi
+export const paymentCancelSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .min(3, { error: () => PAYMENT_TEXT.reason_required })
+    .max(500),
+})
 
 /// Saralash faqat summalar boʻyicha: ism sahifalashdan keyin olinadi
 export const DEBTOR_SORT = ['debt', 'charges', 'paid'] as const
@@ -42,4 +55,5 @@ export const debtorsSchema = z.object({
 
 export type PaymentCreateInput = z.infer<typeof paymentCreateSchema>
 export type PaymentUpdateInput = z.infer<typeof paymentUpdateSchema>
+export type PaymentCancelInput = z.infer<typeof paymentCancelSchema>
 export type DebtorsInput = z.infer<typeof debtorsSchema>

@@ -35,7 +35,7 @@ const WIDTH = {
   visits: [14, 28, 24, 40, 8, 16, 40],
   teeth: [28, 8, 20, 20, 40],
   bridges: [28, 24, 20],
-  payments: [14, 28, 16, 40],
+  payments: [14, 28, 16, 40, 24, 16, 40],
   appointments: [20, 28, 18, 40],
   expenses: [14, 20, 40, 16],
   lab: [14, 28, 20, 20, 10, 20, 24, 16, 16, 12, 40],
@@ -65,12 +65,15 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       ])
 
     const names = new Map(people.map((person) => [person.id, person.fio]))
-    // Bitta soʻrovda: naryaddagi texniklar va tashrifdagi shifokorlar
+    // Bitta soʻrovda: naryaddagi texniklar, tashrifdagi shifokorlar,
+    // toʻlovni qabul qilganlar
     const staffNames = await auth.staffNamesTx(tx, [
       ...new Set(
-        [...labRows.map((row) => row.techId), ...visitRows.map((row) => row.doctorId)].filter(
-          (id): id is string => id !== null,
-        ),
+        [
+          ...labRows.map((row) => row.techId),
+          ...visitRows.map((row) => row.doctorId),
+          ...paymentRows.map((row) => row.createdBy),
+        ].filter((id): id is string => id !== null),
       ),
     ])
 
@@ -90,7 +93,11 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       sheets.toBuffer('Tashriflar', sheets.visitsSheet(visitRows, names, staffNames), WIDTH.visits),
       sheets.toBuffer('Tish xaritasi', sheets.teethSheet(teethRows, names), WIDTH.teeth),
       sheets.toBuffer('Koʻpriklar', sheets.bridgesSheet(bridgeRows, names), WIDTH.bridges),
-      sheets.toBuffer('Toʻlovlar', sheets.paymentsSheet(paymentRows, names), WIDTH.payments),
+      sheets.toBuffer(
+        'Toʻlovlar',
+        sheets.paymentsSheet(paymentRows, names, staffNames),
+        WIDTH.payments,
+      ),
       sheets.toBuffer(
         'Qabullar',
         sheets.appointmentsSheet(appointmentRows, names),

@@ -44,6 +44,20 @@ export function requireAuth(req: FastifyRequest): SessionData {
   return req.session
 }
 
+/// «Kim koʻrayapti» — oʻzinikini yoki hammasini. Bitta shakl ikki joyda:
+/// bemorlar (`patients.all`) va qabul jadvali (`schedule.all`). `all`
+/// boʻlmasa modul roʻyxatni `userId` ga qarab toraytiradi
+export interface ScopedViewer {
+  userId: string
+  all: boolean
+}
+
+/// Marshrutda: guard ruxsatlarni yuklab boʻlgan, shu yerda faqat oʻqiladi
+export function viewerOf(req: FastifyRequest, wide: Permission): ScopedViewer {
+  const session = requireAuth(req)
+  return { userId: session.userId, all: req.permissions.includes(wide) }
+}
+
 /// Platforma admini — hech qaysi klinikaga tegishli emas (`clinic_id`
 /// boʻsh). Klinika marshrutlari unga baribir yopiq: ular ruxsat talab
 /// qiladi, ruxsatlar esa roldan keladi, rol esa klinikaniki

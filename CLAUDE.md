@@ -48,6 +48,11 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   qoʻshish» sukut yoqilgan. «Yakunlandi» faqat tashrif bilan
   (`POST /appointments/:id/complete`). Shifokor jadvalda **faqat oʻz**
   qabullarini koʻradi — hammasini `schedule.all` ochadi (egasi, qabulxona)
+- **Shifokorning oʻz bemorlari** _(qaror 19/09/2026)_: `patients.all` yoʻq
+  shifokor faqat biriktirilgan / davolagan / qabulga yozilgan / biriktirilmagan
+  bemorlarni, kartochkada oʻz tashriflari va oʻz rasmlarini koʻradi; tish
+  xaritasi umumiy. Shifokor toʻlov qabul qiladi. **Toʻlov oʻchirilmaydi** —
+  sabab bilan bekor qilinadi, summa/sana tahrirlanmaydi
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar

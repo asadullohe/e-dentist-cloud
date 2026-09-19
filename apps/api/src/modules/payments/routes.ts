@@ -1,9 +1,14 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
-import { requireAuth } from '../../platform/guards.js'
+import { requireAuth, viewerOf } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { debtorsSchema, paymentCreateSchema, paymentUpdateSchema } from './schema.js'
+import {
+  debtorsSchema,
+  paymentCancelSchema,
+  paymentCreateSchema,
+  paymentUpdateSchema,
+} from './schema.js'
 import * as service from './service.js'
 
 export interface PaymentRouteOpts {
@@ -20,22 +25,25 @@ export const paymentRoutes: FastifyPluginAsync<PaymentRouteOpts> = async (app, o
   const read = { preHandler: app.requirePermission('payments.read') }
   const write = { preHandler: app.requirePermission('payments.write') }
 
+  // Kim koʻrayapti: `patients.all` boʻlmasa (shifokor) faqat oʻz bemorlari
+  const viewer = (req: FastifyRequest) => viewerOf(req, 'patients.all')
+
   app.get('/patients/:id/payments', read, async (req) => {
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.list(opts.deps, clinicId, id))
+    return ok(await service.list(opts.deps, clinicId, viewer(req), id))
   })
 
   app.get('/patients/:id/balance', read, async (req) => {
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.balance(opts.deps, clinicId, id))
+    return ok(await service.balance(opts.deps, clinicId, viewer(req), id))
   })
 
   app.post('/payments', write, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const input = validateInput(paymentCreateSchema, req.body)
-    return ok(await service.create(opts.deps, clinicId, userId, input))
+    return ok(await service.create(opts.deps, clinicId, viewer(req), input))
   })
 
   app.patch('/payments/:id', write, async (req) => {
@@ -45,15 +53,17 @@ export const paymentRoutes: FastifyPluginAsync<PaymentRouteOpts> = async (app, o
     return ok(await service.update(opts.deps, clinicId, userId, id, input))
   })
 
-  app.delete('/payments/:id', write, async (req) => {
+  // Oʻchirish yoʻq — bekor qilish, sabab bilan (qaror 19/09/2026)
+  app.post('/payments/:id/cancel', write, async (req) => {
     const { clinicId, userId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    await service.remove(opts.deps, clinicId, userId, id)
-    return ok({ deleted: true })
+    const input = validateInput(paymentCancelSchema, req.body)
+    return ok(await service.cancel(opts.deps, clinicId, userId, id, input))
   })
 
   app.get('/debtors', read, async (req) => {
     const { clinicId } = clinicOf(req)
-    return ok(await service.debtors(opts.deps, clinicId, validateInput(debtorsSchema, req.query)))
+    const input = validateInput(debtorsSchema, req.query)
+    return ok(await service.debtors(opts.deps, clinicId, viewer(req), input))
   })
 }

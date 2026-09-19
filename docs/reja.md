@@ -1258,6 +1258,32 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 
 ---
 
+## Bosqich 11 — Shifokorning oʻz bemorlari, toʻlovlar oʻzgarmas · ~1 kun
+
+> **Nega** _(qaror 19/09/2026)_
+>
+> Shifokor boshqa shifokorning bemorini, muolajasini va narxini koʻrardi.
+> Toʻlov oʻchirilishi mumkin edi — pul yozuvi izsiz yoʻqolardi. Kichik
+> klinikada pulni shifokorning oʻzi oladi — shablonda toʻlov yopiq edi.
+
+- [x] **11.1 Toʻlov bekor qilinadi, oʻchirilmaydi** — `POST /payments/:id/cancel`
+      sabab bilan (`cancelled_at/by`, `cancel_reason`), `created_by`; bekor
+      qilingani hisob, qarzdorlar, hisobotga kirmaydi, roʻyxatda chizilgan
+      holda; PATCH faqat izoh, DELETE yoʻq. Eksportda «Qabul qildi», «Holat»,
+      «Bekor sababi». Testlar: sabab majburiy, ikki marta bekor 409, summa
+      oʻzgarmas
+- [x] **11.2 Shifokor toʻlov qabul qiladi** — shablonga `payments.read/write`,
+      mavjud rollarga migratsiya
+- [x] **11.3 Shifokor faqat oʻz bemorlarini koʻradi** — `patients.all` (egasi,
+      qabulxona, kuzatuvchi; migratsiya). Usiz: biriktirilgan / davolagan /
+      qabulga yozilgan / biriktirilmagan; kartochkada oʻz tashriflari va oʻz
+      rasmlari (`images.uploaded_by`), tish xaritasi umumiy; tashrif oʻz
+      nomidan; boshqaning tashrifi, rasmi, bemori — 404; qarzdorlar ham
+      shu doirada. Kabinetda tashrif formasida shifokor tanlovi va roʻyxatda
+      shifokor filtri yashiriladi. Testlar: `visibility.test.ts` (12)
+
+---
+
 ## Ochiq savollar
 
 Kod yozishga halaqit bermaydi, lekin bosqich 5 gacha javob kerak:

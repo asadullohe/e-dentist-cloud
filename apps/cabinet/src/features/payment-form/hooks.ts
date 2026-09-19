@@ -13,8 +13,9 @@ function invalidate(queryClient: ReturnType<typeof useQueryClient>) {
 export function useSavePayment(id: string | null) {
   const queryClient = useQueryClient()
   return useMutation({
+    // Tahrirda faqat izoh ketadi — summa va sana serverda ham oʻzgarmas
     mutationFn: (payload: api.PaymentPayload) =>
-      id ? api.updatePayment(id, payload) : api.createPayment(payload),
+      id ? api.updatePaymentNote(id, payload.note) : api.createPayment(payload),
     onSuccess: () => invalidate(queryClient),
     meta: {
       success: () => (id ? TOAST_TEXT.payment_updated : TOAST_TEXT.payment_created),
@@ -23,11 +24,12 @@ export function useSavePayment(id: string | null) {
   })
 }
 
-export function useDeletePayment() {
+/// Bekor qilish — sabab bilan. Xato forma ostida (sabab boʻsh boʻlsa)
+export function useCancelPayment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: api.deletePayment,
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => api.cancelPayment(id, reason),
     onSuccess: () => invalidate(queryClient),
-    meta: { success: () => TOAST_TEXT.payment_deleted },
+    meta: { success: () => TOAST_TEXT.payment_cancelled, inlineErrors: true },
   })
 }

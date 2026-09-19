@@ -2,7 +2,7 @@ import type { Payment } from '@/entities/payment'
 import { apiRequest } from '@/shared/api'
 
 export interface PaymentPayload {
-  patientId?: string
+  patientId: string
   date: string
   amount: number
   note: string | null
@@ -11,8 +11,10 @@ export interface PaymentPayload {
 export const createPayment = (payload: PaymentPayload) =>
   apiRequest<Payment>('/payments', { method: 'POST', body: payload })
 
-export const updatePayment = (id: string, payload: PaymentPayload) =>
-  apiRequest<Payment>(`/payments/${id}`, { method: 'PATCH', body: payload })
+/// Summa va sana oʻzgarmas — faqat izoh tuzatiladi
+export const updatePaymentNote = (id: string, note: string | null) =>
+  apiRequest<Payment>(`/payments/${id}`, { method: 'PATCH', body: { note } })
 
-export const deletePayment = (id: string) =>
-  apiRequest<{ deleted: true }>(`/payments/${id}`, { method: 'DELETE' })
+/// Oʻchirish yoʻq — bekor qilish, sabab bilan
+export const cancelPayment = (id: string, reason: string) =>
+  apiRequest<Payment>(`/payments/${id}/cancel`, { method: 'POST', body: { reason } })

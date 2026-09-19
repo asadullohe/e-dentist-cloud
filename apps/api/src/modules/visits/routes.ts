@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
-import { requireAuth } from '../../platform/guards.js'
+import { requireAuth, viewerOf } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import {
@@ -29,55 +29,59 @@ export const visitRoutes: FastifyPluginAsync<VisitRouteOpts> = async (app, opts)
   const writeVisit = { preHandler: app.requirePermission('visits.write') }
   const writeTeeth = { preHandler: app.requirePermission('teeth.write') }
 
+  // Kim koʻrayapti: `patients.all` boʻlmasa (shifokor) faqat oʻz bemorlari
+  // va oʻz tashriflari
+  const viewer = (req: FastifyRequest) => viewerOf(req, 'patients.all')
+
   app.get('/patients/:id/visits', read, async (req) => {
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.listVisits(opts.deps, clinicId, id))
+    return ok(await service.listVisits(opts.deps, clinicId, viewer(req), id))
   })
 
   app.post('/visits', writeVisit, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const input = validateInput(visitCreateSchema, req.body)
-    return ok(await service.createVisit(opts.deps, clinicId, userId, input))
+    return ok(await service.createVisit(opts.deps, clinicId, viewer(req), input))
   })
 
   app.patch('/visits/:id', writeVisit, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
     const input = validateInput(visitUpdateSchema, req.body)
-    return ok(await service.updateVisit(opts.deps, clinicId, userId, id, input))
+    return ok(await service.updateVisit(opts.deps, clinicId, viewer(req), id, input))
   })
 
   app.delete('/visits/:id', writeVisit, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    await service.removeVisit(opts.deps, clinicId, userId, id)
+    await service.removeVisit(opts.deps, clinicId, viewer(req), id)
     return ok({ deleted: true })
   })
 
   app.get('/patients/:id/teeth', read, async (req) => {
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.chart(opts.deps, clinicId, id))
+    return ok(await service.chart(opts.deps, clinicId, viewer(req), id))
   })
 
   app.post('/patients/:id/bridges', writeTeeth, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
     const input = validateInput(bridgeCreateSchema, req.body)
-    return ok(await service.createBridge(opts.deps, clinicId, userId, id, input))
+    return ok(await service.createBridge(opts.deps, clinicId, viewer(req), id, input))
   })
 
   app.delete('/bridges/:id', writeTeeth, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.removeBridge(opts.deps, clinicId, userId, id))
+    return ok(await service.removeBridge(opts.deps, clinicId, viewer(req), id))
   })
 
   app.put('/patients/:id/teeth/:tooth', writeTeeth, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id, tooth } = req.params as { id: string; tooth: string }
     const input = validateInput(toothUpdateSchema, req.body)
-    return ok(await service.setTooth(opts.deps, clinicId, userId, id, Number(tooth), input))
+    return ok(await service.setTooth(opts.deps, clinicId, viewer(req), id, Number(tooth), input))
   })
 }

@@ -311,6 +311,9 @@ export const ru: DeepPartial<Strings> = {
     not_found: 'Платёж не найден',
     amount_positive: 'Сумма должна быть больше нуля',
     date_required: 'Укажите дату',
+    already_cancelled: 'Этот платёж уже отменён',
+    cancelled_immutable: 'Отменённый платёж нельзя изменить',
+    reason_required: 'Укажите причину отмены',
   },
 
   PAYMENT_UI: {
@@ -326,8 +329,17 @@ export const ru: DeepPartial<Strings> = {
     debt: 'Долг',
     prepaid: 'Предоплата',
     no_debt: 'Долга нет',
-    delete_title: 'Удалить платёж?',
-    delete_text: 'Это действие нельзя отменить.',
+    cancel: 'Отменить платёж',
+    cancel_title: 'Отменить платёж?',
+    cancel_text:
+      'Платёж не удаляется: он остаётся в списке как отменённый и не учитывается в балансе и должниках. Укажите причину — она будет видна рядом с платежом.',
+    cancel_reason: 'Причина',
+    cancel_reason_placeholder: 'Например: сумма введена неверно, возвращено пациенту',
+    cancelled: 'Отменён',
+    cancelled_by: (name: string, date: string) => `${name || '—'} · ${date}`,
+    received_by: 'Принял',
+    edit_note: 'Изменить примечание',
+    edit_hint: 'Сумма и дата не меняются. Если ошибка — отмените платёж и введите новый.',
   },
 
   DEBTORS_UI: {
@@ -489,6 +501,7 @@ export const ru: DeepPartial<Strings> = {
     payment_created: 'Оплата принята',
     payment_updated: 'Оплата изменена',
     payment_deleted: 'Оплата удалена',
+    payment_cancelled: 'Платёж отменён',
     appointment_created: 'Приём записан',
     appointment_updated: 'Приём изменён',
     appointment_deleted: 'Приём удалён',
@@ -583,6 +596,7 @@ export const ru: DeepPartial<Strings> = {
 
   PERMISSION_LABELS: {
     'patients.read': 'Просмотр пациентов',
+    'patients.all': 'Все пациенты и визиты',
     'patients.write': 'Изменение пациентов',
     'visits.write': 'Запись визитов',
     'teeth.write': 'Зубная карта',
@@ -734,6 +748,9 @@ export const ru: DeepPartial<Strings> = {
     total: 'Итого',
     paid: 'Выплачено',
     remaining: 'Остаток',
+    received_by: 'Принял',
+    cancelled: 'Отменён',
+    cancel_reason: 'Причина отмены',
   },
 
   EXPORT_UI: {
@@ -932,6 +949,7 @@ export const ru: DeepPartial<Strings> = {
     payment_created: 'Оплата принята',
     payment_updated: 'Платёж изменён',
     payment_deleted: 'Платёж удалён',
+    payment_cancelled: 'Платёж отменён',
     service_changed: 'Прайс-лист изменён',
     patients_exported: 'Пациенты выгружены в Excel',
     patients_imported: 'Пациенты загружены из Excel',

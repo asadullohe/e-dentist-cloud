@@ -3,6 +3,7 @@
 
 import { phoneDigits, searchKey, todayISO } from '@e-dentist/shared'
 import type { Prisma } from '../../../generated/prisma/client.js'
+import type { ScopedViewer } from '../../platform/guards.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
 const SELECT = {
@@ -15,6 +16,28 @@ const SELECT = {
   doctorId: true,
   createdAt: true,
 } satisfies Prisma.PatientSelect
+
+/// Kim koʻrayapti. `all` boʻlmasa (shifokor) — faqat oʻziga aloqador
+/// bemorlar: biriktirilgan, oʻzi davolagan (tashrif), unga qabulga
+/// yozilgan, yoki hali hech kimga biriktirilmagan (Excel dan yuklangan,
+/// qabulxona shifokor tanlamagan — aks holda uni hech kim davolay olmasdi).
+/// Aks holda hammasi (egasi, qabulxona, kuzatuvchi)
+export type PatientViewer = ScopedViewer
+
+/// Koʻrinish sharti — roʻyxat, kartochka va boshqa modullar tekshiruvi
+/// bitta joydan (tz.md 14-boʻlim)
+export function visibleWhere(viewer: PatientViewer): Prisma.PatientWhereInput {
+  if (viewer.all) return {}
+  const me = viewer.userId
+  return {
+    OR: [
+      { doctorId: null },
+      { doctorId: me },
+      { visits: { some: { doctorId: me } } },
+      { appointments: { some: { doctorId: me } } },
+    ],
+  }
+}
 
 export interface PatientFields {
   fio?: string | undefined
@@ -72,6 +95,7 @@ function columnWhere(input: {
 
 export async function list(
   tx: ClinicTx,
+  viewer: PatientViewer,
   input: {
     q?: string
     fio?: string
@@ -86,7 +110,9 @@ export async function list(
     dir: 'asc' | 'desc'
   },
 ) {
-  const where: Prisma.PatientWhereInput = { AND: [searchWhere(input.q), ...columnWhere(input)] }
+  const where: Prisma.PatientWhereInput = {
+    AND: [visibleWhere(viewer), searchWhere(input.q), ...columnWhere(input)],
+  }
   const [items, total] = await Promise.all([
     tx.patient.findMany({
       where,
@@ -104,6 +130,19 @@ export async function list(
 
 export async function exists(tx: ClinicTx, id: string): Promise<boolean> {
   return (await tx.patient.count({ where: { id } })) > 0
+}
+
+/// Bemor shu koʻruvchiga koʻrinadimi (klinika + koʻrinish sharti)
+export async function isVisible(tx: ClinicTx, viewer: PatientViewer, id: string): Promise<boolean> {
+  return (await tx.patient.count({ where: { AND: [{ id }, visibleWhere(viewer)] } })) > 0
+}
+
+/// Koʻrinadigan bemorlar id si — boshqa modul oʻz roʻyxatini shu bilan
+/// filtrlaydi (qarzdorlar). `null` — hammasi koʻrinadi, filtr kerak emas
+export async function visibleIds(tx: ClinicTx, viewer: PatientViewer): Promise<Set<string> | null> {
+  if (viewer.all) return null
+  const rows = await tx.patient.findMany({ where: visibleWhere(viewer), select: { id: true } })
+  return new Set(rows.map((row) => row.id))
 }
 
 /// Excel ga chiqarish uchun — sahifalashsiz, toʻliq roʻyxat
@@ -177,12 +216,20 @@ const IMAGE_SELECT = {
   id: true,
   key: true,
   caption: true,
+  uploadedBy: true,
   createdAt: true,
 } satisfies Prisma.PatientImageSelect
 
-export function listImages(tx: ClinicTx, patientId: string) {
+/// Shifokor faqat oʻzi yuklagan rasmlarni koʻradi; kim yuklagani nomaʼlum
+/// (eski) rasmlar hammaga koʻrinadi
+export function imageVisibleWhere(viewer: PatientViewer): Prisma.PatientImageWhereInput {
+  if (viewer.all) return {}
+  return { OR: [{ uploadedBy: viewer.userId }, { uploadedBy: null }] }
+}
+
+export function listImages(tx: ClinicTx, viewer: PatientViewer, patientId: string) {
   return tx.patientImage.findMany({
-    where: { patientId },
+    where: { AND: [{ patientId }, imageVisibleWhere(viewer)] },
     select: IMAGE_SELECT,
     orderBy: { id: 'desc' },
   })
@@ -194,9 +241,10 @@ export function createImage(
   patientId: string,
   key: string,
   caption: string | null,
+  uploadedBy: string,
 ) {
   return tx.patientImage.create({
-    data: tenantScoped({ id, patientId, key, caption }),
+    data: tenantScoped({ id, patientId, key, caption, uploadedBy }),
     select: IMAGE_SELECT,
   })
 }

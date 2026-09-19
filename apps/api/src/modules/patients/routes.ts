@@ -5,7 +5,7 @@ const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.s
 /// Fayl nomida oʻzbekcha harflar bor — RFC 5987 koʻrinishi kerak
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
-import { requireAuth } from '../../platform/guards.js'
+import { requireAuth, viewerOf } from '../../platform/guards.js'
 import { attachment, ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import {
@@ -32,9 +32,19 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
   const read = { preHandler: app.requirePermission('patients.read') }
   const write = { preHandler: app.requirePermission('patients.write') }
 
+  // Kim koʻrayapti: `patients.all` boʻlmasa (shifokor) faqat oʻz bemorlari
+  const viewer = (req: FastifyRequest) => viewerOf(req, 'patients.all')
+
   app.get('/patients', read, async (req) => {
     const { clinicId } = clinicOf(req)
-    return ok(await service.list(opts.deps, clinicId, validateInput(patientListSchema, req.query)))
+    return ok(
+      await service.list(
+        opts.deps,
+        clinicId,
+        viewer(req),
+        validateInput(patientListSchema, req.query),
+      ),
+    )
   })
 
   // Ikkalasi ham `/patients/:id` dan oldin: aks holda «export» bemor
@@ -97,9 +107,9 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
   })
 
   app.get('/patients/:id', read, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.get(opts.deps, clinicId, userId, id))
+    return ok(await service.get(opts.deps, clinicId, viewer(req), id))
   })
 
   app.post('/patients', write, async (req) => {
@@ -109,20 +119,20 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
   })
 
   app.patch('/patients/:id', write, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
     const input = validateInput(patientUpdateSchema, req.body)
-    return ok(await service.update(opts.deps, clinicId, userId, id, input))
+    return ok(await service.update(opts.deps, clinicId, viewer(req), id, input))
   })
 
   app.get('/patients/:id/images', read, async (req) => {
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    return ok(await service.listImages(opts.deps, clinicId, id))
+    return ok(await service.listImages(opts.deps, clinicId, viewer(req), id))
   })
 
   app.post('/patients/:id/images', write, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
 
     const file = await req.file()
@@ -135,7 +145,7 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
         : ''
 
     return ok(
-      await service.uploadImage(opts.deps, clinicId, userId, id, {
+      await service.uploadImage(opts.deps, clinicId, viewer(req), id, {
         buffer: await file.toBuffer(),
         mimetype: file.mimetype,
         caption: caption || null,
@@ -148,7 +158,7 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
   app.get('/images/:id/file', read, async (req, reply) => {
     const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    const file = await service.imageFile(opts.deps, clinicId, id)
+    const file = await service.imageFile(opts.deps, clinicId, viewer(req), id)
 
     return (
       reply
@@ -160,16 +170,16 @@ export const patientRoutes: FastifyPluginAsync<PatientRouteOpts> = async (app, o
   })
 
   app.delete('/images/:id', write, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    await service.removeImage(opts.deps, clinicId, userId, id)
+    await service.removeImage(opts.deps, clinicId, viewer(req), id)
     return ok({ deleted: true })
   })
 
   app.delete('/patients/:id', write, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    await service.remove(opts.deps, clinicId, userId, id)
+    await service.remove(opts.deps, clinicId, viewer(req), id)
     return ok({ deleted: true })
   })
 }

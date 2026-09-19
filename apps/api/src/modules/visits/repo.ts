@@ -28,9 +28,11 @@ const BRIDGE_SELECT = {
   material: true,
 } satisfies Prisma.BridgeSelect
 
-export function listVisits(tx: ClinicTx, patientId: string) {
+/// `doctorId` berilsa — faqat shu shifokorning tashriflari (shifokor
+/// boshqaning muolajasini koʻrmaydi)
+export function listVisits(tx: ClinicTx, patientId: string, doctorId?: string) {
   return tx.visit.findMany({
-    where: { patientId },
+    where: { patientId, ...(doctorId ? { doctorId } : {}) },
     select: VISIT_SELECT,
     // Yangi tashrif tepada. Bir kunda bir nechtasi boʻlsa — kiritilgan
     // tartibda: id vaqt boʻyicha tartiblangan (uuid v7)
