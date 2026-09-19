@@ -79,7 +79,9 @@ function ChartTab({ patientId }: { patientId: string }) {
         </div>
       )}
 
-      <Card className="p-4">
+      {/* Telefonda karta ekran chetigacha va deyarli hoshiyasiz — xarita
+          kattaroq chiqadi; kompyuterda oddiy karta */}
+      <Card className="-mx-4 rounded-none border-x-0 p-1.5 sm:mx-0 sm:rounded-xl sm:border-x sm:p-4">
         <ToothChart
           teeth={chart?.teeth ?? []}
           bridges={bridges}
