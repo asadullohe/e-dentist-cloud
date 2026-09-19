@@ -309,7 +309,7 @@ Bemorning ismi kerak — busiz ishni aniqlab boʻlmaydi. Qolgan hamma narsa yopi
 | Rang | VITA Classical: A1–A4, B1–B4, C1–C4, D2–D4 |
 | Muddat | Topshirish sanasi. Oʻtib ketgani roʻyxatda qizil |
 | Texnik narxi | Klinika texnikka toʻlaydigan summa |
-| Bemor narxi | Tashrifga yoziladi, bemor hisobiga tushadi |
+| Bemor narxi | Tashrifga yoziladi, bemor hisobiga tushadi. Naryad **topshirilganda tashrif formasi ochiladi** _(qaror 19/09/2026)_: `POST /lab-orders/:id/deliver` bitta tranzaksiyada tashrif (`visits.lab_order_id`, `lab_cost` = texnik narxi snapshot) + «topshirildi» + tish xaritasi + xarajat. Tashrif avvalroq yozilgan boʻlsa — «Tashrifsiz topshirish» (`PATCH /status`) |
 | Izoh | Erkin matn |
 
 ### Holatlar
@@ -326,6 +326,7 @@ Uchta holat: **Berildi** → **Tayyor** → **Topshirildi**. Texnik «Tayyor» n
 
 - **Tish xaritasi.** Naryad «Topshirildi» boʻlganda oʻsha tishlar avtomatik «koronka» holatiga oʻtadi va materiali yoziladi. Shifokor qoʻlda ikkinchi marta kiritmaydi
 - **Xarajatlar.** Texnik narxi «Texnik ishlari» turkumida xarajat sifatida yoziladi. Busiz hisobotdagi sof foyda yolgʻon chiqadi — protez ishlarida texnikning ulushi katta
+- **Shifokor ulushi texnik narxidan keyin.** Protez tashrifida foiz `(narx − texnik narxi)` dan _(qaror 19/09/2026)_: koronka 1 800 000, texnik 600 000, 40% → shifokorga 480 000 (1 200 000 dan), texnikka 600 000, klinikaga 720 000. Texnik narxi ishdan qimmat boʻlsa ulush 0. Tashrif narxi tahrirlansa yoki oy «qayta hisoblansa» ham shu qoida
 - **Bemor kartochkasi.** Yangi «Texnik ishlari» boʻlimi: shu bemorga qilingan barcha naryadlar
 
 ### Yangi ruxsatlar
@@ -693,7 +694,7 @@ Xodimda `pay_type` enum yoʻq, ikkita son bor: `salary_amount` (oylik, soʻm) va
 | Shifokor 50/50 | 0 | 50 |
 | Shifokor «baza + foiz» | 2 000 000 | 20 |
 
-Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi.
+Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi. Protez tashrifida ulush `(narx − texnik narxi) × foiz` (7-boʻlim) — ishlar roʻyxatida texnik narxi alohida koʻrinadi.
 
 Oylik **hisob ochilgan oydan** boshlab sanaladi (`users.created_at`) — bugun qoʻshilgan administratorga oʻtgan yil uchun oylik chiqmasin.
 

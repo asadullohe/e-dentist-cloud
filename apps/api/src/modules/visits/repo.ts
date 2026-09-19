@@ -12,6 +12,8 @@ const VISIT_SELECT = {
   tooth: true,
   serviceId: true,
   price: true,
+  labOrderId: true,
+  labCost: true,
   note: true,
 } satisfies Prisma.VisitSelect
 
@@ -65,6 +67,8 @@ export function createVisit(
     price: number
     doctorPercent: number
     doctorShare: number
+    labOrderId?: string | null
+    labCost?: number
     note?: string | null
   },
 ) {
@@ -190,6 +194,7 @@ export function listByDoctor(tx: ClinicTx, doctorId: string, from: Date, to: Dat
       treatment: true,
       tooth: true,
       price: true,
+      labCost: true,
       doctorPercent: true,
       doctorShare: true,
     },
@@ -205,17 +210,17 @@ export async function setSharesByDoctor(
   doctorId: string,
   from: Date,
   to: Date,
-  shareFor: (price: number) => number,
+  shareFor: (price: number, labCost: number) => number,
   percent: number,
 ): Promise<number> {
   const rows = await tx.visit.findMany({
     where: { doctorId, date: { gte: from, lte: to } },
-    select: { id: true, price: true },
+    select: { id: true, price: true, labCost: true },
   })
   for (const row of rows) {
     await tx.visit.update({
       where: { id: row.id },
-      data: { doctorPercent: percent, doctorShare: shareFor(row.price) },
+      data: { doctorPercent: percent, doctorShare: shareFor(row.price, row.labCost) },
     })
   }
   return rows.length

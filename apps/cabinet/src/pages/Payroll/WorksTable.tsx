@@ -61,7 +61,14 @@ export function WorksTable({ month, userId }: WorksTableProps) {
             </TableCell>
             <TableCell>{row.treatment}</TableCell>
             <TableCell className="tabular-nums">{row.tooth ?? '—'}</TableCell>
-            <TableCell className="text-right tabular-nums">{formatSom(row.price)}</TableCell>
+            <TableCell className="text-right tabular-nums">
+              {formatSom(row.price)}
+              {row.labCost > 0 && (
+                <span className="text-muted-foreground block text-xs">
+                  {PAYROLL_UI.lab_cost}: −{formatSom(row.labCost)}
+                </span>
+              )}
+            </TableCell>
             <TableCell className="text-right tabular-nums">
               {formatSom(row.share)}
               <span className="text-muted-foreground ml-1 text-xs">{row.percent}%</span>

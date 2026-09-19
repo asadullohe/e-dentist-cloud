@@ -1,4 +1,4 @@
-import { CARD_UI, LAB_UI } from '@e-dentist/shared'
+import { CARD_UI, LAB_MATERIAL_LABELS, LAB_UI, LAB_WORK_TYPE_LABELS } from '@e-dentist/shared'
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -22,6 +22,7 @@ import {
   useDeleteLabOrder,
   useSetLabStatus,
 } from '@/features/lab-form'
+import { VisitFormDialog } from '@/features/visit-form'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,6 +67,9 @@ export function Lab() {
   const [editing, setEditing] = useState<LabOrder | undefined>(undefined)
   const [returning, setReturning] = useState<LabOrder | null>(null)
   const [deleting, setDeleting] = useState<LabOrder | null>(null)
+  // «Topshirildi» — tashrif formasi: bemor narxi tashrif boʻlib yoziladi,
+  // texnik narxi shifokor ulushidan ayiriladi (qaror 19/09/2026)
+  const [delivering, setDelivering] = useState<LabOrder | null>(null)
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'dueDate', desc: false }])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -78,7 +82,7 @@ export function Lab() {
       canWrite,
       canSeePrice,
       onReady: (order) => void setLabStatus({ id: order.id, status: 'ready' }),
-      onDelivered: (order) => void setLabStatus({ id: order.id, status: 'delivered' }),
+      onDelivered: setDelivering,
       onReturn: setReturning,
       onEdit: (order) => {
         setEditing(order)
@@ -146,6 +150,25 @@ export function Lab() {
       />
 
       <ReturnDialog order={returning} onOpenChange={(open) => !open && setReturning(null)} />
+
+      {delivering && (
+        <VisitFormDialog
+          open
+          onOpenChange={(open) => !open && setDelivering(null)}
+          patientId={delivering.patientId}
+          labOrder={{
+            id: delivering.id,
+            doctorId: delivering.doctorId,
+            // «Koronka · Sirkoniy — 11, 12»: shifokor xohlasa oʻzgartiradi
+            treatment: `${LAB_WORK_TYPE_LABELS[delivering.workType]} · ${LAB_MATERIAL_LABELS[delivering.material]} — ${delivering.teeth.join(', ')}`,
+            techPrice: delivering.techPrice,
+          }}
+          onDeliverWithoutVisit={async () => {
+            await setLabStatus({ id: delivering.id, status: 'delivered' })
+            setDelivering(null)
+          }}
+        />
+      )}
 
       <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <AlertDialogContent>

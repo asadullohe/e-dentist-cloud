@@ -148,6 +148,82 @@ describe('holatlar', () => {
     expect(r.statusCode).toBe(400)
   })
 
+  // Topshirish tashrif bilan: bemor narxi tashrifga, shifokor ulushi
+  // (narx − texnik narxi) dan (qaror 19/09/2026)
+  it('tashrif bilan topshirish: ulush texnik narxini ayirib hisoblanadi', async () => {
+    const roles = await h.ownerDb.role.findMany({ where: { clinicId: h.clinicId } })
+    const doctorRole = roles.find((role) => role.template === 'shifokor')
+    const doctor = await call('POST', '/api/staff', {
+      email: `topshirish-shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Topshirish Shifokori',
+      roleId: doctorRole?.id,
+      password: 'juda-yaxshi-parol',
+      payPercent: 40,
+    })
+    const doctorId = doctor.json().data.id as string
+
+    const id = (await newOrder({ techPrice: 600_000, teeth: [11, 12] })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+
+    // Tayyor boʻlmagan naryadni topshirib boʻlmaydi
+    const early = (await newOrder()).json().data.id
+    expect(
+      (
+        await call('POST', `/api/lab-orders/${early}/deliver`, {
+          treatment: 'Koronka',
+          price: 100,
+        })
+      ).statusCode,
+    ).toBe(400)
+
+    const r = await call('POST', `/api/lab-orders/${id}/deliver`, {
+      treatment: 'Sirkoniy koronka — 11, 12',
+      price: 1_800_000,
+      doctorId,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.order.status).toBe('delivered')
+    const visit = r.json().data.visit
+    expect(visit.labOrderId).toBe(id)
+    expect(visit.labCost).toBe(600_000)
+    expect(visit.doctorId).toBe(doctorId)
+
+    const row = await h.ownerDb.visit.findUnique({ where: { id: visit.id } })
+    // (1 800 000 − 600 000) × 40% — toʻliq narxdan emas
+    expect(row?.doctorShare).toBe(480_000)
+    expect(row?.doctorPercent).toBe(40)
+
+    // Xarajat (texnik narxi) ham yozilgan — eski oqim buzilmadi
+    const expenses = await h.ownerDb.expense.findMany({
+      where: { clinicId: h.clinicId, category: 'lab', amount: 600_000 },
+    })
+    expect(expenses.length).toBeGreaterThan(0)
+  })
+
+  it('narx tahrirlansa ulush yana texnik narxini ayirib sanaladi', async () => {
+    const roles = await h.ownerDb.role.findMany({ where: { clinicId: h.clinicId } })
+    const doctorRole = roles.find((role) => role.template === 'shifokor')
+    const doctor = await call('POST', '/api/staff', {
+      email: `topshirish-shifokor2-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Topshirish Shifokori 2',
+      roleId: doctorRole?.id,
+      password: 'juda-yaxshi-parol',
+      payPercent: 50,
+    })
+    const doctorId = doctor.json().data.id as string
+    const id = (await newOrder({ techPrice: 200_000 })).json().data.id
+    await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })
+    const r = await call('POST', `/api/lab-orders/${id}/deliver`, {
+      treatment: 'Koronka',
+      price: 1_000_000,
+      doctorId,
+    })
+    const visitId = r.json().data.visit.id
+    await call('PATCH', `/api/visits/${visitId}`, { price: 1_200_000 })
+    const row = await h.ownerDb.visit.findUnique({ where: { id: visitId } })
+    expect(row?.doctorShare).toBe(500_000)
+  })
+
   it('texnik topshirilganini belgilay olmaydi', async () => {
     const id = (await newOrder()).json().data.id
     await asTech('PATCH', `/api/lab-orders/${id}/status`, { status: 'ready' })

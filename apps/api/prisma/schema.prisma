@@ -249,13 +249,19 @@ model Visit {
   /// qayta hisoblanmaydi; narx tahrirlansa saqlangan foiz bilan qayta sanaladi
   doctorPercent Int  @default(0) @map("doctor_percent")
   doctorShare   Int  @default(0) @map("doctor_share")
+  /// Protez ishi: naryad topshirilganda yozilgan tashrif. Texnik narxi
+  /// (snapshot) shifokor ulushidan ayiriladi — foiz (narx − texnik narxi)
+  /// dan (qaror 19/09/2026, tz.md 7-boʻlim)
+  labOrderId String? @map("lab_order_id") @db.Uuid
+  labCost    Int     @default(0) @map("lab_cost")
   note      String?
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic  Clinic   @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  patient Patient  @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  service Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  clinic   Clinic    @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  service  Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  labOrder LabOrder? @relation(fields: [labOrderId], references: [id], onDelete: SetNull)
 
   @@index([clinicId, patientId, date])
   @@index([clinicId, date])
@@ -482,6 +488,8 @@ model LabOrder {
 
   clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  /// Topshirilganda yozilgan tashrif(lar)
+  visits  Visit[]
 
   @@index([clinicId, status, dueDate])
   @@index([clinicId, techId, status])

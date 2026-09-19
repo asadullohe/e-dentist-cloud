@@ -3,6 +3,7 @@ import {
   formatDate,
   formatMoney,
   formatSom,
+  LAB_UI,
   moneyDigits,
   parseDisplayDate,
   SCHEDULE_UI,
@@ -44,7 +45,7 @@ import {
   SelectValue,
   Textarea,
 } from '@/shared/ui'
-import { useCompleteAppointment, useSaveVisit } from './hooks'
+import { useCompleteAppointment, useDeliverLabOrder, useSaveVisit } from './hooks'
 import { EMPTY_VISIT, type VisitValues, visitSchema } from './model'
 
 /// Qabulni yakunlash rejimi: tashrif shu qabulga yoziladi, sana va shifokor
@@ -56,6 +57,17 @@ export interface CompletingAppointment {
   date: string
 }
 
+/// Naryadni topshirish rejimi: tashrif shu naryadga bogʻlanadi, sana bugun,
+/// texnik narxi shifokor ulushidan ayiriladi (qaror 19/09/2026)
+export interface DeliveringLabOrder {
+  id: string
+  doctorId: string
+  /// Oldindan toʻldiriladigan muolaja nomi: ish turi, material, tishlar
+  treatment: string
+  /// `lab.cost` boʻlmasa koʻrinmaydi — server baribir ayiradi
+  techPrice: number | undefined
+}
+
 interface VisitFormDialogProps {
   open: boolean
   onOpenChange(open: boolean): void
@@ -64,6 +76,10 @@ interface VisitFormDialogProps {
   visit?: Visit | undefined
   /// Berilsa — «Qabulni yakunlash»: saqlash qabulni ham yakunlaydi
   appointment?: CompletingAppointment | undefined
+  /// Berilsa — «Naryadni topshirish»: saqlash naryadni ham topshiradi
+  labOrder?: DeliveringLabOrder | undefined
+  /// Naryad rejimida: tashrif avvalroq yozilgan boʻlsa — tashrifsiz topshirish
+  onDeliverWithoutVisit?(): void
 }
 
 /// Tashrif sanasi — qabul kuni; kelajakdagi qabul bugun yakunlansa — bugun
@@ -74,7 +90,10 @@ const visitDateOf = (appointment: CompletingAppointment) =>
 function toValues(
   visit: Visit | undefined,
   appointment: CompletingAppointment | undefined,
+  labOrder: DeliveringLabOrder | undefined,
 ): VisitValues {
+  if (labOrder)
+    return { ...EMPTY_VISIT, date: formatDate(todayISO()), treatment: labOrder.treatment }
   if (appointment) return { ...EMPTY_VISIT, date: formatDate(visitDateOf(appointment)) }
   if (!visit) return { ...EMPTY_VISIT, date: formatDate(new Date().toISOString().slice(0, 10)) }
   return {
@@ -92,10 +111,13 @@ export function VisitFormDialog({
   patientId,
   visit,
   appointment,
+  labOrder,
+  onDeliverWithoutVisit,
 }: VisitFormDialogProps) {
   const save = useSaveVisit(visit?.id ?? null)
   const complete = useCompleteAppointment()
-  const isPending = save.isPending || complete.isPending
+  const deliver = useDeliverLabOrder()
+  const isPending = save.isPending || complete.isPending || deliver.isPending
   const { data: services } = useServices()
   const { data: doctors } = useDoctors()
   const { data: session } = useSession()
@@ -115,23 +137,24 @@ export function VisitFormDialog({
   // shunday qiladi, tanlov koʻrsatilmaydi (11-bosqich)
   const seesAll = useHasPermission()('patients.all')
   // Yakunlashda — qabulning shifokori birinchi navbatda
-  const defaultDoctorId = appointment?.doctorId ?? patientCard?.doctorId ?? selfId
+  const defaultDoctorId =
+    labOrder?.doctorId ?? appointment?.doctorId ?? patientCard?.doctorId ?? selfId
 
   const form = useForm<VisitValues>({
     resolver: zodResolver(visitSchema),
-    defaultValues: toValues(visit, appointment),
+    defaultValues: toValues(visit, appointment, labOrder),
   })
 
   // Oyna qayta ochilganda maydonlar tanlangan tashrifga moslanadi
   useEffect(() => {
     if (open) {
-      form.reset(toValues(visit, appointment))
+      form.reset(toValues(visit, appointment, labOrder))
       setFormError('')
       setServiceId(visit?.serviceId ?? null)
       setDoctorId(visit?.doctorId ?? defaultDoctorId)
       setDoctorError('')
     }
-  }, [open, visit, appointment, form, defaultDoctorId])
+  }, [open, visit, appointment, labOrder, form, defaultDoctorId])
 
   async function onSubmit(values: VisitValues) {
     setFormError('')
@@ -145,7 +168,10 @@ export function VisitFormDialog({
       note: values.note || null,
     }
     try {
-      if (appointment) {
+      if (labOrder) {
+        // Sana bugun, bemor naryaddan — server oʻzi qoʻyadi
+        await deliver.mutateAsync({ labOrderId: labOrder.id, ...payload })
+      } else if (appointment) {
         // Sana qabuldan — server oʻzi qoʻyadi
         await complete.mutateAsync({ appointmentId: appointment.id, ...payload })
       } else {
@@ -167,8 +193,21 @@ export function VisitFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {appointment ? SCHEDULE_UI.complete : visit ? CARD_UI.edit_visit : CARD_UI.add_visit}
+            {labOrder
+              ? LAB_UI.deliver_title
+              : appointment
+                ? SCHEDULE_UI.complete
+                : visit
+                  ? CARD_UI.edit_visit
+                  : CARD_UI.add_visit}
           </DialogTitle>
+          {labOrder && (
+            <DialogDescription>
+              {LAB_UI.deliver_hint(
+                labOrder.techPrice === undefined ? '…' : formatSom(labOrder.techPrice),
+              )}
+            </DialogDescription>
+          )}
           {appointment && (
             <DialogDescription>
               {SCHEDULE_UI.complete_hint(formatDate(visitDateOf(appointment)))}
@@ -179,8 +218,8 @@ export function VisitFormDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
             <div className="grid grid-cols-2 gap-3">
-              {/* Yakunlashda sana qabulniki — maydon koʻrsatilmaydi */}
-              {!appointment && (
+              {/* Yakunlashda sana qabulniki, topshirishda bugun — maydon koʻrsatilmaydi */}
+              {!appointment && !labOrder && (
                 <FormField
                   control={form.control}
                   name="date"
@@ -312,12 +351,25 @@ export function VisitFormDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 {CARD_UI.cancel}
               </Button>
+              {labOrder && onDeliverWithoutVisit && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  title={LAB_UI.deliver_without_visit_hint}
+                  disabled={isPending}
+                  onClick={onDeliverWithoutVisit}
+                >
+                  {LAB_UI.deliver_without_visit}
+                </Button>
+              )}
               <Button type="submit" disabled={isPending}>
                 {isPending
                   ? UI_TEXT.loading
-                  : appointment
-                    ? SCHEDULE_UI.complete_submit
-                    : CARD_UI.save}
+                  : labOrder
+                    ? LAB_UI.deliver_submit
+                    : appointment
+                      ? SCHEDULE_UI.complete_submit
+                      : CARD_UI.save}
               </Button>
             </DialogFooter>
           </form>

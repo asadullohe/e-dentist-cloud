@@ -214,6 +214,8 @@ export function visitsOf(
       treatment: row.treatment,
       tooth: row.tooth,
       price: row.price,
+      // Protez ishi: ulush (narx − texnik narxi) dan — shifokor buni koʻrsin
+      labCost: row.labCost,
       percent: row.doctorPercent,
       share: row.doctorShare,
     }))

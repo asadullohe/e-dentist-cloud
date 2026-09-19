@@ -21,7 +21,13 @@ import * as expenses from '../expenses/service.js'
 import * as patients from '../patients/service.js'
 import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
-import type { LabCreateInput, LabListInput, LabReturnInput, LabUpdateInput } from './schema.js'
+import type {
+  LabCreateInput,
+  LabDeliverInput,
+  LabListInput,
+  LabReturnInput,
+  LabUpdateInput,
+} from './schema.js'
 
 export interface LabDeps {
   db: Db
@@ -321,6 +327,52 @@ export function setStatus(
     })
     const [view] = await toView(tx, [updated], userId, permissions)
     return view as LabOrderView
+  })
+}
+
+/// Topshirish — tashrif bilan, bitta tranzaksiyada (qaror 19/09/2026):
+/// bemor narxi tashrifga yoziladi, shifokor ulushi (narx − texnik narxi)
+/// dan hisoblanadi, naryad «topshirildi» boʻladi, tish xaritasi va xarajat
+/// yoziladi. Tashrifsiz topshirish PATCH /status orqali qoladi — tashrif
+/// avvalroq (masalan qabulda) yozilgan boʻlsa
+export function deliver(
+  deps: LabDeps,
+  clinicId: string,
+  userId: string,
+  permissions: readonly Permission[],
+  id: string,
+  input: LabDeliverInput,
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const row = await loadForDoctor(tx, id, userId, permissions)
+    if (row.status !== 'ready') throw errors.badRequest(LAB_TEXT.status_flow)
+    if (!permissions.includes('lab.write')) throw errors.forbidden()
+
+    // Tashrif: shifokor — berilgani, boʻlmasa naryadni yozgan shifokor.
+    // Cheklangan koʻruvchi (patients.all yoʻq) uchun visits oʻzi majburlaydi
+    const visit = await visits.createTx(
+      tx,
+      { userId, all: permissions.includes('patients.all') },
+      {
+        ...input,
+        doctorId: input.doctorId ?? row.doctorId,
+        patientId: row.patientId,
+        date: todayISO(),
+      },
+      { labOrderId: row.id, labCost: row.techPrice },
+    )
+
+    const updated = await repo.update(tx, id, { status: 'delivered', deliveredAt: new Date() })
+    await onDelivered(tx, updated, userId)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.lab_status_changed,
+      entity: 'lab_order',
+      entityId: id,
+      meta: { status: 'delivered', visitId: visit.id },
+    })
+    const [view] = await toView(tx, [updated], userId, permissions)
+    return { order: view as LabOrderView, visit }
   })
 }
 

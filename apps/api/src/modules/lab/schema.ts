@@ -1,6 +1,7 @@
 import { LAB_TEXT, VALIDATION_TEXT, VITA_SHADES } from '@e-dentist/shared'
 import { isToothNo } from '@e-dentist/teeth'
 import { z } from 'zod'
+import { visitCreateSchema } from '../visits/service.js'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -84,7 +85,13 @@ export const labListSchema = z.object({
   patientId: z.string().uuid().optional(),
 })
 
+/// Topshirish — tashrif bilan (tz.md 7-boʻlim): bemor narxi tashrifga
+/// yoziladi, sana bugun, bemor naryaddan. Maydonlar visits sxemasidan —
+/// xato matnlari bir xil
+export const labDeliverSchema = visitCreateSchema.omit({ patientId: true, date: true })
+
 export type LabCreateInput = z.infer<typeof labCreateSchema>
+export type LabDeliverInput = z.infer<typeof labDeliverSchema>
 export type LabUpdateInput = z.infer<typeof labUpdateSchema>
 export type LabStatusInput = z.infer<typeof labStatusSchema>
 export type LabReturnInput = z.infer<typeof labReturnSchema>

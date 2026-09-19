@@ -483,6 +483,8 @@ export const PAYROLL_UI = {
   treatment: 'Muolaja',
   tooth: 'Tish',
   price: 'Narx',
+  // Protez ishi: foiz (narx − texnik narxi) dan
+  lab_cost: 'Texnik narxi',
   show_works: 'Ishlarini koʻrish',
   // Qayta hisoblash
   recalculate: 'Qayta hisoblash',
@@ -739,6 +741,13 @@ export const LAB_UI = {
   returns: (n: number) => `${n} marta qaytgan`,
   mark_ready: 'Tayyor',
   mark_delivered: 'Topshirildi',
+  // Topshirish = tashrif yozish (qaror 19/09/2026)
+  deliver_title: 'Ishni topshirish — tashrif',
+  deliver_hint: (labCost: string) =>
+    `Bemor narxi bugungi sana bilan tashrif sifatida yoziladi. Texnik narxi (${labCost}) shifokor ulushidan ayiriladi.`,
+  deliver_submit: 'Topshirish va tashrif yozish',
+  deliver_without_visit: 'Tashrifsiz topshirish',
+  deliver_without_visit_hint: 'Tashrif avvalroq yozilgan boʻlsa (masalan, oldindan toʻlovda)',
   mark_returned: 'Qaytarish',
   return_title: 'Naryadni qaytarish',
   return_reason: 'Sababi',

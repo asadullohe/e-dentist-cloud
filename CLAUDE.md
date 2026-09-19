@@ -52,7 +52,9 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   shifokor faqat biriktirilgan / davolagan / qabulga yozilgan / biriktirilmagan
   bemorlarni, kartochkada oʻz tashriflari va oʻz rasmlarini koʻradi; tish
   xaritasi umumiy. Shifokor toʻlov qabul qiladi. **Toʻlov oʻchirilmaydi** —
-  sabab bilan bekor qilinadi, summa/sana tahrirlanmaydi
+  sabab bilan bekor qilinadi, summa/sana tahrirlanmaydi. Naryad
+  **topshirilganda tashrif yoziladi**, shifokor ulushi
+  `(narx − texnik narxi) × foiz`
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar
