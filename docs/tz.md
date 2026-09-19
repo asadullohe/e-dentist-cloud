@@ -309,7 +309,7 @@ Bemorning ismi kerak — busiz ishni aniqlab boʻlmaydi. Qolgan hamma narsa yopi
 | Rang | VITA Classical: A1–A4, B1–B4, C1–C4, D2–D4 |
 | Muddat | Topshirish sanasi. Oʻtib ketgani roʻyxatda qizil |
 | Texnik narxi | Klinika texnikka toʻlaydigan summa |
-| Bemor narxi | Tashrifga yoziladi, bemor hisobiga tushadi |
+| Bemor narxi | Tashrifga yoziladi, bemor hisobiga tushadi. Naryad **topshirilganda tashrif formasi ochiladi** _(qaror 19/09/2026)_: `POST /lab-orders/:id/deliver` bitta tranzaksiyada tashrif (`visits.lab_order_id`, `lab_cost` = texnik narxi snapshot) + «topshirildi» + tish xaritasi + xarajat. Tashrif avvalroq yozilgan boʻlsa — «Tashrifsiz topshirish» (`PATCH /status`) |
 | Izoh | Erkin matn |
 
 ### Holatlar
@@ -326,6 +326,7 @@ Uchta holat: **Berildi** → **Tayyor** → **Topshirildi**. Texnik «Tayyor» n
 
 - **Tish xaritasi.** Naryad «Topshirildi» boʻlganda oʻsha tishlar avtomatik «koronka» holatiga oʻtadi va materiali yoziladi. Shifokor qoʻlda ikkinchi marta kiritmaydi
 - **Xarajatlar.** Texnik narxi «Texnik ishlari» turkumida xarajat sifatida yoziladi. Busiz hisobotdagi sof foyda yolgʻon chiqadi — protez ishlarida texnikning ulushi katta
+- **Shifokor ulushi texnik narxidan keyin.** Protez tashrifida foiz `(narx − texnik narxi)` dan _(qaror 19/09/2026)_: koronka 1 800 000, texnik 600 000, 40% → shifokorga 480 000 (1 200 000 dan), texnikka 600 000, klinikaga 720 000. Texnik narxi ishdan qimmat boʻlsa ulush 0. Tashrif narxi tahrirlansa yoki oy «qayta hisoblansa» ham shu qoida
 - **Bemor kartochkasi.** Yangi «Texnik ishlari» boʻlimi: shu bemorga qilingan barcha naryadlar
 
 ### Yangi ruxsatlar
@@ -675,7 +676,7 @@ Qabulxona bemorni yaratganda uni shifokorga yoʻnaltiradi — tizimda buning oʻ
 - **Biriktirilgan shifokor** — `patients.doctor_id`, ixtiyoriy. Bemor oynasida tanlanadi, roʻyxatda ustun va filtr, kartochka sarlavhasida ism. Tashrif va qabulda **sukut** shu, lekin har safar boshqasini tanlash mumkin (shifokor taʼtilda)
 - **Qabulda shifokor** — `appointments.doctor_id` endi qabul formasida ham: berilmasa bemorniki olinadi; kunlik roʻyxatda ism, shifokor boʻyicha filtr
 - **Kabinetdan navbatga qoʻshish** — `POST /queue` (`queue.manage`): bemor + shifokor → bugungi navbat, darhol `waiting` (qabulxona oʻzi qoʻshdi, tasdiqlash shart emas). Yangi bemor oynasida «Bugun navbatga qoʻshish» belgisi — sukut **yoqilgan** (bemor odatda oldida turadi); mavjud bemorga roʻyxat va kartochkadan alohida amal. Bir bemor bir kunda ikki marta qoʻshilmaydi. «Navbat yozuvi ochiq» sozlamasi faqat ochiq (QR) sahifaga tegishli — kabinetdan qoʻshishga tegmaydi
-- **Shifokor faqat oʻz bemorlarini koʻradi** _(qaror 19/09/2026)_ — `patients.all` ruxsati: egasi, qabulxona (pulni oladi, navbatni yuritadi) va kuzatuvchi (hisobot) shablonida bor, shifokorda yoʻq. U boʻlmasa bemor koʻrinadi, agar: unga **biriktirilgan**, u **davolagan** (tashrifi bor), unga **qabulga/navbatga yozilgan**, yoki **hech kimga biriktirilmagan** (Excel dan yuklangan, shifokor tanlanmagan — aks holda uni hech kim davolay olmasdi). Kartochkada faqat **oʻz tashriflari** (boshqa shifokorning muolajasi va narxi koʻrinmaydi) va **oʻzi yuklagan rasmlari** (kim yuklagani nomaʼlum eski rasmlar hammaga); **tish xaritasi umumiy** — bu bemorning ogʻzi, ikkinchi shifokor 16-tishda plomba borligini bilishi kerak. Tashrif doim oʻz nomidan yoziladi (boshqa shifokor berilsa ham), boshqaning tashrifi tahrir/oʻchirishda «topilmadi». Roʻyxat, qidiruv, «Bemorlar» soni, qarzdorlar — shu doirada. Naryadlar (texnik ishlari) umumiy qoladi
+- **Shifokor faqat oʻz bemorlarini koʻradi** _(qaror 19/09/2026)_ — `patients.all` ruxsati: egasi, qabulxona (pulni oladi, navbatni yuritadi) va kuzatuvchi (hisobot) shablonida bor, shifokorda yoʻq. U boʻlmasa bemor koʻrinadi, agar: unga **biriktirilgan**, u **davolagan** (tashrifi bor), unga **qabulga/navbatga yozilgan**, yoki **hech kimga biriktirilmagan** (Excel dan yuklangan, shifokor tanlanmagan — aks holda uni hech kim davolay olmasdi). Kartochkada faqat **oʻz tashriflari** (boshqa shifokorning muolajasi va narxi koʻrinmaydi) va **oʻzi yuklagan rasmlari** (kim yuklagani nomaʼlum eski rasmlar hammaga); **tish xaritasi umumiy** — bu bemorning ogʻzi, ikkinchi shifokor 16-tishda plomba borligini bilishi kerak. Tashrif doim oʻz nomidan yoziladi (boshqa shifokor berilsa ham), boshqaning tashrifi tahrir/oʻchirishda «topilmadi». Roʻyxat, qidiruv, «Bemorlar» soni, qarzdorlar — shu doirada. Naryadlar ham: shifokor faqat oʻzi yozgan naryadlarni koʻradi (texnik esa oʻziga biriktirilganlarini — bu oldingidek)
 - **Shifokor faqat oʻz jadvalini koʻradi** _(qaror 17/09/2026)_ — `schedule.all` ruxsati: egasi va qabulxona shablonida bor, shifokorda yoʻq. U boʻlmasa `GET /appointments` faqat `doctor_id = oʻzi` qatorlarini qaytaradi (`doctorId` filtri eʼtiborga olinmaydi), yangi qabul doim oʻziga yoziladi (formada shifokor tanlovi yoʻq), boshqaning qabuli tahrir/yakunlash/oʻchirishda «topilmadi». Bosh sahifadagi «bugungi qabullar» ham shu soʻrovdan — shifokorga oʻziniki chiqadi
 - **Yakunlash = tashrif yozish** — «Yakunlandi» holati holat roʻyxatidan qoʻyilmaydi: jadvalda ham, navbat taxtasida ham u tashrif formasini ochadi (muolaja, tish, narx; sana va shifokor qabuldan, oʻzgartirish mumkin). `POST /appointments/:id/complete` bitta tranzaksiyada tashrifni yozadi (shifokor ulushi snapshot bilan), qabulni `done`, navbat yozuvini `finished` qiladi. `PATCH {status: done}` va navbatdagi `done` amali rad etiladi — qilingan ish yozilmay qabul yakunlanmaydi. Kelajakdagi qabul bugun yakunlansa tashrif sanasi bugun. Ruxsat — ilgari «Yakunlandi» qoʻya olganlar: `schedule.write` yoki `queue.manage` (qabulxona pulni oladi, narxni biladi)
 
@@ -693,7 +694,7 @@ Xodimda `pay_type` enum yoʻq, ikkita son bor: `salary_amount` (oylik, soʻm) va
 | Shifokor 50/50 | 0 | 50 |
 | Shifokor «baza + foiz» | 2 000 000 | 20 |
 
-Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi.
+Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi. Protez tashrifida ulush `(narx − texnik narxi) × foiz` (7-boʻlim) — ishlar roʻyxatida texnik narxi alohida koʻrinadi.
 
 Oylik **hisob ochilgan oydan** boshlab sanaladi (`users.created_at`) — bugun qoʻshilgan administratorga oʻtgan yil uchun oylik chiqmasin.
 

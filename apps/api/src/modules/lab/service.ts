@@ -21,7 +21,13 @@ import * as expenses from '../expenses/service.js'
 import * as patients from '../patients/service.js'
 import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
-import type { LabCreateInput, LabListInput, LabReturnInput, LabUpdateInput } from './schema.js'
+import type {
+  LabCreateInput,
+  LabDeliverInput,
+  LabListInput,
+  LabReturnInput,
+  LabUpdateInput,
+} from './schema.js'
 
 export interface LabDeps {
   db: Db
@@ -147,6 +153,28 @@ async function load(tx: ClinicTx, id: string): Promise<repo.LabRow> {
   return row
 }
 
+/// Shifokor (lab.write bor, patients.all yoʻq) faqat oʻzi yozgan naryadlarni
+/// koʻradi — boshqa shifokorning bemori va ishi unga koʻrinmaydi (tz.md
+/// 14-boʻlim, 11-bosqich). Texnik (lab.own) oʻz naryadlarini texnik sifatida
+/// koʻradi, bu tekshiruv unga tegmaydi
+function ownDoctorOnly(permissions: readonly Permission[]): boolean {
+  return permissions.includes('lab.write') && !permissions.includes('patients.all')
+}
+
+/// Yuklab, shifokorning oʻziniki ekanini tekshiradi
+async function loadForDoctor(
+  tx: ClinicTx,
+  id: string,
+  userId: string,
+  permissions: readonly Permission[],
+): Promise<repo.LabRow> {
+  const row = await load(tx, id)
+  if (ownDoctorOnly(permissions) && row.doctorId !== userId) {
+    throw errors.notFound(LAB_TEXT.not_found)
+  }
+  return row
+}
+
 async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
   if (!(await patients.existsInClinic(tx, patientId))) {
     throw errors.notFound(PATIENT_TEXT.not_found)
@@ -167,12 +195,15 @@ export function list(
 ): Promise<LabOrderView[]> {
   // `lab.write` yoʻq boʻlsa — texnik: faqat oʻziga biriktirilganlari
   const techId = permissions.includes('lab.write') ? input.techId : userId
+  // Shifokor — faqat oʻzi yozganlari
+  const doctorId = ownDoctorOnly(permissions) ? userId : undefined
 
   return withClinic(deps.db, clinicId, async (tx) => {
     const rows = await repo.list(tx, {
       ...(input.status ? { status: input.status } : {}),
       ...(techId ? { techId } : {}),
       ...(input.patientId ? { patientId: input.patientId } : {}),
+      ...(doctorId ? { doctorId } : {}),
     })
     return sortOverdueFirst(await toView(tx, rows, userId, permissions))
   })
@@ -228,7 +259,7 @@ export function update(
   }
 
   return withClinic(deps.db, clinicId, async (tx) => {
-    await load(tx, id)
+    await loadForDoctor(tx, id, userId, permissions)
     await assertTech(tx, input.techId)
 
     const updated = await repo.update(tx, id, {
@@ -263,7 +294,7 @@ export function setStatus(
   status: LabStatus,
 ): Promise<LabOrderView> {
   return withClinic(deps.db, clinicId, async (tx) => {
-    const row = await load(tx, id)
+    const row = await loadForDoctor(tx, id, userId, permissions)
 
     if (status === 'ready') {
       if (row.status !== 'issued') throw errors.badRequest(LAB_TEXT.status_flow)
@@ -299,6 +330,52 @@ export function setStatus(
   })
 }
 
+/// Topshirish — tashrif bilan, bitta tranzaksiyada (qaror 19/09/2026):
+/// bemor narxi tashrifga yoziladi, shifokor ulushi (narx − texnik narxi)
+/// dan hisoblanadi, naryad «topshirildi» boʻladi, tish xaritasi va xarajat
+/// yoziladi. Tashrifsiz topshirish PATCH /status orqali qoladi — tashrif
+/// avvalroq (masalan qabulda) yozilgan boʻlsa
+export function deliver(
+  deps: LabDeps,
+  clinicId: string,
+  userId: string,
+  permissions: readonly Permission[],
+  id: string,
+  input: LabDeliverInput,
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const row = await loadForDoctor(tx, id, userId, permissions)
+    if (row.status !== 'ready') throw errors.badRequest(LAB_TEXT.status_flow)
+    if (!permissions.includes('lab.write')) throw errors.forbidden()
+
+    // Tashrif: shifokor — berilgani, boʻlmasa naryadni yozgan shifokor.
+    // Cheklangan koʻruvchi (patients.all yoʻq) uchun visits oʻzi majburlaydi
+    const visit = await visits.createTx(
+      tx,
+      { userId, all: permissions.includes('patients.all') },
+      {
+        ...input,
+        doctorId: input.doctorId ?? row.doctorId,
+        patientId: row.patientId,
+        date: todayISO(),
+      },
+      { labOrderId: row.id, labCost: row.techPrice },
+    )
+
+    const updated = await repo.update(tx, id, { status: 'delivered', deliveredAt: new Date() })
+    await onDelivered(tx, updated, userId)
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.lab_status_changed,
+      entity: 'lab_order',
+      entityId: id,
+      meta: { status: 'delivered', visitId: visit.id },
+    })
+    const [view] = await toView(tx, [updated], userId, permissions)
+    return { order: view as LabOrderView, visit }
+  })
+}
+
 /// «Qaytarildi» — holat emas, amal: naryad «Tayyor» dan «Berildi» ga
 /// qaytadi, sababi yoziladi va qaytishlar soni oshadi (tz.md 7-boʻlim)
 export function markReturned(
@@ -310,7 +387,7 @@ export function markReturned(
   input: LabReturnInput,
 ): Promise<LabOrderView> {
   return withClinic(deps.db, clinicId, async (tx) => {
-    const row = await load(tx, id)
+    const row = await loadForDoctor(tx, id, userId, permissions)
     if (row.status !== 'ready') throw errors.badRequest(LAB_TEXT.return_from_ready)
 
     const updated = await repo.update(tx, id, {
@@ -367,9 +444,15 @@ async function onDelivered(tx: ClinicTx, row: repo.LabRow, userId: string): Prom
   })
 }
 
-export function remove(deps: LabDeps, clinicId: string, userId: string, id: string): Promise<void> {
+export function remove(
+  deps: LabDeps,
+  clinicId: string,
+  userId: string,
+  permissions: readonly Permission[],
+  id: string,
+): Promise<void> {
   return withClinic(deps.db, clinicId, async (tx) => {
-    await load(tx, id)
+    await loadForDoctor(tx, id, userId, permissions)
     await repo.remove(tx, id)
     await writeAudit(tx, {
       userId,

@@ -31,6 +31,25 @@ export function useCompleteAppointment() {
   })
 }
 
+/// Naryadni topshirish — tashrif yoziladi, naryad, tish xaritasi, xarajat,
+/// ish haqi roʻyxatlari eskiradi
+export function useDeliverLabOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ labOrderId, ...payload }: { labOrderId: string } & api.CompletePayload) =>
+      api.deliverLabOrder(labOrderId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: VISIT_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: ['lab-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['teeth'] })
+      queryClient.invalidateQueries({ queryKey: ['expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['payroll'] })
+      queryClient.invalidateQueries({ queryKey: ['balance'] })
+    },
+    meta: { success: () => TOAST_TEXT.lab_delivered, inlineErrors: true },
+  })
+}
+
 export function useDeleteVisit() {
   const queryClient = useQueryClient()
   return useMutation({

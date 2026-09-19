@@ -1,6 +1,7 @@
 import { LAB_TEXT, VALIDATION_TEXT, VITA_SHADES } from '@e-dentist/shared'
 import { isToothNo } from '@e-dentist/teeth'
 import { z } from 'zod'
+import { visitCreateSchema } from '../visits/service.js'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -36,6 +37,11 @@ const dueDate = z
     error: () => VALIDATION_TEXT.date_invalid,
   })
 
+const techPrice = z.coerce
+  .number()
+  .int()
+  .min(0, { error: () => LAB_TEXT.price_negative })
+
 export const labCreateSchema = z.object({
   patientId: z.string().uuid(),
   techId: z.string().uuid().nullish(),
@@ -52,15 +58,17 @@ export const labCreateSchema = z.object({
   shade: z.enum(VITA_SHADES, { error: () => LAB_TEXT.shade_invalid }).nullish(),
   dueDate,
   /// Soʻm, butun son
-  techPrice: z.coerce
-    .number()
-    .int()
-    .min(0, { error: () => LAB_TEXT.price_negative })
-    .default(0),
+  techPrice: techPrice.default(0),
   note: z.string().trim().max(2000).nullish(),
 })
 
-export const labUpdateSchema = labCreateSchema.omit({ patientId: true }).partial()
+/// `.partial()` `.default(0)` ni olib tashlamaydi — narx yuborilmasa ham 0
+/// kelib, `lab.cost` yoʻq shifokor tahrirda 403 olardi. Shuning uchun narx
+/// alohida, sukutsiz
+export const labUpdateSchema = labCreateSchema
+  .omit({ patientId: true, techPrice: true })
+  .partial()
+  .extend({ techPrice: techPrice.optional() })
 
 export const labStatusSchema = z.object({
   status: z.enum(LAB_STATUSES),
@@ -77,7 +85,13 @@ export const labListSchema = z.object({
   patientId: z.string().uuid().optional(),
 })
 
+/// Topshirish — tashrif bilan (tz.md 7-boʻlim): bemor narxi tashrifga
+/// yoziladi, sana bugun, bemor naryaddan. Maydonlar visits sxemasidan —
+/// xato matnlari bir xil
+export const labDeliverSchema = visitCreateSchema.omit({ patientId: true, date: true })
+
 export type LabCreateInput = z.infer<typeof labCreateSchema>
+export type LabDeliverInput = z.infer<typeof labDeliverSchema>
 export type LabUpdateInput = z.infer<typeof labUpdateSchema>
 export type LabStatusInput = z.infer<typeof labStatusSchema>
 export type LabReturnInput = z.infer<typeof labReturnSchema>

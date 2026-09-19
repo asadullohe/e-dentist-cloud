@@ -46,6 +46,8 @@ export interface PayrollVisit {
   treatment: string
   tooth: number | null
   price: number
+  /// Texnik narxi (naryaddan) — ulush shundan keyingi qismidan
+  labCost: number
   percent: number
   share: number
 }

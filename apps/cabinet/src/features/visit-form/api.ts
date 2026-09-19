@@ -22,6 +22,14 @@ export const completeAppointment = (appointmentId: string, payload: CompletePayl
     { method: 'POST', body: payload },
   )
 
+/// Naryadni topshirish: tashrif + naryad «topshirildi», bitta soʻrov.
+/// Bemor va sana (bugun) naryaddan — payload'da yuborilmaydi
+export const deliverLabOrder = (labOrderId: string, payload: CompletePayload) =>
+  apiRequest<{ order: { id: string }; visit: Visit }>(`/lab-orders/${labOrderId}/deliver`, {
+    method: 'POST',
+    body: payload,
+  })
+
 export const createVisit = (payload: VisitPayload) =>
   apiRequest<Visit>('/visits', { method: 'POST', body: payload })
 

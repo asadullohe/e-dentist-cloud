@@ -5,6 +5,7 @@ import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import {
   labCreateSchema,
+  labDeliverSchema,
   labListSchema,
   labReturnSchema,
   labStatusSchema,
@@ -54,6 +55,14 @@ export const labRoutes: FastifyPluginAsync<LabRouteOpts> = async (app, opts) => 
     return ok(await service.setStatus(opts.deps, clinicId, userId, permissions, id, status))
   })
 
+  // Topshirish tashrif bilan — bemor narxi va shifokor ulushi shu yerda
+  app.post('/lab-orders/:id/deliver', write, async (req) => {
+    const { clinicId, userId, permissions } = actorOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(labDeliverSchema, req.body)
+    return ok(await service.deliver(opts.deps, clinicId, userId, permissions, id, input))
+  })
+
   app.post('/lab-orders/:id/return', write, async (req) => {
     const { clinicId, userId, permissions } = actorOf(req)
     const { id } = req.params as { id: string }
@@ -62,9 +71,9 @@ export const labRoutes: FastifyPluginAsync<LabRouteOpts> = async (app, opts) => 
   })
 
   app.delete('/lab-orders/:id', write, async (req) => {
-    const { clinicId, userId } = actorOf(req)
+    const { clinicId, userId, permissions } = actorOf(req)
     const { id } = req.params as { id: string }
-    await service.remove(opts.deps, clinicId, userId, id)
+    await service.remove(opts.deps, clinicId, userId, permissions, id)
     return ok({ deleted: true })
   })
 }

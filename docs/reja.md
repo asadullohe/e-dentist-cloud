@@ -1281,6 +1281,21 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       nomidan; boshqaning tashrifi, rasmi, bemori — 404; qarzdorlar ham
       shu doirada. Kabinetda tashrif formasida shifokor tanlovi va roʻyxatda
       shifokor filtri yashiriladi. Testlar: `visibility.test.ts` (12)
+- [x] **11.4 Naryadlar shifokor boʻyicha** — `patients.all` yoʻq shifokor
+      faqat oʻzi yozgan naryadlarni koʻradi (`lab_orders.doctor_id`),
+      boshqaniki tahrir/holat/qaytarish/oʻchirishda 404; texnikka tegmaydi.
+      Yoʻlakay: `labUpdateSchema` da `.partial()` `techPrice.default(0)` ni
+      saqlab qolgani uchun `lab.cost` yoʻq shifokor tahrirda 403 olardi —
+      tuzatildi. Bemor tanlash (PatientPicker) oyna ichida gʻildirak bilan
+      aylanmasdi — Popover `modal`
+- [x] **11.5 Naryad topshirish = tashrif** — `POST /lab-orders/:id/deliver`
+      (tashrif + topshirildi + tish xaritasi + xarajat, bitta tranzaksiya);
+      «Topshirildi» tugmasi tashrif formasini ochadi (muolaja naryaddan,
+      shifokor naryadniki, sana bugun), «Tashrifsiz topshirish» qoladi.
+      `visits.lab_order_id`, `lab_cost` (snapshot). Shifokor ulushi
+      `(narx − texnik narxi) × foiz` — yaratish, tahrir, qayta hisoblashda;
+      ish haqi roʻyxatida texnik narxi koʻrinadi. Testlar: ulush 480 000,
+      tahrirdan keyin qayta hisob, tayyor boʻlmagan naryad 400
 
 ---
 

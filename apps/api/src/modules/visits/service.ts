@@ -106,7 +106,14 @@ export function recalculateSharesTx(
   to: Date,
   percent: number,
 ): Promise<number> {
-  return repo.setSharesByDoctor(tx, doctorId, from, to, (price) => shareOf(price, percent), percent)
+  return repo.setSharesByDoctor(
+    tx,
+    doctorId,
+    from,
+    to,
+    (price, labCost) => shareOf(price, percent, labCost),
+    percent,
+  )
 }
 
 /// Boshqa modullar uchun (reports): oraliqdagi eng qimmat muolajalar
@@ -126,8 +133,11 @@ export async function topTreatmentsTx(
 
 /// Shifokor ulushi: narx × foiz, butun soʻmga yaxlitlanadi (tz.md 15-boʻlim).
 /// payroll moduli qayta hisoblashda ham shu formulani ishlatadi
-export function shareOf(price: number, percent: number): number {
-  return Math.round((price * percent) / 100)
+/// Shifokor ulushi. Protez ishida texnik narxi avval ayiriladi: foiz
+/// klinikaga qolgan puldan (qaror 19/09/2026). Texnik narxi ishdan qimmat
+/// boʻlsa ulush nol — manfiy boʻlmaydi
+export function shareOf(price: number, percent: number, labCost = 0): number {
+  return Math.round((Math.max(0, price - labCost) * percent) / 100)
 }
 
 /// Shifokor faol va `visits.write` li xodim boʻlishi shart. Tashqi kalit
@@ -170,10 +180,18 @@ export function listVisits(
 /// Tashrif yozish — ochiq tranzaksiya ichida. Boshqa modullar uchun ham
 /// (schedule: qabul yakunlanganda tashrif shu yerdan yoziladi, bir
 /// tranzaksiyada — tashrif yozilib, qabul yakunlanmay qolmasin)
+/// Naryad bilan bogʻlanish: tashrif naryad topshirilganda yoziladi, texnik
+/// narxi snapshot boʻlib ulushdan ayiriladi
+export interface LabLink {
+  labOrderId: string
+  labCost: number
+}
+
 export async function createTx(
   tx: ClinicTx,
   viewer: ScopedViewer,
   input: VisitCreateInput,
+  lab?: LabLink,
 ): Promise<VisitRow> {
   const { userId } = viewer
   const id = uuidV7()
@@ -195,7 +213,9 @@ export async function createTx(
     serviceId: input.serviceId ?? null,
     price: input.price,
     doctorPercent: payPercent,
-    doctorShare: shareOf(input.price, payPercent),
+    doctorShare: shareOf(input.price, payPercent, lab?.labCost ?? 0),
+    labOrderId: lab?.labOrderId ?? null,
+    labCost: lab?.labCost ?? 0,
     note: input.note ?? null,
   })
   await writeAudit(tx, {
@@ -250,7 +270,9 @@ export function updateVisit(
     }
     const price = input.price ?? current.price
     const share =
-      doctorChanged || input.price !== undefined ? shareOf(price, percent) : current.doctorShare
+      doctorChanged || input.price !== undefined
+        ? shareOf(price, percent, current.labCost)
+        : current.doctorShare
 
     try {
       const visit = await repo.updateVisit(tx, id, {

@@ -33,6 +33,8 @@ export interface LabFilter {
   status?: LabStatus
   techId?: string
   patientId?: string
+  /// Naryadni yozgan shifokor — shifokor faqat oʻzinikini koʻradi
+  doctorId?: string
 }
 
 export function list(tx: ClinicTx, filter: LabFilter) {
@@ -41,6 +43,7 @@ export function list(tx: ClinicTx, filter: LabFilter) {
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.techId ? { techId: filter.techId } : {}),
       ...(filter.patientId ? { patientId: filter.patientId } : {}),
+      ...(filter.doctorId ? { doctorId: filter.doctorId } : {}),
     },
     select: SELECT,
     orderBy: [{ dueDate: 'asc' }, { id: 'asc' }],
