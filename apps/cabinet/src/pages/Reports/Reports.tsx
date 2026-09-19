@@ -1,17 +1,8 @@
-import {
-  EXPENSE_CATEGORY_LABELS,
-  EXPENSE_UI,
-  formatMonth,
-  formatSom,
-  REPORT_UI,
-  todayISO,
-} from '@e-dentist/shared'
+import { EXPENSE_CATEGORY_LABELS, formatSom, REPORT_UI, todayISO } from '@e-dentist/shared'
 import { cn } from 'cn'
 import {
   CalendarCheckIcon,
   ChartColumnIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   type LucideIcon,
   ReceiptIcon,
   StethoscopeIcon,
@@ -23,13 +14,13 @@ import {
 import { type ReactNode, useState } from 'react'
 import { useReport } from '@/entities/report'
 import {
-  Button,
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   EmptyState,
   Money,
+  MonthNav,
   Skeleton,
   Table,
   TableBody,
@@ -41,12 +32,6 @@ import {
 import { MonthsChart } from './MonthsChart'
 
 const thisMonth = () => todayISO().slice(0, 7)
-
-function shiftMonth(month: string, by: number): string {
-  const [year, index] = month.split('-').map(Number) as [number, number]
-  const date = new Date(year, index - 1 + by, 1)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-}
 
 interface StatProps {
   label: string
@@ -95,30 +80,7 @@ export function Reports() {
           <h1 className="text-2xl font-semibold tracking-tight">{REPORT_UI.title}</h1>
           <p className="text-muted-foreground text-sm">{REPORT_UI.subtitle}</p>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={EXPENSE_UI.prev_month}
-            onClick={() => setMonth(shiftMonth(month, -1))}
-          >
-            <ChevronLeftIcon />
-          </Button>
-          <span className="min-w-36 text-center font-semibold">{formatMonth(month)}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={EXPENSE_UI.next_month}
-            onClick={() => setMonth(shiftMonth(month, 1))}
-          >
-            <ChevronRightIcon />
-          </Button>
-          {month !== thisMonth() && (
-            <Button variant="outline" size="sm" onClick={() => setMonth(thisMonth())}>
-              {EXPENSE_UI.this_month}
-            </Button>
-          )}
-        </div>
+        <MonthNav month={month} onChange={setMonth} />
       </div>
 
       {isPending || !summary ? (

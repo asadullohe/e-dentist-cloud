@@ -2,7 +2,6 @@ import {
   CARD_UI,
   EXPENSE_CATEGORY_LABELS,
   EXPENSE_UI,
-  formatMonth,
   formatSom,
   todayISO,
 } from '@e-dentist/shared'
@@ -17,7 +16,7 @@ import {
   useReactTable,
   type VisibilityState,
 } from '@tanstack/react-table'
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
+import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type Expense, useExpenses } from '@/entities/expense'
 import { ExpenseFormDialog, useDeleteExpense } from '@/features/expense-form'
@@ -30,23 +29,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  Badge,
   Button,
   Card,
   DataTable,
   DataTablePagination,
   DataTableViewOptions,
+  MonthNav,
   Skeleton,
 } from '@/shared/ui'
 import { expenseColumns } from './columns'
 
 const thisMonth = () => todayISO().slice(0, 7)
-
-function shiftMonth(month: string, by: number): string {
-  const [year, index] = month.split('-').map(Number) as [number, number]
-  const date = new Date(year, index - 1 + by, 1)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-}
 
 export function Expenses() {
   const [month, setMonth] = useState(thisMonth)
@@ -102,43 +95,22 @@ export function Expenses() {
           <h1 className="text-2xl font-semibold tracking-tight">{EXPENSE_UI.title}</h1>
           <p className="text-muted-foreground text-sm">{EXPENSE_UI.subtitle}</p>
         </div>
-        <Button size="sm" onClick={openNew}>
+        <Button size="sm" className="w-full sm:w-auto" onClick={openNew}>
           <PlusIcon />
           {EXPENSE_UI.add}
         </Button>
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={EXPENSE_UI.prev_month}
-          onClick={() => setMonth(shiftMonth(month, -1))}
-        >
-          <ChevronLeftIcon />
-        </Button>
-        <span className="min-w-36 text-center font-semibold">{formatMonth(month)}</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={EXPENSE_UI.next_month}
-          onClick={() => setMonth(shiftMonth(month, 1))}
-        >
-          <ChevronRightIcon />
-        </Button>
-        {month !== thisMonth() && (
-          <Button variant="outline" size="sm" onClick={() => setMonth(thisMonth())}>
-            {EXPENSE_UI.this_month}
-          </Button>
-        )}
-        <div className="ml-auto max-sm:basis-full">
-          {/* Yuklanayotganda «0 soʻm» koʻrsatilmasin — bu yolgʻon raqam */}
+        <MonthNav month={month} onChange={setMonth} />
+        {/* Oy jamisi: telefonda butun qator (nom chapda, summa oʻngda), keng
+            ekranda oʻng chetda. Yuklanayotganda «0 soʻm» emas — skelet */}
+        <div className="bg-muted flex w-full items-center justify-between gap-3 rounded-md px-3 py-1.5 text-sm sm:ml-auto sm:w-auto">
+          <span className="text-muted-foreground">{EXPENSE_UI.total}</span>
           {data ? (
-            <Badge variant="secondary" className="text-sm">
-              {EXPENSE_UI.total}: {formatSom(data.total)}
-            </Badge>
+            <span className="font-semibold tabular-nums">{formatSom(data.total)}</span>
           ) : (
-            <Skeleton className="h-6 w-36" />
+            <Skeleton className="h-4 w-24" />
           )}
         </div>
       </div>

@@ -66,6 +66,7 @@ export {
 export { Input } from './input'
 export { Label } from './label'
 export { Money } from './money'
+export { MonthNav } from './month-nav'
 export { Popover, PopoverContent, PopoverTrigger } from './popover'
 export {
   Select,

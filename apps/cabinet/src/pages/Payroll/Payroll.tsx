@@ -1,17 +1,8 @@
-import {
-  EXPENSE_UI,
-  formatMonth,
-  formatSom,
-  PAYROLL_UI,
-  shiftMonth,
-  todayISO,
-} from '@e-dentist/shared'
+import { formatSom, PAYROLL_UI, todayISO } from '@e-dentist/shared'
 import { cn } from 'cn'
 import {
   BanknoteIcon,
   ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   HandCoinsIcon,
   MoreHorizontalIcon,
   RefreshCwIcon,
@@ -32,6 +23,7 @@ import {
   DropdownMenuTrigger,
   EmptyState,
   Money,
+  MonthNav,
   Skeleton,
   Table,
   TableBody,
@@ -75,30 +67,7 @@ export function Payroll() {
             {manage ? PAYROLL_UI.subtitle : PAYROLL_UI.own_subtitle}
           </p>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={EXPENSE_UI.prev_month}
-            onClick={() => setMonth(shiftMonth(month, -1))}
-          >
-            <ChevronLeftIcon />
-          </Button>
-          <span className="min-w-36 text-center font-semibold">{formatMonth(month)}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={EXPENSE_UI.next_month}
-            onClick={() => setMonth(shiftMonth(month, 1))}
-          >
-            <ChevronRightIcon />
-          </Button>
-          {month !== thisMonth() && (
-            <Button variant="outline" size="sm" onClick={() => setMonth(thisMonth())}>
-              {EXPENSE_UI.this_month}
-            </Button>
-          )}
-        </div>
+        <MonthNav month={month} onChange={setMonth} />
       </div>
 
       {isPending || !data ? (
