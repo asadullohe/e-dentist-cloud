@@ -129,13 +129,40 @@ export function bridgesSheet(
   )
 }
 
+/// Bekor qilingan toʻlovlar ham chiqadi — «Holat» ustunida belgisi va
+/// sababi bilan; summalarni qoʻshganda shu ustunga qarab ajratiladi
 export function paymentsSheet(
-  rows: { patientId: string; date: Date; amount: number; note: string | null }[],
+  rows: {
+    patientId: string
+    date: Date
+    amount: number
+    note: string | null
+    createdBy: string | null
+    cancelledAt: Date | null
+    cancelReason: string | null
+  }[],
   people: Map<string, string>,
+  staff: Map<string, string>,
 ): SheetData {
   return sheet(
-    [EXPORT_COLUMNS.date, EXPORT_COLUMNS.patient, EXPORT_COLUMNS.amount, EXPORT_COLUMNS.note],
-    rows.map((row) => [iso(row.date), nameOf(people, row.patientId), row.amount, row.note]),
+    [
+      EXPORT_COLUMNS.date,
+      EXPORT_COLUMNS.patient,
+      EXPORT_COLUMNS.amount,
+      EXPORT_COLUMNS.note,
+      EXPORT_COLUMNS.received_by,
+      EXPORT_COLUMNS.status,
+      EXPORT_COLUMNS.cancel_reason,
+    ],
+    rows.map((row) => [
+      iso(row.date),
+      nameOf(people, row.patientId),
+      row.amount,
+      row.note,
+      row.createdBy ? (staff.get(row.createdBy) ?? '') : '',
+      row.cancelledAt ? EXPORT_COLUMNS.cancelled : '',
+      row.cancelReason,
+    ]),
   )
 }
 

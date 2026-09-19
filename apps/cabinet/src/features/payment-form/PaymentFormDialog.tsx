@@ -17,6 +17,7 @@ import {
   DatePicker,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -72,11 +73,15 @@ export function PaymentFormDialog({
     }
   }, [open, payment, form])
 
+  // Tahrirda summa va sana qulf: pul yozuvi keyin «tuzatilmaydi» — xato boʻlsa
+  // bekor qilib, yangisi kiritiladi (qaror 19/09/2026)
+  const locked = payment !== undefined
+
   async function onSubmit(values: PaymentValues) {
     setFormError('')
     try {
       await mutateAsync({
-        ...(payment ? {} : { patientId }),
+        patientId,
         date: parseDisplayDate(values.date) as string,
         amount: Number(moneyDigits(values.amount) || 0),
         note: values.note || null,
@@ -91,7 +96,8 @@ export function PaymentFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>{payment ? PAYMENT_UI.edit : PAYMENT_UI.add}</DialogTitle>
+          <DialogTitle>{locked ? PAYMENT_UI.edit_note : PAYMENT_UI.add}</DialogTitle>
+          {locked && <DialogDescription>{PAYMENT_UI.edit_hint}</DialogDescription>}
         </DialogHeader>
 
         <Form {...form}>
@@ -103,7 +109,7 @@ export function PaymentFormDialog({
                 <FormItem>
                   <FormLabel>{PAYMENT_UI.date}</FormLabel>
                   <FormControl>
-                    <DatePicker {...field} />
+                    <DatePicker {...field} disabled={locked} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -118,6 +124,7 @@ export function PaymentFormDialog({
                   <FormControl>
                     <Input
                       inputMode="numeric"
+                      disabled={locked}
                       {...field}
                       onChange={(event) => field.onChange(formatMoney(event.target.value))}
                     />

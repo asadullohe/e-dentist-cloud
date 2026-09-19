@@ -318,6 +318,13 @@ model Payment {
   /// Soʻm, butun son
   amount    Int
   note      String?
+  /// Kim qabul qildi. Eski yozuvlarda boʻsh
+  createdBy String?  @map("created_by") @db.Uuid
+  /// Toʻlov oʻchirilmaydi — bekor qilinadi, sabab bilan (11-bosqich).
+  /// Bekor qilingani hisobga, qarzdorlar va hisobotga kirmaydi
+  cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  cancelledBy  String?   @map("cancelled_by") @db.Uuid
+  cancelReason String?   @map("cancel_reason")
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 

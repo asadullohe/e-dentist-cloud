@@ -3,7 +3,12 @@ import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { debtorsSchema, paymentCreateSchema, paymentUpdateSchema } from './schema.js'
+import {
+  debtorsSchema,
+  paymentCancelSchema,
+  paymentCreateSchema,
+  paymentUpdateSchema,
+} from './schema.js'
 import * as service from './service.js'
 
 export interface PaymentRouteOpts {
@@ -45,11 +50,12 @@ export const paymentRoutes: FastifyPluginAsync<PaymentRouteOpts> = async (app, o
     return ok(await service.update(opts.deps, clinicId, userId, id, input))
   })
 
-  app.delete('/payments/:id', write, async (req) => {
+  // Oʻchirish yoʻq — bekor qilish, sabab bilan (qaror 19/09/2026)
+  app.post('/payments/:id/cancel', write, async (req) => {
     const { clinicId, userId } = clinicOf(req)
     const { id } = req.params as { id: string }
-    await service.remove(opts.deps, clinicId, userId, id)
-    return ok({ deleted: true })
+    const input = validateInput(paymentCancelSchema, req.body)
+    return ok(await service.cancel(opts.deps, clinicId, userId, id, input))
   })
 
   app.get('/debtors', read, async (req) => {

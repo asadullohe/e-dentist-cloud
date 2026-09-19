@@ -1,4 +1,4 @@
-import { CARD_UI, formatSom, PAYMENT_UI } from '@e-dentist/shared'
+import { formatSom, PAYMENT_UI } from '@e-dentist/shared'
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -15,20 +15,8 @@ import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type Payment, useBalance, usePayments } from '@/entities/payment'
 import { useHasPermission } from '@/entities/session'
-import { PaymentFormDialog, useDeletePayment } from '@/features/payment-form'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  Button,
-  DataTable,
-  DataTablePagination,
-} from '@/shared/ui'
+import { CancelPaymentDialog, PaymentFormDialog } from '@/features/payment-form'
+import { Button, DataTable, DataTablePagination } from '@/shared/ui'
 import { paymentColumns } from './paymentColumns'
 
 function BalanceRow({ label, value, tone }: { label: string; value: number; tone?: string }) {
@@ -44,13 +32,13 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
   // Bitta bemorning toʻlovlari toʻliq keladi — saralash va sahifalash mijozda
   const { data: payments, isPending } = usePayments(patientId)
   const { data: balance } = useBalance(patientId)
-  const { mutateAsync: remove } = useDeletePayment()
   const hasPermission = useHasPermission()
   const canWrite = hasPermission('payments.write')
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Payment | undefined>(undefined)
-  const [deleting, setDeleting] = useState<Payment | null>(null)
+  // Oʻchirish yoʻq — bekor qilish, sabab bilan
+  const [cancelling, setCancelling] = useState<Payment | null>(null)
 
   const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -64,7 +52,7 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
         setEditing(payment)
         setFormOpen(true)
       },
-      onRemove: setDeleting,
+      onCancel: setCancelling,
       canEdit: canWrite,
     }),
     state: { sorting, columnVisibility, columnFilters, pagination },
@@ -123,25 +111,7 @@ export function PaymentsTab({ patientId }: { patientId: string }) {
         payment={editing}
       />
 
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{PAYMENT_UI.delete_title}</AlertDialogTitle>
-            <AlertDialogDescription>{PAYMENT_UI.delete_text}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (deleting) await remove(deleting.id)
-                setDeleting(null)
-              }}
-            >
-              {CARD_UI.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CancelPaymentDialog payment={cancelling} onClose={() => setCancelling(null)} />
     </>
   )
 }

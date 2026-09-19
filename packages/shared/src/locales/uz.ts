@@ -317,6 +317,10 @@ export const PAYMENT_TEXT = {
   not_found: 'Toʻlov topilmadi',
   amount_positive: 'Summa noldan katta boʻlishi kerak',
   date_required: 'Sana kiritilishi shart',
+  // Toʻlov oʻchirilmaydi, bekor qilinadi — sabab bilan (11-bosqich)
+  already_cancelled: 'Bu toʻlov allaqachon bekor qilingan',
+  cancelled_immutable: 'Bekor qilingan toʻlovni oʻzgartirib boʻlmaydi',
+  reason_required: 'Bekor qilish sababini yozing',
 } as const
 
 export const PAYMENT_UI = {
@@ -333,8 +337,19 @@ export const PAYMENT_UI = {
   /// Qarz manfiy boʻlsa bemor oldindan toʻlagan
   prepaid: 'Oldindan toʻlangan',
   no_debt: 'Qarz yoʻq',
-  delete_title: 'Toʻlov oʻchirilsinmi?',
-  delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  // Toʻlov oʻchirilmaydi — bekor qilinadi, sabab bilan (11-bosqich)
+  // «Bekor qilish» tugmasi (yopish) bilan adashmasin — toʻliq nom
+  cancel: 'Toʻlovni bekor qilish',
+  cancel_title: 'Toʻlov bekor qilinsinmi?',
+  cancel_text:
+    'Toʻlov oʻchirilmaydi: roʻyxatda «bekor qilingan» deb qoladi, hisobga va qarzdorlarga kirmaydi. Sababini yozing — u toʻlov yonida koʻrinib turadi.',
+  cancel_reason: 'Sabab',
+  cancel_reason_placeholder: 'Masalan: summa notoʻgʻri kiritilgan, bemorga qaytarildi',
+  cancelled: 'Bekor qilingan',
+  cancelled_by: (name: string, date: string) => `${name || '—'} · ${date}`,
+  received_by: 'Qabul qildi',
+  edit_note: 'Izohni tahrirlash',
+  edit_hint: 'Summa va sana oʻzgarmaydi. Xato boʻlsa toʻlovni bekor qilib, yangisini kiriting.',
 } as const
 
 export const DEBTORS_UI = {
@@ -507,6 +522,7 @@ export const TOAST_TEXT = {
   payment_created: 'Toʻlov qabul qilindi',
   payment_updated: 'Toʻlov tahrirlandi',
   payment_deleted: 'Toʻlov oʻchirildi',
+  payment_cancelled: 'Toʻlov bekor qilindi',
   appointment_created: 'Qabul yozildi',
   appointment_updated: 'Qabul tahrirlandi',
   appointment_deleted: 'Qabul oʻchirildi',
@@ -783,6 +799,10 @@ export const EXPORT_COLUMNS = {
   total: 'Jami',
   paid: 'Toʻlangan',
   remaining: 'Qoldiq',
+  // tolovlar.xlsx: bekor qilingan toʻlovlar ham chiqadi, belgisi bilan
+  received_by: 'Qabul qildi',
+  cancelled: 'Bekor qilingan',
+  cancel_reason: 'Bekor sababi',
 } as const
 
 export const EXPORT_UI = {
@@ -990,6 +1010,7 @@ export const AUDIT_LABELS = {
   payment_created: 'Toʻlov qabul qilindi',
   payment_updated: 'Toʻlov tahrirlandi',
   payment_deleted: 'Toʻlov oʻchirildi',
+  payment_cancelled: 'Toʻlov bekor qilindi',
   service_changed: 'Narxnoma oʻzgardi',
   patients_exported: 'Bemorlar Excelga chiqarildi',
   patients_imported: 'Bemorlar Exceldan yuklandi',

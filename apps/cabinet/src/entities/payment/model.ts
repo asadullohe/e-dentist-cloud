@@ -6,6 +6,13 @@ export interface Payment {
   /// Soʻm, butun son
   amount: number
   note: string | null
+  /// Kim qabul qildi. Eski yozuvlarda boʻsh
+  createdByName: string | null
+  /// Toʻlov oʻchirilmaydi — bekor qilinadi, sabab bilan. Bekor qilingani
+  /// hisobga kirmaydi, roʻyxatda chizilgan holda turadi
+  cancelledAt: string | null
+  cancelledByName: string | null
+  cancelReason: string | null
 }
 
 export interface Balance {

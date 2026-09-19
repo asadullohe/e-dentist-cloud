@@ -41,6 +41,10 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'visits.write',
       'teeth.write',
       'schedule.write',
+      // Toʻlov qabul qilish (qaror 19/09/2026): kichik klinikada pulni
+      // shifokorning oʻzi oladi
+      'payments.read',
+      'payments.write',
       'lab.write',
       'payroll.own',
     ],

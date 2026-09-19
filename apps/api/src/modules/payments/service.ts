@@ -10,10 +10,16 @@ import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
+import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
 import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
-import type { DebtorsInput, PaymentCreateInput, PaymentUpdateInput } from './schema.js'
+import type {
+  DebtorsInput,
+  PaymentCancelInput,
+  PaymentCreateInput,
+  PaymentUpdateInput,
+} from './schema.js'
 
 export interface PaymentDeps {
   db: Db
@@ -23,22 +29,39 @@ function toDate(value: string): Date {
   return new Date(`${value}T00:00:00Z`)
 }
 
-function isMissing(error: unknown): boolean {
-  return (
-    typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2025'
-  )
-}
-
 async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
   if (!(await patients.existsInClinic(tx, patientId))) {
     throw errors.notFound(PATIENT_TEXT.not_found)
   }
 }
 
+type PaymentRow = Awaited<ReturnType<typeof repo.list>>[number]
+
+/// Roʻyxatdagi qator: kim qabul qilgani va (bekor qilingan boʻlsa) kim bekor
+/// qilgani ismlar bilan — xodimlar boshqa modulniki, ismlar servisidan olinadi
+export interface Payment extends PaymentRow {
+  createdByName: string | null
+  cancelledByName: string | null
+}
+
+async function withNames(tx: ClinicTx, rows: PaymentRow[]): Promise<Payment[]> {
+  const ids = new Set<string>()
+  for (const row of rows) {
+    if (row.createdBy) ids.add(row.createdBy)
+    if (row.cancelledBy) ids.add(row.cancelledBy)
+  }
+  const names = await auth.staffNamesTx(tx, [...ids])
+  return rows.map((row) => ({
+    ...row,
+    createdByName: row.createdBy ? (names.get(row.createdBy) ?? null) : null,
+    cancelledByName: row.cancelledBy ? (names.get(row.cancelledBy) ?? null) : null,
+  }))
+}
+
 export function list(deps: PaymentDeps, clinicId: string, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, patientId)
-    return repo.list(tx, patientId)
+    return withNames(tx, await repo.list(tx, patientId))
   })
 }
 
@@ -79,6 +102,7 @@ export function create(
       date: toDate(input.date),
       amount: input.amount,
       note: input.note ?? null,
+      createdBy: userId,
     })
     await writeAudit(tx, {
       userId,
@@ -87,10 +111,13 @@ export function create(
       entityId: id,
       meta: { patientId: input.patientId, amount: input.amount },
     })
-    return payment
+    const [row] = await withNames(tx, [payment])
+    return row as Payment
   })
 }
 
+/// Faqat izoh. Summa va sana oʻzgarmas — xato boʻlsa bekor qilib, yangisi
+/// kiritiladi (qaror 19/09/2026: pul yozuvi keyin «tuzatilmasin»)
 export function update(
   deps: PaymentDeps,
   clinicId: string,
@@ -99,40 +126,49 @@ export function update(
   input: PaymentUpdateInput,
 ) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    try {
-      const payment = await repo.update(tx, id, {
-        ...(input.date === undefined ? {} : { date: toDate(input.date) }),
-        ...(input.amount === undefined ? {} : { amount: input.amount }),
-        ...(input.note === undefined ? {} : { note: input.note }),
-      })
-      await writeAudit(tx, {
-        userId,
-        action: AUDIT_ACTION.payment_updated,
-        entity: 'payment',
-        entityId: id,
-      })
-      return payment
-    } catch (error) {
-      if (isMissing(error)) throw errors.notFound(PAYMENT_TEXT.not_found)
-      throw error
-    }
-  })
-}
+    const existing = await repo.findById(tx, id)
+    if (!existing) throw errors.notFound(PAYMENT_TEXT.not_found)
+    if (existing.cancelledAt) throw errors.conflict(PAYMENT_TEXT.cancelled_immutable)
 
-export function remove(deps: PaymentDeps, clinicId: string, userId: string, id: string) {
-  return withClinic(deps.db, clinicId, async (tx) => {
-    try {
-      await repo.remove(tx, id)
-    } catch (error) {
-      if (isMissing(error)) throw errors.notFound(PAYMENT_TEXT.not_found)
-      throw error
-    }
+    const payment = await repo.update(tx, id, {
+      ...(input.note === undefined ? {} : { note: input.note }),
+    })
     await writeAudit(tx, {
       userId,
-      action: AUDIT_ACTION.payment_deleted,
+      action: AUDIT_ACTION.payment_updated,
       entity: 'payment',
       entityId: id,
     })
+    const [row] = await withNames(tx, [payment])
+    return row as Payment
+  })
+}
+
+/// Bekor qilish — oʻchirish oʻrniga. Yozuv roʻyxatda qoladi (kim, qachon,
+/// nima uchun), hisobga va qarzdorlarga kirmaydi. Ikki marta bekor qilib
+/// boʻlmaydi
+export function cancel(
+  deps: PaymentDeps,
+  clinicId: string,
+  userId: string,
+  id: string,
+  input: PaymentCancelInput,
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const existing = await repo.findById(tx, id)
+    if (!existing) throw errors.notFound(PAYMENT_TEXT.not_found)
+    if (existing.cancelledAt) throw errors.conflict(PAYMENT_TEXT.already_cancelled)
+
+    const payment = await repo.cancel(tx, id, { cancelledBy: userId, cancelReason: input.reason })
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.payment_cancelled,
+      entity: 'payment',
+      entityId: id,
+      meta: { patientId: existing.patientId, amount: existing.amount, reason: input.reason },
+    })
+    const [row] = await withNames(tx, [payment])
+    return row as Payment
   })
 }
 
