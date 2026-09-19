@@ -21,7 +21,11 @@ function clinicOf(req: FastifyRequest): { clinicId: string; viewer: service.Sche
   if (!session.clinicId) throw errors.forbidden()
   return {
     clinicId: session.clinicId,
-    viewer: { userId: session.userId, all: req.permissions.includes('schedule.all') },
+    viewer: {
+      userId: session.userId,
+      all: req.permissions.includes('schedule.all'),
+      patientsAll: req.permissions.includes('patients.all'),
+    },
   }
 }
 

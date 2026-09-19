@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { usePatient } from '@/entities/patient'
 import { useServices } from '@/entities/service'
-import { useSession } from '@/entities/session'
+import { useHasPermission, useSession } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import type { Visit } from '@/entities/visit'
 import { fieldErrors } from '@/shared/api'
@@ -111,6 +111,9 @@ export function VisitFormDialog({
   // shifokor boʻlmasa ham shu, tahrirda tanlab qoʻyiladi
   const { data: patientCard } = usePatient(patientId)
   const selfId = session?.user.id ?? ''
+  // `patients.all` yoʻq (shifokor): tashrif doim oʻz nomidan — server ham
+  // shunday qiladi, tanlov koʻrsatilmaydi (11-bosqich)
+  const seesAll = useHasPermission()('patients.all')
   // Yakunlashda — qabulning shifokori birinchi navbatda
   const defaultDoctorId = appointment?.doctorId ?? patientCard?.doctorId ?? selfId
 
@@ -207,22 +210,24 @@ export function VisitFormDialog({
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="visit-doctor">{CARD_UI.doctor}</Label>
-              <Select value={doctorId} onValueChange={setDoctorId}>
-                <SelectTrigger id="visit-doctor" className="w-full">
-                  <SelectValue placeholder={CARD_UI.doctor} />
-                </SelectTrigger>
-                <SelectContent>
-                  {doctors?.map((item) => (
-                    <SelectItem key={item.id} value={item.id}>
-                      {item.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {doctorError && <p className="text-destructive text-sm">{doctorError}</p>}
-            </div>
+            {seesAll && (
+              <div className="space-y-1.5">
+                <Label htmlFor="visit-doctor">{CARD_UI.doctor}</Label>
+                <Select value={doctorId} onValueChange={setDoctorId}>
+                  <SelectTrigger id="visit-doctor" className="w-full">
+                    <SelectValue placeholder={CARD_UI.doctor} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {doctors?.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.fullName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {doctorError && <p className="text-destructive text-sm">{doctorError}</p>}
+              </div>
+            )}
 
             {services && services.length > 0 && (
               <div className="space-y-1.5">

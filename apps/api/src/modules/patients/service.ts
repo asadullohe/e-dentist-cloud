@@ -28,6 +28,8 @@ import {
 import * as repo from './repo.js'
 import type { PatientCreateInput, PatientListInput, PatientUpdateInput } from './schema.js'
 
+export type { PatientViewer } from './repo.js'
+
 export interface PatientDeps {
   db: Db
   storage: Storage
@@ -99,6 +101,30 @@ export function existsInClinic(tx: ClinicTx, patientId: string): Promise<boolean
   return repo.exists(tx, patientId)
 }
 
+/// Boshqa modullar uchun: bemor shu koʻruvchiga koʻrinadimi. Shifokor
+/// (patients.all yoʻq) boshqaning bemoriga tashrif, toʻlov, rasm yoza
+/// olmaydi — u uchun bemor «topilmadi» (tz.md 14-boʻlim)
+export function isVisibleTx(
+  tx: ClinicTx,
+  viewer: repo.PatientViewer,
+  patientId: string,
+): Promise<boolean> {
+  return repo.isVisible(tx, viewer, patientId)
+}
+
+export async function assertVisibleTx(
+  tx: ClinicTx,
+  viewer: repo.PatientViewer,
+  patientId: string,
+): Promise<void> {
+  if (!(await repo.isVisible(tx, viewer, patientId))) throw errors.notFound(PATIENT_TEXT.not_found)
+}
+
+/// Boshqa modullar uchun (qarzdorlar): koʻrinadigan bemorlar, `null` — hammasi
+export function visibleIdsTx(tx: ClinicTx, viewer: repo.PatientViewer) {
+  return repo.visibleIds(tx, viewer)
+}
+
 /// Boshqa modullar uchun: identifikatorlar boʻyicha bemor nomlari
 export function findByIds(tx: ClinicTx, ids: string[]) {
   return repo.findByIds(tx, ids)
@@ -114,9 +140,14 @@ export function countCreatedTx(tx: ClinicTx, from: Date, to: Date): Promise<numb
   return repo.countCreatedBetween(tx, from, to)
 }
 
-export function list(deps: PatientDeps, clinicId: string, input: PatientListInput) {
+export function list(
+  deps: PatientDeps,
+  clinicId: string,
+  viewer: repo.PatientViewer,
+  input: PatientListInput,
+) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    const { items, total } = await repo.list(tx, input)
+    const { items, total } = await repo.list(tx, viewer, input)
     return {
       items: await withDoctorNames(tx, items),
       total,
@@ -128,13 +159,14 @@ export function list(deps: PatientDeps, clinicId: string, input: PatientListInpu
 
 /// Kartochka ochilishi audit'ga yoziladi — tibbiy maʼlumot uchun kim nima
 /// koʻrgani ham yozilishi shart (tz.md 12-boʻlim)
-export function get(deps: PatientDeps, clinicId: string, userId: string, id: string) {
+export function get(deps: PatientDeps, clinicId: string, viewer: repo.PatientViewer, id: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
     const patient = await repo.findById(tx, id)
     if (!patient) throw errors.notFound(PATIENT_TEXT.not_found)
+    await assertVisibleTx(tx, viewer, id)
 
     await writeAudit(tx, {
-      userId,
+      userId: viewer.userId,
       action: AUDIT_ACTION.patient_viewed,
       entity: 'patient',
       entityId: id,
@@ -169,11 +201,13 @@ export function create(
 export function update(
   deps: PatientDeps,
   clinicId: string,
-  userId: string,
+  viewer: repo.PatientViewer,
   id: string,
   input: PatientUpdateInput,
 ) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
+    await assertVisibleTx(tx, viewer, id)
     await assertDoctor(tx, input.doctorId)
     try {
       const patient = await repo.update(tx, id, fields(input))
@@ -192,8 +226,15 @@ export function update(
   })
 }
 
-export function remove(deps: PatientDeps, clinicId: string, userId: string, id: string) {
+export function remove(
+  deps: PatientDeps,
+  clinicId: string,
+  viewer: repo.PatientViewer,
+  id: string,
+) {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
+    await assertVisibleTx(tx, viewer, id)
     try {
       await repo.remove(tx, id)
     } catch (error) {
@@ -227,9 +268,15 @@ export interface UploadedFile {
   caption: string | null
 }
 
-export function listImages(deps: PatientDeps, clinicId: string, patientId: string) {
+export function listImages(
+  deps: PatientDeps,
+  clinicId: string,
+  viewer: repo.PatientViewer,
+  patientId: string,
+) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    const rows = await repo.listImages(tx, patientId)
+    await assertVisibleTx(tx, viewer, patientId)
+    const rows = await repo.listImages(tx, viewer, patientId)
     // Rasm serverning oʻzi orqali beriladi: imzolangan havola MinIO
     // manziliga koʻrsatadi, u esa Docker tarmogʻi ichida va brauzerga
     // koʻrinmaydi. Bu manzil esa sessiya va klinika tekshiruvidan oʻtadi
@@ -241,27 +288,35 @@ export function listImages(deps: PatientDeps, clinicId: string, patientId: strin
   })
 }
 
-/// Rasmning oʻzi. RLS tufayli boshqa klinikaning rasmi topilmaydi
+/// Rasmning oʻzi. RLS tufayli boshqa klinikaning rasmi topilmaydi; shifokor
+/// uchun boshqa yuklagan rasm ham «yoʻq»
 export async function imageFile(
   deps: PatientDeps,
   clinicId: string,
+  viewer: repo.PatientViewer,
   imageId: string,
 ): Promise<{ body: Buffer; contentType: string }> {
   const image = await withClinic(deps.db, clinicId, (tx) => repo.findImage(tx, imageId))
-  if (!image) throw errors.notFound()
+  if (!image || !imageVisible(viewer, image.uploadedBy)) throw errors.notFound()
 
   const file = await deps.storage.get(image.key)
   if (!file) throw errors.notFound()
   return file
 }
 
+/// Eski rasmlarda kim yuklagani yoʻq — hammaga koʻrinadi
+function imageVisible(viewer: repo.PatientViewer, uploadedBy: string | null): boolean {
+  return viewer.all || uploadedBy === null || uploadedBy === viewer.userId
+}
+
 export async function uploadImage(
   deps: PatientDeps,
   clinicId: string,
-  userId: string,
+  viewer: repo.PatientViewer,
   patientId: string,
   file: UploadedFile,
 ) {
+  const { userId } = viewer
   const ext = IMAGE_TYPES[file.mimetype]
   if (!ext) throw errors.badRequest(IMAGE_TEXT.wrong_type)
   if (file.buffer.length === 0) throw errors.badRequest(IMAGE_TEXT.no_file)
@@ -270,14 +325,14 @@ export async function uploadImage(
   const id = uuidV7()
   const key = imageKey(clinicId, patientId, id, ext)
 
-  await withClinic(deps.db, clinicId, (tx) => assertPatientExists(tx, patientId))
+  await withClinic(deps.db, clinicId, (tx) => assertVisibleTx(tx, viewer, patientId))
 
   // Avval fayl, keyin yozuv: aks holda bazadagi qator yoʻq faylga
   // koʻrsatib turishi mumkin edi
   await deps.storage.put(key, file.buffer, file.mimetype)
 
   return withClinic(deps.db, clinicId, async (tx) => {
-    const image = await repo.createImage(tx, id, patientId, key, file.caption)
+    const image = await repo.createImage(tx, id, patientId, key, file.caption, userId)
     await writeAudit(tx, {
       userId,
       action: AUDIT_ACTION.image_uploaded,
@@ -289,10 +344,17 @@ export async function uploadImage(
   })
 }
 
-export async function removeImage(deps: PatientDeps, clinicId: string, userId: string, id: string) {
+export async function removeImage(
+  deps: PatientDeps,
+  clinicId: string,
+  viewer: repo.PatientViewer,
+  id: string,
+) {
+  const { userId } = viewer
   const key = await withClinic(deps.db, clinicId, async (tx) => {
     const image = await repo.findImage(tx, id)
-    if (!image) throw errors.notFound(IMAGE_TEXT.not_found)
+    if (!image || !imageVisible(viewer, image.uploadedBy))
+      throw errors.notFound(IMAGE_TEXT.not_found)
 
     await repo.removeImage(tx, id)
     await writeAudit(tx, {
@@ -307,12 +369,6 @@ export async function removeImage(deps: PatientDeps, clinicId: string, userId: s
   // Yozuv oʻchgach fayl ham. Bu yerda xato boʻlsa saqlagichda yetim fayl
   // qoladi — bu bazadagi qator yoʻq faylga koʻrsatishidan yaxshiroq
   await deps.storage.remove(key)
-}
-
-/// Bemor shu klinikaniki ekanini tekshiradi (yuqoridagi assertPatient bilan
-/// bir xil, lekin bu modulning oʻzida — patients oʻz jadvalini biladi)
-async function assertPatientExists(tx: ClinicTx, patientId: string): Promise<void> {
-  if (!(await repo.exists(tx, patientId))) throw errors.notFound(PATIENT_TEXT.not_found)
 }
 
 // --- Excel ---

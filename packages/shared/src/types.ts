@@ -41,6 +41,7 @@ export type ApiResponse<T> = ApiOk<T> | ApiErrorResponse
 export const PERMISSIONS = [
   'patients.read',
   'patients.write',
+  'patients.all',
   'visits.write',
   'teeth.write',
   'payments.read',

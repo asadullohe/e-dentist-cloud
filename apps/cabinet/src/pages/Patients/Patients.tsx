@@ -97,10 +97,11 @@ export function Patients() {
   // Kuzatuvchi roʻyxatni koʻradi va Excelga chiqaradi, lekin yozmaydi
   const canWrite = hasPermission('patients.write')
   const { data: doctors } = useDoctors()
-  const doctorOptions = (doctors ?? []).map((item) => ({
-    value: item.id,
-    label: item.fullName ?? '',
-  }))
+  // Shifokor (patients.all yoʻq) roʻyxatda faqat oʻz bemorlarini koʻradi —
+  // shifokor boʻyicha filtr unga maʼnosiz
+  const doctorOptions = hasPermission('patients.all')
+    ? (doctors ?? []).map((item) => ({ value: item.id, label: item.fullName ?? '' }))
+    : []
 
   const table = useReactTable({
     data: data?.items ?? [],

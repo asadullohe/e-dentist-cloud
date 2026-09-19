@@ -624,6 +624,7 @@ export const STAFF_UI = {
 export const PERMISSION_LABELS = {
   'patients.read': 'Bemorlarni koʻrish',
   'patients.write': 'Bemorlarni oʻzgartirish',
+  'patients.all': 'Hamma bemorlar va tashriflar',
   'visits.write': 'Tashrif yozish',
   'teeth.write': 'Tish xaritasi',
   'payments.read': 'Toʻlovlar va qarzdorlik',

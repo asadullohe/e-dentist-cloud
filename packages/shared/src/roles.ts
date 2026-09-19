@@ -61,6 +61,9 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
     permissions: [
       'patients.read',
       'patients.write',
+      // Hamma bemor: qabulxona pulni oladi, navbatni yuritadi — kimniki
+      // ekanidan qatʼi nazar. Shifokor esa faqat oʻz bemorlarini koʻradi
+      'patients.all',
       'schedule.write',
       'schedule.all',
       'payments.read',
@@ -88,7 +91,13 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       return ROLE_LABELS.kuzatuvchi
     },
     isOwner: false,
-    permissions: ['patients.read', 'payments.read', 'expenses.read', 'reports.read'],
+    permissions: [
+      'patients.read',
+      'patients.all',
+      'payments.read',
+      'expenses.read',
+      'reports.read',
+    ],
   },
 }
 

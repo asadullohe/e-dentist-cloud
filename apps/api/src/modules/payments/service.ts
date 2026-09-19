@@ -8,6 +8,7 @@ import { PATIENT_TEXT, PAYMENT_TEXT } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import type { ScopedViewer } from '../../platform/guards.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -29,8 +30,10 @@ function toDate(value: string): Date {
   return new Date(`${value}T00:00:00Z`)
 }
 
-async function assertPatient(tx: ClinicTx, patientId: string): Promise<void> {
-  if (!(await patients.existsInClinic(tx, patientId))) {
+/// Bemor shu klinikaniki va koʻruvchiga koʻrinadi: shifokor (patients.all
+/// yoʻq) boshqaning bemori hisobini koʻrmaydi, toʻlov ham yozolmaydi
+async function assertPatient(tx: ClinicTx, viewer: ScopedViewer, patientId: string): Promise<void> {
+  if (!(await patients.isVisibleTx(tx, viewer, patientId))) {
     throw errors.notFound(PATIENT_TEXT.not_found)
   }
 }
@@ -58,9 +61,9 @@ async function withNames(tx: ClinicTx, rows: PaymentRow[]): Promise<Payment[]> {
   }))
 }
 
-export function list(deps: PaymentDeps, clinicId: string, patientId: string) {
+export function list(deps: PaymentDeps, clinicId: string, viewer: ScopedViewer, patientId: string) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, patientId)
+    await assertPatient(tx, viewer, patientId)
     return withNames(tx, await repo.list(tx, patientId))
   })
 }
@@ -76,9 +79,14 @@ export async function dailyTotalsTx(
 }
 
 /// Bemorning hisobi. Qarz manfiy boʻlsa — oldindan toʻlangan
-export function balance(deps: PaymentDeps, clinicId: string, patientId: string) {
+export function balance(
+  deps: PaymentDeps,
+  clinicId: string,
+  viewer: ScopedViewer,
+  patientId: string,
+) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, patientId)
+    await assertPatient(tx, viewer, patientId)
     const [charges, paid] = await Promise.all([
       visits.chargeTotalOf(tx, patientId),
       repo.paidTotalOf(tx, patientId),
@@ -90,12 +98,13 @@ export function balance(deps: PaymentDeps, clinicId: string, patientId: string) 
 export function create(
   deps: PaymentDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScopedViewer,
   input: PaymentCreateInput,
 ) {
+  const { userId } = viewer
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
-    await assertPatient(tx, input.patientId)
+    await assertPatient(tx, viewer, input.patientId)
 
     const payment = await repo.create(tx, id, {
       patientId: input.patientId,
@@ -187,17 +196,25 @@ export interface Debtor {
 /// soʻraladi va birlashtirish shu yerda boʻladi. Bitta SQL bilan qilish
 /// tezroq boʻlardi, lekin modul chegarasini buzardi — klinikada bemorlar
 /// soni mingdan oshmaydi, bu hajmda farq sezilmaydi
-export function debtors(deps: PaymentDeps, clinicId: string, input: DebtorsInput) {
+export function debtors(
+  deps: PaymentDeps,
+  clinicId: string,
+  viewer: ScopedViewer,
+  input: DebtorsInput,
+) {
   return withClinic(deps.db, clinicId, async (tx) => {
-    const [charges, paid, matching] = await Promise.all([
+    const [charges, paid, matching, visible] = await Promise.all([
       visits.chargeTotals(tx),
       repo.paidTotals(tx),
       input.q ? patients.searchIds(tx, input.q) : null,
+      // Shifokor faqat oʻz bemorlarining qarzini koʻradi
+      patients.visibleIdsTx(tx, viewer),
     ])
 
     const all: Omit<Debtor, 'fio' | 'phone'>[] = []
     for (const [patientId, charged] of charges) {
       if (matching && !matching.has(patientId)) continue
+      if (visible && !visible.has(patientId)) continue
       const paidSum = paid.get(patientId) ?? 0
       const debt = charged - paidSum
       if (debt > 0) all.push({ patientId, charges: charged, paid: paidSum, debt })

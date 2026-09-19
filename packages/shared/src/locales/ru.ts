@@ -596,6 +596,7 @@ export const ru: DeepPartial<Strings> = {
 
   PERMISSION_LABELS: {
     'patients.read': 'Просмотр пациентов',
+    'patients.all': 'Все пациенты и визиты',
     'patients.write': 'Изменение пациентов',
     'visits.write': 'Запись визитов',
     'teeth.write': 'Зубная карта',
