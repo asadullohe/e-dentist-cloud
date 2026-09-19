@@ -24,7 +24,8 @@ import {
   UPPER,
 } from '@e-dentist/teeth'
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import { useMediaQuery } from '@/shared/lib'
 import { Button } from '@/shared/ui'
 import type { BridgeInfo, ToothInfo } from '../model'
 import { type ArchConfig, GROOVES, MARGIN_X, PERMANENT_ARCH, PRIMARY_ARCH, SHAPES } from './shapes'
@@ -294,9 +295,41 @@ function bridgePath(
     })
 
   if (points.length < 2) return null
-  return points
-    .map(([x, y], i) => `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
-    .join(' ')
+  // Qatorli joylashuvda koʻprik ikki qatorga boʻlinib qolsa (11–21) —
+  // qatorlar orasiga chiziq tortilmaydi, har qator alohida segment
+  const parts: string[] = []
+  points.forEach(([x, y], i) => {
+    const prev = points[i - 1]
+    const newRun = i === 0 || (prev !== undefined && Math.abs(prev[1] - y) > 40)
+    parts.push(`${newRun ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
+  })
+  return parts.join(' ')
+}
+
+/// Telefon uchun joylashuv: ravoq oʻrniga toʻrt qator (oʻng-yuqori,
+/// chap-yuqori, oʻng-pastki, chap-pastki) — 8 tadan tish, hammasi ekranga
+/// sigʻadi va barmoq bilan bosiladi. Aylantirish yoʻq
+const ROWS = { width: 400, height: 470, scale: 0.9, step: 44 }
+
+function rowsPositions(upper: readonly number[], lower: readonly number[]) {
+  const positions = new Map<number, Position>()
+  const half = (list: readonly number[]) => [
+    list.slice(0, list.length / 2),
+    list.slice(list.length / 2),
+  ]
+  const rows: { teeth: readonly number[]; y: number; upper: boolean }[] = [
+    { teeth: half(upper)[0] ?? [], y: 70, upper: true },
+    { teeth: half(upper)[1] ?? [], y: 170, upper: true },
+    { teeth: half(lower)[0] ?? [], y: 298, upper: false },
+    { teeth: half(lower)[1] ?? [], y: 398, upper: false },
+  ]
+  for (const row of rows) {
+    const x0 = (ROWS.width - (row.teeth.length - 1) * ROWS.step) / 2
+    row.teeth.forEach((no, i) => {
+      positions.set(no, { x: x0 + i * ROWS.step, y: row.y, rot: 0, upper: row.upper })
+    })
+  }
+  return positions
 }
 
 interface OdontogramProps {
@@ -306,42 +339,45 @@ interface OdontogramProps {
   cfg: ArchConfig
   bridges?: BridgeInfo[]
   onPick?: ((tooth: number) => void) | undefined
+  /// Telefonda ravoq juda kichrayib, tishni bosib boʻlmay qolardi —
+  /// qatorli joylashuv
+  rows?: boolean
 }
 
-/// Telefonda xarita kichrayib, tishni bosib boʻlmay qolardi. Tor ekranda
-/// SVG 640px dan kichik boʻlmaydi (`min-w-[640px]`) — konteyner yonlama
-/// aylanadi, boshida oʻrtaga (old tishlarga) surilgan boʻladi
-function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: OdontogramProps) {
-  const scroller = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = scroller.current
-    if (el) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
-  }, [])
-
+function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick, rows }: OdontogramProps) {
   const positions = new Map<number, Position>()
-  for (const [list, isUpper] of [
-    [upper, true],
-    [lower, false],
-  ] as const) {
-    const layout = archLayout(list)
-    list.forEach((no, index) => {
-      positions.set(no, { ...archPos(layout[index] ?? 0, isUpper, cfg), upper: isUpper })
-    })
+  if (rows) {
+    for (const [no, p] of rowsPositions(upper, lower)) positions.set(no, p)
+  } else {
+    for (const [list, isUpper] of [
+      [upper, true],
+      [lower, false],
+    ] as const) {
+      const layout = archLayout(list)
+      list.forEach((no, index) => {
+        positions.set(no, { ...archPos(layout[index] ?? 0, isUpper, cfg), upper: isUpper })
+      })
+    }
   }
+  const scale = rows ? ROWS.scale : cfg.scale
+  const width = rows ? ROWS.width : 760
+  const height = rows ? ROWS.height : cfg.height
+  const middle = rows ? 226 : cfg.middle
+  const midX = width / 2
 
   return (
-    <div ref={scroller} className="overflow-x-auto [scrollbar-width:thin] md:overflow-visible">
+    <div>
       <svg
-        viewBox={`0 0 760 ${cfg.height}`}
-        className="mx-auto block w-full min-w-[640px] md:min-w-0"
-        style={{ maxWidth: cfg.maxWidth }}
+        viewBox={`0 0 ${width} ${height}`}
+        className="mx-auto block w-full"
+        style={{ maxWidth: rows ? undefined : cfg.maxWidth }}
         role="img"
         aria-label={CHART_UI.chart_label}
       >
         <title>{CHART_UI.chart_label}</title>
         <text
-          x="380"
-          y={cfg.middle - 10}
+          x={midX}
+          y={middle - 10}
           textAnchor="middle"
           fontSize="12"
           fill="var(--muted-foreground)"
@@ -349,16 +385,16 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
           {CHART_UI.upper_jaw}
         </text>
         <line
-          x1="140"
-          y1={cfg.middle}
-          x2="620"
-          y2={cfg.middle}
+          x1={rows ? 24 : 140}
+          y1={middle}
+          x2={rows ? width - 24 : 620}
+          y2={middle}
           stroke="var(--border)"
           strokeDasharray="3 5"
         />
         <text
-          x="380"
-          y={cfg.middle + 22}
+          x={midX}
+          y={middle + 22}
           textAnchor="middle"
           fontSize="12"
           fill="var(--muted-foreground)"
@@ -372,7 +408,7 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
             bridge.teeth.length >= 2
               ? bridge.teeth
               : bridgeSpan(bridge.teeth[0] ?? 0, bridge.teeth[0] ?? 0)
-          const d = bridgePath(span, positions, cfg)
+          const d = bridgePath(span, positions, { ...cfg, scale })
           if (!d) return null
           const style =
             MATERIAL_STYLE[(bridge.material ?? '') as keyof typeof MATERIAL_STYLE] ??
@@ -383,7 +419,7 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
               d={d}
               fill="none"
               stroke={style.stroke}
-              strokeWidth={11 * cfg.scale}
+              strokeWidth={11 * scale}
               strokeLinecap="round"
               strokeLinejoin="round"
               opacity="0.95"
@@ -405,7 +441,7 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
               x={p.x}
               y={p.y}
               rot={p.rot}
-              scale={cfg.scale}
+              scale={scale}
               onClick={onPick ? () => onPick(no) : undefined}
             />
           )
@@ -423,6 +459,8 @@ export interface ToothChartProps {
 
 export function ToothChart({ teeth, bridges = [], onPick }: ToothChartProps) {
   const byTooth = new Map(teeth.map((t) => [t.tooth, t]))
+  // Telefonda (md dan tor) qatorli joylashuv — ravoq juda kichrayib ketadi
+  const rows = useMediaQuery('(max-width: 767px)')
   // Bemorda sut tishi belgilangan boʻlsa — pastki xarita oʻzi ochiladi
   const [showPrimary, setShowPrimary] = useState(() => teeth.some((t) => isPrimary(t.tooth)))
 
@@ -436,6 +474,7 @@ export function ToothChart({ teeth, bridges = [], onPick }: ToothChartProps) {
         cfg={PERMANENT_ARCH}
         bridges={bridges}
         onPick={onPick}
+        rows={rows}
       />
 
       <div className="my-2 flex justify-center">
@@ -452,6 +491,7 @@ export function ToothChart({ teeth, bridges = [], onPick }: ToothChartProps) {
           byTooth={byTooth}
           cfg={PRIMARY_ARCH}
           onPick={onPick}
+          rows={rows}
         />
       )}
 
