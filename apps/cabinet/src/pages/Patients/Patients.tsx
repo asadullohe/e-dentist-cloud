@@ -76,7 +76,7 @@ export function Patients() {
   const ageRange = columnFilters.find((f) => f.id === 'birthDate')?.value as
     | [number | undefined, number | undefined]
     | undefined
-  const { data, isPending } = usePatients({
+  const { data, isPending, isFetching } = usePatients({
     q: debouncedSearch || undefined,
     fio: filterOf('fio'),
     phone: filterOf('phone'),
@@ -214,7 +214,8 @@ export function Patients() {
       <DataTable
         table={table}
         loading={isPending && !data}
-        refreshing={isPending}
+        // Eski maʼlumot koʻrsatilib turganda (qidiruv, sahifa) — jadval xira
+        refreshing={isFetching}
         emptyText={
           debouncedSearch || columnFilters.length ? PATIENT_UI.nothing_found : PATIENT_UI.empty
         }

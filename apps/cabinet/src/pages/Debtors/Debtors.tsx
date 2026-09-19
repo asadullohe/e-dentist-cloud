@@ -23,7 +23,7 @@ export function Debtors() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
 
   const sort = sorting[0]
-  const { data, isPending } = useDebtors({
+  const { data, isPending, isFetching } = useDebtors({
     q: columnFilters.find((f) => f.id === 'fio')?.value as string | undefined,
     page: pagination.pageIndex + 1,
     pageSize: pagination.pageSize,
@@ -72,7 +72,8 @@ export function Debtors() {
       <DataTable
         table={table}
         loading={isPending && !data}
-        refreshing={isPending}
+        // Eski maʼlumot koʻrsatilib turganda (qidiruv, sahifa) — jadval xira
+        refreshing={isFetching}
         emptyText={DEBTORS_UI.empty}
         onRowClick={(debtor) => navigate(`/patients/${debtor.patientId}/tolovlar`)}
       />

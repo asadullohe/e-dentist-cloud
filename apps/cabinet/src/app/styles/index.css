@@ -186,6 +186,19 @@
     cursor: pointer;
   }
 
+  /* Yuklanish chizigʻi (FetchBar): chapdan oʻngga yurib turadi */
+  @keyframes fetch-bar {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
+  .animate-fetch-bar {
+    animation: fetch-bar 1.1s ease-in-out infinite;
+  }
+
   /* Chop etish — hozircha faqat navbat QR varagʻi (10.8): A4, tor hoshiya,
      qorongʻi rejim fonlari qogʻozga tushmasin */
   @page {

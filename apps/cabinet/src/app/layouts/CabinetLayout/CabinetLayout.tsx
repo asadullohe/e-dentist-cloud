@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useSession } from '@/entities/session'
 import { navSections } from '@/shared/config'
+import { FetchBar } from '@/widgets/FetchBar'
 import { Header } from '@/widgets/Header'
 import { Sidebar } from '@/widgets/Sidebar'
 import { TrialBanner } from '@/widgets/TrialBanner'
@@ -65,6 +66,7 @@ export function CabinetLayout() {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <FetchBar />
         <Header
           title={pageTitle(pathname)}
           onToggleMenu={toggle}

@@ -37,6 +37,11 @@ function insideControl(target: EventTarget | null): boolean {
 
 /// Jadvalning oʻzi: sarlavha, qatorlar, boʻsh holat. Ustunlar va holat —
 /// `useReactTable` da, bu yerda faqat chizish
+/// Skelet qatorlari va turli kenglik — bir xil chiziqlar «bloklangan» dek
+/// koʻrinadi, har xili matnga oʻxshaydi
+const SKELETON_ROWS = [0, 1, 2, 3, 4, 5]
+const SKELETON_WIDTHS = ['w-3/4', 'w-1/2', 'w-2/3', 'w-5/6']
+
 export function DataTable<TData>({
   table,
   loading = false,
@@ -51,11 +56,34 @@ export function DataTable<TData>({
   return (
     <Card className="gap-0 overflow-hidden p-0">
       {loading ? (
-        <div className="space-y-2 p-4">
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-          <Skeleton className="h-8 w-full" />
-        </div>
+        // Skelet jadval shaklida: sarlavha oʻz joyida, ostida qatorlar —
+        // yuklanish tugagach hech narsa sakramaydi
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className={meta(header.column)?.className}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {SKELETON_ROWS.map((row) => (
+              <TableRow key={row}>
+                {table.getVisibleLeafColumns().map((column, i) => (
+                  <TableCell key={column.id} className={meta(column)?.className}>
+                    <Skeleton className={cn('h-4', SKELETON_WIDTHS[(row + i) % 4])} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       ) : (
         <Table>
           <TableHeader>

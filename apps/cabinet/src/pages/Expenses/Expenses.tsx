@@ -36,6 +36,7 @@ import {
   DataTable,
   DataTablePagination,
   DataTableViewOptions,
+  Skeleton,
 } from '@/shared/ui'
 import { expenseColumns } from './columns'
 
@@ -131,9 +132,14 @@ export function Expenses() {
           </Button>
         )}
         <div className="ml-auto">
-          <Badge variant="secondary" className="text-sm">
-            {EXPENSE_UI.total}: {formatSom(data?.total ?? 0)}
-          </Badge>
+          {/* Yuklanayotganda «0 soʻm» koʻrsatilmasin — bu yolgʻon raqam */}
+          {data ? (
+            <Badge variant="secondary" className="text-sm">
+              {EXPENSE_UI.total}: {formatSom(data.total)}
+            </Badge>
+          ) : (
+            <Skeleton className="h-6 w-36" />
+          )}
         </div>
       </div>
 
