@@ -31,8 +31,11 @@ export function PatientPicker({ value, label, onPick }: PatientPickerProps) {
   const debounced = useDebounced(query, 300)
   const { data } = usePatients({ q: debounced, page: 1, pageSize: 20 })
 
+  // `modal`: tanlov oyna (Dialog) ichida ochiladi — Dialog tashqaridagi
+  // gʻildirak hodisalarini yutadi, roʻyxat esa portal orqali tashqarida.
+  // Modal popover oʻz qulfini oʻrnatadi va roʻyxat ichida aylantirish ishlaydi
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <Button
           type="button"

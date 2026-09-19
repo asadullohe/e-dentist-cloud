@@ -62,9 +62,9 @@ export const labRoutes: FastifyPluginAsync<LabRouteOpts> = async (app, opts) => 
   })
 
   app.delete('/lab-orders/:id', write, async (req) => {
-    const { clinicId, userId } = actorOf(req)
+    const { clinicId, userId, permissions } = actorOf(req)
     const { id } = req.params as { id: string }
-    await service.remove(opts.deps, clinicId, userId, id)
+    await service.remove(opts.deps, clinicId, userId, permissions, id)
     return ok({ deleted: true })
   })
 }

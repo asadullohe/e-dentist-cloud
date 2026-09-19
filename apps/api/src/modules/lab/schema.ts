@@ -36,6 +36,11 @@ const dueDate = z
     error: () => VALIDATION_TEXT.date_invalid,
   })
 
+const techPrice = z.coerce
+  .number()
+  .int()
+  .min(0, { error: () => LAB_TEXT.price_negative })
+
 export const labCreateSchema = z.object({
   patientId: z.string().uuid(),
   techId: z.string().uuid().nullish(),
@@ -52,15 +57,17 @@ export const labCreateSchema = z.object({
   shade: z.enum(VITA_SHADES, { error: () => LAB_TEXT.shade_invalid }).nullish(),
   dueDate,
   /// Soʻm, butun son
-  techPrice: z.coerce
-    .number()
-    .int()
-    .min(0, { error: () => LAB_TEXT.price_negative })
-    .default(0),
+  techPrice: techPrice.default(0),
   note: z.string().trim().max(2000).nullish(),
 })
 
-export const labUpdateSchema = labCreateSchema.omit({ patientId: true }).partial()
+/// `.partial()` `.default(0)` ni olib tashlamaydi — narx yuborilmasa ham 0
+/// kelib, `lab.cost` yoʻq shifokor tahrirda 403 olardi. Shuning uchun narx
+/// alohida, sukutsiz
+export const labUpdateSchema = labCreateSchema
+  .omit({ patientId: true, techPrice: true })
+  .partial()
+  .extend({ techPrice: techPrice.optional() })
 
 export const labStatusSchema = z.object({
   status: z.enum(LAB_STATUSES),

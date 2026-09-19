@@ -233,6 +233,53 @@ describe('roʻyxat', () => {
     expect(all.length).toBeGreaterThan(mine.length)
   })
 
+  // Shifokor (patients.all yoʻq) faqat oʻzi yozgan naryadlarni koʻradi —
+  // boshqa shifokorning bemori va ishi unga koʻrinmaydi (11-bosqich)
+  it('shifokor faqat oʻzi yozgan naryadlarni koʻradi, boshqaniki — topilmadi', async () => {
+    const roles = await h.ownerDb.role.findMany({ where: { clinicId: h.clinicId } })
+    const doctorRole = roles.find((role) => role.template === 'shifokor')
+    const email = `naryad-shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`
+    await call('POST', '/api/staff', {
+      email,
+      fullName: 'Naryad Shifokori',
+      roleId: doctorRole?.id,
+      password: 'juda-yaxshi-parol',
+      payPercent: 30,
+    })
+    const login = await h.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress: h.clientIp,
+      payload: { email, password: 'juda-yaxshi-parol' },
+    })
+    const cookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
+    const asDoctor = (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) =>
+      h.app.inject({ method, url, payload, headers: { cookie } })
+
+    // Egasining naryadi bor (yuqorida yozilgan); shifokor oʻzinikini yozadi
+    const ownersOrder = (await call('GET', '/api/lab-orders')).json().data[0] as LabOrder
+    const own = await asDoctor('POST', '/api/lab-orders', {
+      patientId,
+      teeth: [11],
+      workType: 'crown',
+      material: 'zirconia',
+      dueDate: '2027-01-10',
+    })
+    expect(own.statusCode).toBe(200)
+
+    const mine: LabOrder[] = (await asDoctor('GET', '/api/lab-orders')).json().data
+    expect(mine.map((row) => row.id)).toEqual([own.json().data.id])
+
+    expect(
+      (await asDoctor('PATCH', `/api/lab-orders/${ownersOrder.id}`, { note: 'x' })).statusCode,
+    ).toBe(404)
+    expect((await asDoctor('DELETE', `/api/lab-orders/${ownersOrder.id}`)).statusCode).toBe(404)
+    // Egasi (patients.all) hammasini koʻradi
+    const all: LabOrder[] = (await call('GET', '/api/lab-orders')).json().data
+    expect(all.map((row) => row.id)).toContain(own.json().data.id)
+    await asDoctor('DELETE', `/api/lab-orders/${own.json().data.id}`)
+  })
+
   // Texnik boshqaning naryadini koʻrish uchun filtr bera olmaydi
   it('texnik filtr bilan ham begona naryadga yeta olmaydi', async () => {
     const rows: LabOrder[] = (
