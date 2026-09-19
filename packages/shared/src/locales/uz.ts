@@ -642,6 +642,8 @@ export const PERMISSION_LABELS = {
   'payroll.own': 'Oʻz ish haqi',
   'payroll.manage': 'Ish haqi: hamma xodim, toʻlab berish',
   'queue.manage': 'Navbat',
+  'feedback.read': 'Bemor fikrlari: hammasi',
+  'feedback.own': 'Bemor fikrlari: oʻzi haqida',
   'staff.manage': 'Xodimlar va rollar',
   'billing.manage': 'Obuna va toʻlov',
   'data.export': 'Maʼlumotni yuklab olish',
@@ -863,6 +865,123 @@ export const QUEUE_UI = {
   screen_now: 'Hozir',
   screen_next: 'Keyingi',
   closed: 'Navbat yopiq',
+  // Bosqichli sahifa (12-bosqich)
+  step_doctor: 'Shifokor',
+  step_name: 'Maʼlumotlar',
+  step_number: 'Raqam',
+  now_serving: (n: number) => `Hozir qabulda: №${n}`,
+  free_now: 'Hozir boʻsh',
+  phone_optional: 'Telefon (ixtiyoriy)',
+  phone_hint: 'Qabulxona kerak boʻlsa qoʻngʻiroq qiladi',
+  change_doctor: 'Boshqa shifokor',
+  progress: (ahead: number) => (ahead === 0 ? 'Keyingisi sizsiz' : `Oldingizda ${ahead} kishi`),
+  keep_open: 'Sahifani yopmang — navbatingiz kelganda shu yerda koʻrasiz',
+  call: 'Qoʻngʻiroq',
+  route: 'Manzil',
+  leave_feedback: 'Fikr bildirish',
+  feedback_prompt: 'Qabul qanday oʻtdi?',
+  feedback_prompt_hint: 'Bir daqiqa — bahoyingiz klinikaga yordam beradi',
+  feedback_done: 'Fikringiz uchun rahmat',
+  join_again: 'Yana yozilish',
+} as const
+
+// Bemor fikri — ochiq sahifa (/f/<kod>)
+export const FEEDBACK_UI = {
+  title: 'Fikr bildirish',
+  subtitle: 'Bahoyingiz faqat klinika rahbariga koʻrinadi',
+  rating: 'Klinikaga bahoyingiz',
+  rating_labels: ['Juda yomon', 'Yomon', 'Oʻrtacha', 'Yaxshi', 'Aʼlo'] as const,
+  doctor: 'Qaysi shifokor qabul qildi?',
+  doctor_any: 'Aytmayman',
+  tags_good: 'Nima yoqdi?',
+  tags_bad: 'Nima yoqmadi?',
+  comment: 'Izoh',
+  comment_placeholder: 'Xohlasangiz batafsil yozing…',
+  phone: 'Telefon',
+  phone_hint: 'Rahbariyat siz bilan bogʻlanishini xohlasangiz qoldiring',
+  send: 'Yuborish',
+  thanks: 'Rahmat!',
+  thanks_hint: 'Fikringiz klinika rahbariga yetkazildi',
+  thanks_low: 'Kechirim soʻraymiz. Rahbariyat albatta koʻrib chiqadi',
+  review_cta: 'Xaritada ham baholang',
+  review_hint:
+    'Sizga yoqqan boʻlsa — Google yoki Yandex xaritada ham bir ogʻiz yozing, boshqalarga yordam beradi',
+  back_to_queue: 'Navbat sahifasiga',
+} as const
+
+export const FEEDBACK_TAG_LABELS = {
+  waiting: 'Kutish vaqti',
+  attitude: 'Muomala',
+  treatment: 'Davolash',
+  cleanliness: 'Tozalik',
+  price: 'Narx',
+} as const
+
+export const FEEDBACK_STATUS_LABELS = {
+  new: 'Yangi',
+  seen: 'Koʻrildi',
+  contacted: 'Bogʻlanildi',
+} as const
+
+export const FEEDBACK_SOURCE_LABELS = {
+  ticket: 'Navbatdan',
+  qr: 'QR varaqdan',
+  page: 'Sahifadan',
+} as const
+
+// Server xatolari
+export const FEEDBACK_TEXT = {
+  rating_required: '1 dan 5 gacha baho bering',
+  too_many: 'Bu qurilmadan bugun juda koʻp fikr yuborildi',
+  ticket_not_finished: 'Fikr qabul tugagach yoziladi',
+  ticket_already: 'Bu navbat raqamiga fikr allaqachon yozilgan',
+  not_found: 'Fikr topilmadi',
+  bad_url: 'Havola http:// yoki https:// bilan boshlansin',
+} as const
+
+// Kabinetdagi fikrlar (Sozlamalar → Fikrlar) va bosh sahifa kartasi
+export const FEEDBACK_CABINET_UI = {
+  tab: 'Fikrlar',
+  hint: 'Bemorlarning klinika va shifokorlar haqidagi bahosi',
+  empty: 'Hali fikr yoʻq',
+  empty_hint:
+    'Fikr QR varagʻini chop etib chiqish eshigiga osing — bemorlar bahosi shu yerga tushadi',
+  average: 'Oʻrtacha baho',
+  count: (n: number) => `${n} ta fikr`,
+  new_count: (n: number) => `${n} ta yangi`,
+  all: 'Hammasi',
+  only_new: 'Faqat yangi',
+  low_only: 'Past baho (1–2)',
+  doctor_filter: 'Shifokor',
+  no_doctor: 'Shifokor koʻrsatilmagan',
+  anonymous: 'Ismsiz',
+  mark_seen: 'Koʻrildi',
+  mark_contacted: 'Bogʻlanildi',
+  by_doctor: 'Shifokorlar boʻyicha',
+  period_month: 'Shu oy',
+  period_all: 'Hammasi',
+  home_title: 'Bemorlar bahosi',
+  home_hint: (count: number, fresh: number) =>
+    fresh > 0 ? `${count} ta fikr · ${fresh} ta yangi` : `${count} ta fikr`,
+  home_empty: 'Hali fikr yoʻq',
+  // Sozlamalar
+  settings_title: 'Bemor sahifasi',
+  public_phone: 'Bemorlar uchun telefon',
+  public_phone_hint: 'Navbat sahifasida «Qoʻngʻiroq» tugmasi shu raqamga',
+  address: 'Manzil',
+  address_hint: 'Navbat sahifasida koʻrinadi',
+  review_url: 'Xaritadagi sharh havolasi',
+  review_url_hint:
+    'Google yoki Yandex xaritadagi klinika sahifangiz. 5 yulduz bergan bemorga «xaritada ham baholang» tugmasi chiqadi',
+  saved: 'Saqlandi',
+  // Fikr QR varagʻi
+  poster: 'Fikr QR varagʻi',
+  poster_hint: 'Chiqish eshigiga yoki har shifokor xonasiga — shifokor tanlab chop etiladi',
+  poster_doctor: 'Shifokor xonasi uchun',
+  poster_general: 'Umumiy (chiqish eshigi)',
+  poster_title: 'Fikringiz biz uchun muhim',
+  poster_scan: 'QR ni skanerlang va bir daqiqada baholang',
+  poster_steps: 'Yulduz qoʻying, xohlasangiz izoh yozing. Ism shart emas.',
 } as const
 
 // Kabinetdagi navbat
@@ -1113,6 +1232,7 @@ export const SETTINGS_UI = {
   roles_hint: 'Har rol nimani koʻradi va nimani oʻzgartira oladi',
   clinic_hint: 'Logotip va klinika koʻrinishi',
   queue_hint: 'Bemorlar uchun navbat sahifasi va kutish xonasi ekrani',
+  feedback_hint: 'Bemorlarning bahosi, fikr QR varagʻi va bemor sahifasi kontaktlari',
   data_hint: 'Barcha maʼlumotni yuklab olish',
 } as const
 

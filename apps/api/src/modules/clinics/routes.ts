@@ -4,7 +4,7 @@ import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
-import { queueSettingsSchema, rolePermissionsSchema } from './schema.js'
+import { publicProfileSchema, queueSettingsSchema, rolePermissionsSchema } from './schema.js'
 import * as service from './service.js'
 
 export interface ClinicRouteOpts {
@@ -78,5 +78,12 @@ export const clinicRoutes: FastifyPluginAsync<ClinicRouteOpts> = async (app, opt
     const input = validateInput(queueSettingsSchema, req.body)
     const clinic = await service.setQueueEnabled(opts.deps, clinicId, input.enabled)
     return ok({ queueEnabled: clinic.queueEnabled, queueCode: clinic.queueCode })
+  })
+
+  // Bemor sahifasidagi telefon, manzil va xarita sharh havolasi (12-bosqich)
+  app.patch('/clinic/public', manage, async (req) => {
+    const { clinicId } = clinicOf(req)
+    const input = validateInput(publicProfileSchema, req.body)
+    return ok(await service.updatePublicProfile(opts.deps, clinicId, input))
   })
 }

@@ -42,6 +42,13 @@ model Clinic {
   queueEnabled Boolean @default(true) @map("queue_enabled")
   /// Logotip fayli MinIO da; bazada faqat kalit. Yoʻq boʻlsa nom koʻrsatiladi
   logoKey      String? @map("logo_key")
+  /// Bemor sahifasidagi kontaktlar (tz.md 14-boʻlim). `phone` egasining
+  /// roʻyxat raqami — u ochiq sahifaga chiqmaydi
+  publicPhone  String? @map("public_phone")
+  address      String?
+  /// Google/Yandex xaritadagi sharh havolasi: 5 yulduz bergan bemorga
+  /// «u yerda ham baholang» tugmasi chiqadi. Boʻsh boʻlsa tugma yoʻq
+  reviewUrl    String? @map("review_url")
   /// Obuna tugash sanasi. Bundan keyin faqat oʻqish rejimi
   expiresAt DateTime     @map("expires_at") @db.Date
   createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -62,6 +69,7 @@ model Clinic {
   expenses     Expense[]
   labOrders    LabOrder[]
   staffPayouts StaffPayout[]
+  feedback     Feedback[]
 
   @@index([status])
   @@map("clinics")
@@ -389,13 +397,66 @@ model Appointment {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic  Clinic   @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  patient Patient? @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  clinic   Clinic    @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient  Patient?  @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  feedback Feedback?
 
   @@index([clinicId, at])
   @@index([clinicId, patientId])
   @@index([clinicId, queueStatus, queueNumber])
   @@map("appointments")
+}
+
+// ─────────────────────────────  Bemor fikrlari  ─────────────────────────────
+
+/// Fikr qayerdan kelgani: navbat raqamidan (qabul tugagach), fikr QR
+/// varagʻidan yoki navbat sahifasidagi tugmadan
+enum FeedbackSource {
+  ticket
+  qr
+  page
+}
+
+enum FeedbackStatus {
+  new
+  seen
+  /// Egasi bemor bilan bogʻlandi
+  contacted
+}
+
+/// Bemorning klinika va shifokor haqidagi bahosi (tz.md 14-boʻlim). Ochiq
+/// sahifadan keladi — ismsiz boʻlishi mumkin. Faqat egasiga koʻrinadi,
+/// ochiq reyting 1-versiyada yoʻq
+model Feedback {
+  id       String  @id @default(uuid(7)) @db.Uuid
+  clinicId String  @map("clinic_id") @db.Uuid
+  doctorId String? @map("doctor_id") @db.Uuid
+  /// Navbat raqamidan kelgan fikr — bitta raqamga bittasi
+  appointmentId String? @unique @map("appointment_id") @db.Uuid
+  patientId     String? @map("patient_id") @db.Uuid
+
+  /// 1–5
+  rating  Int
+  /// Tez tanlovlar: kutish, muomala, davolash… (FEEDBACK_TAGS)
+  tags    String[]
+  comment String?
+  /// Bemor «bogʻlaning» desa qoldiradi
+  phone   String?
+  source  FeedbackSource
+  status  FeedbackStatus @default(new)
+  /// Qurilma belgisi (cookie) — suiisteʼmolni koʻrish uchun, shaxs emas
+  deviceId String? @map("device_id")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic      Clinic       @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([clinicId, createdAt])
+  @@index([clinicId, status])
+  @@index([clinicId, doctorId, createdAt])
+  @@map("feedback")
 }
 
 // ────────────────────────────────  Narxnoma  ────────────────────────────────

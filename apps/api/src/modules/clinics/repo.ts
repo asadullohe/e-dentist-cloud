@@ -70,7 +70,23 @@ export async function findClinic(tx: ClinicTx, clinicId: string) {
       queueCode: true,
       queueEnabled: true,
       logoKey: true,
+      publicPhone: true,
+      address: true,
+      reviewUrl: true,
     },
+  })
+}
+
+/// Bemor sahifasi kontaktlari va xarita sharh havolasi
+export function updatePublicProfile(
+  tx: ClinicTx,
+  clinicId: string,
+  data: { publicPhone: string | null; address: string | null; reviewUrl: string | null },
+) {
+  return tx.clinic.update({
+    where: { id: clinicId },
+    data,
+    select: { publicPhone: true, address: true, reviewUrl: true },
   })
 }
 
@@ -112,6 +128,10 @@ export interface QueueClinicRow {
   name: string
   queue_enabled: boolean
   logo_key: string | null
+  /// Bemor sahifasidagi kontaktlar va xarita sharh havolasi (12-bosqich)
+  public_phone: string | null
+  address: string | null
+  review_url: string | null
 }
 
 export async function findByQueueCode(db: Db, code: string): Promise<QueueClinicRow | null> {

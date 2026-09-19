@@ -13,6 +13,7 @@ import * as billing from '../modules/billing/service.js'
 import { clinicRoutes } from '../modules/clinics/routes.js'
 import { expenseRoutes } from '../modules/expenses/routes.js'
 import { exportRoutes } from '../modules/export/routes.js'
+import { feedbackRoutes } from '../modules/feedback/routes.js'
 import { healthRoutes } from '../modules/health/routes.js'
 import { labRoutes } from '../modules/lab/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
@@ -173,6 +174,12 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(queueRoutes, {
     prefix: '/api',
     deps: { db: deps.db, rateLimiter: deps.rateLimiter, bus: deps.bus },
+    secureCookie: config.NODE_ENV === 'production',
+  })
+  // Bemor fikrlari: ochiq /api/f/<kod> va kabinetdagi /api/feedback
+  app.register(feedbackRoutes, {
+    prefix: '/api',
+    deps: { db: deps.db, rateLimiter: deps.rateLimiter },
     secureCookie: config.NODE_ENV === 'production',
   })
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })

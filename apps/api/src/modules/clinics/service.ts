@@ -16,6 +16,7 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import { generateQueueCode } from './queueCode.js'
 import * as repo from './repo.js'
+import type { PublicProfileInput } from './schema.js'
 
 export type { NewClinic, RoleInfo } from './repo.js'
 
@@ -116,6 +117,11 @@ export function findRoleByIdTx(tx: ClinicTx, roleId: string) {
 /// Navbat kodi boʻyicha klinika. Sessiyasiz — ochiq sahifa uchun
 export function findByQueueCode(db: Db, code: string) {
   return repo.findByQueueCode(db, code)
+}
+
+/// Bemor sahifasi kontaktlari va xarita sharh havolasi (12-bosqich)
+export function updatePublicProfile(deps: ClinicDeps, clinicId: string, input: PublicProfileInput) {
+  return withClinic(deps.db, clinicId, (tx) => repo.updatePublicProfile(tx, clinicId, input))
 }
 
 /// Navbatni yoqish/oʻchirish (tz.md 14-boʻlim: klinika navbatni butunlay

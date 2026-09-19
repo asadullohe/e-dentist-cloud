@@ -60,7 +60,21 @@ export const PERMISSIONS = [
   'billing.manage',
   'data.export',
   'queue.manage',
+  'feedback.read',
+  'feedback.own',
 ] as const
+
+// --- Bemor fikrlari ---
+// Tez tanlovlar: bemor yulduz bilan birga nimani nazarda tutganini belgilaydi.
+// Roʻyxat qatʼiy — statistika shu kalitlar boʻyicha yigʻiladi
+export const FEEDBACK_TAGS = ['waiting', 'attitude', 'treatment', 'cleanliness', 'price'] as const
+export type FeedbackTag = (typeof FEEDBACK_TAGS)[number]
+
+export const FEEDBACK_SOURCES = ['ticket', 'qr', 'page'] as const
+export type FeedbackSource = (typeof FEEDBACK_SOURCES)[number]
+
+export const FEEDBACK_STATUSES = ['new', 'seen', 'contacted'] as const
+export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number]
 
 export type Permission = (typeof PERMISSIONS)[number]
 

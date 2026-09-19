@@ -4,9 +4,9 @@
 // ataylab tor: klinika nomi, shifokorlar va raqamlar. Bemor ismlari
 // qaytmaydi (tz.md 14-boʻlim, maxfiylik chegarasi).
 
-import { randomUUID } from 'node:crypto'
 import { QUEUE_TEXT } from '@e-dentist/shared'
-import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify'
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
+import { deviceId } from '../../platform/device.js'
 import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
@@ -23,31 +23,10 @@ function clinicOf(req: FastifyRequest): { clinicId: string; userId: string } {
 /// Proxy oqimni jim deb uzib yubormasligi uchun
 const HEARTBEAT_MS = 25_000
 
-/// Qurilmani belgilaydigan cookie. Login emas — faqat «shu brauzerdan
-/// bugun nechta yozuv boʻldi» degan hisob uchun
-const DEVICE_COOKIE = 'ed_device'
-const DEVICE_TTL = 60 * 60 * 24 * 365
-
 /// Bitta IP dan bir vaqtda nechta oqim ochilishi mumkin. Ochiq marshrut
 /// boʻlgani uchun ulanishlarni cheksiz ushlab turishga yoʻl qoʻymaymiz
 const STREAM_PER_IP = 3
 const streams = new Map<string, number>()
-
-/// Qurilma belgisi: boʻlmasa yaratiladi va cookie ga yoziladi
-function deviceId(req: FastifyRequest, reply: FastifyReply, secure: boolean): string {
-  const existing = req.cookies[DEVICE_COOKIE]
-  if (existing) return existing
-
-  const fresh = randomUUID()
-  reply.setCookie(DEVICE_COOKIE, fresh, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure,
-    path: '/',
-    maxAge: DEVICE_TTL,
-  })
-  return fresh
-}
 
 export interface QueueRouteOpts {
   deps: queue.QueueDeps

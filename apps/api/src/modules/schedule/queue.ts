@@ -47,12 +47,17 @@ export interface DoctorBoard {
   fullName: string
   waiting: number
   waitMinutes: number
+  /// Hozir chaqirilgan raqam — bemor navbat qayerdaligini koʻradi
+  nowServing: number | null
 }
 
 export interface Board {
   clinicName: string
   /// Rasmning oʻzi alohida manzilda: /api/n/<kod>/logo
   hasLogo: boolean
+  /// Kontaktlar (12-bosqich): «Qoʻngʻiroq» va «Manzil» tugmalari
+  publicPhone: string | null
+  address: string | null
   doctors: DoctorBoard[]
 }
 
@@ -119,17 +124,29 @@ export function board(deps: QueueDeps, code: string): Promise<Board> {
 
       const minutes = averageMinutes(finished.map((row) => row.updatedAt))
       const waitingByDoctor = new Map<string, number>()
+      const servingByDoctor = new Map<string, number>()
       for (const entry of entries) {
         if (!inQueue(entry.queueStatus) || !entry.doctorId) continue
         waitingByDoctor.set(entry.doctorId, (waitingByDoctor.get(entry.doctorId) ?? 0) + 1)
+        // Roʻyxat raqam boʻyicha — oxirgi chaqirilgan qoladi
+        if (entry.queueStatus === 'called' && entry.queueNumber !== null) {
+          servingByDoctor.set(entry.doctorId, entry.queueNumber)
+        }
       }
 
       return {
         clinicName: clinic.name,
         hasLogo: clinic.logo_key !== null,
+        publicPhone: clinic.public_phone,
+        address: clinic.address,
         doctors: doctors.map((doctor) => {
           const waiting = waitingByDoctor.get(doctor.id) ?? 0
-          return { ...doctor, waiting, waitMinutes: waiting * minutes }
+          return {
+            ...doctor,
+            waiting,
+            waitMinutes: waiting * minutes,
+            nowServing: servingByDoctor.get(doctor.id) ?? null,
+          }
         }),
       }
     }),
@@ -245,6 +262,24 @@ export async function watch(
 ): Promise<() => void> {
   const clinic = await findClinic(deps, code)
   return deps.bus.subscribe(queueChannel(clinic.id), onChange)
+}
+
+/// Fikr yozish uchun (feedback moduli): raqam kimniki va tugaganmi.
+/// Boshqa modul `appointments` ga oʻzi soʻrov yubormaydi — shu yerdan oladi
+export interface FinishedTicket {
+  doctorId: string | null
+  patientId: string | null
+  finished: boolean
+}
+
+export async function ticketForFeedback(tx: ClinicTx, id: string): Promise<FinishedTicket | null> {
+  const entry = await repo.findQueueEntry(tx, id)
+  if (!entry || entry.queueStatus === null) return null
+  return {
+    doctorId: entry.doctorId,
+    patientId: entry.patientId,
+    finished: entry.queueStatus === 'finished',
+  }
 }
 
 /// Bemor oʻz raqamini kuzatadi
