@@ -24,7 +24,7 @@ import {
   UPPER,
 } from '@e-dentist/teeth'
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/shared/ui'
 import type { BridgeInfo, ToothInfo } from '../model'
 import { type ArchConfig, GROOVES, MARGIN_X, PERMANENT_ARCH, PRIMARY_ARCH, SHAPES } from './shapes'
@@ -308,7 +308,16 @@ interface OdontogramProps {
   onPick?: ((tooth: number) => void) | undefined
 }
 
+/// Telefonda xarita kichrayib, tishni bosib boʻlmay qolardi. Tor ekranda
+/// SVG 640px dan kichik boʻlmaydi (`min-w-[640px]`) — konteyner yonlama
+/// aylanadi, boshida oʻrtaga (old tishlarga) surilgan boʻladi
 function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: OdontogramProps) {
+  const scroller = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = scroller.current
+    if (el) el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2
+  }, [])
+
   const positions = new Map<number, Position>()
   for (const [list, isUpper] of [
     [upper, true],
@@ -321,86 +330,88 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
   }
 
   return (
-    <svg
-      viewBox={`0 0 760 ${cfg.height}`}
-      className="mx-auto block w-full"
-      style={{ maxWidth: cfg.maxWidth }}
-      role="img"
-      aria-label={CHART_UI.chart_label}
-    >
-      <title>{CHART_UI.chart_label}</title>
-      <text
-        x="380"
-        y={cfg.middle - 10}
-        textAnchor="middle"
-        fontSize="12"
-        fill="var(--muted-foreground)"
+    <div ref={scroller} className="overflow-x-auto [scrollbar-width:thin] md:overflow-visible">
+      <svg
+        viewBox={`0 0 760 ${cfg.height}`}
+        className="mx-auto block w-full min-w-[640px] md:min-w-0"
+        style={{ maxWidth: cfg.maxWidth }}
+        role="img"
+        aria-label={CHART_UI.chart_label}
       >
-        {CHART_UI.upper_jaw}
-      </text>
-      <line
-        x1="140"
-        y1={cfg.middle}
-        x2="620"
-        y2={cfg.middle}
-        stroke="var(--border)"
-        strokeDasharray="3 5"
-      />
-      <text
-        x="380"
-        y={cfg.middle + 22}
-        textAnchor="middle"
-        fontSize="12"
-        fill="var(--muted-foreground)"
-      >
-        {CHART_UI.lower_jaw}
-      </text>
+        <title>{CHART_UI.chart_label}</title>
+        <text
+          x="380"
+          y={cfg.middle - 10}
+          textAnchor="middle"
+          fontSize="12"
+          fill="var(--muted-foreground)"
+        >
+          {CHART_UI.upper_jaw}
+        </text>
+        <line
+          x1="140"
+          y1={cfg.middle}
+          x2="620"
+          y2={cfg.middle}
+          stroke="var(--border)"
+          strokeDasharray="3 5"
+        />
+        <text
+          x="380"
+          y={cfg.middle + 22}
+          textAnchor="middle"
+          fontSize="12"
+          fill="var(--muted-foreground)"
+        >
+          {CHART_UI.lower_jaw}
+        </text>
 
-      {/* Koʻpriklar tishlar ostida — chetlari koʻrinib turadi */}
-      {bridges.map((bridge) => {
-        const span =
-          bridge.teeth.length >= 2
-            ? bridge.teeth
-            : bridgeSpan(bridge.teeth[0] ?? 0, bridge.teeth[0] ?? 0)
-        const d = bridgePath(span, positions, cfg)
-        if (!d) return null
-        const style =
-          MATERIAL_STYLE[(bridge.material ?? '') as keyof typeof MATERIAL_STYLE] ??
-          MATERIAL_STYLE['']
-        return (
-          <path
-            key={bridge.id}
-            d={d}
-            fill="none"
-            stroke={style.stroke}
-            strokeWidth={11 * cfg.scale}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.95"
-          >
-            <title>{CHART_UI.bridge_title(span, crownMaterialLabel(bridge.material))}</title>
-          </path>
-        )
-      })}
+        {/* Koʻpriklar tishlar ostida — chetlari koʻrinib turadi */}
+        {bridges.map((bridge) => {
+          const span =
+            bridge.teeth.length >= 2
+              ? bridge.teeth
+              : bridgeSpan(bridge.teeth[0] ?? 0, bridge.teeth[0] ?? 0)
+          const d = bridgePath(span, positions, cfg)
+          if (!d) return null
+          const style =
+            MATERIAL_STYLE[(bridge.material ?? '') as keyof typeof MATERIAL_STYLE] ??
+            MATERIAL_STYLE['']
+          return (
+            <path
+              key={bridge.id}
+              d={d}
+              fill="none"
+              stroke={style.stroke}
+              strokeWidth={11 * cfg.scale}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.95"
+            >
+              <title>{CHART_UI.bridge_title(span, crownMaterialLabel(bridge.material))}</title>
+            </path>
+          )
+        })}
 
-      {[...upper, ...lower].map((no) => {
-        const p = positions.get(no)
-        if (!p) return null
-        return (
-          <Tooth
-            key={no}
-            no={no}
-            info={byTooth.get(no)}
-            upper={p.upper}
-            x={p.x}
-            y={p.y}
-            rot={p.rot}
-            scale={cfg.scale}
-            onClick={onPick ? () => onPick(no) : undefined}
-          />
-        )
-      })}
-    </svg>
+        {[...upper, ...lower].map((no) => {
+          const p = positions.get(no)
+          if (!p) return null
+          return (
+            <Tooth
+              key={no}
+              no={no}
+              info={byTooth.get(no)}
+              upper={p.upper}
+              x={p.x}
+              y={p.y}
+              rot={p.rot}
+              scale={cfg.scale}
+              onClick={onPick ? () => onPick(no) : undefined}
+            />
+          )
+        })}
+      </svg>
+    </div>
   )
 }
 
