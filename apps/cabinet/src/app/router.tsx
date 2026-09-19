@@ -39,11 +39,13 @@ import { Splash } from '@/shared/ui'
 import { CabinetLayout } from './layouts/CabinetLayout'
 
 function RequireAuth() {
-  const { data: session, isPending } = useSession()
+  const { data: session, isPending, isFetching } = useSession()
 
   // Sahifa yangilanganda sessiya javobini kutamiz — aks holda kirgan
-  // foydalanuvchi bir lahzaga kirish oynasiga otilib ketardi
-  if (isPending) return <Splash />
+  // foydalanuvchi bir lahzaga kirish oynasiga otilib ketardi. Keshda
+  // «kirmagan» turib qayta soʻralayotgan boʻlsa ham kutamiz: eski javob
+  // asosida kirish sahifasiga qaytarib yubormaslik uchun
+  if (isPending || (!session && isFetching)) return <Splash />
   if (!session) return <Navigate to="/login" replace />
   return <Outlet />
 }

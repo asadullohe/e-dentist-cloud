@@ -3,12 +3,18 @@ import { SESSION_QUERY_KEY } from '@/entities/session'
 import * as api from './api'
 
 /// Kirgandan keyin sessiya soʻrovi qaytadan oʻqiladi — kim kirgani,
-/// qaysi klinika va qanday ruxsatlari borligi serverdan keladi
+/// qaysi klinika va qanday ruxsatlari borligi serverdan keladi.
+///
+/// `refetchQueries`, `invalidateQueries` emas: kirish sahifasida sessiyani
+/// hech kim kuzatmaydi, invalidate faqat «eskirgan» deb belgilab qoʻyadi.
+/// Keshda `null` (kirmagan) turgan holda kabinetga oʻtilsa RequireAuth
+/// darhol kirish sahifasiga qaytarardi — «birinchi kirish ishlamaydi,
+/// ikkinchisi ishlaydi». Refetch promise qaytaradi, mutateAsync uni kutadi
 export function useLogin() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: api.login,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY }),
+    onSuccess: () => queryClient.refetchQueries({ queryKey: SESSION_QUERY_KEY }),
     // Kirish sahifasi xatoni forma ostida koʻrsatadi; muvaffaqiyat — kabinetga oʻtish
     meta: { inlineErrors: true },
   })
@@ -51,6 +57,7 @@ export function useAcceptInvite() {
   return useMutation({
     mutationFn: api.acceptInvite,
     meta: { inlineErrors: true },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY }),
+    // useLogin dagi kabi — taklif sahifasida ham sessiya kuzatilmaydi
+    onSuccess: () => queryClient.refetchQueries({ queryKey: SESSION_QUERY_KEY }),
   })
 }
