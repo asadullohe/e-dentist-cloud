@@ -1328,7 +1328,13 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       holat), bemor sahifasi kontaktlari formasi, fikr QR varagʻi
       (`/fikr-varaq`, umumiy yoki shifokor xonasi uchun), bosh sahifada
       «Bemorlar bahosi», yon menyuda «Fikrlar» (`feedback.read` yoki `.own`)
-- [ ] **12.5 Serverga chiqarish** — push, migratsiya, jonli tekshiruv
+- [x] **12.5 Davr: kun · hafta · oy · yil** — `/expenses` va `/reports`
+      `month` yoki `from`/`to` (platform/period: teskari yoki yildan uzun
+      davr 400); hisobot jamlanmasi davr uchun, grafik davr oxiri oyidan 12
+      oy; shared `periodRange/shiftPeriod/formatPeriod` (hafta dushanbadan);
+      `PeriodNav` (tur tanlovi + ‹ › + «Bugun/Shu hafta/Shu oy/Shu yil»),
+      xarajat va hisobotda; ish haqi oylik qoladi. Testlar: davr chegaralari
+- [ ] **12.6 Serverga chiqarish** — push, migratsiya, jonli tekshiruv
 
 ---
 

@@ -400,7 +400,7 @@ export const ru: DeepPartial<Strings> = {
     subtitle: 'Учёт расходов клиники',
     add: 'Новый расход',
     edit: 'Изменить расход',
-    empty: 'В этом месяце расходов нет',
+    empty: 'За этот период расходов нет',
     date: 'Дата',
     category: 'Категория',
     description: 'На что',
@@ -416,7 +416,7 @@ export const ru: DeepPartial<Strings> = {
 
   REPORT_UI: {
     title: 'Отчёты',
-    subtitle: 'Доходы и визиты по месяцам',
+    subtitle: 'Доходы и визиты за день, неделю, месяц или год',
     visits: 'Визиты',
     charges: 'Стоимость работ',
     payments: 'Доход (платежи)',
@@ -431,8 +431,8 @@ export const ru: DeepPartial<Strings> = {
     category: 'Категория',
     count: 'Кол-во',
     total: 'Итого',
-    empty_visits: 'В этом месяце визитов не было',
-    empty_expenses: 'В этом месяце расходов нет',
+    empty_visits: 'За этот период визитов не было',
+    empty_expenses: 'За этот период расходов нет',
   },
 
   PAYROLL_TEXT: {

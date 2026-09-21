@@ -414,7 +414,7 @@ export const EXPENSE_UI = {
   subtitle: 'Klinika xarajatlarini yozib borish',
   add: 'Yangi xarajat',
   edit: 'Xarajatni tahrirlash',
-  empty: 'Bu oyda xarajat yozilmagan',
+  empty: 'Bu davrda xarajat yozilmagan',
   date: 'Sana',
   category: 'Turkumi',
   description: 'Nima uchun',
@@ -431,7 +431,7 @@ export const EXPENSE_UI = {
 // Hisobotlar sahifasi
 export const REPORT_UI = {
   title: 'Hisobotlar',
-  subtitle: 'Oy boʻyicha daromad va tashriflar tahlili',
+  subtitle: 'Kun, hafta, oy yoki yil boʻyicha daromad va tashriflar tahlili',
   visits: 'Tashriflar',
   charges: 'Qilingan ish narxi',
   payments: 'Tushum (toʻlovlar)',
@@ -446,8 +446,8 @@ export const REPORT_UI = {
   category: 'Turkumi',
   count: 'Soni',
   total: 'Jami',
-  empty_visits: 'Bu oyda tashrif boʻlmagan',
-  empty_expenses: 'Bu oyda xarajat yozilmagan',
+  empty_visits: 'Bu davrda tashrif boʻlmagan',
+  empty_expenses: 'Bu davrda xarajat yozilmagan',
 } as const
 
 // Ish haqi (tz.md 15-boʻlim)

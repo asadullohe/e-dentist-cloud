@@ -3,6 +3,8 @@ import {
   EXPENSE_CATEGORY_LABELS,
   EXPENSE_UI,
   formatSom,
+  type Period,
+  periodRange,
   todayISO,
 } from '@e-dentist/shared'
 import {
@@ -34,23 +36,23 @@ import {
   DataTable,
   DataTablePagination,
   DataTableViewOptions,
-  MonthNav,
+  PeriodNav,
   Skeleton,
 } from '@/shared/ui'
 import { expenseColumns } from './columns'
 
-const thisMonth = () => todayISO().slice(0, 7)
-
 export function Expenses() {
-  const [month, setMonth] = useState(thisMonth)
+  // Sukut — shu oy; tur (kun, hafta, oy, yil) va sana tanlovda oʻzgaradi
+  const [period, setPeriod] = useState<Period>(() => ({ kind: 'month', anchor: todayISO() }))
+  const range = periodRange(period)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Expense | undefined>(undefined)
   const [deleting, setDeleting] = useState<Expense | null>(null)
 
-  const { data, isPending } = useExpenses(month)
+  const { data, isPending } = useExpenses(range)
 
-  // Bitta oy — maʼlumot toʻliq keladi, shuning uchun saralash, filtr va
-  // sahifalash mijozda
+  // Bitta davr (koʻpi bilan yil) — maʼlumot toʻliq keladi, shuning uchun
+  // saralash, filtr va sahifalash mijozda
   const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -78,10 +80,10 @@ export function Expenses() {
 
   const { mutateAsync: remove } = useDeleteExpense()
 
-  // Shu oyda — bugun, oʻtgan oyda — oyning birinchi kuni. Xarajat kelajakda
-  // boʻlmaydi, shuning uchun keyingi oylarda ham bugungi sana qoʻyiladi
-  const firstDay = `${month}-01`
-  const defaultDate = month === thisMonth() || firstDay > todayISO() ? todayISO() : firstDay
+  // Bugun davr ichida boʻlsa — bugun, oʻtgan davrda — davrning oxirgi kuni.
+  // Xarajat kelajakda boʻlmaydi, kelgusi davrda ham bugungi sana qoʻyiladi
+  const today = todayISO()
+  const defaultDate = today < range.from ? today : today > range.to ? range.to : today
 
   function openNew() {
     setEditing(undefined)
@@ -102,7 +104,7 @@ export function Expenses() {
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <MonthNav month={month} onChange={setMonth} />
+        <PeriodNav value={period} onChange={setPeriod} />
         {/* Oy jamisi: telefonda butun qator (nom chapda, summa oʻngda), keng
             ekranda oʻng chetda. Yuklanayotganda «0 soʻm» emas — skelet */}
         <div className="bg-muted flex w-full items-center justify-between gap-3 rounded-md px-3 py-1.5 text-sm sm:ml-auto sm:w-auto">

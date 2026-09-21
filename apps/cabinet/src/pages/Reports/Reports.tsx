@@ -1,4 +1,11 @@
-import { EXPENSE_CATEGORY_LABELS, formatSom, REPORT_UI, todayISO } from '@e-dentist/shared'
+import {
+  EXPENSE_CATEGORY_LABELS,
+  formatSom,
+  type Period,
+  periodRange,
+  REPORT_UI,
+  todayISO,
+} from '@e-dentist/shared'
 import { cn } from 'cn'
 import {
   CalendarCheckIcon,
@@ -20,7 +27,7 @@ import {
   CardTitle,
   EmptyState,
   Money,
-  MonthNav,
+  PeriodNav,
   Skeleton,
   Table,
   TableBody,
@@ -30,8 +37,6 @@ import {
   TableRow,
 } from '@/shared/ui'
 import { MonthsChart } from './MonthsChart'
-
-const thisMonth = () => todayISO().slice(0, 7)
 
 interface StatProps {
   label: string
@@ -68,8 +73,12 @@ function Stat({ label, value, icon: Icon, negative = false, wide = false }: Stat
 }
 
 export function Reports() {
-  const [month, setMonth] = useState(thisMonth)
-  const { data, isPending } = useReport(month)
+  // Sukut — shu oy; tur (kun, hafta, oy, yil) va sana tanlovda oʻzgaradi
+  const [period, setPeriod] = useState<Period>(() => ({ kind: 'month', anchor: todayISO() }))
+  const range = periodRange(period)
+  const { data, isPending } = useReport(range)
+  // Grafikda davr oyi (oy koʻrinishida) belgilanadi; ustun bosilsa oʻsha oy
+  const selectedMonth = period.kind === 'month' ? range.from.slice(0, 7) : ''
 
   const summary = data?.summary
 
@@ -80,7 +89,7 @@ export function Reports() {
           <h1 className="text-2xl font-semibold tracking-tight">{REPORT_UI.title}</h1>
           <p className="text-muted-foreground text-sm">{REPORT_UI.subtitle}</p>
         </div>
-        <MonthNav month={month} onChange={setMonth} />
+        <PeriodNav value={period} onChange={setPeriod} />
       </div>
 
       {isPending || !summary ? (
@@ -136,7 +145,11 @@ export function Reports() {
           {isPending || !data ? (
             <Skeleton className="h-64 w-full" />
           ) : (
-            <MonthsChart months={data.months} selected={month} onPick={setMonth} />
+            <MonthsChart
+              months={data.months}
+              selected={selectedMonth}
+              onPick={(month) => setPeriod({ kind: 'month', anchor: `${month}-01` })}
+            />
           )}
         </CardContent>
       </Card>

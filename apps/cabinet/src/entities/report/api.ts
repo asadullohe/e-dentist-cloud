@@ -1,4 +1,7 @@
+import type { DateRange } from '@e-dentist/shared'
 import { apiRequest } from '@/shared/api'
 import type { Report } from './model'
 
-export const fetchReport = (month: string) => apiRequest<Report>(`/reports?month=${month}`)
+/// Davr — kun, hafta, oy yoki yil (`periodRange`)
+export const fetchReport = ({ from, to }: DateRange) =>
+  apiRequest<Report>(`/reports?from=${from}&to=${to}`)

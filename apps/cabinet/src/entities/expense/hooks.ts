@@ -1,16 +1,17 @@
+import type { DateRange } from '@e-dentist/shared'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { fetchExpenses } from './api'
 
 export const EXPENSE_KEYS = {
   all: ['expenses'] as const,
-  month: (month: string) => ['expenses', month] as const,
+  range: (range: DateRange) => ['expenses', range.from, range.to] as const,
 }
 
-export function useExpenses(month: string) {
+export function useExpenses(range: DateRange) {
   return useQuery({
-    queryKey: EXPENSE_KEYS.month(month),
-    queryFn: () => fetchExpenses(month),
-    // Oydan oyga oʻtganda roʻyxat boʻshab-toʻlib turmasin
+    queryKey: EXPENSE_KEYS.range(range),
+    queryFn: () => fetchExpenses(range),
+    // Davrdan davrga oʻtganda roʻyxat boʻshab-toʻlib turmasin
     placeholderData: keepPreviousData,
   })
 }

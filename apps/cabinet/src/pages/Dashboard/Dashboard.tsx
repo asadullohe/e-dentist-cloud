@@ -4,6 +4,7 @@ import {
   formatSom,
   formatUzPhone,
   HOME_UI,
+  periodRange,
   SECTION_LABELS,
   todayISO,
   UI_TEXT,
@@ -112,13 +113,16 @@ function PatientsStat({ month, canReports }: { month: string; canReports: boolea
   )
 }
 
+/// Shu oyning davri — hisobot soʻrovi shunga
+const monthRange = (month: string) => periodRange({ kind: 'month', anchor: `${month}-01` })
+
 function NewPatientsHint({ month }: { month: string }) {
-  const { data } = useReport(month)
+  const { data } = useReport(monthRange(month))
   return data ? HOME_UI.new_this_month(data.summary.newPatients) : null
 }
 
 function IncomeStat({ month }: { month: string }) {
-  const { data, isPending } = useReport(month)
+  const { data, isPending } = useReport(monthRange(month))
   return (
     <Stat
       label={HOME_UI.month_income}
