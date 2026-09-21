@@ -44,6 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
+  TimePicker,
 } from '@/shared/ui'
 import { useCompleteAppointment, useDeliverLabOrder, useSaveVisit } from './hooks'
 import { EMPTY_VISIT, type VisitValues, visitSchema } from './model'
@@ -243,7 +244,7 @@ export function VisitFormDialog({
                   )}
                 />
               )}
-              {/* Vaqt: sukut hozirgi soat — brauzerning oʻz vaqt tanlagichi */}
+              {/* Vaqt: sukut hozirgi soat; 24 soatli oʻz maydonimiz (AM/PM siz) */}
               <FormField
                 control={form.control}
                 name="time"
@@ -251,7 +252,7 @@ export function VisitFormDialog({
                   <FormItem>
                     <FormLabel>{CARD_UI.time}</FormLabel>
                     <FormControl>
-                      <Input type="time" step={60} {...field} />
+                      <TimePicker {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

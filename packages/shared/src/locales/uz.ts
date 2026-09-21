@@ -109,6 +109,8 @@ export const UI_TEXT = {
   // Sana maydoni: qoʻlda yoziladi yoki kalendardan tanlanadi
   date_placeholder: 'KK/OO/YYYY',
   pick_date: 'Kalendardan tanlash',
+  time_placeholder: 'SS:DD',
+  pick_time: 'Vaqtni tanlash',
   close: 'Yopish',
   cancel: 'Bekor qilish',
   welcome: 'Xush kelibsiz',

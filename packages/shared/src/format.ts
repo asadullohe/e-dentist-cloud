@@ -115,6 +115,14 @@ export function maskDisplayDate(value: string): string {
   return parts.join('/')
 }
 
+// Vaqt maydoni maskasi: yozilgan raqamlar «SS:DD» koʻrinishiga keladi
+// (brauzerning oʻz vaqt maydoni AM/PM koʻrsatishi mumkin — oʻzimizniki 24 soat)
+export function maskDisplayTime(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 4)
+  const parts = [digits.slice(0, 2), digits.slice(2, 4)].filter(Boolean)
+  return parts.join(':')
+}
+
 // Postgres DATE ustuniga yoziladigan sana.
 //
 // Tuzoq: `new Date()` ga setHours(0,0,0,0) qoʻysak mahalliy yarim tun chiqadi.

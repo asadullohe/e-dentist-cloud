@@ -116,6 +116,8 @@ export const ru: DeepPartial<Strings> = {
     theme_dark: 'Тёмная тема',
     date_placeholder: 'ДД/ММ/ГГГГ',
     pick_date: 'Выбрать в календаре',
+    time_placeholder: 'ЧЧ:ММ',
+    pick_time: 'Выбрать время',
     close: 'Закрыть',
     cancel: 'Отмена',
     welcome: 'Добро пожаловать',
