@@ -1410,6 +1410,22 @@ export const SCHEDULE_UI = {
   complete_hint: (date: string) =>
     `Qilingan ish ${date} sanasidagi tashrif sifatida bemor kartochkasiga tushadi, qabul «Yakunlandi» boʻladi.`,
   complete_submit: 'Yakunlash',
+  // Vaqt toʻri (kun/hafta) va davomiylik (12-bosqich)
+  view_day: 'Kun',
+  view_week: 'Hafta',
+  view_month: 'Oy',
+  duration: 'Davomiylik',
+  minutes: (n: number) => `${n} daq`,
+  ends_at: (time: string) => `→ ${time}`,
+  free_slots: 'Boʻsh vaqtlar',
+  free_slots_hint: 'Shifokorning band vaqtlari oʻchirilgan',
+  no_slots: 'Bu kunda boʻsh vaqt qolmagan',
+  pick_doctor_first: 'Boʻsh vaqtlarni koʻrish uchun shifokorni tanlang',
+  new_patient: 'Yangi bemor',
+  new_patient_hint: 'Kartotekaga yoziladi',
+  existing_patient: 'Kartotekadan tanlash',
+  week_total: (n: number) => `${n} ta qabul`,
+  now: 'Hozir',
 } as const
 
 // Sana formati uchun. `format.ts` shulardan oladi

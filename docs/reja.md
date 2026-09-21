@@ -1348,6 +1348,15 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       formada vaqt maydoni (sukut hozirgi soat, brauzer tanlagichi), roʻyxat
       sana ↓ vaqt ↓, eksportda «Vaqt» ustuni. Testlar: saqlanadi / sukut /
       notoʻgʻri 400 / tartib
+- [x] **12.10 Qabulga yozish qaytadan** — `appointments.duration_min`
+      (sukut 30), bir shifokorga kesishgan vaqt 409 (kim va qachon);
+      jadvalda Kun · Hafta · Oy: kun/hafta — vaqt toʻri 08:00–20:00,
+      bloklar davomiylik boʻyicha, kesishganlar yonma-yon, hozirgi vaqt
+      chizigʻi, boʻsh joy bosilsa oʻsha vaqtga yangi qabul, navbat yozuvi
+      chiziqli; forma: bemor kartotekadan yoki shu yerda yangi (F.I.O. +
+      telefon), sana · shifokor, vaqt · davomiylik → tugash, «Boʻsh
+      vaqtlar» toʻri (band slotlar oʻchirilgan). Testlar: davomiylik,
+      409, tahrirda kesishuv, bekor qilingan band emas
 
 ---
 

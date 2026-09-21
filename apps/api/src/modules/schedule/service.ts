@@ -72,6 +72,9 @@ export interface Appointment {
   at: Date
   /// Daqiqa. Navbat yozuvida sukut (30) — maʼnosi yoʻq
   duration: number
+  /// Navbatdan (QR yoki kabinet) kelgan yozuv — vaqti yozilgan lahza,
+  /// jadvalda oddiy qabuldan farqli koʻrsatiladi
+  fromQueue: boolean
   status: string
   note: string | null
   /// Kartotekadagi ism, boʻlmasa oʻzi yozgan ism
@@ -112,6 +115,7 @@ async function withPatients(
     doctorId: string | null
     at: Date
     durationMin: number
+    queueStatus: string | null
     status: string
     note: string | null
     guestName: string | null
@@ -135,6 +139,7 @@ async function withPatients(
       doctorName: row.doctorId ? (doctorNames.get(row.doctorId) ?? null) : null,
       at: row.at,
       duration: row.durationMin,
+      fromQueue: row.queueStatus !== null,
       status: row.status,
       note: row.note,
       fio: person?.fio ?? row.guestName ?? '',

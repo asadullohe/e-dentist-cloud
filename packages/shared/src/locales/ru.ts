@@ -1333,6 +1333,21 @@ export const ru: DeepPartial<Strings> = {
     complete_hint: (date: string) =>
       `Выполненная работа попадёт в карточку пациента как визит от ${date}, приём станет «Завершён».`,
     complete_submit: 'Завершить',
+    view_day: 'День',
+    view_week: 'Неделя',
+    view_month: 'Месяц',
+    duration: 'Длительность',
+    minutes: (n: number) => `${n} мин`,
+    ends_at: (time: string) => `→ ${time}`,
+    free_slots: 'Свободное время',
+    free_slots_hint: 'Занятое время врача недоступно',
+    no_slots: 'В этот день свободного времени нет',
+    pick_doctor_first: 'Выберите врача, чтобы увидеть свободное время',
+    new_patient: 'Новый пациент',
+    new_patient_hint: 'Будет добавлен в картотеку',
+    existing_patient: 'Выбрать из картотеки',
+    week_total: (n: number) => `${n} ${plural(n, ['приём', 'приёма', 'приёмов'])}`,
+    now: 'Сейчас',
   },
 
   MONTHS: [

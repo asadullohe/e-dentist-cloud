@@ -1,6 +1,7 @@
 import { TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { APPOINTMENT_KEYS, type AppointmentStatus } from '@/entities/appointment'
+import { PATIENT_KEYS } from '@/entities/patient'
 import * as api from './api'
 
 export function useSaveAppointment(id: string | null) {
@@ -36,5 +37,15 @@ export function useDeleteAppointment() {
     mutationFn: api.deleteAppointment,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
     meta: { success: () => TOAST_TEXT.appointment_deleted },
+  })
+}
+
+/// Qabul formasidan yangi bemor: kartoteka roʻyxati yangilansin
+export function useCreatePatientInline() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.createPatientInline,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: PATIENT_KEYS.all }),
+    meta: { inlineErrors: true },
   })
 }
