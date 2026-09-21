@@ -28,7 +28,12 @@ export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<
       meta: { title: CARD_UI.date, className: 'hidden w-28 sm:table-cell' } satisfies ColumnMeta,
       header: ({ column }) => <DataTableColumnHeader column={column} title={CARD_UI.date} />,
       cell: ({ row }) => (
-        <span className="tabular-nums">{formatDate(row.original.date.slice(0, 10))}</span>
+        <span className="tabular-nums">
+          {formatDate(row.original.date.slice(0, 10))}
+          {row.original.time && (
+            <span className="text-muted-foreground block text-xs">{row.original.time}</span>
+          )}
+        </span>
       ),
     },
     {
@@ -50,6 +55,7 @@ export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<
             {visit.treatment}
             <div className="text-muted-foreground text-xs tabular-nums sm:hidden">
               {formatDate(visit.date.slice(0, 10))}
+              {visit.time && ` ${visit.time}`}
               {visit.tooth !== null && ` · ${CARD_UI.tooth} ${visit.tooth}`}
             </div>
             {visit.note && <div className="text-muted-foreground text-xs">{visit.note}</div>}

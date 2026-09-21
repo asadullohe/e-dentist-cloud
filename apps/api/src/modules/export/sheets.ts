@@ -58,6 +58,7 @@ export function visitsSheet(
     patientId: string
     doctorId: string | null
     date: Date
+    time: string | null
     treatment: string
     tooth: number | null
     price: number
@@ -69,6 +70,7 @@ export function visitsSheet(
   return sheet(
     [
       EXPORT_COLUMNS.date,
+      EXPORT_COLUMNS.time,
       EXPORT_COLUMNS.patient,
       EXPORT_COLUMNS.doctor,
       EXPORT_COLUMNS.treatment,
@@ -78,6 +80,7 @@ export function visitsSheet(
     ],
     rows.map((row) => [
       iso(row.date),
+      row.time,
       nameOf(people, row.patientId),
       row.doctorId ? (staff.get(row.doctorId) ?? '') : '',
       row.treatment,

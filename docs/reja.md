@@ -1335,8 +1335,19 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `PeriodNav` (tur tanlovi + ‹ › + «Bugun/Shu hafta/Shu oy/Shu yil»),
       xarajat va hisobotda; ish haqi oylik qoladi. Testlar: davr chegaralari.
       Eksport arxiviga `fikrlar.xlsx` qoʻshildi
-- [~] **12.6 Serverga chiqarish** — push 21/09/2026; migratsiya va jonli
-      tekshiruv egasi tomonidan
+- [x] **12.6 Serverga chiqarish** — push 21/09/2026, deploy oʻtdi (CI da
+      «muhit konteynerlari» uch urinish bilan)
+- [x] **12.7 Landingda «Bemor fikrlari»** — uz + ru boʻlim, skrinshotlar,
+      FAQ, featureList; seed-demo da fikrlar
+- [x] **12.8 Telefonda pastki dok (Liquid Glass)** — suzuvchi shisha kapsula,
+      faol tab ostida linza, «Yana» varagʻi (qidiruv, plitkalar jonli izoh
+      bilan, hisob); rolga qarab birinchi 4 boʻlim; yon menyu tugmasi
+      telefonda yoʻq; klaviatura ochilganda yashirinadi. Chiqishga tasdiq
+      oynasi (yon menyuda ham yoʻq edi)
+- [x] **12.9 Tashrif vaqti** — `visits.time` «HH:MM» (eski yozuvlarda boʻsh),
+      formada vaqt maydoni (sukut hozirgi soat, brauzer tanlagichi), roʻyxat
+      sana ↓ vaqt ↓, eksportda «Vaqt» ustuni. Testlar: saqlanadi / sukut /
+      notoʻgʻri 400 / tartib
 
 ---
 

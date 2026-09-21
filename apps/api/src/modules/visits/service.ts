@@ -30,6 +30,12 @@ function toDate(value: string): Date {
   return new Date(`${value}T00:00:00Z`)
 }
 
+/// Vaqt berilmasa — kiritilayotgan lahza, klinika soati boʻyicha
+function nowTime(): string {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+}
+
 function isMissing(error: unknown): boolean {
   return (
     typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2025'
@@ -208,6 +214,7 @@ export async function createTx(
     patientId: input.patientId,
     doctorId,
     date: toDate(input.date),
+    time: input.time ?? nowTime(),
     treatment: input.treatment,
     tooth: input.tooth ?? null,
     serviceId: input.serviceId ?? null,
@@ -278,6 +285,7 @@ export function updateVisit(
       const visit = await repo.updateVisit(tx, id, {
         ...(doctorChanged ? { doctorId: input.doctorId, doctorPercent: percent } : {}),
         ...(input.date === undefined ? {} : { date: toDate(input.date) }),
+        ...(input.time === undefined ? {} : { time: input.time }),
         ...(input.treatment === undefined ? {} : { treatment: input.treatment }),
         ...(input.tooth === undefined ? {} : { tooth: input.tooth }),
         ...(input.price === undefined ? {} : { price: input.price }),

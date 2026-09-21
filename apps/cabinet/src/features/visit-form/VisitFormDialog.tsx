@@ -87,17 +87,24 @@ interface VisitFormDialogProps {
 const visitDateOf = (appointment: CompletingAppointment) =>
   appointment.date > todayISO() ? todayISO() : appointment.date
 
+/// Sukut vaqt — hozirgi soat («HH:MM»); qogʻozdan keyin kiritilsa oʻzgartiriladi
+function nowTime(): string {
+  const now = new Date()
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+}
+
 function toValues(
   visit: Visit | undefined,
   appointment: CompletingAppointment | undefined,
   labOrder: DeliveringLabOrder | undefined,
 ): VisitValues {
-  if (labOrder)
-    return { ...EMPTY_VISIT, date: formatDate(todayISO()), treatment: labOrder.treatment }
-  if (appointment) return { ...EMPTY_VISIT, date: formatDate(visitDateOf(appointment)) }
-  if (!visit) return { ...EMPTY_VISIT, date: formatDate(new Date().toISOString().slice(0, 10)) }
+  const fresh = { ...EMPTY_VISIT, time: nowTime() }
+  if (labOrder) return { ...fresh, date: formatDate(todayISO()), treatment: labOrder.treatment }
+  if (appointment) return { ...fresh, date: formatDate(visitDateOf(appointment)) }
+  if (!visit) return { ...fresh, date: formatDate(todayISO()) }
   return {
     date: formatDate(visit.date.slice(0, 10)),
+    time: visit.time ?? nowTime(),
     treatment: visit.treatment,
     tooth: visit.tooth === null ? '' : String(visit.tooth),
     price: formatMoney(String(visit.price)),
@@ -161,6 +168,7 @@ export function VisitFormDialog({
     setDoctorError('')
     const payload = {
       doctorId,
+      time: values.time,
       treatment: values.treatment,
       tooth: values.tooth ? Number(values.tooth) : null,
       serviceId,
@@ -217,6 +225,7 @@ export function VisitFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+            {/* Sana · vaqt bir qatorda; yakunlash/topshirishda sana yoʻq — vaqt yarim qator */}
             <div className="grid grid-cols-2 gap-3">
               {/* Yakunlashda sana qabulniki, topshirishda bugun — maydon koʻrsatilmaydi */}
               {!appointment && !labOrder && (
@@ -234,14 +243,15 @@ export function VisitFormDialog({
                   )}
                 />
               )}
+              {/* Vaqt: sukut hozirgi soat — brauzerning oʻz vaqt tanlagichi */}
               <FormField
                 control={form.control}
-                name="tooth"
+                name="time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{CARD_UI.tooth}</FormLabel>
+                    <FormLabel>{CARD_UI.time}</FormLabel>
                     <FormControl>
-                      <Input inputMode="numeric" placeholder="16" {...field} />
+                      <Input type="time" step={60} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -313,23 +323,39 @@ export function VisitFormDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{CARD_UI.price}</FormLabel>
-                  <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      {...field}
-                      onChange={(event) => field.onChange(formatMoney(event.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Narx · tish bir qatorda — ikkalasi qisqa */}
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{CARD_UI.price}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        {...field}
+                        onChange={(event) => field.onChange(formatMoney(event.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="tooth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{CARD_UI.tooth}</FormLabel>
+                    <FormControl>
+                      <Input inputMode="numeric" placeholder="16" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}

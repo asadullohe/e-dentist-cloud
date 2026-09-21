@@ -8,6 +8,7 @@ const VISIT_SELECT = {
   patientId: true,
   doctorId: true,
   date: true,
+  time: true,
   treatment: true,
   tooth: true,
   serviceId: true,
@@ -36,9 +37,9 @@ export function listVisits(tx: ClinicTx, patientId: string, doctorId?: string) {
   return tx.visit.findMany({
     where: { patientId, ...(doctorId ? { doctorId } : {}) },
     select: VISIT_SELECT,
-    // Yangi tashrif tepada. Bir kunda bir nechtasi boʻlsa — kiritilgan
-    // tartibda: id vaqt boʻyicha tartiblangan (uuid v7)
-    orderBy: [{ date: 'desc' }, { id: 'desc' }],
+    // Yangi tashrif tepada. Bir kunda bir nechtasi boʻlsa — qabul vaqti
+    // boʻyicha (vaqtsiz eski yozuvlar oxirida), keyin kiritilgan tartibda
+    orderBy: [{ date: 'desc' }, { time: { sort: 'desc', nulls: 'last' } }, { id: 'desc' }],
   })
 }
 
@@ -61,6 +62,7 @@ export function createVisit(
     patientId: string
     doctorId: string
     date: Date
+    time: string | null
     treatment: string
     tooth?: number | null
     serviceId?: string | null
@@ -191,6 +193,7 @@ export function listByDoctor(tx: ClinicTx, doctorId: string, from: Date, to: Dat
       id: true,
       patientId: true,
       date: true,
+      time: true,
       treatment: true,
       tooth: true,
       price: true,
@@ -198,7 +201,7 @@ export function listByDoctor(tx: ClinicTx, doctorId: string, from: Date, to: Dat
       doctorPercent: true,
       doctorShare: true,
     },
-    orderBy: [{ date: 'desc' }, { id: 'desc' }],
+    orderBy: [{ date: 'desc' }, { time: { sort: 'desc', nulls: 'last' } }, { id: 'desc' }],
   })
 }
 

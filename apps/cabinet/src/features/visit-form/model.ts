@@ -1,4 +1,4 @@
-import { parseDisplayDate, VALIDATION_TEXT, VISIT_TEXT } from '@e-dentist/shared'
+import { APPOINTMENT_TEXT, parseDisplayDate, VALIDATION_TEXT, VISIT_TEXT } from '@e-dentist/shared'
 import { isToothNo } from '@e-dentist/teeth'
 import { z } from 'zod'
 
@@ -18,6 +18,12 @@ export const visitSchema = z.object({
       },
       { error: () => VALIDATION_TEXT.date_in_future },
     ),
+  /// «HH:MM» — brauzerning vaqt maydoni shu shaklda beradi
+  time: z
+    .string()
+    .trim()
+    .min(1, { error: () => APPOINTMENT_TEXT.time_required })
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, { error: () => APPOINTMENT_TEXT.time_invalid }),
   treatment: z
     .string()
     .trim()
@@ -36,6 +42,7 @@ export type VisitValues = z.infer<typeof visitSchema>
 
 export const EMPTY_VISIT: VisitValues = {
   date: '',
+  time: '',
   treatment: '',
   tooth: '',
   price: '',

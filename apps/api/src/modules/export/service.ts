@@ -33,7 +33,7 @@ export interface Archive {
 }
 
 const WIDTH = {
-  visits: [14, 28, 24, 40, 8, 16, 40],
+  visits: [14, 8, 28, 24, 40, 8, 16, 40],
   teeth: [28, 8, 20, 20, 40],
   bridges: [28, 24, 20],
   payments: [14, 28, 16, 40, 24, 16, 40],

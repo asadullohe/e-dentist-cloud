@@ -5,6 +5,8 @@ export interface VisitPayload {
   patientId?: string
   doctorId: string
   date: string
+  /// «HH:MM»
+  time: string
   treatment: string
   tooth: number | null
   serviceId?: string | null

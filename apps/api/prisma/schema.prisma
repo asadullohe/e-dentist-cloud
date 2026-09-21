@@ -244,6 +244,9 @@ model Visit {
   /// 9.1 dan oldingi yozuvlarda boʻsh — hisobda «koʻrsatilmagan» qatorida
   doctorId  String?  @map("doctor_id") @db.Uuid
   date      DateTime @db.Date
+  /// Qabul vaqti «HH:MM» — qogʻozga yozib keyin kiritilgan tashrifda ham
+  /// haqiqiy vaqt tursin. Sukut — kiritilayotgan lahza (mijoz beradi)
+  time      String?  @map("time") @db.VarChar(5)
   /// Muolaja nomi. Narxnomadan tanlansa ham matn saqlanadi — narxnoma
   /// keyin oʻzgarsa tarix buzilmasin
   treatment String

@@ -1,4 +1,4 @@
-import { VALIDATION_TEXT, VISIT_TEXT } from '@e-dentist/shared'
+import { APPOINTMENT_TEXT, VALIDATION_TEXT, VISIT_TEXT } from '@e-dentist/shared'
 import { CROWN_MATERIALS, isToothNo, TOOTH_STATUSES } from '@e-dentist/teeth'
 import { z } from 'zod'
 
@@ -16,6 +16,13 @@ const visitDate = z
   .refine((value) => new Date(`${value}T00:00:00Z`) <= new Date(), {
     error: () => VALIDATION_TEXT.date_in_future,
   })
+
+/// Qabul vaqti «HH:MM». Berilmasa server kiritilayotgan lahzani yozadi —
+/// qogʻozdan keyinroq kiritilganda foydalanuvchi oʻzi oʻzgartiradi
+const visitTime = z
+  .string()
+  .trim()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, { error: () => APPOINTMENT_TEXT.time_invalid })
 
 const toothNumber = z.coerce
   .number()
@@ -35,6 +42,7 @@ export const visitCreateSchema = z.object({
     .uuid({ error: () => VISIT_TEXT.doctor_invalid })
     .optional(),
   date: visitDate,
+  time: visitTime.optional(),
   treatment: z
     .string()
     .trim()

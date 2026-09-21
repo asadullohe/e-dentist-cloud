@@ -52,6 +52,52 @@ describe('tashrif yozish', () => {
     expect(r.json().data).toMatchObject({ treatment: 'Karies davolash', tooth: 16, price: 250_000 })
   })
 
+  // Vaqt: berilsa saqlanadi, berilmasa hozirgi soat (12-bosqich)
+  it('vaqt saqlanadi; berilmasa hozirgi vaqt; notoʻgʻrisi 400', async () => {
+    const withTime = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      time: '14:30',
+      treatment: 'Vaqtli tashrif',
+    })
+    expect(withTime.statusCode).toBe(200)
+    expect(withTime.json().data.time).toBe('14:30')
+
+    const auto = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      treatment: 'Vaqtsiz tashrif',
+    })
+    expect(auto.json().data.time).toMatch(/^([01]\d|2[0-3]):[0-5]\d$/)
+
+    for (const time of ['25:00', '9:5', '14.30', '']) {
+      const bad = await call('POST', '/api/visits', {
+        patientId,
+        date: '2026-09-01',
+        time,
+        treatment: 'Notoʻgʻri vaqt',
+      })
+      expect(bad.statusCode, time).toBe(400)
+    }
+
+    // Tahrirda vaqt oʻzgaradi
+    const edited = await call('PATCH', `/api/visits/${withTime.json().data.id}`, { time: '09:05' })
+    expect(edited.json().data.time).toBe('09:05')
+    // Roʻyxatda bir kun ichida vaqt boʻyicha kamayib: 14:30 li tashrif
+    // 09:05 lidan oldin turadi
+    await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-01',
+      time: '14:30',
+      treatment: 'Tushdan keyin',
+    })
+    const list = (await call('GET', `/api/patients/${patientId}/visits`)).json().data
+    const times = list
+      .filter((v: { date: string }) => v.date.startsWith('2026-09-01'))
+      .map((v: { time: string | null }) => v.time)
+    expect(times.indexOf('14:30')).toBeLessThan(times.indexOf('09:05'))
+  })
+
   it('kelajakdagi sana rad etiladi — u tashrif emas, qabul', async () => {
     const r = await call('POST', '/api/visits', {
       patientId,

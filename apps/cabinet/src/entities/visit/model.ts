@@ -6,6 +6,8 @@ export interface Visit {
   doctorName: string | null
   /// ISO: 2026-09-01T00:00:00.000Z
   date: string
+  /// «HH:MM»; eski yozuvlarda boʻsh
+  time: string | null
   treatment: string
   tooth: number | null
   serviceId: string | null
