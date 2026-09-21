@@ -43,6 +43,24 @@ export function listVisits(tx: ClinicTx, patientId: string, doctorId?: string) {
   })
 }
 
+/// Toʻlovni ishga bogʻlash uchun: bemorning tashriflari eng eskisidan
+/// (sana, vaqt, kiritilish tartibi) — avtomat bogʻlash shu tartibda yopadi
+export function forAllocation(tx: ClinicTx, patientId: string) {
+  return tx.visit.findMany({
+    where: { patientId },
+    select: { id: true, date: true, treatment: true, price: true },
+    orderBy: [{ date: 'asc' }, { time: { sort: 'asc', nulls: 'first' } }, { id: 'asc' }],
+  })
+}
+
+export function summaries(tx: ClinicTx, ids: readonly string[]) {
+  if (ids.length === 0) return Promise.resolve([])
+  return tx.visit.findMany({
+    where: { id: { in: [...ids] } },
+    select: { id: true, date: true, treatment: true, tooth: true, price: true },
+  })
+}
+
 /// Bemor boʻyicha tashriflar summasi. payments moduli qarzni shundan
 /// hisoblaydi — u `visits` jadvaliga oʻzi murojaat qilmaydi
 export async function chargeTotals(tx: ClinicTx): Promise<Map<string, number>> {
@@ -175,13 +193,12 @@ export async function firstDate(tx: ClinicTx): Promise<Date | null> {
 }
 
 /// Ish haqi uchun: oy ichida shifokor boʻyicha jamlanma. `doctorId` null —
-/// 9.1 dan oldingi yozuvlar («shifokor koʻrsatilmagan» qatori)
-export function doctorTotals(tx: ClinicTx, from: Date, to: Date) {
-  return tx.visit.groupBy({
-    by: ['doctorId'],
+/// Oydagi hamma tashriflar — ish haqi hisobi tashrif darajasida (olingan
+/// qism har tashrifda alohida)
+export function listByMonth(tx: ClinicTx, from: Date, to: Date) {
+  return tx.visit.findMany({
     where: { date: { gte: from, lte: to } },
-    _sum: { price: true, doctorShare: true },
-    _count: { _all: true },
+    select: { id: true, doctorId: true, price: true, labCost: true, doctorShare: true },
   })
 }
 

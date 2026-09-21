@@ -18,6 +18,7 @@ import { healthRoutes } from '../modules/health/routes.js'
 import { labRoutes } from '../modules/lab/routes.js'
 import { patientRoutes } from '../modules/patients/routes.js'
 import { paymentRoutes } from '../modules/payments/routes.js'
+import * as payments from '../modules/payments/service.js'
 import { payrollRoutes } from '../modules/payroll/routes.js'
 import { reportRoutes } from '../modules/reports/routes.js'
 import { queueRoutes } from '../modules/schedule/queueRoutes.js'
@@ -166,7 +167,16 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     prefix: '/api',
     deps: { db: deps.db, storage: deps.storage, imports: deps.imports },
   })
-  app.register(visitRoutes, { prefix: '/api', deps: { db: deps.db } })
+  // Tashrifga olingan summa payments dan — aylanma import oʻrniga shu yerda
+  // ulanadi (visits modulini payments import qiladi, teskarisi emas)
+  app.register(visitRoutes, {
+    prefix: '/api',
+    deps: {
+      db: deps.db,
+      paidOfVisit: payments.paidOfVisitTx,
+      paidByVisits: payments.paidByVisitsTx,
+    },
+  })
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(serviceRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(scheduleRoutes, { prefix: '/api', deps: { db: deps.db, bus: deps.bus } })

@@ -110,8 +110,11 @@ describe('toʻliq eksport', () => {
       'Rol',
       'Tashriflar',
       'Ish summasi',
+      'Olingan',
+      'Olinmagan',
       'Foiz',
       'Ulush',
+      'Kutilayotgan ulush',
       'Oylik',
       'Jami',
       'Toʻlangan',
@@ -119,7 +122,8 @@ describe('toʻliq eksport', () => {
     ])
     const march = rows.find((row) => row[0] === 'Mart 2026')
     expect(march).toBeDefined()
-    expect(march?.slice(3)).toEqual([1, 300_000, 0, 0, 0, 0, 0, 0])
+    // 300 000 lik ishga 200 000 toʻlangan (arxiv sinovi shunday yozadi)
+    expect(march?.slice(3)).toEqual([1, 300_000, 200_000, 100_000, 0, 0, 0, 0, 0, 0, 0])
   })
 
   it('maʼlumot faylida klinika nomi bor', async () => {

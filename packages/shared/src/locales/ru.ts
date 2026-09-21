@@ -235,6 +235,8 @@ export const ru: DeepPartial<Strings> = {
   },
 
   VISIT_TEXT: {
+    price_below_paid: (paid: string) =>
+      `По этой работе получено ${paid} — цену нельзя сделать меньше`,
     not_found: 'Визит не найден',
     treatment_required: 'Укажите название процедуры',
     date_required: 'Укажите дату',
@@ -325,6 +327,11 @@ export const ru: DeepPartial<Strings> = {
     already_cancelled: 'Этот платёж уже отменён',
     cancelled_immutable: 'Отменённый платёж нельзя изменить',
     reason_required: 'Укажите причину отмены',
+    allocation_exceeds: 'Привязанная сумма больше платежа',
+    allocation_visit: 'Работа не этого пациента или не найдена',
+    allocation_over_visit: (treatment: string) =>
+      `К работе «${treatment}» нельзя привязать больше её остатка`,
+    allocation_duplicate: 'Одна работа указана дважды',
   },
 
   PAYMENT_UI: {
@@ -794,8 +801,11 @@ export const ru: DeepPartial<Strings> = {
     role: 'Роль',
     visits: 'Визиты',
     charges: 'Сумма работ',
+    collected: 'Получено',
+    uncollected: 'Не получено',
     percent: 'Процент',
     share: 'Доля',
+    pending_share: 'Ожидаемая доля',
     salary: 'Оклад',
     total: 'Итого',
     paid: 'Выплачено',

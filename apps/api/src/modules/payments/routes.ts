@@ -4,6 +4,7 @@ import { requireAuth, viewerOf } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import {
+  allocationsSchema,
   debtorsSchema,
   paymentCancelSchema,
   paymentCreateSchema,
@@ -51,6 +52,14 @@ export const paymentRoutes: FastifyPluginAsync<PaymentRouteOpts> = async (app, o
     const { id } = req.params as { id: string }
     const input = validateInput(paymentUpdateSchema, req.body)
     return ok(await service.update(opts.deps, clinicId, userId, id, input))
+  })
+
+  // Qaysi ishga — keyin oʻrnatish yoki tuzatish
+  app.put('/payments/:id/allocations', write, async (req) => {
+    const { clinicId } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(allocationsSchema, req.body)
+    return ok(await service.setAllocations(opts.deps, clinicId, viewer(req), id, input))
   })
 
   // Oʻchirish yoʻq — bekor qilish, sabab bilan (qaror 19/09/2026)

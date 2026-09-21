@@ -237,6 +237,7 @@ export const CHART_UI = {
 
 // Tashriflar va tish xaritasi
 export const VISIT_TEXT = {
+  price_below_paid: (paid: string) => `Bu ishga ${paid} olingan — narxni undan kam qilib boʻlmaydi`,
   not_found: 'Tashrif topilmadi',
   treatment_required: 'Muolaja nomini yozing',
   date_required: 'Sana kiritilishi shart',
@@ -333,6 +334,12 @@ export const PAYMENT_TEXT = {
   already_cancelled: 'Bu toʻlov allaqachon bekor qilingan',
   cancelled_immutable: 'Bekor qilingan toʻlovni oʻzgartirib boʻlmaydi',
   reason_required: 'Bekor qilish sababini yozing',
+  // Toʻlovni ishga bogʻlash (qaror 21/09/2026)
+  allocation_exceeds: 'Bogʻlangan summa toʻlovdan katta',
+  allocation_visit: 'Ish bu bemorniki emas yoki topilmadi',
+  allocation_over_visit: (treatment: string) =>
+    `«${treatment}» ishiga uning qolganidan koʻp bogʻlab boʻlmaydi`,
+  allocation_duplicate: 'Bitta ish ikki marta koʻrsatilgan',
 } as const
 
 export const PAYMENT_UI = {
@@ -851,8 +858,11 @@ export const EXPORT_COLUMNS = {
   role: 'Rol',
   visits: 'Tashriflar',
   charges: 'Ish summasi',
+  collected: 'Olingan',
+  uncollected: 'Olinmagan',
   percent: 'Foiz',
   share: 'Ulush',
+  pending_share: 'Kutilayotgan ulush',
   salary: 'Oylik',
   total: 'Jami',
   paid: 'Toʻlangan',

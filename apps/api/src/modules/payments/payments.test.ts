@@ -11,7 +11,7 @@ let patientId = ''
 let otherClinicId = ''
 let otherPatientId = ''
 
-function call(method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) {
+function call(method: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE', url: string, payload?: object) {
   return h.app.inject({ method, url, payload, headers: { cookie: h.cookie } })
 }
 
@@ -174,6 +174,141 @@ describe('bekor qilish', () => {
     expect(r.statusCode).toBe(404)
   })
 })
+
+// Toʻlov ishga bogʻlanadi (qaror 21/09/2026): tashrifda olingan/olinmagan,
+// shifokor ulushi olingan qismdan
+describe('toʻlovni ishga bogʻlash', () => {
+  let pid = ''
+  let a = ''
+  let b = ''
+  const paidOf = async (visitId: string) => {
+    const rows = (await call('GET', `/api/patients/${pid}/visits`)).json().data as {
+      id: string
+      paid: number
+    }[]
+    return rows.find((row) => row.id === visitId)?.paid
+  }
+
+  let otherPid = ''
+
+  beforeAll(async () => {
+    const patient = await call('POST', '/api/patients', { fio: 'Bogʻlash Bemori' })
+    pid = patient.json().data.id
+    const other = await call('POST', '/api/patients', { fio: 'Boshqa Bemor' })
+    otherPid = other.json().data.id
+    otherPatientVisit = (
+      await call('POST', '/api/visits', {
+        patientId: otherPid,
+        date: '2026-09-01',
+        treatment: 'Koʻrik',
+        price: 50_000,
+      })
+    ).json().data.id
+    a = (
+      await call('POST', '/api/visits', {
+        patientId: pid,
+        date: '2026-09-01',
+        treatment: 'Plomba',
+        price: 100_000,
+      })
+    ).json().data.id
+    b = (
+      await call('POST', '/api/visits', {
+        patientId: pid,
+        date: '2026-09-05',
+        treatment: 'Koronka',
+        price: 200_000,
+      })
+    ).json().data.id
+  })
+
+  // Qarzdorlar testlari shu klinikada — bu bemorlar ularga aralashmasin
+  afterAll(async () => {
+    const where = { patientId: { in: [pid, otherPid] } }
+    await h.ownerDb.paymentAllocation.deleteMany({ where: { payment: where } })
+    await h.ownerDb.payment.deleteMany({ where })
+    await h.ownerDb.visit.deleteMany({ where })
+    await h.ownerDb.patient.deleteMany({ where: { id: { in: [pid, otherPid] } } })
+  })
+
+  it('bogʻlanish berilmasa eng eski ishdan avtomat yopiladi', async () => {
+    const r = await call('POST', '/api/payments', {
+      patientId: pid,
+      date: '2026-09-06',
+      amount: 150_000,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.allocations).toEqual([
+      expect.objectContaining({ visitId: a, amount: 100_000, treatment: 'Plomba' }),
+      expect.objectContaining({ visitId: b, amount: 50_000, treatment: 'Koronka' }),
+    ])
+    expect(await paidOf(a)).toBe(100_000)
+    expect(await paidOf(b)).toBe(50_000)
+  })
+
+  it('aniq bogʻlanish: ishga qolganidan koʻp emas, bemorniki boʻlsin, jami toʻlovdan oshmasin', async () => {
+    const over = await call('POST', '/api/payments', {
+      patientId: pid,
+      date: '2026-09-07',
+      amount: 200_000,
+      allocations: [{ visitId: b, amount: 160_000 }],
+    })
+    expect(over.statusCode).toBe(400)
+    expect(over.json().error.fields.allocations).toContain('Koronka')
+
+    const foreign = await call('POST', '/api/payments', {
+      patientId: pid,
+      date: '2026-09-07',
+      amount: 10_000,
+      allocations: [{ visitId: otherPatientVisit, amount: 10_000 }],
+    })
+    expect(foreign.statusCode).toBe(400)
+
+    const exceeds = await call('POST', '/api/payments', {
+      patientId: pid,
+      date: '2026-09-07',
+      amount: 10_000,
+      allocations: [{ visitId: b, amount: 20_000 }],
+    })
+    expect(exceeds.statusCode).toBe(400)
+
+    const ok = await call('POST', '/api/payments', {
+      patientId: pid,
+      date: '2026-09-07',
+      amount: 120_000,
+      allocations: [{ visitId: b, amount: 100_000 }],
+    })
+    expect(ok.statusCode).toBe(200)
+    // 20 000 bogʻlanmagan qoldi (avans)
+    expect(ok.json().data.allocations).toHaveLength(1)
+    expect(await paidOf(b)).toBe(150_000)
+    avansId = ok.json().data.id
+  })
+
+  it('bogʻlanish keyin oʻrnatiladi (PUT) — avans ishga yoziladi', async () => {
+    const r = await call('PUT', `/api/payments/${avansId}/allocations`, {
+      allocations: [{ visitId: b, amount: 120_000 }],
+    })
+    expect(r.statusCode).toBe(200)
+    expect(await paidOf(b)).toBe(170_000)
+  })
+
+  it('narx olinganidan kam qilib boʻlmaydi', async () => {
+    const r = await call('PATCH', `/api/visits/${b}`, { price: 150_000 })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields.price).toContain('olingan')
+    expect((await call('PATCH', `/api/visits/${b}`, { price: 250_000 })).statusCode).toBe(200)
+  })
+
+  it('bekor qilingan toʻlov hech qaysi ishni yopmaydi', async () => {
+    const r = await call('POST', `/api/payments/${avansId}/cancel`, { reason: 'Xato kiritildi' })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.allocations).toEqual([])
+    expect(await paidOf(b)).toBe(50_000)
+  })
+})
+let avansId = ''
+let otherPatientVisit = ''
 
 describe('qarzdorlar', () => {
   it('faqat qarzi borlar, qarzi boʻyicha kamayish tartibida', async () => {

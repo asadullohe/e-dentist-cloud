@@ -279,8 +279,11 @@ export function payrollSheet(
     roleName: string | null
     visits: number
     charges: number
+    collected: number
+    uncollected: number
     percent: number
     share: number
+    pendingShare: number
     salary: number
     total: number
     paid: number
@@ -294,8 +297,11 @@ export function payrollSheet(
       EXPORT_COLUMNS.role,
       EXPORT_COLUMNS.visits,
       EXPORT_COLUMNS.charges,
+      EXPORT_COLUMNS.collected,
+      EXPORT_COLUMNS.uncollected,
       EXPORT_COLUMNS.percent,
       EXPORT_COLUMNS.share,
+      EXPORT_COLUMNS.pending_share,
       EXPORT_COLUMNS.salary,
       EXPORT_COLUMNS.total,
       EXPORT_COLUMNS.paid,
@@ -307,8 +313,11 @@ export function payrollSheet(
       row.roleName,
       row.visits,
       row.charges,
+      row.collected,
+      row.uncollected,
       row.percent,
       row.share,
+      row.pendingShare,
       row.salary,
       row.total,
       row.paid,

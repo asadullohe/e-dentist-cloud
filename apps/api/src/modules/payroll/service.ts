@@ -4,6 +4,11 @@
 //
 // Hisob = oylik + Σ tashrif ulushi. Ulush tashrifda snapshot, shuning uchun
 // bu yerda foiz qayta koʻpaytirilmaydi — `doctor_share` yigʻiladi.
+//
+// Ulush **olingan puldan** (qaror 21/09/2026): tashrifga bogʻlangan toʻlovlar
+// nisbatida — `share × olingan / narx`. Olinmagan qismi «kutilmoqda» —
+// bemor toʻlaganda ish qilingan oyning hisobiga tushadi (oy tashrifniki,
+// foiz oʻsha paytdagi snapshot).
 
 import { formatMonth, PAYROLL_TEXT, shiftMonth } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
@@ -14,6 +19,7 @@ import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as expenses from '../expenses/service.js'
 import * as patients from '../patients/service.js'
+import * as payments from '../payments/service.js'
 import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
 import type {
@@ -50,10 +56,18 @@ export interface PayrollRow {
   status: 'active' | 'disabled'
   visits: number
   charges: number
+  /// Bemorlardan olingan / olinmagan (oy ishlari boʻyicha)
+  collected: number
+  uncollected: number
+  /// Texnik narxi (naryad va xizmatdan) — ulushdan ayirilgan
+  labCost: number
   /// Joriy foiz (xodim kartasidan). Tashrifdagi snapshot bundan farq
   /// qilishi mumkin — «Qayta hisoblash» ularni tenglashtiradi
   percent: number
+  /// Ulush — olingan qismdan; `pendingShare` — olinmagan qismga toʻgʻri
+  /// keladigani, bemor toʻlaganda shu oyga tushadi
   share: number
+  pendingShare: number
   salary: number
   total: number
   /// Shu oy uchun berilgan pul va qoldiq
@@ -62,10 +76,24 @@ export interface PayrollRow {
   payouts: Payout[]
 }
 
+export interface PayrollTotals {
+  charges: number
+  collected: number
+  uncollected: number
+  labCost: number
+  share: number
+  pendingShare: number
+  salary: number
+  total: number
+  paid: number
+  /// Klinikaga qolgan: olingan − shifokorlar ulushi − texnik − oyliklar
+  clinic: number
+}
+
 export interface Payroll {
   month: string
   rows: PayrollRow[]
-  totals: { charges: number; share: number; salary: number; total: number; paid: number }
+  totals: PayrollTotals
   /// Shifokori yoʻq tashriflar (9.1 dan oldingi yozuvlar). Faqat egasiga
   unassigned: { visits: number; charges: number } | null
 }
@@ -78,8 +106,66 @@ export interface PayrollVisit {
   treatment: string
   tooth: number | null
   price: number
+  labCost: number
+  /// Olingan / olinmagan
+  paid: number
+  unpaid: number
   percent: number
+  /// Toʻliq ulush (snapshot) va uning olingan qismi
   share: number
+  sharePaid: number
+}
+
+/// Ulushning olingan qismi — toʻlov nisbatida, butun soʻmga
+export function sharePaidOf(share: number, price: number, paid: number): number {
+  if (price <= 0) return share
+  return Math.round((share * Math.min(paid, price)) / price)
+}
+
+interface DoctorWork {
+  count: number
+  charges: number
+  collected: number
+  uncollected: number
+  labCost: number
+  share: number
+  pendingShare: number
+}
+
+/// Oy tashriflari shifokor boʻyicha, olingan qism bilan
+async function workByDoctor(
+  tx: ClinicTx,
+  from: Date,
+  to: Date,
+): Promise<Map<string | null, DoctorWork>> {
+  const rows = await visits.listByMonthTx(tx, from, to)
+  const paid = await payments.paidByVisitsTx(
+    tx,
+    rows.map((row) => row.id),
+  )
+  const result = new Map<string | null, DoctorWork>()
+  for (const row of rows) {
+    const work = result.get(row.doctorId) ?? {
+      count: 0,
+      charges: 0,
+      collected: 0,
+      uncollected: 0,
+      labCost: 0,
+      share: 0,
+      pendingShare: 0,
+    }
+    const got = Math.min(paid.get(row.id) ?? 0, row.price)
+    const sharePaid = sharePaidOf(row.doctorShare, row.price, got)
+    work.count += 1
+    work.charges += row.price
+    work.collected += got
+    work.uncollected += row.price - got
+    work.labCost += row.labCost
+    work.share += sharePaid
+    work.pendingShare += row.doctorShare - sharePaid
+    result.set(row.doctorId, work)
+  }
+  return result
 }
 
 /// `created_at` aniq vaqt, jarayon TZ si Asia/Tashkent — mahalliy oy olinadi
@@ -124,12 +210,11 @@ async function payoutsByUser(tx: ClinicTx, month: Date): Promise<Map<string, Pay
 
 async function build(tx: ClinicTx, month: string, viewer: Viewer): Promise<Payroll> {
   const { from, to } = monthRange(month)
-  const [staff, totals, payouts] = await Promise.all([
+  const [staff, byDoctor, payouts] = await Promise.all([
     auth.listStaffTx(tx),
-    visits.doctorTotalsTx(tx, from, to),
+    workByDoctor(tx, from, to),
     payoutsByUser(tx, from),
   ])
-  const byDoctor = new Map(totals.map((row) => [row.doctorId, row]))
 
   // Faol xodimlar hammasi; faolsizlantirilgani — faqat shu oyda ishi yoki
   // toʻlovi boʻlsa (ishdan ketgan shifokorning oxirgi oyi tushib qolmasin)
@@ -154,8 +239,12 @@ async function build(tx: ClinicTx, month: string, viewer: Viewer): Promise<Payro
         status: person.status,
         visits: work?.count ?? 0,
         charges: work?.charges ?? 0,
+        collected: work?.collected ?? 0,
+        uncollected: work?.uncollected ?? 0,
+        labCost: work?.labCost ?? 0,
         percent: person.payPercent,
         share,
+        pendingShare: work?.pendingShare ?? 0,
         salary,
         total,
         paid,
@@ -166,16 +255,30 @@ async function build(tx: ClinicTx, month: string, viewer: Viewer): Promise<Payro
 
   const sum = (pick: (row: PayrollRow) => number) => rows.reduce((acc, row) => acc + pick(row), 0)
   const orphan = byDoctor.get(null)
+  // Kassa taqsimoti — hamma tashriflar boʻyicha (shifokorsizlari ham),
+  // faqat egasiga; shifokor oʻz qatorini koʻrganda umumiy son sir qoladi
+  const all = [...byDoctor.values()]
+  const total = (pick: (work: DoctorWork) => number) =>
+    all.reduce((acc, work) => acc + pick(work), 0)
+  const collected = viewer.manage ? total((w) => w.collected) : sum((row) => row.collected)
+  const labCost = viewer.manage ? total((w) => w.labCost) : sum((row) => row.labCost)
+  const share = sum((row) => row.share)
+  const salary = sum((row) => row.salary)
 
   return {
     month,
     rows,
     totals: {
-      charges: sum((row) => row.charges),
-      share: sum((row) => row.share),
-      salary: sum((row) => row.salary),
+      charges: viewer.manage ? total((w) => w.charges) : sum((row) => row.charges),
+      collected,
+      uncollected: viewer.manage ? total((w) => w.uncollected) : sum((row) => row.uncollected),
+      labCost,
+      share,
+      pendingShare: sum((row) => row.pendingShare),
+      salary,
       total: sum((row) => row.total),
       paid: sum((row) => row.paid),
+      clinic: collected - share - labCost - salary,
     },
     unassigned: viewer.manage && orphan ? { visits: orphan.count, charges: orphan.charges } : null,
   }
@@ -204,21 +307,33 @@ export function visitsOf(
   return withClinic(deps.db, clinicId, async (tx) => {
     const { from, to } = monthRange(input.month)
     const rows = await visits.listByDoctorTx(tx, userId, from, to)
-    const people = await patients.findByIds(tx, [...new Set(rows.map((row) => row.patientId))])
+    const [people, paid] = await Promise.all([
+      patients.findByIds(tx, [...new Set(rows.map((row) => row.patientId))]),
+      payments.paidByVisitsTx(
+        tx,
+        rows.map((row) => row.id),
+      ),
+    ])
     const names = new Map(people.map((person) => [person.id, person.fio]))
-    return rows.map((row) => ({
-      id: row.id,
-      date: row.date,
-      patientId: row.patientId,
-      patientName: names.get(row.patientId) ?? '',
-      treatment: row.treatment,
-      tooth: row.tooth,
-      price: row.price,
-      // Protez ishi: ulush (narx − texnik narxi) dan — shifokor buni koʻrsin
-      labCost: row.labCost,
-      percent: row.doctorPercent,
-      share: row.doctorShare,
-    }))
+    return rows.map((row) => {
+      const got = Math.min(paid.get(row.id) ?? 0, row.price)
+      return {
+        id: row.id,
+        date: row.date,
+        patientId: row.patientId,
+        patientName: names.get(row.patientId) ?? '',
+        treatment: row.treatment,
+        tooth: row.tooth,
+        price: row.price,
+        // Protez ishi: ulush (narx − texnik narxi) dan — shifokor buni koʻrsin
+        labCost: row.labCost,
+        paid: got,
+        unpaid: row.price - got,
+        percent: row.doctorPercent,
+        share: row.doctorShare,
+        sharePaid: sharePaidOf(row.doctorShare, row.price, got),
+      }
+    })
   })
 }
 
@@ -318,8 +433,11 @@ export interface PayrollExportRow {
   roleName: string | null
   visits: number
   charges: number
+  collected: number
+  uncollected: number
   percent: number
   share: number
+  pendingShare: number
   salary: number
   total: number
   paid: number
@@ -349,8 +467,11 @@ export async function exportRowsTx(tx: ClinicTx): Promise<PayrollExportRow[]> {
         roleName: row.roleName,
         visits: row.visits,
         charges: row.charges,
+        collected: row.collected,
+        uncollected: row.uncollected,
         percent: row.percent,
         share: row.share,
+        pendingShare: row.pendingShare,
         salary: row.salary,
         total: row.total,
         paid: row.paid,

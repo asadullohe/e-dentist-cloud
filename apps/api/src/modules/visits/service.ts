@@ -1,6 +1,6 @@
 // Tashriflar va tish xaritasi mantigʻi.
 
-import { PATIENT_TEXT, VISIT_TEXT } from '@e-dentist/shared'
+import { formatSom, PATIENT_TEXT, VISIT_TEXT } from '@e-dentist/shared'
 import { bridgeSpan } from '@e-dentist/teeth'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
@@ -20,6 +20,23 @@ import type {
 
 export interface VisitDeps {
   db: Db
+  /// Tashrifga olingan summa (payments moduli beradi — u bu modulni import
+  /// qiladi, shuning uchun aylanma import oʻrniga server yigʻilganda beriladi).
+  /// Berilmasa narxni kamaytirishda tekshiruv yoʻq
+  paidOfVisit?: (tx: ClinicTx, visitId: string) => Promise<number>
+  /// Roʻyxatda har tashrifga «olingan» — payments dan; berilmasa 0
+  paidByVisits?: (tx: ClinicTx, visitIds: readonly string[]) => Promise<Map<string, number>>
+}
+
+/// Boshqa modullar uchun (payments): bemorning tashriflari — toʻlovni ishga
+/// bogʻlash uchun kerak boʻlgan maydonlar, eng eskisidan
+export function forAllocationTx(tx: ClinicTx, patientId: string) {
+  return repo.forAllocation(tx, patientId)
+}
+
+/// Boshqa modullar uchun (payments, payroll): id boʻyicha qisqa maʼlumot
+export function summariesTx(tx: ClinicTx, ids: readonly string[]) {
+  return repo.summaries(tx, ids)
 }
 
 /// Boshqa modullar uchun (schedule): tashrif maydonlarining sxemasi —
@@ -83,19 +100,9 @@ export function firstDateTx(tx: ClinicTx): Promise<Date | null> {
   return repo.firstDate(tx)
 }
 
-/// Boshqa modullar uchun (payroll): oy ichida shifokor boʻyicha jamlanma
-export async function doctorTotalsTx(
-  tx: ClinicTx,
-  from: Date,
-  to: Date,
-): Promise<{ doctorId: string | null; count: number; charges: number; share: number }[]> {
-  const rows = await repo.doctorTotals(tx, from, to)
-  return rows.map((row) => ({
-    doctorId: row.doctorId,
-    count: row._count._all,
-    charges: row._sum.price ?? 0,
-    share: row._sum.doctorShare ?? 0,
-  }))
+/// Boshqa modullar uchun (payroll): oydagi hamma tashriflar, qisqa
+export function listByMonthTx(tx: ClinicTx, from: Date, to: Date) {
+  return repo.listByMonth(tx, from, to)
 }
 
 /// Boshqa modullar uchun (payroll): shifokorning oydagi ishlari
@@ -179,7 +186,15 @@ export function listVisits(
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, viewer, patientId)
     const rows = await repo.listVisits(tx, patientId, viewer.all ? undefined : viewer.userId)
-    return withDoctorNames(tx, rows)
+    // Har tashrifda olingan summa — «olinmagan» kartochkada shundan
+    const paid = deps.paidByVisits
+      ? await deps.paidByVisits(
+          tx,
+          rows.map((row) => row.id),
+        )
+      : new Map<string, number>()
+    const named = await withDoctorNames(tx, rows)
+    return named.map((row) => ({ ...row, paid: paid.get(row.id) ?? 0 }))
   })
 }
 
@@ -279,6 +294,12 @@ export function updateVisit(
       percent = (await auth.payTermsTx(tx, input.doctorId)).payPercent
     }
     const price = input.price ?? current.price
+    // Narx olinganidan kam boʻlmasin — bogʻlangan toʻlov «havoda» qolmasin
+    if (input.price !== undefined && input.price < current.price && deps.paidOfVisit) {
+      const paid = await deps.paidOfVisit(tx, id)
+      if (input.price < paid)
+        throw errors.validation({ price: VISIT_TEXT.price_below_paid(formatSom(paid)) })
+    }
     // Naryadga bogʻlangan tashrifda texnik narxi naryadniki — bu yerdan
     // oʻzgarmaydi (ikki joyda turgan son ajralib ketmasin)
     const labCostChanged =

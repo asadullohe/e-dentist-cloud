@@ -27,32 +27,32 @@ enum ClinicStatus {
 
 /// Ijarachi. Sinov ham shu qator, faqat is_trial = true
 model Clinic {
-  id        String       @id @default(uuid(7)) @db.Uuid
-  name      String
-  phone     String?
-  status    ClinicStatus @default(active)
+  id           String       @id @default(uuid(7)) @db.Uuid
+  name         String
+  phone        String?
+  status       ClinicStatus @default(active)
   /// Tarif nomi. Narx modeli hali belgilanmagan (reja.md, ochiq savol 1) —
   /// shuning uchun enum emas, matn
-  plan      String       @default("asosiy")
-  isTrial   Boolean      @default(true) @map("is_trial")
+  plan         String       @default("asosiy")
+  isTrial      Boolean      @default(true) @map("is_trial")
   /// Navbat sahifasining manzili: /n/<kod>. 8 belgili tasodifiy — klinika
   /// raqami URL da koʻrinmaydi va kodni taxmin qilib boʻlmaydi (tz.md 14-boʻlim)
-  queueCode    String  @unique @map("queue_code")
+  queueCode    String       @unique @map("queue_code")
   /// Klinika navbat tizimini butunlay yopa oladi
-  queueEnabled Boolean @default(true) @map("queue_enabled")
+  queueEnabled Boolean      @default(true) @map("queue_enabled")
   /// Logotip fayli MinIO da; bazada faqat kalit. Yoʻq boʻlsa nom koʻrsatiladi
-  logoKey      String? @map("logo_key")
+  logoKey      String?      @map("logo_key")
   /// Bemor sahifasidagi kontaktlar (tz.md 14-boʻlim). `phone` egasining
   /// roʻyxat raqami — u ochiq sahifaga chiqmaydi
-  publicPhone  String? @map("public_phone")
+  publicPhone  String?      @map("public_phone")
   address      String?
   /// Google/Yandex xaritadagi sharh havolasi: 5 yulduz bergan bemorga
   /// «u yerda ham baholang» tugmasi chiqadi. Boʻsh boʻlsa tugma yoʻq
-  reviewUrl    String? @map("review_url")
+  reviewUrl    String?      @map("review_url")
   /// Obuna tugash sanasi. Bundan keyin faqat oʻqish rejimi
-  expiresAt DateTime     @map("expires_at") @db.Date
-  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  expiresAt    DateTime     @map("expires_at") @db.Date
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   users        User[]
   roles        Role[]
@@ -63,6 +63,7 @@ model Clinic {
   teeth        Tooth[]
   bridges      Bridge[]
   payments     Payment[]
+  allocations  PaymentAllocation[]
   appointments Appointment[]
   services     Service[]
   serviceTypes ServiceType[]
@@ -121,27 +122,27 @@ enum UserStatus {
 /// Xodim hech qachon oʻchirilmaydi: ishdan boʻshasa status = disabled.
 /// Uning tashriflari va audit yozuvlari joyida qoladi
 model User {
-  id              String     @id @default(uuid(7)) @db.Uuid
+  id                   String     @id @default(uuid(7)) @db.Uuid
   /// Platforma admini uchun boʻsh — u hech qaysi klinikaga tegishli emas
-  clinicId        String?    @map("clinic_id") @db.Uuid
-  roleId          String?    @map("role_id") @db.Uuid
-  email           String     @unique
-  passwordHash    String     @map("password_hash")
-  fullName        String?    @map("full_name")
-  status          UserStatus @default(active)
+  clinicId             String?    @map("clinic_id") @db.Uuid
+  roleId               String?    @map("role_id") @db.Uuid
+  email                String     @unique
+  passwordHash         String     @map("password_hash")
+  fullName             String?    @map("full_name")
+  status               UserStatus @default(active)
   /// Tasdiqlanmaguncha kabinet ochilmaydi
-  emailVerifiedAt DateTime?  @map("email_verified_at") @db.Timestamptz(3)
+  emailVerifiedAt      DateTime?  @map("email_verified_at") @db.Timestamptz(3)
   /// Tasdiqlash havolasidagi kalitning xeshi. Kalitning oʻzi faqat xatda boʻladi
-  emailVerifyTokenHash  String?   @unique @map("email_verify_token_hash")
-  emailVerifyExpiresAt  DateTime? @map("email_verify_expires_at") @db.Timestamptz(3)
-  lastLoginAt     DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  emailVerifyTokenHash String?    @unique @map("email_verify_token_hash")
+  emailVerifyExpiresAt DateTime?  @map("email_verify_expires_at") @db.Timestamptz(3)
+  lastLoginAt          DateTime?  @map("last_login_at") @db.Timestamptz(3)
   /// Ish haqi sharti (tz.md 15-boʻlim): oylik (soʻm) va qilingan ish
   /// narxidan foiz. Ikkalasi birga boʻlishi mumkin — «baza + foiz».
   /// Enum emas: uch holat ham ikki son bilan yopiladi
-  salaryAmount    Int        @default(0) @map("salary_amount")
-  payPercent      Int        @default(0) @map("pay_percent")
-  createdAt       DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  salaryAmount         Int        @default(0) @map("salary_amount")
+  payPercent           Int        @default(0) @map("pay_percent")
+  createdAt            DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   clinic Clinic? @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   role   Role?   @relation(fields: [roleId], references: [id], onDelete: Restrict)
@@ -239,42 +240,43 @@ model Patient {
 // ────────────────────────  Tashriflar va muolajalar  ────────────────────────
 
 model Visit {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  clinicId  String   @map("clinic_id") @db.Uuid
-  patientId String   @map("patient_id") @db.Uuid
+  id            String   @id @default(uuid(7)) @db.Uuid
+  clinicId      String   @map("clinic_id") @db.Uuid
+  patientId     String   @map("patient_id") @db.Uuid
   /// Ishni qilgan shifokor. Ish haqi hisobi shunga qaraydi (tz.md 15-boʻlim).
   /// 9.1 dan oldingi yozuvlarda boʻsh — hisobda «koʻrsatilmagan» qatorida
-  doctorId  String?  @map("doctor_id") @db.Uuid
-  date      DateTime @db.Date
+  doctorId      String?  @map("doctor_id") @db.Uuid
+  date          DateTime @db.Date
   /// Qabul vaqti «HH:MM» — qogʻozga yozib keyin kiritilgan tashrifda ham
   /// haqiqiy vaqt tursin. Sukut — kiritilayotgan lahza (mijoz beradi)
-  time      String?  @map("time") @db.VarChar(5)
+  time          String?  @map("time") @db.VarChar(5)
   /// Muolaja nomi. Narxnomadan tanlansa ham matn saqlanadi — narxnoma
   /// keyin oʻzgarsa tarix buzilmasin
-  treatment String
+  treatment     String
   /// FDI raqami. Bir nechta tish boʻlsa har biriga alohida yozuv
-  tooth     Int?
-  serviceId String?  @map("service_id") @db.Uuid
+  tooth         Int?
+  serviceId     String?  @map("service_id") @db.Uuid
   /// Soʻm, butun son
-  price     Int      @default(0)
+  price         Int      @default(0)
   /// Shifokor ulushi — tashrif yozilgan paytdagi foiz va undan hisoblangan
   /// summa (snapshot, tz.md 15-boʻlim). Foiz keyin oʻzgarsa oʻtgan oylar
   /// qayta hisoblanmaydi; narx tahrirlansa saqlangan foiz bilan qayta sanaladi
-  doctorPercent Int  @default(0) @map("doctor_percent")
-  doctorShare   Int  @default(0) @map("doctor_share")
+  doctorPercent Int      @default(0) @map("doctor_percent")
+  doctorShare   Int      @default(0) @map("doctor_share")
   /// Protez ishi: naryad topshirilganda yozilgan tashrif. Texnik narxi
   /// (snapshot) shifokor ulushidan ayiriladi — foiz (narx − texnik narxi)
   /// dan (qaror 19/09/2026, tz.md 7-boʻlim)
-  labOrderId String? @map("lab_order_id") @db.Uuid
-  labCost    Int     @default(0) @map("lab_cost")
-  note      String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  labOrderId    String?  @map("lab_order_id") @db.Uuid
+  labCost       Int      @default(0) @map("lab_cost")
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic   Clinic    @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  patient  Patient   @relation(fields: [patientId], references: [id], onDelete: Restrict)
-  service  Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  labOrder LabOrder? @relation(fields: [labOrderId], references: [id], onDelete: SetNull)
+  clinic      Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient     Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  service     Service?            @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  labOrder    LabOrder?           @relation(fields: [labOrderId], references: [id], onDelete: SetNull)
+  allocations PaymentAllocation[]
 
   @@index([clinicId, patientId, date])
   @@index([clinicId, date])
@@ -330,29 +332,51 @@ model Bridge {
 /// Qarz = tashriflar summasi − toʻlovlar. Alohida ustunda saqlanmaydi:
 /// ikki joyda turgan son ertami-kechmi bir-biridan ajralib qoladi
 model Payment {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  clinicId  String   @map("clinic_id") @db.Uuid
-  patientId String   @map("patient_id") @db.Uuid
-  date      DateTime @db.Date
+  id           String    @id @default(uuid(7)) @db.Uuid
+  clinicId     String    @map("clinic_id") @db.Uuid
+  patientId    String    @map("patient_id") @db.Uuid
+  date         DateTime  @db.Date
   /// Soʻm, butun son
-  amount    Int
-  note      String?
+  amount       Int
+  note         String?
   /// Kim qabul qildi. Eski yozuvlarda boʻsh
-  createdBy String?  @map("created_by") @db.Uuid
+  createdBy    String?   @map("created_by") @db.Uuid
   /// Toʻlov oʻchirilmaydi — bekor qilinadi, sabab bilan (11-bosqich).
   /// Bekor qilingani hisobga, qarzdorlar va hisobotga kirmaydi
   cancelledAt  DateTime? @map("cancelled_at") @db.Timestamptz(3)
   cancelledBy  String?   @map("cancelled_by") @db.Uuid
   cancelReason String?   @map("cancel_reason")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  clinic      Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient     Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  allocations PaymentAllocation[]
 
   @@index([clinicId, patientId])
   @@index([clinicId, date])
   @@map("payments")
+}
+
+/// Toʻlovning ishga bogʻlanishi (qaror 21/09/2026): toʻlov bemorga emas,
+/// aniq tashrif(lar)ga yoziladi — bitta toʻlov bir nechta ishni yopishi
+/// mumkin. Tashrifda «olingan / olinmagan» shundan; shifokor ulushi
+/// olingan qismdan. Bekor qilingan toʻlovning bogʻlanishlari oʻchiriladi
+model PaymentAllocation {
+  id        String @id @default(uuid(7)) @db.Uuid
+  clinicId  String @map("clinic_id") @db.Uuid
+  paymentId String @map("payment_id") @db.Uuid
+  visitId   String @map("visit_id") @db.Uuid
+  /// Soʻm, butun son, > 0
+  amount    Int
+
+  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  visit   Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, visitId])
+  @@index([clinicId, visitId])
+  @@map("payment_allocations")
 }
 
 // ─────────────────────────────  Qabul jadvali  ─────────────────────────────
@@ -379,8 +403,8 @@ enum QueueStatus {
 }
 
 model Appointment {
-  id       String @id @default(uuid(7)) @db.Uuid
-  clinicId String @map("clinic_id") @db.Uuid
+  id        String  @id @default(uuid(7)) @db.Uuid
+  clinicId  String  @map("clinic_id") @db.Uuid
   /// Navbatga ochiq sahifadan yozilganda kartotekada hali yozuv boʻlmasligi
   /// mumkin — qabulxona tasdiqlaganda bogʻlanadi (tz.md 14-boʻlim)
   patientId String? @map("patient_id") @db.Uuid
@@ -388,12 +412,12 @@ model Appointment {
   doctorId  String? @map("doctor_id") @db.Uuid
 
   /// Qabul vaqti. Navbat yozuvida — yozilgan lahza
-  at        DateTime          @db.Timestamptz(3)
+  at          DateTime          @db.Timestamptz(3)
   /// Davomiylik, daqiqa (12-bosqich): jadvalda blok uzunligi va band vaqt
   /// tekshiruvi shunga qaraydi. Navbat yozuvida maʼnosiz — sukut qoladi
-  durationMin Int             @default(30) @map("duration_min")
-  status    AppointmentStatus @default(scheduled)
-  note      String?
+  durationMin Int               @default(30) @map("duration_min")
+  status      AppointmentStatus @default(scheduled)
+  note        String?
 
   /// Navbat: kunlik tartib raqami va holati. Oddiy qabulda ikkalasi ham boʻsh
   queueNumber Int?         @map("queue_number")
@@ -436,24 +460,24 @@ enum FeedbackStatus {
 /// sahifadan keladi — ismsiz boʻlishi mumkin. Faqat egasiga koʻrinadi,
 /// ochiq reyting 1-versiyada yoʻq
 model Feedback {
-  id       String  @id @default(uuid(7)) @db.Uuid
-  clinicId String  @map("clinic_id") @db.Uuid
-  doctorId String? @map("doctor_id") @db.Uuid
+  id            String  @id @default(uuid(7)) @db.Uuid
+  clinicId      String  @map("clinic_id") @db.Uuid
+  doctorId      String? @map("doctor_id") @db.Uuid
   /// Navbat raqamidan kelgan fikr — bitta raqamga bittasi
   appointmentId String? @unique @map("appointment_id") @db.Uuid
   patientId     String? @map("patient_id") @db.Uuid
 
   /// 1–5
-  rating  Int
+  rating   Int
   /// Tez tanlovlar: kutish, muomala, davolash… (FEEDBACK_TAGS)
-  tags    String[]
-  comment String?
+  tags     String[]
+  comment  String?
   /// Bemor «bogʻlaning» desa qoldiradi
-  phone   String?
-  source  FeedbackSource
-  status  FeedbackStatus @default(new)
+  phone    String?
+  source   FeedbackSource
+  status   FeedbackStatus @default(new)
   /// Qurilma belgisi (cookie) — suiisteʼmolni koʻrish uchun, shaxs emas
-  deviceId String? @map("device_id")
+  deviceId String?        @map("device_id")
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -597,9 +621,9 @@ model LabOrder {
 
   /// Necha marta qaytgani va oxirgi qaytishning sababi. Sabab texnikka
   /// koʻrinishi kerak — auditda qolsa u nimani tuzatishni bilmaydi
-  returns          Int              @default(0)
-  returnReason     LabReturnReason? @map("return_reason")
-  returnNote       String?          @map("return_note")
+  returns      Int              @default(0)
+  returnReason LabReturnReason? @map("return_reason")
+  returnNote   String?          @map("return_note")
 
   deliveredAt DateTime? @map("delivered_at") @db.Timestamptz(3)
   createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -677,17 +701,17 @@ model StaffPayout {
 // ────────────────────────────  Bemor rasmlari  ────────────────────────────
 
 model PatientImage {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  clinicId  String   @map("clinic_id") @db.Uuid
-  patientId String   @map("patient_id") @db.Uuid
+  id         String   @id @default(uuid(7)) @db.Uuid
+  clinicId   String   @map("clinic_id") @db.Uuid
+  patientId  String   @map("patient_id") @db.Uuid
   /// MinIO dagi obyekt nomi. Ochiq URL emas — rasm imzolangan vaqtinchalik
   /// havola orqali beriladi (tz.md 12-boʻlim)
-  key       String   @unique
-  caption   String?
+  key        String   @unique
+  caption    String?
   /// Kim yukladi. Shifokor faqat oʻzi yuklagan rasmlarni koʻradi
   /// (patients.all boʻlmasa). Eski yozuvlarda boʻsh — hammaga koʻrinadi
-  uploadedBy String? @map("uploaded_by") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  uploadedBy String?  @map("uploaded_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)

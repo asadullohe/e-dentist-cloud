@@ -16,6 +16,7 @@ import * as patients from '../patients/service.js'
 import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
 import type {
+  AllocationsInput,
   DebtorsInput,
   PaymentCancelInput,
   PaymentCreateInput,
@@ -40,12 +41,25 @@ async function assertPatient(tx: ClinicTx, viewer: ScopedViewer, patientId: stri
 
 type PaymentRow = Awaited<ReturnType<typeof repo.list>>[number]
 
+/// Toʻlovning bogʻlangan ishi — roʻyxatda «qaysi ish uchun» koʻrinadi
+export interface Allocation {
+  visitId: string
+  amount: number
+  /// YYYY-MM-DD; tashrif oʻchirilgan boʻlsa boʻsh
+  visitDate: string | null
+  treatment: string | null
+  tooth: number | null
+}
+
 /// Roʻyxatdagi qator: kim qabul qilgani va (bekor qilingan boʻlsa) kim bekor
 /// qilgani ismlar bilan — xodimlar boshqa modulniki, ismlar servisidan olinadi
 export interface Payment extends PaymentRow {
   createdByName: string | null
   cancelledByName: string | null
+  allocations: Allocation[]
 }
+
+const isoOf = (date: Date) => date.toISOString().slice(0, 10)
 
 async function withNames(tx: ClinicTx, rows: PaymentRow[]): Promise<Payment[]> {
   const ids = new Set<string>()
@@ -53,12 +67,94 @@ async function withNames(tx: ClinicTx, rows: PaymentRow[]): Promise<Payment[]> {
     if (row.createdBy) ids.add(row.createdBy)
     if (row.cancelledBy) ids.add(row.cancelledBy)
   }
-  const names = await auth.staffNamesTx(tx, [...ids])
+  const [names, allocationRows] = await Promise.all([
+    auth.staffNamesTx(tx, [...ids]),
+    repo.allocationsOf(
+      tx,
+      rows.map((row) => row.id),
+    ),
+  ])
+  const summaries = new Map(
+    (await visits.summariesTx(tx, [...new Set(allocationRows.map((a) => a.visitId))])).map(
+      (v) => [v.id, v] as const,
+    ),
+  )
   return rows.map((row) => ({
     ...row,
     createdByName: row.createdBy ? (names.get(row.createdBy) ?? null) : null,
     cancelledByName: row.cancelledBy ? (names.get(row.cancelledBy) ?? null) : null,
+    allocations: allocationRows
+      .filter((a) => a.paymentId === row.id)
+      .map((a) => {
+        const v = summaries.get(a.visitId)
+        return {
+          visitId: a.visitId,
+          amount: a.amount,
+          visitDate: v ? isoOf(v.date) : null,
+          treatment: v?.treatment ?? null,
+          tooth: v?.tooth ?? null,
+        }
+      }),
   }))
+}
+
+/// Boshqa modullar uchun (visits, payroll): tashrif boʻyicha olingan summa
+export function paidByVisitsTx(tx: ClinicTx, visitIds: readonly string[]) {
+  return repo.paidByVisits(tx, visitIds)
+}
+
+export async function paidOfVisitTx(tx: ClinicTx, visitId: string): Promise<number> {
+  return (await repo.paidByVisits(tx, [visitId])).get(visitId) ?? 0
+}
+
+/// Toʻlovni ishlarga bogʻlash. Aniq roʻyxat berilsa tekshiriladi: ish shu
+/// bemorniki, bir ish bir marta, ishga qolganidan koʻp emas, jami toʻlovdan
+/// koʻp emas. Berilmasa — eng eski yopilmagan ishdan boshlab avtomat;
+/// ortib qolgani bogʻlanmay qoladi (avans)
+async function allocate(
+  tx: ClinicTx,
+  payment: { id: string; patientId: string; amount: number },
+  explicit: readonly { visitId: string; amount: number }[] | undefined,
+): Promise<void> {
+  const [own, paid] = await Promise.all([
+    visits.forAllocationTx(tx, payment.patientId),
+    repo.paidByPatientVisits(tx, payment.patientId, payment.id),
+  ])
+  const remainingOf = (visit: { id: string; price: number }) =>
+    Math.max(0, visit.price - (paid.get(visit.id) ?? 0))
+
+  if (explicit === undefined) {
+    const rows: repo.AllocationInput[] = []
+    let left = payment.amount
+    for (const visit of own) {
+      if (left <= 0) break
+      const amount = Math.min(left, remainingOf(visit))
+      if (amount <= 0) continue
+      rows.push({ visitId: visit.id, amount })
+      left -= amount
+    }
+    await repo.replaceAllocations(tx, payment.id, rows)
+    return
+  }
+
+  const byId = new Map(own.map((visit) => [visit.id, visit]))
+  const seen = new Set<string>()
+  let total = 0
+  for (const row of explicit) {
+    const visit = byId.get(row.visitId)
+    if (!visit) throw errors.validation({ allocations: PAYMENT_TEXT.allocation_visit })
+    if (seen.has(row.visitId))
+      throw errors.validation({ allocations: PAYMENT_TEXT.allocation_duplicate })
+    seen.add(row.visitId)
+    if (row.amount > remainingOf(visit))
+      throw errors.validation({
+        allocations: PAYMENT_TEXT.allocation_over_visit(visit.treatment),
+      })
+    total += row.amount
+  }
+  if (total > payment.amount)
+    throw errors.validation({ allocations: PAYMENT_TEXT.allocation_exceeds })
+  await repo.replaceAllocations(tx, payment.id, explicit)
 }
 
 export function list(deps: PaymentDeps, clinicId: string, viewer: ScopedViewer, patientId: string) {
@@ -113,6 +209,7 @@ export function create(
       note: input.note ?? null,
       createdBy: userId,
     })
+    await allocate(tx, payment, input.allocations)
     await writeAudit(tx, {
       userId,
       action: AUDIT_ACTION.payment_created,
@@ -169,6 +266,8 @@ export function cancel(
     if (existing.cancelledAt) throw errors.conflict(PAYMENT_TEXT.already_cancelled)
 
     const payment = await repo.cancel(tx, id, { cancelledBy: userId, cancelReason: input.reason })
+    // Bekor qilingan toʻlov hech qaysi ishni yopmaydi
+    await repo.replaceAllocations(tx, id, [])
     await writeAudit(tx, {
       userId,
       action: AUDIT_ACTION.payment_cancelled,
@@ -177,6 +276,33 @@ export function cancel(
       meta: { patientId: existing.patientId, amount: existing.amount, reason: input.reason },
     })
     const [row] = await withNames(tx, [payment])
+    return row as Payment
+  })
+}
+
+/// Bogʻlanishni keyin oʻrnatish yoki oʻzgartirish — avans toʻlovni ishga
+/// yozish, xato bogʻlanishni tuzatish. Roʻyxat toʻliq almashadi
+export function setAllocations(
+  deps: PaymentDeps,
+  clinicId: string,
+  viewer: ScopedViewer,
+  id: string,
+  input: AllocationsInput,
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const existing = await repo.findById(tx, id)
+    if (!existing) throw errors.notFound(PAYMENT_TEXT.not_found)
+    await assertPatient(tx, viewer, existing.patientId)
+    if (existing.cancelledAt) throw errors.conflict(PAYMENT_TEXT.cancelled_immutable)
+    await allocate(tx, existing, input.allocations)
+    await writeAudit(tx, {
+      userId: viewer.userId,
+      action: AUDIT_ACTION.payment_updated,
+      entity: 'payment',
+      entityId: id,
+      meta: { allocations: input.allocations.length },
+    })
+    const [row] = await withNames(tx, [existing])
     return row as Payment
   })
 }

@@ -27,6 +27,7 @@ export const TENANT_MODELS = new Set([
   'Tooth',
   'Bridge',
   'Payment',
+  'PaymentAllocation',
   'Appointment',
   'Service',
   'ServiceType',

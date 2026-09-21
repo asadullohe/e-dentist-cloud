@@ -160,6 +160,7 @@ export async function removeClinic(ownerDb: Db, clinicId: string): Promise<void>
   await ownerDb.auditLog.deleteMany(where)
   await ownerDb.feedback.deleteMany(where)
   await ownerDb.timeBlock.deleteMany(where)
+  await ownerDb.paymentAllocation.deleteMany(where)
   await ownerDb.payment.deleteMany(where)
   await ownerDb.appointment.deleteMany(where)
   await ownerDb.visit.deleteMany(where)

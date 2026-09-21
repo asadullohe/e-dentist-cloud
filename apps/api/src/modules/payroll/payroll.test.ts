@@ -12,14 +12,18 @@ let doctorId = ''
 let doctorCookie = ''
 let adminId = ''
 let otherClinicId = ''
+let mayVisitId = ''
 
 interface Row {
   userId: string
   fullName: string
   visits: number
   charges: number
+  collected: number
+  uncollected: number
   percent: number
   share: number
+  pendingShare: number
   salary: number
   total: number
   paid: number
@@ -41,7 +45,16 @@ async function payroll(month: string, cookie = h.cookie) {
   expect(r.statusCode).toBe(200)
   return r.json().data as {
     rows: Row[]
-    totals: { charges: number; share: number; salary: number; total: number }
+    totals: {
+      charges: number
+      collected: number
+      uncollected: number
+      share: number
+      pendingShare: number
+      salary: number
+      total: number
+      clinic: number
+    }
     unassigned: { visits: number; charges: number } | null
   }
 }
@@ -108,12 +121,23 @@ beforeAll(async () => {
     price: 100_000,
   })
   // Boshqa oy — aprelga kirmasligi kerak
-  await call('POST', '/api/visits', {
+  const may = await call('POST', '/api/visits', {
     patientId,
     doctorId,
     date: '2026-05-01',
     treatment: 'Plomba',
     price: 999_000,
+  })
+  mayVisitId = may.json().data.id
+
+  // Ulush olingan puldan (qaror 21/09/2026): aprel ishlari toʻliq toʻlangan
+  // (500 000 eng eski ikki ishni yopadi), may ishi yarmi — aniq bogʻlab
+  await call('POST', '/api/payments', { patientId, date: '2026-04-12', amount: 500_000 })
+  await call('POST', '/api/payments', {
+    patientId,
+    date: '2026-05-02',
+    amount: 499_500,
+    allocations: [{ visitId: mayVisitId, amount: 499_500 }],
   })
 
   // Shifokori yoʻq eski yozuv (9.1 dan oldingi)
@@ -160,8 +184,11 @@ describe('oylik hisob', () => {
       fullName: 'Aliyev Bobur',
       visits: 2,
       charges: 500_000,
+      collected: 500_000,
+      uncollected: 0,
       percent: 50,
       share: 250_000,
+      pendingShare: 0,
       salary: 0,
       total: 250_000,
     })
@@ -174,9 +201,9 @@ describe('oylik hisob', () => {
       total: 3_000_000,
     })
 
-    // Egasi foizsiz — ishi bor, ulushi yoʻq
+    // Egasi foizsiz — ishi bor, ulushi yoʻq; puli hali olinmagan
     const owner = data.rows.find((row) => row.userId === h.userId)
-    expect(owner).toMatchObject({ visits: 1, charges: 100_000, share: 0 })
+    expect(owner).toMatchObject({ visits: 1, charges: 100_000, collected: 0, share: 0 })
   })
 
   it('jami va shifokor koʻrsatilmagan tashriflar', async () => {
@@ -184,6 +211,11 @@ describe('oylik hisob', () => {
     expect(data.totals.share).toBe(250_000)
     expect(data.totals.salary).toBe(3_000_000)
     expect(data.totals.total).toBe(3_250_000)
+    // Kassa: olingan 500 000 (aprel ishlariga), olinmagan — egasiniki 100 000
+    // + shifokorsiz 50 000; klinikaga qolgan = 500 000 − 250 000 − 3 000 000
+    expect(data.totals.collected).toBe(500_000)
+    expect(data.totals.uncollected).toBe(150_000)
+    expect(data.totals.clinic).toBe(-2_750_000)
     expect(data.unassigned).toEqual({ visits: 1, charges: 50_000 })
   })
 
@@ -194,11 +226,33 @@ describe('oylik hisob', () => {
     expect(after).toMatchObject({ salary: 3_000_000 })
   })
 
-  it('boshqa oy alohida', async () => {
+  it('boshqa oy alohida; yarmi olingan ishda ulush yarmi, qolgani kutilmoqda', async () => {
     const data = await payroll('2026-05')
     const doctor = data.rows.find((row) => row.userId === doctorId)
-    expect(doctor).toMatchObject({ visits: 1, charges: 999_000, share: 499_500 })
+    expect(doctor).toMatchObject({
+      visits: 1,
+      charges: 999_000,
+      collected: 499_500,
+      uncollected: 499_500,
+      share: 249_750,
+      pendingShare: 249_750,
+    })
     expect(data.unassigned).toBeNull()
+  })
+
+  it('bemor keyin toʻlasa ish qilingan oyning hisobi oshadi (oy tashrifniki)', async () => {
+    const late = await call('POST', '/api/payments', {
+      patientId,
+      date: '2026-07-15',
+      amount: 499_500,
+      allocations: [{ visitId: mayVisitId, amount: 499_500 }],
+    })
+    expect(late.statusCode).toBe(200)
+    const doctor = (await payroll('2026-05')).rows.find((row) => row.userId === doctorId)
+    expect(doctor).toMatchObject({ share: 499_500, pendingShare: 0, uncollected: 0 })
+    // Iyulda bu ish yoʻq — u may hisobida
+    const july = (await payroll('2026-07')).rows.find((row) => row.userId === doctorId)
+    expect(july).toMatchObject({ visits: 0, share: 0 })
   })
 })
 
@@ -211,7 +265,10 @@ describe('ishlar roʻyxati', () => {
     expect(rows[0]).toMatchObject({
       patientName: 'Ish Haqi Bemori',
       price: 200_000,
+      paid: 200_000,
+      unpaid: 0,
       share: 100_000,
+      sharePaid: 100_000,
     })
   })
 })

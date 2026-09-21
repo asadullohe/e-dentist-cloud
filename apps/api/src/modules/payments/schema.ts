@@ -15,6 +15,20 @@ const paymentDate = z
     error: () => VALIDATION_TEXT.date_in_future,
   })
 
+/// Qaysi ishga qancha. Berilmasa — eng eski yopilmagan ishdan boshlab avtomat;
+/// boʻsh massiv — bogʻlanmagan (avans), keyin bogʻlanadi
+const allocations = z
+  .array(
+    z.object({
+      visitId: z.string().uuid(),
+      amount: z.coerce
+        .number()
+        .int()
+        .positive({ error: () => PAYMENT_TEXT.amount_positive }),
+    }),
+  )
+  .max(200)
+
 export const paymentCreateSchema = z.object({
   patientId: z.string().uuid(),
   date: paymentDate,
@@ -24,7 +38,10 @@ export const paymentCreateSchema = z.object({
     .int()
     .positive({ error: () => PAYMENT_TEXT.amount_positive }),
   note: z.string().trim().max(500).nullish(),
+  allocations: allocations.optional(),
 })
+
+export const allocationsSchema = z.object({ allocations })
 
 /// Toʻlov oʻzgarmas: summa va sana tahrirlanmaydi — xato boʻlsa bekor qilib
 /// yangisi kiritiladi. Faqat izoh tuzatiladi (qaror 19/09/2026)
@@ -54,6 +71,7 @@ export const debtorsSchema = z.object({
 })
 
 export type PaymentCreateInput = z.infer<typeof paymentCreateSchema>
+export type AllocationsInput = z.infer<typeof allocationsSchema>
 export type PaymentUpdateInput = z.infer<typeof paymentUpdateSchema>
 export type PaymentCancelInput = z.infer<typeof paymentCancelSchema>
 export type DebtorsInput = z.infer<typeof debtorsSchema>
