@@ -7,6 +7,7 @@ export {
   useRegister,
   useVerifyEmail,
 } from './hooks'
+export { LogoutDialog } from './LogoutDialog'
 export {
   type InviteValues,
   inviteSchema,

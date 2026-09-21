@@ -26,7 +26,14 @@ export function Header({ title, onToggleMenu, notice }: Props) {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
-      <Button variant="ghost" size="icon" onClick={onToggleMenu} aria-label={UI_TEXT.menu}>
+      {/* Telefonda yon menyu oʻrniga pastki dok — tugma faqat keng ekranda */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onToggleMenu}
+        aria-label={UI_TEXT.menu}
+        className="hidden md:inline-flex"
+      >
         <PanelLeftIcon />
       </Button>
       <h1 className="truncate text-sm font-medium md:hidden">{title}</h1>

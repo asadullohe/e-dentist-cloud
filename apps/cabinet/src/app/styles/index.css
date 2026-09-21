@@ -69,10 +69,25 @@
   --info: oklch(0.588 0.158 241.966);
 
   --font-body: "Inter Variable", system-ui, sans-serif;
+
+  /* Shisha (telefon pastki doki, iOS 26 «Liquid Glass» uslubi): yarim
+   * shaffof fon, oq yaltiroq chegara, faol tab ostidagi «linza» */
+  --glass-bg: rgba(255, 255, 255, 0.62);
+  /* Oq fonda oq hoshiya koʻrinmasdi — slate tusli, sezilarli */
+  --glass-rim: rgba(15, 23, 42, 0.12);
+  --glass-lens: color-mix(in oklab, var(--primary) 13%, white);
+  --glass-shine: rgba(255, 255, 255, 0.75);
+  --glass-shadow: 0 12px 32px -12px rgba(20, 30, 60, 0.35), 0 2px 6px rgba(20, 30, 60, 0.08);
 }
 
 .dark,
 [data-theme="dark"] {
+  --glass-bg: rgba(38, 42, 60, 0.5);
+  --glass-rim: rgba(255, 255, 255, 0.18);
+  --glass-lens: rgba(255, 255, 255, 0.14);
+  --glass-shine: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 20px 40px -18px rgba(0, 0, 0, 0.7);
+
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
 
@@ -165,6 +180,33 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+/* Shisha yuza: fon xiralashadi, tepasida yaltiroq gradient (::before) */
+@utility glass {
+  position: relative;
+  overflow: hidden;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-rim);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1px 0 var(--glass-shine);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      var(--glass-shine) 0%,
+      transparent 45%,
+      transparent 60%,
+      color-mix(in oklab, var(--glass-shine) 40%, transparent) 100%
+    );
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -197,6 +239,59 @@
   }
   .animate-fetch-bar {
     animation: fetch-bar 1.1s ease-in-out infinite;
+  }
+
+  /* Pastdan chiqadigan varaq («Yana»): ochilishda yuqoriga suzadi, yopilishda
+     pastga tushadi. shadcn ning `animate-in` sinflari tw-animate-css siz
+     ishlamaydi — shu yerda oʻz keyframe lari */
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  @keyframes sheet-down {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  .sheet-bottom[data-state="open"] {
+    animation: sheet-up 0.42s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .sheet-bottom[data-state="closed"] {
+    animation: sheet-down 0.25s ease-in forwards;
+  }
+  .sheet-scrim[data-state="open"] {
+    animation: fade-in 0.3s ease-out;
+  }
+  .sheet-scrim[data-state="closed"] {
+    animation: fade-out 0.25s ease-in forwards;
+  }
+
+  /* Pastki dok: linza faol tabga «suzib» oʻtadi — prujinali egri chiziq */
+  .ease-spring {
+    transition-timing-function: cubic-bezier(0.34, 1.4, 0.64, 1);
   }
 
   /* Chop etish — hozircha faqat navbat QR varagʻi (10.8): A4, tor hoshiya,

@@ -87,6 +87,8 @@ export const ru: DeepPartial<Strings> = {
     offline: 'Нет связи с сервером. Проверьте интернет и попробуйте снова',
     login: 'Войти',
     logout: 'Выйти',
+    logout_confirm_title: 'Выйти из аккаунта?',
+    logout_confirm_text: 'Для повторного входа понадобятся почта и пароль.',
     register: 'Регистрация',
     email: 'Почта',
     password: 'Пароль',
@@ -115,6 +117,7 @@ export const ru: DeepPartial<Strings> = {
     date_placeholder: 'ДД/ММ/ГГГГ',
     pick_date: 'Выбрать в календаре',
     close: 'Закрыть',
+    cancel: 'Отмена',
     welcome: 'Добро пожаловать',
   },
 
@@ -269,6 +272,7 @@ export const ru: DeepPartial<Strings> = {
     edit_visit: 'Изменить визит',
     no_visits: 'Визитов пока нет',
     date: 'Дата',
+    time: 'Время',
     treatment: 'Процедура',
     tooth: 'Зуб',
     price: 'Цена',
@@ -1164,6 +1168,22 @@ export const ru: DeepPartial<Strings> = {
     range_from: 'от',
     range_to: 'до',
     selected: (n: number) => `Выбрано: ${n}`,
+  },
+
+  DOCK_UI: {
+    more: 'Ещё',
+    short: {
+      '/': 'Главная',
+      '/schedule': 'Приёмы',
+      '/lab': 'Наряды',
+      '/debtors': 'Долги',
+      '/reports': 'Отчёты',
+    } as Record<string, string>,
+    search: 'Найти раздел…',
+    nothing: 'Ничего не найдено',
+    queue_waiting: (n: number) => `В очереди ${n} ${plural(n, PEOPLE)}`,
+    lab_ready: (n: number) => `${n} готово`,
+    feedback_new: (n: number) => `${n} ${plural(n, ['новый', 'новых', 'новых'])}`,
   },
 
   PERIOD_UI: {

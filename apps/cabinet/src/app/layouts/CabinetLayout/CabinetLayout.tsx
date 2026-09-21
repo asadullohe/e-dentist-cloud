@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useSession } from '@/entities/session'
 import { navSections } from '@/shared/config'
+import { BottomNav } from '@/widgets/BottomNav'
 import { FetchBar } from '@/widgets/FetchBar'
 import { Header } from '@/widgets/Header'
 import { Sidebar } from '@/widgets/Sidebar'
@@ -72,9 +73,11 @@ export function CabinetLayout() {
           onToggleMenu={toggle}
           notice={<TrialBanner subscription={session?.subscription ?? null} />}
         />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 md:px-6 md:py-6">
+        {/* Telefonda pastki dok kontent ustida suzadi — pastda joy qoldiriladi */}
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 pb-30 md:px-6 md:py-6">
           <Outlet />
         </main>
+        <BottomNav />
       </div>
     </div>
   )

@@ -77,6 +77,8 @@ export const UI_TEXT = {
   offline: 'Server bilan aloqa yoʻq. Internetni tekshirib, qayta urinib koʻring',
   login: 'Kirish',
   logout: 'Chiqish',
+  logout_confirm_title: 'Hisobdan chiqasizmi?',
+  logout_confirm_text: 'Qayta kirish uchun pochta va parol soʻraladi.',
   register: 'Roʻyxatdan oʻtish',
   email: 'Pochta',
   password: 'Parol',
@@ -108,6 +110,7 @@ export const UI_TEXT = {
   date_placeholder: 'KK/OO/YYYY',
   pick_date: 'Kalendardan tanlash',
   close: 'Yopish',
+  cancel: 'Bekor qilish',
   welcome: 'Xush kelibsiz',
 } as const
 
@@ -273,6 +276,7 @@ export const CARD_UI = {
   edit_visit: 'Tashrifni tahrirlash',
   no_visits: 'Hozircha tashrif yozilmagan',
   date: 'Sana',
+  time: 'Vaqt',
   treatment: 'Muolaja',
   tooth: 'Tish',
   price: 'Narx',
@@ -1244,6 +1248,24 @@ export const SETTINGS_UI = {
   queue_hint: 'Bemorlar uchun navbat sahifasi va kutish xonasi ekrani',
   feedback_hint: 'Bemorlarning bahosi, fikr QR varagʻi va bemor sahifasi kontaktlari',
   data_hint: 'Barcha maʼlumotni yuklab olish',
+} as const
+
+// Telefondagi pastki dok (Liquid Glass) va «Yana» varagʻi
+export const DOCK_UI = {
+  more: 'Yana',
+  // Dok tabida qisqa nom: toʻrt tab 300px ga sigʻishi kerak
+  short: {
+    '/': 'Asosiy',
+    '/schedule': 'Jadval',
+    '/lab': 'Naryadlar',
+    '/debtors': 'Qarzlar',
+    '/reports': 'Hisobot',
+  } as Record<string, string>,
+  search: 'Boʻlim qidirish…',
+  nothing: 'Topilmadi',
+  queue_waiting: (n: number) => `Navbatda ${n} kishi`,
+  lab_ready: (n: number) => `${n} ta tayyor`,
+  feedback_new: (n: number) => `${n} ta yangi`,
 } as const
 
 // Davr tanlovi: kun · hafta · oy · yil (xarajatlar, hisobotlar)

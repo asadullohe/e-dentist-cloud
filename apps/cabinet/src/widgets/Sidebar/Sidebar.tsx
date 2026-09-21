@@ -4,7 +4,7 @@ import { ChevronRightIcon, LogOutIcon, UserCogIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
-import { useLogout } from '@/features/auth'
+import { LogoutDialog } from '@/features/auth'
 import { type NavSection, navSections } from '@/shared/config'
 import {
   DropdownMenu,
@@ -26,19 +26,14 @@ interface Props {
 export function Sidebar({ collapsed, onNavigate }: Props) {
   const { data: session } = useSession()
   const hasPermission = useHasPermission()
-  const { mutateAsync: logout } = useLogout()
   const navigate = useNavigate()
+  const [logoutOpen, setLogoutOpen] = useState(false)
 
   const clinic = session?.clinic ?? null
   const sections = navSections().filter(
     (section) => !section.permission || hasPermission(section.permission),
   )
   const initial = (session?.user.fullName ?? session?.user.email ?? '?').trim().charAt(0)
-
-  async function handleLogout() {
-    await logout()
-    navigate('/login', { replace: true })
-  }
 
   return (
     <aside
@@ -124,13 +119,14 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
               <UserCogIcon />
               {STAFF_UI.account_tab}
             </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={() => void handleLogout()}>
+            <DropdownMenuItem variant="destructive" onSelect={() => setLogoutOpen(true)}>
               <LogOutIcon />
               {UI_TEXT.logout}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      <LogoutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
     </aside>
   )
 }
