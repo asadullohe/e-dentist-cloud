@@ -387,6 +387,9 @@ model Appointment {
 
   /// Qabul vaqti. Navbat yozuvida — yozilgan lahza
   at        DateTime          @db.Timestamptz(3)
+  /// Davomiylik, daqiqa (12-bosqich): jadvalda blok uzunligi va band vaqt
+  /// tekshiruvi shunga qaraydi. Navbat yozuvida maʼnosiz — sukut qoladi
+  durationMin Int             @default(30) @map("duration_min")
   status    AppointmentStatus @default(scheduled)
   note      String?
 

@@ -5,6 +5,14 @@ import { visitCreateSchema } from '../visits/service.js'
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 
+/// Daqiqa: 5 dan 8 soatgacha, 5 qadam. Jadvalda blok uzunligi shunga qaraydi
+const duration = z.coerce
+  .number()
+  .int({ error: () => APPOINTMENT_TEXT.duration_invalid })
+  .min(5, { error: () => APPOINTMENT_TEXT.duration_invalid })
+  .max(480, { error: () => APPOINTMENT_TEXT.duration_invalid })
+  .multipleOf(5, { error: () => APPOINTMENT_TEXT.duration_invalid })
+
 const isoDate = z
   .string()
   .trim()
@@ -29,6 +37,7 @@ export const appointmentCreateSchema = z.object({
     .regex(TIME, {
       error: () => APPOINTMENT_TEXT.time_invalid,
     }),
+  duration: duration.default(30),
   note: z.string().trim().max(500).nullish(),
 })
 
@@ -44,6 +53,7 @@ export const appointmentUpdateSchema = z.object({
     .trim()
     .regex(TIME, { error: () => APPOINTMENT_TEXT.time_invalid })
     .optional(),
+  duration: duration.optional(),
   status: z.enum(['scheduled', 'arrived', 'no_show', 'done', 'cancelled']).optional(),
   note: z.string().trim().max(500).nullish(),
 })

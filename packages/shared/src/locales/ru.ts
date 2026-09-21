@@ -1294,6 +1294,8 @@ export const ru: DeepPartial<Strings> = {
     already_done: 'Этот приём уже завершён',
     done_needs_visit:
       'Чтобы завершить приём, запишите выполненную работу — «Завершён» ставится через визит',
+    duration_invalid: 'Длительность от 5 минут до 8 часов, с шагом 5 минут',
+    slot_busy: (range: string, fio: string) => `Это время занято: ${range} — ${fio}`,
   },
 
   APPOINTMENT_STATUS_LABELS: {

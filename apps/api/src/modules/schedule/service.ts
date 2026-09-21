@@ -70,6 +70,8 @@ export interface Appointment {
   doctorId: string | null
   doctorName: string | null
   at: Date
+  /// Daqiqa. Navbat yozuvida sukut (30) — maʼnosi yoʻq
+  duration: number
   status: string
   note: string | null
   /// Kartotekadagi ism, boʻlmasa oʻzi yozgan ism
@@ -109,6 +111,7 @@ async function withPatients(
     patientId: string | null
     doctorId: string | null
     at: Date
+    durationMin: number
     status: string
     note: string | null
     guestName: string | null
@@ -131,12 +134,41 @@ async function withPatients(
       doctorId: row.doctorId,
       doctorName: row.doctorId ? (doctorNames.get(row.doctorId) ?? null) : null,
       at: row.at,
+      duration: row.durationMin,
       status: row.status,
       note: row.note,
       fio: person?.fio ?? row.guestName ?? '',
       phone: person?.phone ?? row.guestPhone ?? null,
     }
   })
+}
+
+/// Bir shifokorga bir vaqtda ikki qabul yozilmaydi: yangi oraliq [at, at+dur)
+/// mavjud ochiq qabul bilan kesishsa — 409, xabarda kimniki va qachon.
+/// Faqat oʻsha kun ichida tekshiriladi (yarim tundan oʻtgan qabul yoʻq)
+async function assertFree(
+  tx: ClinicTx,
+  doctorId: string | null,
+  at: Date,
+  duration: number,
+  excludeId?: string,
+): Promise<void> {
+  if (!doctorId) return
+  const dayStart = new Date(at.getFullYear(), at.getMonth(), at.getDate())
+  const dayEnd = new Date(at.getFullYear(), at.getMonth(), at.getDate() + 1)
+  const rows = await repo.openByDoctor(tx, doctorId, dayStart, dayEnd)
+  const from = at.getTime()
+  const to = from + duration * 60_000
+  const clash = rows.find((row) => {
+    if (row.id === excludeId) return false
+    const start = row.at.getTime()
+    return start < to && start + row.durationMin * 60_000 > from
+  })
+  if (!clash) return
+  const end = new Date(clash.at.getTime() + clash.durationMin * 60_000)
+  const range = `${formatLocalTime(clash.at)}–${formatLocalTime(end)}`
+  const person = clash.patientId ? (await patients.findByIds(tx, [clash.patientId]))[0] : undefined
+  throw errors.conflict(APPOINTMENT_TEXT.slot_busy(range, person?.fio ?? clash.guestName ?? ''))
 }
 
 export function list(
@@ -176,11 +208,14 @@ export function create(
         ? ((await patients.findByIds(tx, [input.patientId]))[0]?.doctorId ?? null)
         : input.doctorId
     await assertDoctor(tx, doctorId)
+    const at = toInstant(input.date, input.time)
+    await assertFree(tx, doctorId, at, input.duration)
 
     const created = await repo.create(tx, id, {
       patientId: input.patientId,
       doctorId,
-      at: toInstant(input.date, input.time),
+      at,
+      durationMin: input.duration,
       note: input.note ?? null,
     })
     await writeAudit(tx, {
@@ -223,8 +258,25 @@ export function update(
             )
 
       await assertDoctor(tx, input.doctorId)
+      // Vaqt, davomiylik yoki shifokor oʻzgarsa — yangi oraliq boʻsh boʻlsin
+      const nextDoctor = input.doctorId === undefined ? existing.doctorId : input.doctorId
+      const nextStatus = input.status ?? existing.status
+      if (
+        (at !== undefined || input.duration !== undefined || input.doctorId !== undefined) &&
+        (nextStatus === 'scheduled' || nextStatus === 'arrived') &&
+        existing.queueStatus === null
+      ) {
+        await assertFree(
+          tx,
+          nextDoctor,
+          at ?? existing.at,
+          input.duration ?? existing.durationMin,
+          id,
+        )
+      }
       const updated = await repo.update(tx, id, {
         ...(at === undefined ? {} : { at }),
+        ...(input.duration === undefined ? {} : { durationMin: input.duration }),
         ...(input.doctorId === undefined ? {} : { doctorId: input.doctorId }),
         ...(input.status === undefined ? {} : { status: input.status }),
         ...(input.note === undefined ? {} : { note: input.note }),

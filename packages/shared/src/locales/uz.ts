@@ -1369,6 +1369,8 @@ export const APPOINTMENT_TEXT = {
   time_invalid: 'Vaqtni oʻqib boʻlmadi — soat:daqiqa koʻrinishida yozing',
   already_done: 'Bu qabul allaqachon yakunlangan',
   done_needs_visit: 'Yakunlash uchun qilingan ishni yozing — «Yakunlandi» tashrif orqali qoʻyiladi',
+  duration_invalid: 'Davomiylik 5 daqiqadan 8 soatgacha, 5 daqiqa qadam bilan',
+  slot_busy: (range: string, fio: string) => `Bu vaqt band: ${range} — ${fio}`,
 } as const
 
 /// Holat kalitlari bazada saqlanadi, shuning uchun oʻzgarmaydi

@@ -138,6 +138,143 @@ describe('qabulda shifokor', () => {
   })
 })
 
+describe('davomiylik va band vaqt (12-bosqich)', () => {
+  let doctorId = ''
+  let otherPatient = ''
+
+  beforeAll(async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const created = await call('POST', '/api/staff', {
+      email: `band-shifokor-${h.clinicId.slice(0, 8)}@sinov.uz`,
+      fullName: 'Band Shifokor',
+      roleId: role?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    doctorId = created.json().data.id
+    otherPatient = (await call('POST', '/api/patients', { fio: 'Ikkinchi Bemor' })).json().data.id
+  })
+
+  it('davomiylik saqlanadi; sukut 30; notoʻgʻrisi 400', async () => {
+    const r = await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-03-01',
+      time: '09:00',
+      duration: 45,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.duration).toBe(45)
+    const auto = await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-03-01',
+      time: '12:00',
+    })
+    expect(auto.json().data.duration).toBe(30)
+    for (const duration of [0, 7, 500, 'uzoq']) {
+      const bad = await call('POST', '/api/appointments', {
+        patientId,
+        doctorId,
+        date: '2027-03-01',
+        time: '15:00',
+        duration,
+      })
+      expect(bad.statusCode, String(duration)).toBe(400)
+    }
+  })
+
+  it('bir shifokorga kesishgan vaqt — 409, xabarda kim va qachon', async () => {
+    // 09:00–09:45 band (yuqorida). 09:30 da boshlanadigan — kesishadi
+    const clash = await call('POST', '/api/appointments', {
+      patientId: otherPatient,
+      doctorId,
+      date: '2027-03-01',
+      time: '09:30',
+    })
+    expect(clash.statusCode).toBe(409)
+    expect(clash.json().error.message).toContain('09:00–09:45')
+    // 09:45 da boshlanadigan — kesishmaydi (oxiri ochiq)
+    const ok = await call('POST', '/api/appointments', {
+      patientId: otherPatient,
+      doctorId,
+      date: '2027-03-01',
+      time: '09:45',
+      duration: 15,
+    })
+    expect(ok.statusCode).toBe(200)
+    // 08:30 dan 60 daqiqa — 09:00 ga kirib keladi
+    const before = await call('POST', '/api/appointments', {
+      patientId: otherPatient,
+      doctorId,
+      date: '2027-03-01',
+      time: '08:30',
+      duration: 60,
+    })
+    expect(before.statusCode).toBe(409)
+  })
+
+  it('boshqa shifokorga yoki shifokorsiz — cheklov yoʻq', async () => {
+    const free = await call('POST', '/api/appointments', {
+      patientId: otherPatient,
+      doctorId: null,
+      date: '2027-03-01',
+      time: '09:00',
+    })
+    expect(free.statusCode).toBe(200)
+  })
+
+  it('tahrirda vaqt band joyga surilsa 409; oʻzining vaqtiga qayta yozish mumkin', async () => {
+    const own = (
+      await call('POST', '/api/appointments', {
+        patientId: otherPatient,
+        doctorId,
+        date: '2027-03-02',
+        time: '10:00',
+        duration: 30,
+      })
+    ).json().data
+    await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-03-02',
+      time: '11:00',
+      duration: 30,
+    })
+    expect((await call('PATCH', `/api/appointments/${own.id}`, { time: '11:15' })).statusCode).toBe(
+      409,
+    )
+    // Oʻzi bilan kesishishi hisobga olinmaydi: davomiylik uzaytiriladi
+    const longer = await call('PATCH', `/api/appointments/${own.id}`, { duration: 60 })
+    expect(longer.statusCode).toBe(200)
+    expect(longer.json().data.duration).toBe(60)
+    // 60 daqiqaga choʻzilgani endi 11:00 ga tegadi — keyingi surish 409
+    expect((await call('PATCH', `/api/appointments/${own.id}`, { time: '10:30' })).statusCode).toBe(
+      409,
+    )
+  })
+
+  it('bekor qilingan qabul vaqtni band qilmaydi', async () => {
+    const first = (
+      await call('POST', '/api/appointments', {
+        patientId,
+        doctorId,
+        date: '2027-03-03',
+        time: '10:00',
+      })
+    ).json().data
+    await call('PATCH', `/api/appointments/${first.id}`, { status: 'cancelled' })
+    const again = await call('POST', '/api/appointments', {
+      patientId: otherPatient,
+      doctorId,
+      date: '2027-03-03',
+      time: '10:00',
+    })
+    expect(again.statusCode).toBe(200)
+  })
+})
+
 describe('qabulni yakunlash — tashrif yoziladi', () => {
   let doctorId = ''
   let doctorPatientId = ''

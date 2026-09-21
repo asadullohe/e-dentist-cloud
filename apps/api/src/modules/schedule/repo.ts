@@ -11,8 +11,11 @@ const SELECT = {
   patientId: true,
   doctorId: true,
   at: true,
+  durationMin: true,
   status: true,
   note: true,
+  /// Navbat yozuvimi — vaqt kesishuvi tekshiruvida ular hisobga olinmaydi
+  queueStatus: true,
   /// Navbatga ochiq sahifadan yozilgan, kartotekada hali yoʻq odam
   guestName: true,
   guestPhone: true,
@@ -33,9 +36,29 @@ export function findById(tx: ClinicTx, id: string) {
 export function create(
   tx: ClinicTx,
   id: string,
-  data: { patientId: string; doctorId: string | null; at: Date; note?: string | null },
+  data: {
+    patientId: string
+    doctorId: string | null
+    at: Date
+    durationMin: number
+    note?: string | null
+  },
 ) {
   return tx.appointment.create({ data: tenantScoped({ id, ...data }), select: SELECT })
+}
+
+/// Shifokorning oraliqdagi ochiq qabullari — vaqt kesishuvini tekshirish
+/// uchun. Navbat yozuvlari (vaqti yoʻq) va yopilganlari kirmaydi
+export function openByDoctor(tx: ClinicTx, doctorId: string, from: Date, to: Date) {
+  return tx.appointment.findMany({
+    where: {
+      doctorId,
+      queueStatus: null,
+      status: { in: ['scheduled', 'arrived'] },
+      at: { gte: from, lt: to },
+    },
+    select: { id: true, at: true, durationMin: true, patientId: true, guestName: true },
+  })
 }
 
 export function update(tx: ClinicTx, id: string, data: Prisma.AppointmentUpdateInput) {
