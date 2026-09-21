@@ -1296,6 +1296,13 @@ export const ru: DeepPartial<Strings> = {
       'Чтобы завершить приём, запишите выполненную работу — «Завершён» ставится через визит',
     duration_invalid: 'Длительность от 5 минут до 8 часов, с шагом 5 минут',
     slot_busy: (range: string, fio: string) => `Это время занято: ${range} — ${fio}`,
+    block_not_found: 'Занятое время не найдено',
+    block_range: 'Время окончания должно быть позже начала',
+    block_doctor_required: 'Выберите врача',
+    block_has_appointments: (n: number) =>
+      `В этом интервале ${n} ${plural(n, ['приём', 'приёма', 'приёмов'])} — сначала перенесите или отмените их`,
+    doctor_away: (range: string, reason: string) =>
+      `Врача нет в это время: ${range}${reason ? ` (${reason})` : ''}`,
   },
 
   APPOINTMENT_STATUS_LABELS: {
@@ -1346,6 +1353,17 @@ export const ru: DeepPartial<Strings> = {
     new_patient: 'Новый пациент',
     new_patient_hint: 'Будет добавлен в картотеку',
     existing_patient: 'Выбрать из картотеки',
+    block: 'Занятое время',
+    block_add: 'Добавить занятое время',
+    block_edit: 'Изменить занятое время',
+    block_hint: 'На этот интервал приём не запишется: обед, учёба, отпуск',
+    block_from: 'С',
+    block_to: 'До',
+    block_all_day: 'Весь день',
+    block_reason: 'Причина',
+    block_reason_placeholder: 'Обед, учёба, отпуск…',
+    block_delete_title: 'Удалить занятое время?',
+    block_default: 'Занято',
     week_total: (n: number) => `${n} ${plural(n, ['приём', 'приёма', 'приёмов'])}`,
     now: 'Сейчас',
   },

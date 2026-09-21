@@ -3,6 +3,8 @@ import { errors } from '../../platform/errors.js'
 import { requireAuth } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
+import { blockCreateSchema, blockListSchema, blockUpdateSchema } from './blockSchema.js'
+import * as blocks from './blocks.js'
 import {
   appointmentCompleteSchema,
   appointmentCreateSchema,
@@ -69,6 +71,35 @@ export const scheduleRoutes: FastifyPluginAsync<ScheduleRouteOpts> = async (app,
     const { clinicId, viewer } = clinicOf(req)
     const { id } = req.params as { id: string }
     await service.remove(opts.deps, clinicId, viewer, id)
+    return ok({ deleted: true })
+  })
+
+  // ───────────  Shifokorning band vaqti (12-bosqich)  ───────────
+  // Koʻrish — jadvalni koʻrgan har kim; yozish — jadval yurituvchi.
+  // Shifokor (schedule.all yoʻq) faqat oʻzinikini
+  app.get('/time-blocks', read, async (req) => {
+    const { clinicId, viewer } = clinicOf(req)
+    const input = validateInput(blockListSchema, req.query)
+    return ok(await blocks.list(opts.deps, clinicId, viewer, input))
+  })
+
+  app.post('/time-blocks', write, async (req) => {
+    const { clinicId, viewer } = clinicOf(req)
+    const input = validateInput(blockCreateSchema, req.body)
+    return ok(await blocks.create(opts.deps, clinicId, viewer, input))
+  })
+
+  app.patch('/time-blocks/:id', write, async (req) => {
+    const { clinicId, viewer } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(blockUpdateSchema, req.body)
+    return ok(await blocks.update(opts.deps, clinicId, viewer, id, input))
+  })
+
+  app.delete('/time-blocks/:id', write, async (req) => {
+    const { clinicId, viewer } = clinicOf(req)
+    const { id } = req.params as { id: string }
+    await blocks.remove(opts.deps, clinicId, viewer, id)
     return ok({ deleted: true })
   })
 }

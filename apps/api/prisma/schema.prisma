@@ -70,6 +70,7 @@ model Clinic {
   labOrders    LabOrder[]
   staffPayouts StaffPayout[]
   feedback     Feedback[]
+  timeBlocks   TimeBlock[]
 
   @@index([status])
   @@map("clinics")
@@ -463,6 +464,28 @@ model Feedback {
   @@index([clinicId, status])
   @@index([clinicId, doctorId, createdAt])
   @@map("feedback")
+}
+
+// ───────────────────────────  Shifokorning band vaqti  ───────────────────────────
+
+/// Shifokor yoʻq boʻladigan vaqt (12-bosqich): taʼtil, tushlik, oʻqish. Bu
+/// oraliqqa qabul yozilmaydi (409), jadvalda shtrixli blok. Uzluksiz
+/// oraliq — bir necha kunlik taʼtil ham bitta yozuv
+model TimeBlock {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  doctorId  String   @map("doctor_id") @db.Uuid
+  startsAt  DateTime @map("starts_at") @db.Timestamptz(3)
+  endsAt    DateTime @map("ends_at") @db.Timestamptz(3)
+  reason    String?
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+
+  @@index([clinicId, doctorId, startsAt])
+  @@map("time_blocks")
 }
 
 // ────────────────────────────────  Narxnoma  ────────────────────────────────

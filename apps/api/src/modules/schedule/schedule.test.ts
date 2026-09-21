@@ -275,6 +275,155 @@ describe('davomiylik va band vaqt (12-bosqich)', () => {
   })
 })
 
+describe('shifokorning band vaqti (12-bosqich)', () => {
+  let doctorId = ''
+  let doctorCookie = ''
+
+  beforeAll(async () => {
+    const role = await h.ownerDb.role.findFirst({
+      where: { clinicId: h.clinicId, template: 'shifokor' },
+    })
+    const email = `band-vaqt-${h.clinicId.slice(0, 8)}@sinov.uz`
+    const created = await call('POST', '/api/staff', {
+      email,
+      fullName: 'Taʼtil Shifokori',
+      roleId: role?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    doctorId = created.json().data.id
+    const login = await h.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress: h.clientIp,
+      payload: { email, password: 'juda-yaxshi-parol' },
+    })
+    doctorCookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
+  })
+  const asDoctor = (method: 'GET' | 'POST' | 'PATCH' | 'DELETE', url: string, payload?: object) =>
+    h.app.inject({ method, url, payload, headers: { cookie: doctorCookie } })
+
+  it('yoziladi; oraliqdagi vaqtga qabul yozilmaydi (409), tashqarisiga yoziladi', async () => {
+    const r = await call('POST', '/api/time-blocks', {
+      doctorId,
+      fromDate: '2027-04-01',
+      fromTime: '13:00',
+      toDate: '2027-04-01',
+      toTime: '14:00',
+      reason: 'Tushlik',
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({
+      doctorId,
+      reason: 'Tushlik',
+      doctorName: 'Taʼtil Shifokori',
+    })
+
+    const inside = await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-04-01',
+      time: '13:30',
+    })
+    expect(inside.statusCode).toBe(409)
+    expect(inside.json().error.message).toContain('13:00–14:00')
+    expect(inside.json().error.message).toContain('Tushlik')
+    // 12:45 dan 30 daqiqa — 13:00 ga kirib keladi
+    const crossing = await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-04-01',
+      time: '12:45',
+    })
+    expect(crossing.statusCode).toBe(409)
+    const outside = await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-04-01',
+      time: '14:00',
+    })
+    expect(outside.statusCode).toBe(200)
+  })
+
+  it('roʻyxat oraliq boʻyicha; koʻp kunlik taʼtil ham chiqadi', async () => {
+    await call('POST', '/api/time-blocks', {
+      doctorId,
+      fromDate: '2027-04-10',
+      fromTime: '00:00',
+      toDate: '2027-04-20',
+      toTime: '23:59',
+      reason: 'Taʼtil',
+    })
+    const list = (await call('GET', '/api/time-blocks?from=2027-04-15&to=2027-04-15')).json().data
+    expect(list.some((b: { reason: string }) => b.reason === 'Taʼtil')).toBe(true)
+    const none = (await call('GET', '/api/time-blocks?from=2027-04-21&to=2027-04-30')).json().data
+    expect(none.length).toBe(0)
+    // Taʼtil ichida qabul — xabarda sanalar
+    const inside = await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-04-12',
+      time: '10:00',
+    })
+    expect(inside.statusCode).toBe(409)
+    expect(inside.json().error.message).toContain('Taʼtil')
+  })
+
+  it('ichida qabul boʻlsa band vaqt yozilmaydi', async () => {
+    await call('POST', '/api/appointments', {
+      patientId,
+      doctorId,
+      date: '2027-04-02',
+      time: '10:00',
+    })
+    const r = await call('POST', '/api/time-blocks', {
+      doctorId,
+      fromDate: '2027-04-02',
+      fromTime: '09:00',
+      toDate: '2027-04-02',
+      toTime: '12:00',
+    })
+    expect(r.statusCode).toBe(409)
+    expect(r.json().error.message).toContain('1 ta qabul')
+  })
+
+  it('tugash boshlanishdan oldin — 400', async () => {
+    const r = await call('POST', '/api/time-blocks', {
+      doctorId,
+      fromDate: '2027-04-03',
+      fromTime: '12:00',
+      toDate: '2027-04-03',
+      toTime: '11:00',
+    })
+    expect(r.statusCode).toBe(400)
+  })
+
+  it('shifokor faqat oʻzinikini yozadi va koʻradi; boshqaniki 404', async () => {
+    const own = await asDoctor('POST', '/api/time-blocks', {
+      doctorId: h.userId, // eʼtiborga olinmaydi — oʻziga yoziladi
+      fromDate: '2027-04-05',
+      fromTime: '09:00',
+      toDate: '2027-04-05',
+      toTime: '10:00',
+    })
+    expect(own.statusCode).toBe(200)
+    expect(own.json().data.doctorId).toBe(doctorId)
+    const ownersBlock = (
+      await call('POST', '/api/time-blocks', {
+        doctorId: h.userId,
+        fromDate: '2027-04-05',
+        fromTime: '11:00',
+        toDate: '2027-04-05',
+        toTime: '12:00',
+      })
+    ).json().data
+    const list = (await asDoctor('GET', '/api/time-blocks?from=2027-04-05&to=2027-04-05')).json()
+      .data
+    expect(list.every((b: { doctorId: string }) => b.doctorId === doctorId)).toBe(true)
+    expect((await asDoctor('DELETE', `/api/time-blocks/${ownersBlock.id}`)).statusCode).toBe(404)
+    expect((await call('DELETE', `/api/time-blocks/${ownersBlock.id}`)).statusCode).toBe(200)
+  })
+})
+
 describe('qabulni yakunlash — tashrif yoziladi', () => {
   let doctorId = ''
   let doctorPatientId = ''

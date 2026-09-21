@@ -10,6 +10,7 @@ import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
 import * as visits from '../visits/service.js'
+import * as blocks from './blocks.js'
 import * as repo from './repo.js'
 import type {
   AppointmentCompleteInput,
@@ -161,9 +162,20 @@ async function assertFree(
   if (!doctorId) return
   const dayStart = new Date(at.getFullYear(), at.getMonth(), at.getDate())
   const dayEnd = new Date(at.getFullYear(), at.getMonth(), at.getDate() + 1)
-  const rows = await repo.openByDoctor(tx, doctorId, dayStart, dayEnd)
   const from = at.getTime()
   const to = from + duration * 60_000
+
+  // Shifokorning band vaqti (taʼtil, tushlik) — qabul yozilmaydi
+  const block = await blocks.blockingTx(tx, doctorId, at, new Date(to))
+  if (block) {
+    const sameDay = block.startsAt.toDateString() === block.endsAt.toDateString()
+    const range = sameDay
+      ? `${blocks.timeOf(block.startsAt)}–${blocks.timeOf(block.endsAt)}`
+      : `${localDate(block.startsAt)} – ${localDate(block.endsAt)}`
+    throw errors.conflict(APPOINTMENT_TEXT.doctor_away(range, block.reason ?? ''))
+  }
+
+  const rows = await repo.openByDoctor(tx, doctorId, dayStart, dayEnd)
   const clash = rows.find((row) => {
     if (row.id === excludeId) return false
     const start = row.at.getTime()

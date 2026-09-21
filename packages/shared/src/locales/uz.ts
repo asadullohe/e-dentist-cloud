@@ -1371,6 +1371,14 @@ export const APPOINTMENT_TEXT = {
   done_needs_visit: 'Yakunlash uchun qilingan ishni yozing — «Yakunlandi» tashrif orqali qoʻyiladi',
   duration_invalid: 'Davomiylik 5 daqiqadan 8 soatgacha, 5 daqiqa qadam bilan',
   slot_busy: (range: string, fio: string) => `Bu vaqt band: ${range} — ${fio}`,
+  // Shifokorning band vaqti
+  block_not_found: 'Band vaqt topilmadi',
+  block_range: 'Tugash vaqti boshlanishdan keyin boʻlishi kerak',
+  block_doctor_required: 'Shifokorni tanlang',
+  block_has_appointments: (n: number) =>
+    `Bu oraliqda ${n} ta qabul bor — avval ularni koʻchiring yoki bekor qiling`,
+  doctor_away: (range: string, reason: string) =>
+    `Shifokor bu vaqtda yoʻq: ${range}${reason ? ` (${reason})` : ''}`,
 } as const
 
 /// Holat kalitlari bazada saqlanadi, shuning uchun oʻzgarmaydi
@@ -1424,6 +1432,18 @@ export const SCHEDULE_UI = {
   new_patient: 'Yangi bemor',
   new_patient_hint: 'Kartotekaga yoziladi',
   existing_patient: 'Kartotekadan tanlash',
+  // Shifokorning band vaqti
+  block: 'Band vaqt',
+  block_add: 'Band vaqt qoʻshish',
+  block_edit: 'Band vaqtni tahrirlash',
+  block_hint: 'Bu oraliqqa qabul yozilmaydi: tushlik, oʻqish, taʼtil',
+  block_from: 'Dan',
+  block_to: 'Gacha',
+  block_all_day: 'Butun kun',
+  block_reason: 'Sabab',
+  block_reason_placeholder: 'Tushlik, oʻqish, taʼtil…',
+  block_delete_title: 'Band vaqt oʻchirilsinmi?',
+  block_default: 'Band',
   week_total: (n: number) => `${n} ta qabul`,
   now: 'Hozir',
 } as const

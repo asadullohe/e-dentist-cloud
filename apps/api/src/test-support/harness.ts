@@ -159,6 +159,7 @@ export async function removeClinic(ownerDb: Db, clinicId: string): Promise<void>
   const where = { where: { clinicId } }
   await ownerDb.auditLog.deleteMany(where)
   await ownerDb.feedback.deleteMany(where)
+  await ownerDb.timeBlock.deleteMany(where)
   await ownerDb.payment.deleteMany(where)
   await ownerDb.appointment.deleteMany(where)
   await ownerDb.visit.deleteMany(where)
