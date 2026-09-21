@@ -95,6 +95,9 @@ export function TimeGrid({
   }, [loading])
 
   function pickAt(day: string, event: React.MouseEvent<HTMLDivElement>) {
+    // Blok menyusi (portal) React daraxti boʻyicha ustun ichida — uning
+    // bandlari bosilganda ham shu yerga keladi; DOM boʻyicha tashqarida
+    if (!event.currentTarget.contains(event.target as Node)) return
     const rect = event.currentTarget.getBoundingClientRect()
     const minutes = START * 60 + ((event.clientY - rect.top) / HOUR) * 60
     // 15 daqiqaga yaxlitlab
