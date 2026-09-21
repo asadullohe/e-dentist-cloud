@@ -288,6 +288,28 @@ describe('shifokor ulushi (snapshot)', () => {
     expect(await shareOf(id)).toMatchObject({ doctorPercent: 40, doctorShare: 40_000 })
   })
 
+  it('texnik narxi: ulush (narx − texnik) dan; tahrirlansa qayta sanaladi', async () => {
+    // Shifokor foizi hozir 40
+    const r = await call('POST', '/api/visits', {
+      patientId,
+      doctorId,
+      date: '2026-09-01',
+      treatment: 'Metall-keramika koronka',
+      price: 1_000_000,
+      labCost: 300_000,
+    })
+    const id = r.json().data.id
+    expect(await shareOf(id)).toEqual({ price: 1_000_000, doctorPercent: 40, doctorShare: 280_000 })
+    const row = await h.ownerDb.visit.findUnique({ where: { id }, select: { labCost: true } })
+    expect(row?.labCost).toBe(300_000)
+
+    await call('PATCH', `/api/visits/${id}`, { labCost: 500_000 })
+    expect((await shareOf(id)).doctorShare).toBe(200_000)
+    // Faqat izoh — texnik narxi va ulush joyida
+    await call('PATCH', `/api/visits/${id}`, { note: 'izoh' })
+    expect((await shareOf(id)).doctorShare).toBe(200_000)
+  })
+
   it('narxsiz PATCH narxni va ulushni buzmaydi', async () => {
     const r = await call('POST', '/api/visits', {
       patientId,

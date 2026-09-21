@@ -9,6 +9,7 @@ const SELECT = {
   typeId: true,
   name: true,
   price: true,
+  techPrice: true,
   position: true,
   type: { select: { name: true } },
 } satisfies Prisma.ServiceSelect
@@ -22,6 +23,7 @@ export interface ServiceRow {
   typeName: string
   name: string
   price: number
+  techPrice: number | null
   position: number
 }
 
@@ -31,6 +33,7 @@ const flat = (row: Row): ServiceRow => ({
   typeName: row.type.name,
   name: row.name,
   price: row.price,
+  techPrice: row.techPrice,
   position: row.position,
 })
 
@@ -89,7 +92,7 @@ export async function list(tx: ClinicTx): Promise<ServiceRow[]> {
 export async function create(
   tx: ClinicTx,
   id: string,
-  data: { typeId: string; name: string; price: number },
+  data: { typeId: string; name: string; price: number; techPrice: number | null },
 ): Promise<ServiceRow> {
   const last = await tx.service.aggregate({
     where: { typeId: data.typeId },
@@ -105,7 +108,13 @@ export async function create(
 export async function update(
   tx: ClinicTx,
   id: string,
-  data: { typeId?: string; name?: string; price?: number; position?: number },
+  data: {
+    typeId?: string
+    name?: string
+    price?: number
+    techPrice?: number | null
+    position?: number
+  },
 ): Promise<ServiceRow> {
   return flat(await tx.service.update({ where: { id }, data, select: SELECT }))
 }

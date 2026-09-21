@@ -18,6 +18,13 @@ export const serviceCreateSchema = z.object({
     .int()
     .min(0, { error: () => SERVICE_TEXT.price_negative })
     .default(0),
+  /// Texnik narxi; null — texnik ishi yoʻq
+  techPrice: z.coerce
+    .number()
+    .int()
+    .min(0, { error: () => SERVICE_TEXT.price_negative })
+    .nullable()
+    .optional(),
 })
 
 export const serviceUpdateSchema = serviceCreateSchema.partial()

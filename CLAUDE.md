@@ -66,7 +66,11 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   (`service_types` → `services.type_id`). Foydalanuvchi matnida «tur»
   («kategoriya» emas). Sahifa: tur plitkalari, bosilsa ichidagi xizmatlar;
   ikkalasi ham tortib tartiblanadi (`position`, dnd-kit). Ichida xizmati bor
-  tur oʻchirilmaydi. Migratsiyada eski xizmatlarga oʻz nomi bilan tur yaratildi
+  tur oʻchirilmaydi. Migratsiyada eski xizmatlarga oʻz nomi bilan tur yaratildi.
+  Xizmatda **texnik narxi** (`tech_price`, switch bilan) — tashrifga
+  `lab_cost` snapshot boʻlib koʻchadi, ulush `(narx − texnik) × foiz`;
+  xarajatga tushmaydi. Ulush **ish qilingan oyga**, foiz oʻsha paytdagi
+  snapshot — keyin oʻzgarsa eski oylar oʻzgarmaydi _(tasdiq 21/09/2026)_
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar

@@ -404,6 +404,10 @@ export const SERVICE_UI = {
   delete_title: 'Xizmat oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
   // Turlar
+  tech_switch: 'Texnik ishi bor',
+  tech_price: 'Texnik narxi',
+  tech_hint: 'Tashrifga koʻchadi; shifokor ulushi (narx − texnik narxi) dan hisoblanadi',
+  tech_short: (price: string) => `Texnik: ${price}`,
   type: 'Turi',
   types: 'Turlar',
   type_add: 'Yangi tur',

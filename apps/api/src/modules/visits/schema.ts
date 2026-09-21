@@ -51,6 +51,10 @@ export const visitCreateSchema = z.object({
   tooth: toothNumber.nullish(),
   serviceId: z.string().uuid().nullish(),
   price: visitPrice.default(0),
+  /// Texnik narxi — xizmatdan koʻchadi yoki qoʻlda; shifokor ulushi
+  /// (narx − texnik) dan. Naryad topshirishda naryaddan olinadi, bu maydon
+  /// eʼtiborga olinmaydi
+  labCost: visitPrice.optional(),
   note: z.string().trim().max(2000).nullish(),
 })
 

@@ -210,6 +210,9 @@ export async function createTx(
   // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
   const { payPercent } = await auth.payTermsTx(tx, doctorId)
 
+  // Texnik narxi: naryaddan (topshirish), boʻlmasa formadan (xizmatdan
+  // koʻchgan yoki qoʻlda) — ikkalasi ham snapshot
+  const labCost = lab?.labCost ?? input.labCost ?? 0
   const visit = await repo.createVisit(tx, id, {
     patientId: input.patientId,
     doctorId,
@@ -220,9 +223,9 @@ export async function createTx(
     serviceId: input.serviceId ?? null,
     price: input.price,
     doctorPercent: payPercent,
-    doctorShare: shareOf(input.price, payPercent, lab?.labCost ?? 0),
+    doctorShare: shareOf(input.price, payPercent, labCost),
     labOrderId: lab?.labOrderId ?? null,
-    labCost: lab?.labCost ?? 0,
+    labCost,
     note: input.note ?? null,
   })
   await writeAudit(tx, {
@@ -276,9 +279,16 @@ export function updateVisit(
       percent = (await auth.payTermsTx(tx, input.doctorId)).payPercent
     }
     const price = input.price ?? current.price
+    // Naryadga bogʻlangan tashrifda texnik narxi naryadniki — bu yerdan
+    // oʻzgarmaydi (ikki joyda turgan son ajralib ketmasin)
+    const labCostChanged =
+      input.labCost !== undefined &&
+      current.labOrderId === null &&
+      input.labCost !== current.labCost
+    const labCost = labCostChanged ? (input.labCost as number) : current.labCost
     const share =
-      doctorChanged || input.price !== undefined
-        ? shareOf(price, percent, current.labCost)
+      doctorChanged || input.price !== undefined || labCostChanged
+        ? shareOf(price, percent, labCost)
         : current.doctorShare
 
     try {
@@ -289,6 +299,7 @@ export function updateVisit(
         ...(input.treatment === undefined ? {} : { treatment: input.treatment }),
         ...(input.tooth === undefined ? {} : { tooth: input.tooth }),
         ...(input.price === undefined ? {} : { price: input.price }),
+        ...(labCostChanged ? { labCost } : {}),
         doctorShare: share,
         ...(input.note === undefined ? {} : { note: input.note }),
       })

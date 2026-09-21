@@ -93,6 +93,22 @@ describe('xizmatlar', () => {
     await call('DELETE', `/api/services/${other.json().data.id}`)
   })
 
+  it('texnik narxi: berilsa saqlanadi, null — olib tashlanadi', async () => {
+    const r = await call('POST', '/api/services', {
+      typeId,
+      name: 'Sirkoniy koronka',
+      price: 1_500_000,
+      techPrice: 400_000,
+    })
+    expect(r.json().data).toMatchObject({ techPrice: 400_000 })
+    const id = r.json().data.id
+    const off = await call('PATCH', `/api/services/${id}`, { techPrice: null })
+    expect(off.json().data.techPrice).toBeNull()
+    const neg = await call('PATCH', `/api/services/${id}`, { techPrice: -5 })
+    expect(neg.statusCode).toBe(400)
+    await call('DELETE', `/api/services/${id}`)
+  })
+
   it('manfiy narx rad etiladi', async () => {
     const r = await call('POST', '/api/services', { typeId, name: 'Notoʻgʻri', price: -1 })
     expect(r.json().error.fields.price).toBe('Narx manfiy boʻlishi mumkin emas')

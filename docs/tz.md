@@ -207,7 +207,7 @@ Uch qatlamli himoya:
 | `payments` | patient_id, date, amount, created_by, cancelled_at, cancelled_by, cancel_reason | Qarz = tashriflar summasi − amaldagi toʻlovlar. Toʻlov **oʻchirilmaydi** — bekor qilinadi, sabab bilan _(qaror 19/09/2026)_; bekor qilingani hisobga kirmaydi, roʻyxatda qoladi. Summa va sana tahrirlanmaydi (faqat izoh): xato boʻlsa bekor qilib, yangisi kiritiladi |
 | `appointments` | clinic_id, patient_id, doctor_id, at, status, queue_number, queue_status, guest_name, guest_phone | Navbat ham shu jadvalda: «bugungi, vaqti belgilanmagan qabul». Ochiq sahifadan yozilganda `patient_id` boʻsh — qabulxona tasdiqlaganda bogʻlanadi, shu sababli ism va telefon `guest_*` da |
 | `service_types` | clinic_id, name, position | Xizmat turi — katalogning birinchi darajasi (Jarrohlik, Terapiya…). Tartibni klinika belgilaydi _(qaror 21/09/2026)_ |
-| `services` | clinic_id, type_id, name, price, position | Xizmat — tur ichida, nom tur ichida takrorlanmaydi. Ichida xizmati bor tur oʻchirilmaydi |
+| `services` | clinic_id, type_id, name, price, tech_price, position | Xizmat — tur ichida, nom tur ichida takrorlanmaydi. `tech_price` (boʻsh — texnik ishi yoʻq) tashrifga `lab_cost` boʻlib koʻchadi _(qaror 21/09/2026)_. Ichida xizmati bor tur oʻchirilmaydi |
 | `expenses` | clinic_id, date, category, amount |  |
 | `staff_payouts` | clinic_id, user_id, month, expense_id | Ish haqi toʻlovi ↔ xarajat bogʻlanishi. Summa xarajatda (15-boʻlim) |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
@@ -714,6 +714,8 @@ Xodimda `pay_type` enum yoʻq, ikkita son bor: `salary_amount` (oylik, soʻm) va
 | Shifokor «baza + foiz» | 2 000 000 | 20 |
 
 Oylik hisob = `salary_amount + Σ tashrif ulushi`. Enum qilinsa aralash holat yopilmaydi va baribir shunga kelinadi. Protez tashrifida ulush `(narx − texnik narxi) × foiz` (7-boʻlim) — ishlar roʻyxatida texnik narxi alohida koʻrinadi.
+
+Texnik narxi tashrifga ikki yoʻl bilan tushadi _(qaror 21/09/2026)_: naryad topshirilganda naryaddan, yoki xizmatda `tech_price` belgilangan boʻlsa — tashrif yozishda xizmatdan (formada koʻrinadi, tahrirlash mumkin). Ikkalasi ham **snapshot** (`visits.lab_cost`): xizmatdagi texnik narxi keyin oʻzgarsa yozilgan tashriflar oʻzgarmaydi. Naryadga bogʻlangan tashrifda texnik narxi naryadniki — tashrifdan oʻzgartirilmaydi. Xizmatdagi texnik narxi xarajatga tushmaydi (texnik tayinlanmagan) — faqat ulush hisobida ayiriladi.
 
 Oylik **hisob ochilgan oydan** boshlab sanaladi (`users.created_at`) — bugun qoʻshilgan administratorga oʻtgan yil uchun oylik chiqmasin.
 

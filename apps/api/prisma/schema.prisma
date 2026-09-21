@@ -516,6 +516,10 @@ model Service {
   name      String
   /// Soʻm, butun son
   price     Int
+  /// Texnik (protez ustasi) narxi — boʻsh: texnik ishi yoʻq. Tashrifga
+  /// snapshot boʻlib koʻchadi (`visits.lab_cost`), shifokor ulushi
+  /// (narx − texnik) dan (qaror 21/09/2026)
+  techPrice Int?     @map("tech_price")
   /// Tur ichidagi tartib
   position  Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)

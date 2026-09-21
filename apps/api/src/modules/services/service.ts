@@ -144,6 +144,7 @@ export function create(
         typeId: input.typeId,
         name: input.name,
         price: input.price,
+        techPrice: input.techPrice ?? null,
       })
       await audit(tx, userId, 'service', id)
       return created
@@ -169,6 +170,7 @@ export function update(
         ...(input.typeId === undefined ? {} : { typeId: input.typeId }),
         ...(input.name === undefined ? {} : { name: input.name }),
         ...(input.price === undefined ? {} : { price: input.price }),
+        ...(input.techPrice === undefined ? {} : { techPrice: input.techPrice }),
       })
       await audit(tx, userId, 'service', id)
       return updated
