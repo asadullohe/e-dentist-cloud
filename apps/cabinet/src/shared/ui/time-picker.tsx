@@ -44,7 +44,11 @@ export function TimePicker({
         className="pr-9 tabular-nums"
         {...inputProps}
       />
-      <Popover open={open} onOpenChange={setOpen}>
+      {/* `modal`: oyna (Dialog) ichida ochilganda Dialog tashqaridagi barmoq/
+          gʻildirak surishini yutadi, roʻyxat esa portal orqali tashqarida —
+          modal popover oʻz qulfini oʻrnatadi va ustunlar ichida surish ishlaydi
+          (PatientPicker bilan bir xil) */}
+      <Popover open={open} onOpenChange={setOpen} modal>
         <PopoverTrigger asChild>
           <Button
             type="button"
