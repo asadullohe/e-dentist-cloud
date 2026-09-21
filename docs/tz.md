@@ -204,6 +204,7 @@ Uch qatlamli himoya:
 | `visits` | patient_id, doctor_id, date, treatment, tooth, price, doctor_percent, doctor_share | `doctor_*` — ish haqi hisobi uchun snapshot (15-boʻlim) |
 | `teeth` | patient_id, tooth, status, material, note | FDI raqamlash, sut tishlari alohida |
 | `bridges` | patient_id, teeth[], material | Koʻprik: tayanch va oraliq tishlar |
+| `payment_allocations` | payment_id, visit_id, amount | Toʻlovning ishga bogʻlanishi _(qaror 21/09/2026)_: bitta toʻlov bir nechta ishni yopadi; tashrifda olingan/olinmagan shundan, shifokor ulushi olingan qismdan (15-boʻlim) |
 | `payments` | patient_id, date, amount, created_by, cancelled_at, cancelled_by, cancel_reason | Qarz = tashriflar summasi − amaldagi toʻlovlar. Toʻlov **oʻchirilmaydi** — bekor qilinadi, sabab bilan _(qaror 19/09/2026)_; bekor qilingani hisobga kirmaydi, roʻyxatda qoladi. Summa va sana tahrirlanmaydi (faqat izoh): xato boʻlsa bekor qilib, yangisi kiritiladi |
 | `appointments` | clinic_id, patient_id, doctor_id, at, status, queue_number, queue_status, guest_name, guest_phone | Navbat ham shu jadvalda: «bugungi, vaqti belgilanmagan qabul». Ochiq sahifadan yozilganda `patient_id` boʻsh — qabulxona tasdiqlaganda bogʻlanadi, shu sababli ism va telefon `guest_*` da |
 | `service_types` | clinic_id, name, position | Xizmat turi — katalogning birinchi darajasi (Jarrohlik, Terapiya…). Tartibni klinika belgilaydi _(qaror 21/09/2026)_ |
@@ -733,15 +734,17 @@ Oylik **hisob ochilgan oydan** boshlab sanaladi (`users.created_at`) — bugun q
 
 ### Hisob nimadan olinadi
 
-**Qilingan ish narxidan** (`visits.price`), tushgan puldan emas. Bemor qarzga ketsa xavf klinikada qoladi. «Toʻlangan puldan» rejimi 1-versiyaga kirmaydi: toʻlov bemorga bogʻlangan, tashrifga emas — buning uchun toʻlovni tashriflarga taqsimlash kerak boʻladi.
+_Qaror 21/09/2026 (15/09 dagi «ish narxidan» qarori bekor qilindi)._ Ulush **olingan puldan**: toʻlov ishga bogʻlanadi (`payment_allocations`), tashrifning olingan qismi `olingan / narx` nisbatida ulushga aylanadi — `share_paid = round(doctor_share × olingan / narx)`. Olinmagan qismga toʻgʻri keladigani «kutilmoqda»: bemor toʻlaganda **ish qilingan oyning** hisobiga tushadi (oy tashrifniki, foiz oʻsha paytdagi snapshot — keyin oʻzgarsa eski oy oʻzgarmaydi). Texnik narxi olinganidan qatʼi nazar toʻliq ayiriladi — texnik oʻz ishini qilgan, qarz xavfi klinikada.
+
+Toʻlov formasida «Qaysi ish uchun»: bemorning yopilmagan ishlari roʻyxati, belgilanganda summa yigʻiladi, qisman toʻlov — ish yonidagi summa kamaytiriladi; bitta toʻlov bir nechta ishni yopishi mumkin. Ish belgilanmasa server eng eski yopilmagan ishdan boshlab yopadi; ortib qolgani bogʻlanmagan (avans) qoladi va keyin `PUT /payments/:id/allocations` bilan bogʻlanadi. Bekor qilingan toʻlovning bogʻlanishlari oʻchadi. Tashrif narxi olinganidan kam qilib boʻlmaydi. Migratsiyada eski toʻlovlar eng eski ishdan avtomat bogʻlandi (hamma oylarga).
 
 Foiz xodimga bitta — xizmat turi boʻyicha farqlanmaydi. Kerak boʻlsa keyin `services` ga ustun qoʻshiladi.
 
 ### «Ish haqi» sahifasi
 
-Oy kesimida jadval: xodim · tashriflar · ish summasi · foiz · ulush · oylik · jami · toʻlangan · qoldiq.
+_Qayta chizildi 21/09/2026._ Tepada **kassa taqsimoti** (egasiga): bemorlardan olingan · olinmagan, chiziq — shifokorlar ulushi · texniklar · oyliklar · klinikaga qolgan. Keyin ikki boʻlim: **Foizdagilar** (foiz, ishlar soni, olingan/olinmagan chizigʻi, jami, qoldiq) va **Oylikdagilar**.
 
-Qator ochilganda — oʻsha xodimning oydagi **ishlari roʻyxati**: sana · bemor · muolaja · tish · narx · ulush. Shifokor oʻzi qancha ish qilganini va nimalardan ekanini koʻradi, egasi hammasini — hisob «qora quti» boʻlmasin.
+Xodim bosilganda **varaq** (telefonda pastdan, keng ekranda oyna), uch boʻlim: **Hisob** — chek koʻrinishida: ish summasi → − texnik → − olinmagan → ulush (foiz olingandan, «kutilmoqda» izohi) → oylik → − toʻlab berildi → qoldiq; **Ishlar** — muolaja · tish · narx, sana · bemor · texnik, «toʻliq olingan / qarz», ulush (olingan / toʻliq); **Toʻlovlar** — berilgan pullar va yangisini yozish. Pastda «Qayta hisoblash · Toʻlash». Shifokor (`payroll.own`) faqat oʻz varagʻini sahifaning oʻzida koʻradi, kassa taqsimotisiz.
 
 | Ruxsat | Nimaga ochadi |
 |---|---|
@@ -756,7 +759,7 @@ Xodimga pul berilganda «Toʻlash» amali `expenses` ga `salary` turkumida yozuv
 
 Hisobotdagi sof foyda oʻz-oʻzidan toʻgʻri boʻladi: `tushum − xarajat`, ish haqi xarajatga tushgan.
 
-Eksport arxivida `ish-haqi.xlsx`: oy × xodim — tashriflar, ish summasi, foiz, ulush, oylik, jami, toʻlangan, qoldiq; birinchi tashrif yoki toʻlovdan joriy oygacha.
+Eksport arxivida `ish-haqi.xlsx`: oy × xodim — tashriflar, ish summasi, olingan, olinmagan, foiz, ulush, kutilayotgan ulush, oylik, jami, toʻlangan, qoldiq; birinchi tashrif yoki toʻlovdan joriy oygacha.
 
 ## 16. Bosqichlar
 

@@ -1,3 +1,3 @@
 export { useCreatePayout, useDeletePayout, useRecalculate } from './hooks'
-export { PayoutsDialog } from './PayoutsDialog'
+export { PayoutsPanel } from './PayoutsPanel'
 export { RecalculateDialog } from './RecalculateDialog'

@@ -35,8 +35,10 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   naryadlarini koʻradi. Holatlar: berildi → tayyor → topshirildi + «qaytarildi»
 - **QR navbat** 1-versiyada: ochiq sahifa, kutish xonasi ekrani, SSE
 - **Ish haqi** _(qaror 15/09/2026, tz.md 15-boʻlim)_: xodimda ikki son —
-  `salary_amount` (oylik) va `pay_percent` (foiz), enum emas. Foiz **qilingan
-  ish narxidan** (`visits.price`), tushgan puldan emas; xodimga **bitta foiz**.
+  `salary_amount` (oylik) va `pay_percent` (foiz), enum emas. Foiz **olingan
+  puldan** _(qaror 21/09/2026, avval ish narxidan edi)_: toʻlov ishga
+  bogʻlanadi (`payment_allocations`), ulush `share × olingan / narx`, qolgani
+  «kutilmoqda» va bemor toʻlaganda **ish qilingan oyga** tushadi; xodimga **bitta foiz**.
   Tashrifda `doctor_id` + `doctor_percent`/`doctor_share` **snapshot**; oyga
   «Qayta hisoblash» amali bor. Shifokor **oʻz** hisobini va ishlarini koʻradi
   (`payroll.own`). Toʻlab berish → `expenses(salary)` + `staff_payouts`
