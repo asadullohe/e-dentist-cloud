@@ -29,14 +29,17 @@ const HINTS: Record<string, () => string | null> = {
   '/settings/fikrlar': FeedbackHint,
 }
 
-/// Plitka balandligi (h-24) va oraliq (gap-2) — CSS bilan bir xil. Plitka
-/// qatʼiy balandlikda: izohli va izohsizlari bir xil, panjara oʻlchami aniq
+/// Plitka balandligi (h-24), oraliq (gap-2) va pastki joy (pb-3) — CSS bilan
+/// bir xil. Plitka qatʼiy balandlikda: izohli va izohsizlari bir xil,
+/// panjara oʻlchami aniq. Pastki joy — oxirgi qator soyasi kesilmasin
+/// (konteyner aylanuvchi, chetidan chiqqanini qirqadi)
 const TILE = 96
 const GAP = 8
 const COLS = 3
+const PAD_BOTTOM = 12
 function gridHeight(count: number): number {
   const rows = Math.max(1, Math.ceil(count / COLS))
-  return rows * TILE + (rows - 1) * GAP
+  return rows * TILE + (rows - 1) * GAP + PAD_BOTTOM
 }
 
 /// «Yana» — pastdan chiqadigan shisha varaq: qidiruv, dokka sigʻmagan
@@ -84,7 +87,7 @@ export function MoreSheet({
         {/* Balandlik toʻliq roʻyxatdan hisoblanadi va qidiruvda oʻzgarmaydi —
               varaq sakramasin. Kichik ekranda ichida aylanadi */}
         <div
-          className="relative max-h-[60dvh] overflow-y-auto"
+          className="relative max-h-[60dvh] overflow-y-auto pb-3"
           style={{ minHeight: gridHeight(items.length) }}
         >
           {shown.length === 0 ? (
