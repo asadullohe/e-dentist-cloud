@@ -136,7 +136,7 @@ export function PayoutsDialog({ month, row, onClose }: PayoutsDialogProps) {
           </DialogHeader>
 
           {row && (
-            <dl className="grid grid-cols-3 gap-2 text-sm">
+            <dl className="grid grid-cols-3 gap-2 text-sm *:min-w-0 [&_dd]:break-words">
               <div>
                 <dt className="text-muted-foreground text-xs">{PAYROLL_UI.total}</dt>
                 <dd className="font-semibold tabular-nums">{formatSom(row.total)}</dd>
