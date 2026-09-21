@@ -125,7 +125,7 @@ e-dentist-cloud/
 │  │  │  │  ├─ visits/        # tashriflar, tish xaritasi
 │  │  │  │  ├─ payments/      # toʻlovlar, qarzdorlik
 │  │  │  │  ├─ schedule/      # qabul jadvali
-│  │  │  │  ├─ services/      # narxnoma
+│  │  │  │  ├─ services/      # xizmatlar katalogi (tur → xizmat)
 │  │  │  │  ├─ expenses/      # xarajatlar
 │  │  │  │  ├─ reports/       # hisobotlar
 │  │  │  │  └─ billing/       # obuna, tarif, muddat
@@ -206,7 +206,8 @@ Uch qatlamli himoya:
 | `bridges` | patient_id, teeth[], material | Koʻprik: tayanch va oraliq tishlar |
 | `payments` | patient_id, date, amount, created_by, cancelled_at, cancelled_by, cancel_reason | Qarz = tashriflar summasi − amaldagi toʻlovlar. Toʻlov **oʻchirilmaydi** — bekor qilinadi, sabab bilan _(qaror 19/09/2026)_; bekor qilingani hisobga kirmaydi, roʻyxatda qoladi. Summa va sana tahrirlanmaydi (faqat izoh): xato boʻlsa bekor qilib, yangisi kiritiladi |
 | `appointments` | clinic_id, patient_id, doctor_id, at, status, queue_number, queue_status, guest_name, guest_phone | Navbat ham shu jadvalda: «bugungi, vaqti belgilanmagan qabul». Ochiq sahifadan yozilganda `patient_id` boʻsh — qabulxona tasdiqlaganda bogʻlanadi, shu sababli ism va telefon `guest_*` da |
-| `services` | clinic_id, name, price | Narxnoma |
+| `service_types` | clinic_id, name, position | Xizmat turi — katalogning birinchi darajasi (Jarrohlik, Terapiya…). Tartibni klinika belgilaydi _(qaror 21/09/2026)_ |
+| `services` | clinic_id, type_id, name, price, position | Xizmat — tur ichida, nom tur ichida takrorlanmaydi. Ichida xizmati bor tur oʻchirilmaydi |
 | `expenses` | clinic_id, date, category, amount |  |
 | `staff_payouts` | clinic_id, user_id, month, expense_id | Ish haqi toʻlovi ↔ xarajat bogʻlanishi. Summa xarajatda (15-boʻlim) |
 | `lab_orders` | clinic_id, patient_id, doctor_id, tech_id, teeth[], work_type, material, shade, due_date, tech_price, status, note, returns, return_reason, return_note, delivered_at | Naryad. `returns` — necha marta qaytgani; `return_reason` va `return_note` — oxirgi qaytishning sababi: texnik nimani tuzatishni bilishi kerak, audit yozuvi unga koʻrinmaydi |
@@ -236,7 +237,7 @@ Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta t
 | `payments.write` | Toʻlov qabul qilish, bekor qilish (sabab bilan). Toʻlov oʻchirilmaydi, summasi va sanasi oʻzgarmaydi |
 | `schedule.write` | Qabul jadvali (oʻz qabullari) |
 | `schedule.all` | Jadvalda hamma shifokorning qabullari. Yoʻq boʻlsa — faqat oʻziniki: shifokor boshqaning bemorini koʻrmaydi |
-| `services.manage` | Narxnoma |
+| `services.manage` | Xizmatlar (turlar va narxlar) |
 | `expenses.read` | Xarajatlar |
 | `reports.read` | Hisobotlar, tushum, foyda |
 | `lab.own` | Oʻz naryadlari, holatni oʻzgartirish |
@@ -355,7 +356,7 @@ _Har modul mustaqil ishlab chiqiladi va alohida testlanadi._
 | `visits` | Tashriflar, muolajalar, tish xaritasi | patients, services |
 | `payments` | Toʻlovlar, qarzdorlar roʻyxati | patients, visits |
 | `schedule` | Qabullar, kunlik eslatma | patients |
-| `services` | Narxnoma | clinics |
+| `services` | Xizmatlar katalogi: turlar va xizmatlar | clinics |
 | `expenses` | Xarajatlar | clinics |
 | `lab` | Naryadlar, texnik ishlari, holatlar | patients, expenses, visits |
 | `reports` | Oylik tushum, sof foyda, statistika | visits, payments, expenses |
@@ -517,7 +518,7 @@ _Klinika kundalik ishlaydigan asosiy ilova. Mavjud desktop ilovaning tuzilishini
 | Qabul jadvali | Oylik kalendar, kunlik roʻyxat | Hammasi |
 | Texnik ishlari | Naryadlar roʻyxati, holat va texnik boʻyicha filtr, muddati oʻtganlari tepada | Shifokor, texnik, egasi |
 | Qarzdorlar | Qarzi bor bemorlar, jami summa | Egasi, qabulxona |
-| Narxnoma | Xizmatlar va narxlari | Egasi |
+| Xizmatlar | Katalog: tur plitkalari → turning xizmatlari (nom, narx); tortib tartiblash | Egasi |
 | Xarajatlar | Oylik xarajatlar, turlari boʻyicha | Egasi |
 | Hisobotlar | Tushum, sof foyda, 12 oylik grafik | Egasi |
 | Ish haqi | Oy boʻyicha xodimlar: ulush, oylik, toʻlangan, qoldiq; ishlar roʻyxati; toʻlab berish (15-boʻlim) | Egasi hammasini, shifokor oʻzinikini |

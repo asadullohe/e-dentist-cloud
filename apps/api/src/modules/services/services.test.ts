@@ -24,49 +24,140 @@ afterAll(async () => {
   await h.stop()
 })
 
-describe('narxnoma', () => {
-  it('xizmat qoʻshiladi', async () => {
-    const r = await call('POST', '/api/services', { name: 'Karies davolash', price: 250_000 })
-    expect(r.statusCode).toBe(200)
-    expect(r.json().data).toMatchObject({ name: 'Karies davolash', price: 250_000 })
+let typeId = ''
+let otherTypeId = ''
+
+describe('xizmat turlari', () => {
+  it('tur qoʻshiladi, oxiriga tushadi; nom klinika ichida takrorlanmaydi', async () => {
+    const a = await call('POST', '/api/service-types', { name: 'Terapiya' })
+    expect(a.statusCode).toBe(200)
+    typeId = a.json().data.id
+    const b = await call('POST', '/api/service-types', { name: 'Jarrohlik' })
+    otherTypeId = b.json().data.id
+    expect(b.json().data.position).toBeGreaterThan(a.json().data.position)
+
+    const dup = await call('POST', '/api/service-types', { name: 'Terapiya' })
+    expect(dup.statusCode).toBe(409)
+    expect(dup.json().error.message).toMatch(/allaqachon bor/)
   })
 
-  it('nom klinika ichida takrorlanmaydi', async () => {
-    const r = await call('POST', '/api/services', { name: 'Karies davolash', price: 300_000 })
-    expect(r.statusCode).toBe(409)
-    expect(r.json().error.message).toMatch(/allaqachon bor/)
+  it('roʻyxat tartib boʻyicha, har turda xizmatlar soni', async () => {
+    const r = await call('GET', '/api/service-types')
+    const rows = r.json().data as { name: string; serviceCount: number }[]
+    expect(rows.map((x) => x.name)).toEqual(['Terapiya', 'Jarrohlik'])
+    expect(rows[0]?.serviceCount).toBe(0)
+  })
+
+  it('tartib oʻzgartiriladi; toʻliq boʻlmagan roʻyxat — 400', async () => {
+    const bad = await call('PATCH', '/api/service-types/order', { ids: [typeId] })
+    expect(bad.statusCode).toBe(400)
+
+    const r = await call('PATCH', '/api/service-types/order', { ids: [otherTypeId, typeId] })
+    expect(r.statusCode).toBe(200)
+    const names = (await call('GET', '/api/service-types'))
+      .json()
+      .data.map((x: { name: string }) => x.name)
+    expect(names).toEqual(['Jarrohlik', 'Terapiya'])
+  })
+})
+
+describe('xizmatlar', () => {
+  it('xizmat turga qoʻshiladi; tursiz — 400', async () => {
+    const r = await call('POST', '/api/services', {
+      typeId,
+      name: 'Karies davolash',
+      price: 250_000,
+    })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({
+      typeId,
+      typeName: 'Terapiya',
+      name: 'Karies davolash',
+      price: 250_000,
+    })
+
+    const noType = await call('POST', '/api/services', { name: 'Tursiz', price: 1 })
+    expect(noType.statusCode).toBe(400)
+    expect(noType.json().error.fields.typeId).toBe('Xizmat turini tanlang')
+  })
+
+  it('nom tur ichida takrorlanmaydi, boshqa turda mumkin', async () => {
+    const dup = await call('POST', '/api/services', { typeId, name: 'Karies davolash', price: 1 })
+    expect(dup.statusCode).toBe(409)
+    const other = await call('POST', '/api/services', {
+      typeId: otherTypeId,
+      name: 'Karies davolash',
+      price: 1,
+    })
+    expect(other.statusCode).toBe(200)
+    await call('DELETE', `/api/services/${other.json().data.id}`)
   })
 
   it('manfiy narx rad etiladi', async () => {
-    const r = await call('POST', '/api/services', { name: 'Notoʻgʻri', price: -1 })
+    const r = await call('POST', '/api/services', { typeId, name: 'Notoʻgʻri', price: -1 })
     expect(r.json().error.fields.price).toBe('Narx manfiy boʻlishi mumkin emas')
   })
 
-  it('nom boʻyicha tartiblangan roʻyxat', async () => {
-    await call('POST', '/api/services', { name: 'Aseptika', price: 20_000 })
-    await call('POST', '/api/services', { name: 'Zirkoniy koronka', price: 900_000 })
+  it('roʻyxat: tur tartibi, keyin tur ichidagi tartib', async () => {
+    await call('POST', '/api/services', { typeId, name: 'Aseptika', price: 20_000 })
+    await call('POST', '/api/services', { typeId: otherTypeId, name: 'Tish olish', price: 150_000 })
 
     const r = await call('GET', '/api/services')
     const names = r.json().data.map((x: { name: string }) => x.name)
-    expect(names).toEqual(['Aseptika', 'Karies davolash', 'Zirkoniy koronka'])
+    // Jarrohlik birinchi (tartib), ichida Tish olish; Terapiyada qoʻshilish tartibida
+    expect(names).toEqual(['Tish olish', 'Karies davolash', 'Aseptika'])
   })
 
-  it('narx oʻzgartiriladi', async () => {
+  it('tur ichida tartib oʻzgartiriladi', async () => {
+    const list = (await call('GET', '/api/services')).json().data as {
+      id: string
+      typeId: string
+    }[]
+    const ids = list.filter((x) => x.typeId === typeId).map((x) => x.id)
+    const r = await call('PATCH', `/api/service-types/${typeId}/order`, { ids: [...ids].reverse() })
+    expect(r.statusCode).toBe(200)
+    const names = (await call('GET', '/api/services'))
+      .json()
+      .data.filter((x: { typeId: string }) => x.typeId === typeId)
+      .map((x: { name: string }) => x.name)
+    expect(names).toEqual(['Aseptika', 'Karies davolash'])
+  })
+
+  it('narx oʻzgartiriladi; boshqa turga koʻchiriladi', async () => {
     const list = await call('GET', '/api/services')
-    const item = list.json().data[0]
-    const r = await call('PATCH', `/api/services/${item.id}`, { price: 25_000 })
-    expect(r.json().data.price).toBe(25_000)
+    const item = list.json().data.find((x: { name: string }) => x.name === 'Aseptika')
+    const r = await call('PATCH', `/api/services/${item.id}`, {
+      price: 25_000,
+      typeId: otherTypeId,
+    })
+    expect(r.json().data).toMatchObject({ price: 25_000, typeName: 'Jarrohlik' })
+    await call('PATCH', `/api/services/${item.id}`, { typeId })
+  })
+
+  it('ichida xizmati bor tur oʻchirilmaydi — 409; boʻshi oʻchadi', async () => {
+    const busy = await call('DELETE', `/api/service-types/${typeId}`)
+    expect(busy.statusCode).toBe(409)
+    expect(busy.json().error.message).toContain('2 ta xizmat')
+
+    const empty = await call('POST', '/api/service-types', { name: 'Vaqtinchalik tur' })
+    expect((await call('DELETE', `/api/service-types/${empty.json().data.id}`)).statusCode).toBe(
+      200,
+    )
   })
 })
 
 // Tashrifda muolaja nomi ham, narxi ham matn/son sifatida saqlanadi —
-// narxnoma keyin oʻzgarsa yoki oʻchirilsa tarix buzilmasin
-describe('narxnoma va tashriflar tarixi', () => {
+// xizmat keyin oʻzgarsa yoki oʻchirilsa tarix buzilmasin
+describe('xizmatlar va tashriflar tarixi', () => {
   it('xizmat oʻchirilsa tashrifdagi nom va narx qoladi', async () => {
     const patient = await call('POST', '/api/patients', { fio: 'Tarix Bemori' })
     const patientId = patient.json().data.id
 
-    const created = await call('POST', '/api/services', { name: 'Vaqtinchalik', price: 111_000 })
+    const created = await call('POST', '/api/services', {
+      typeId,
+      name: 'Vaqtinchalik',
+      price: 111_000,
+    })
     const serviceId = created.json().data.id
 
     await call('POST', '/api/visits', {
@@ -88,32 +179,57 @@ describe('narxnoma va tashriflar tarixi', () => {
 })
 
 describe('koʻp ijarachilik', () => {
-  it('begona klinikaning narxnomasi koʻrinmaydi', async () => {
-    await h.ownerDb.service.create({
-      data: { clinicId: otherClinicId, name: 'Begona xizmat', price: 1000 },
+  let foreignTypeId = ''
+  let foreignServiceId = ''
+
+  it('begona klinikaning turlari va xizmatlari koʻrinmaydi', async () => {
+    const type = await h.ownerDb.serviceType.create({
+      data: { clinicId: otherClinicId, name: 'Begona tur' },
     })
-    const r = await call('GET', '/api/services')
-    const names = r.json().data.map((x: { name: string }) => x.name)
+    foreignTypeId = type.id
+    const svc = await h.ownerDb.service.create({
+      data: { clinicId: otherClinicId, typeId: type.id, name: 'Begona xizmat', price: 1000 },
+    })
+    foreignServiceId = svc.id
+
+    const types = (await call('GET', '/api/service-types'))
+      .json()
+      .data.map((x: { name: string }) => x.name)
+    expect(types).not.toContain('Begona tur')
+    const names = (await call('GET', '/api/services'))
+      .json()
+      .data.map((x: { name: string }) => x.name)
     expect(names).not.toContain('Begona xizmat')
   })
 
-  it('begona xizmatni oʻzgartirib boʻlmaydi', async () => {
-    const foreign = await h.ownerDb.service.findFirst({ where: { clinicId: otherClinicId } })
-    const r = await call('PATCH', `/api/services/${foreign?.id}`, { price: 1 })
-    expect(r.statusCode).toBe(404)
+  it('begona xizmat va turni oʻzgartirib boʻlmaydi; begona turga xizmat yozilmaydi', async () => {
+    expect(
+      (await call('PATCH', `/api/services/${foreignServiceId}`, { price: 1 })).statusCode,
+    ).toBe(404)
+    expect(
+      (await call('PATCH', `/api/service-types/${foreignTypeId}`, { name: 'Boshqa' })).statusCode,
+    ).toBe(404)
+    expect((await call('DELETE', `/api/service-types/${foreignTypeId}`)).statusCode).toBe(404)
 
-    const untouched = await h.ownerDb.service.findUnique({ where: { id: foreign?.id } })
+    const r = await call('POST', '/api/services', {
+      typeId: foreignTypeId,
+      name: 'Suqilma',
+      price: 1,
+    })
+    expect(r.statusCode).toBe(400)
+
+    const untouched = await h.ownerDb.service.findUnique({ where: { id: foreignServiceId } })
     expect(untouched?.price).toBe(1000)
   })
 
   it('bir xil nom turli klinikalarda boʻlishi mumkin', async () => {
-    const r = await call('POST', '/api/services', { name: 'Begona xizmat', price: 5000 })
+    const r = await call('POST', '/api/services', { typeId, name: 'Begona xizmat', price: 5000 })
     expect(r.statusCode).toBe(200)
   })
 })
 
 describe('ruxsat', () => {
-  it('shifokor narxnomani oʻqiydi, lekin oʻzgartira olmaydi', async () => {
+  it('shifokor xizmatlarni oʻqiydi, lekin oʻzgartira olmaydi', async () => {
     const doctor = await h.ownerDb.role.findFirst({
       where: { clinicId: h.clinicId, template: 'shifokor' },
     })
@@ -124,7 +240,11 @@ describe('ruxsat', () => {
     await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: doctor?.id } })
     // Tashrif yozayotganda narxni tanlashi kerak
     expect((await call('GET', '/api/services')).statusCode).toBe(200)
-    expect((await call('POST', '/api/services', { name: 'X', price: 1 })).statusCode).toBe(403)
+    expect((await call('GET', '/api/service-types')).statusCode).toBe(200)
+    expect((await call('POST', '/api/services', { typeId, name: 'X', price: 1 })).statusCode).toBe(
+      403,
+    )
+    expect((await call('POST', '/api/service-types', { name: 'X' })).statusCode).toBe(403)
 
     await h.ownerDb.user.update({ where: { id: h.userId }, data: { roleId: owner?.id } })
   })

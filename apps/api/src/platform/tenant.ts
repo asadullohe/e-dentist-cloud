@@ -29,6 +29,7 @@ export const TENANT_MODELS = new Set([
   'Payment',
   'Appointment',
   'Service',
+  'ServiceType',
   'PatientImage',
   'Expense',
   'LabOrder',

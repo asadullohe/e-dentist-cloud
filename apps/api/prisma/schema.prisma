@@ -65,6 +65,7 @@ model Clinic {
   payments     Payment[]
   appointments Appointment[]
   services     Service[]
+  serviceTypes ServiceType[]
   images       PatientImage[]
   expenses     Expense[]
   labOrders    LabOrder[]
@@ -488,21 +489,45 @@ model TimeBlock {
   @@map("time_blocks")
 }
 
-// ────────────────────────────────  Narxnoma  ────────────────────────────────
+// ────────────────────────────────  Xizmatlar  ───────────────────────────────
+
+/// Xizmat turi — katalogning birinchi darajasi: Jarrohlik, Terapiya… Ichida
+/// xizmatlar (nom + narx). Tartibni klinika oʻzi belgilaydi (tortib joylash)
+model ServiceType {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  clinicId  String   @map("clinic_id") @db.Uuid
+  name      String
+  position  Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic   Clinic    @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  services Service[]
+
+  @@unique([clinicId, name])
+  @@index([clinicId, position])
+  @@map("service_types")
+}
 
 model Service {
   id        String   @id @default(uuid(7)) @db.Uuid
   clinicId  String   @map("clinic_id") @db.Uuid
+  typeId    String   @map("type_id") @db.Uuid
   name      String
   /// Soʻm, butun son
   price     Int
+  /// Tur ichidagi tartib
+  position  Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  clinic Clinic      @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  /// Ichida xizmati bor tur oʻchirilmaydi — avval koʻchiriladi
+  type   ServiceType @relation(fields: [typeId], references: [id], onDelete: Restrict)
   visits Visit[]
 
-  @@unique([clinicId, name])
+  @@unique([typeId, name])
+  @@index([typeId, position])
   @@map("services")
 }
 

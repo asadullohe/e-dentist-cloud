@@ -62,6 +62,11 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   bergan bemorga xaritadagi sharh havolasi. Bemor sahifasi bosqichli
   (shifokor → ism → raqam), kontaktlar `public_phone`/`address` — egasining
   roʻyxat telefoni ochiq sahifaga chiqmaydi
+- **Xizmatlar katalogi** _(qaror 21/09/2026)_: «narxnoma» emas — **tur → xizmat**
+  (`service_types` → `services.type_id`). Foydalanuvchi matnida «tur»
+  («kategoriya» emas). Sahifa: tur plitkalari, bosilsa ichidagi xizmatlar;
+  ikkalasi ham tortib tartiblanadi (`position`, dnd-kit). Ichida xizmati bor
+  tur oʻchirilmaydi. Migratsiyada eski xizmatlarga oʻz nomi bilan tur yaratildi
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar

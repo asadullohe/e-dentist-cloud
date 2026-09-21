@@ -42,7 +42,12 @@ beforeAll(async () => {
     description: 'Plomba materiali',
     amount: 150_000,
   })
-  await call('POST', '/api/services', { name: 'Karies davolash', price: 300_000 })
+  const type = await call('POST', '/api/service-types', { name: 'Terapiya' })
+  await call('POST', '/api/services', {
+    typeId: type.json().data.id,
+    name: 'Karies davolash',
+    price: 300_000,
+  })
   await call('POST', '/api/lab-orders', {
     patientId,
     teeth: [16],
@@ -86,7 +91,7 @@ describe('toʻliq eksport', () => {
         'qabullar.xlsx',
         'xarajatlar.xlsx',
         'naryadlar.xlsx',
-        'narxnoma.xlsx',
+        'xizmatlar.xlsx',
         'ish-haqi.xlsx',
         'fikrlar.xlsx',
         'malumot.txt',

@@ -258,10 +258,12 @@ export function labSheet(
   )
 }
 
-export function servicesSheet(rows: { name: string; price: number }[]): SheetData {
+export function servicesSheet(
+  rows: { typeName: string; name: string; price: number }[],
+): SheetData {
   return sheet(
-    [EXPORT_COLUMNS.service, EXPORT_COLUMNS.price],
-    rows.map((row) => [row.name, row.price]),
+    [EXPORT_COLUMNS.service_type, EXPORT_COLUMNS.service, EXPORT_COLUMNS.price],
+    rows.map((row) => [row.typeName, row.name, row.price]),
   )
 }
 
