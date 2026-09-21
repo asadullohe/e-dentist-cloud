@@ -25,6 +25,7 @@ import {
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
 import { VisitFormDialog } from '@/features/visit-form'
+import { useSwipe } from '@/shared/lib'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -144,6 +145,11 @@ export function Schedule() {
   }
 
   const showToday = !(today >= from && today <= to) || (view === 'month' && selected !== today)
+  // T3: chapga surish — keyingi davr, oʻngga — oldingi
+  const swipe = useSwipe(
+    () => shift(1),
+    () => shift(-1),
+  )
 
   return (
     <>
@@ -192,8 +198,12 @@ export function Schedule() {
         </div>
       </div>
 
-      {/* Davr almashtirgich + koʻrinish: telefonda ikki qator */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      {/* Davr almashtirgich + koʻrinish: telefonda ikki qator. Yopishqoq —
+          toʻr uzun, kunni almashtirish uchun tepaga qaytish shart boʻlmasin */}
+      <div
+        data-sticky="schedule"
+        className="bg-background/95 sticky top-14 z-20 -mx-4 mb-3 flex flex-wrap items-center justify-between gap-2 px-4 py-2 backdrop-blur md:-mx-6 md:px-6"
+      >
         <div className="flex w-full items-center gap-1 sm:w-auto">
           <Button variant="ghost" size="icon" aria-label={PERIOD_UI.prev} onClick={() => shift(-1)}>
             <ChevronLeftIcon />
@@ -204,11 +214,18 @@ export function Schedule() {
           <Button variant="ghost" size="icon" aria-label={PERIOD_UI.next} onClick={() => shift(1)}>
             <ChevronRightIcon />
           </Button>
-          {showToday && (
-            <Button variant="outline" size="sm" onClick={() => setSelected(today)}>
-              {SCHEDULE_UI.today}
-            </Button>
-          )}
+          {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
+              «Bugun» ga tushib qaytib qolardi */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(!showToday && 'invisible')}
+            tabIndex={showToday ? 0 : -1}
+            aria-hidden={!showToday}
+            onClick={() => setSelected(today)}
+          >
+            {SCHEDULE_UI.today}
+          </Button>
         </div>
         <div className="bg-muted flex w-full rounded-md p-0.5 sm:w-auto">
           {(
@@ -234,33 +251,36 @@ export function Schedule() {
         </div>
       </div>
 
-      {view === 'month' ? (
-        <MonthView
-          year={parseIso(selected).getFullYear()}
-          month={parseIso(selected).getMonth()}
-          today={today}
-          selected={selected}
-          onSelect={setSelected}
-          byDay={byDay}
-          loading={isPending && !appointments}
-          actions={actions}
-        />
-      ) : (
-        <TimeGrid
-          days={view === 'day' ? [selected] : weekOf(selected)}
-          today={today}
-          byDay={byDay}
-          blocks={blocks ?? []}
-          loading={isPending && !appointments}
-          actions={actions}
-          onPickSlot={(date, time) => openNew(date, time)}
-          onEditBlock={(block) => {
-            setEditingBlock(block)
-            setBlockOpen(true)
-          }}
-          onDeleteBlock={setDeletingBlock}
-        />
-      )}
+      <div {...swipe}>
+        {view === 'month' ? (
+          <MonthView
+            year={parseIso(selected).getFullYear()}
+            month={parseIso(selected).getMonth()}
+            today={today}
+            selected={selected}
+            onSelect={setSelected}
+            byDay={byDay}
+            loading={isPending && !appointments}
+            actions={actions}
+          />
+        ) : (
+          <TimeGrid
+            key={view}
+            days={view === 'day' ? [selected] : weekOf(selected)}
+            today={today}
+            byDay={byDay}
+            blocks={blocks ?? []}
+            loading={isPending && !appointments}
+            actions={actions}
+            onPickSlot={(date, time) => openNew(date, time)}
+            onEditBlock={(block) => {
+              setEditingBlock(block)
+              setBlockOpen(true)
+            }}
+            onDeleteBlock={setDeletingBlock}
+          />
+        )}
+      </div>
 
       <AppointmentFormDialog
         open={formOpen}

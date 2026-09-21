@@ -88,13 +88,19 @@ function Column({
   onPick: (value: string) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  // scrollIntoView emas: u ota elementlarni (sahifa, oyna) ham suradi —
+  // faqat ustunning oʻz scrollTop i
   useEffect(() => {
-    ref.current
-      ?.querySelector<HTMLElement>('[aria-pressed="true"]')
-      ?.scrollIntoView({ block: 'center' })
+    const list = ref.current
+    const active = list?.querySelector<HTMLElement>('[aria-pressed="true"]')
+    if (list && active)
+      list.scrollTop = active.offsetTop - list.clientHeight / 2 + active.offsetHeight / 2
   }, [])
   return (
-    <div ref={ref} className="max-h-56 w-14 overflow-y-auto [scrollbar-width:thin]">
+    <div
+      ref={ref}
+      className="max-h-56 w-14 overflow-y-auto overscroll-contain [scrollbar-width:thin]"
+    >
       {items.map((item) => (
         <button
           key={item}

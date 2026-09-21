@@ -15,10 +15,12 @@ import {
 import { type AppointmentActions, AppointmentMenu } from './AppointmentMenu'
 import { blockClass, layoutDay, mondayFirst, pad, parseIso, timeOf } from './scheduleUtils'
 
-/// Ish kuni 08:00–20:00; bir soat — 56px (telefonda 30 daqiqalik blokka
-/// ism sigʻadi). Keyinroq klinika sozlamasi
-const START = 8
-const END = 20
+/// Toʻr sutka boʻyi (tungi navbat, erta taʼtil ham koʻrinsin), ochilganda
+/// ish boshi — 08:00 (bugun boʻlsa hozirgi vaqt) koʻrinadigan joyga
+/// suriladi. Bir soat — 56px (telefonda 30 daqiqalik blokka ism sigʻadi)
+const START = 0
+const END = 24
+const WORK_START = 8
 const HOUR = 56
 const HOURS = Array.from({ length: END - START }, (_, i) => START + i)
 
@@ -66,16 +68,27 @@ export function TimeGrid({
   onDeleteBlock: (block: TimeBlock) => void
 }) {
   const nowMinutes = useNowMinutes()
-  const scroller = useRef<HTMLDivElement>(null)
+  const grid = useRef<HTMLDivElement>(null)
   const week = days.length > 1
 
-  // Ochilganda ish boshiga emas, hozirgi vaqtdan biroz tepaga (faqat
-  // kun/hafta almashganda — daqiqa sayin aylantirmaymiz)
+  // Ichki scroll yoʻq — sahifa oʻzi aylanadi (telefonda ikki scroll chalkash).
+  // Faqat birinchi ochilganda (Schedule `key={view}` bilan qayta ochadi):
+  // bugun koʻrinishda boʻlsa hozirgi vaqtdan bir soat tepa, aks holda ish
+  // boshi. Kun/hafta almashganda oʻrin saqlanadi — sahifa sakramasin
+  const initialToday = useRef(days.includes(today))
+  const positioned = useRef(false)
   useEffect(() => {
-    const el = scroller.current
-    if (!el || !days.includes(today)) return
-    el.scrollTop = Math.max(0, topOf(nowMinutesOf()) - HOUR * 2)
-  }, [days, today])
+    const el = grid.current
+    // Yuklanayotganda toʻr oʻrnida skelet — toʻr chizilgach bir marta
+    if (loading || !el || positioned.current) return
+    positioned.current = true
+    const target = initialToday.current ? nowMinutesOf() - 60 : WORK_START * 60
+    // Yopishqoq sarlavha va davr qatori ostidan boshlanadigan qilib
+    const sticky = document.querySelector('[data-sticky="schedule"]')?.getBoundingClientRect()
+    const offset = (sticky?.bottom ?? 112) + 8
+    const y = el.getBoundingClientRect().top + window.scrollY + topOf(Math.max(0, target)) - offset
+    window.scrollTo({ top: Math.max(0, y) })
+  }, [loading])
 
   function pickAt(day: string, event: React.MouseEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect()
@@ -116,7 +129,7 @@ export function TimeGrid({
       {loading ? (
         <Skeleton className="m-3 h-80" />
       ) : (
-        <div ref={scroller} className="max-h-[calc(100dvh-18rem)] overflow-y-auto">
+        <div ref={grid}>
           <div
             className="grid"
             style={{ gridTemplateColumns: `2.75rem repeat(${days.length}, minmax(0, 1fr))` }}
