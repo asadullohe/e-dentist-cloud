@@ -24,6 +24,10 @@ interface Props<TData> {
   /// Qator bosilganda — masalan, kartochkaga oʻtish. Qator ichidagi tugma
   /// va havolalar oʻz ishini qiladi, qatorga oʻtmaydi
   onRowClick?: (row: TData) => void
+  /// Telefonda sarlavha qatori sahifa aylanganda shu balandlikda (px)
+  /// yopishib turadi. Kartochka va konteyner `clip` ga oʻtadi — `hidden`/
+  /// `auto` aylanish konteksti yaratib, sticky ni oʻziga bogʻlab qoʻyadi
+  stickyTop?: number
 }
 
 /// Bosilgan joy tugma, havola yoki forma elementi boʻlsa — bu qator emas,
@@ -49,17 +53,22 @@ export function DataTable<TData>({
   emptyText,
   rowClassName,
   onRowClick,
+  stickyTop,
 }: Props<TData>) {
   const meta = (column: { columnDef: { meta?: unknown } }) =>
     column.columnDef.meta as ColumnMeta | undefined
+  const sticky = stickyTop !== undefined
+  const headerProps = sticky
+    ? { className: 'bg-card max-md:sticky max-md:z-10 [&_th]:bg-card', style: { top: stickyTop } }
+    : {}
 
   return (
-    <Card className="gap-0 overflow-hidden p-0">
+    <Card className={cn('gap-0 p-0', sticky ? 'overflow-clip' : 'overflow-hidden')}>
       {loading ? (
         // Skelet jadval shaklida: sarlavha oʻz joyida, ostida qatorlar —
         // yuklanish tugagach hech narsa sakramaydi
-        <Table>
-          <TableHeader>
+        <Table containerClassName={sticky ? 'max-md:overflow-x-clip' : undefined}>
+          <TableHeader {...headerProps}>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -85,8 +94,8 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       ) : (
-        <Table>
-          <TableHeader>
+        <Table containerClassName={sticky ? 'max-md:overflow-x-clip' : undefined}>
+          <TableHeader {...headerProps}>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

@@ -68,6 +68,9 @@ export function MoreSheet({
     >
       <SheetContent
         side="bottom"
+        // Ochilganda qidiruvga fokus tushmasin — telefonda klaviatura chiqib
+        // varaqning yarmini yopib qoʻyardi
+        onOpenAutoFocus={(event) => event.preventDefault()}
         showCloseButton={false}
         className="glass inset-x-0 bottom-0 gap-0 rounded-t-[28px] rounded-b-none border-x-0 border-b-0 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
       >
