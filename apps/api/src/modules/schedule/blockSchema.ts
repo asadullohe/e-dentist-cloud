@@ -19,7 +19,7 @@ const time = z
 /// bir necha kun (taʼtil). Boshi va oxiri sana + vaqt bilan
 export const blockCreateSchema = z
   .object({
-    /// Berilmasa — yozayotgan odamning oʻzi (schedule.all boʻlmasa doim oʻzi)
+    /// `schedule.all` bilan majburiy; boʻlmasa eʼtiborga olinmaydi — doim oʻzi
     doctorId: z.string().uuid().optional(),
     fromDate: isoDate,
     fromTime: time,

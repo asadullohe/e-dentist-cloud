@@ -386,6 +386,17 @@ describe('shifokorning band vaqti (12-bosqich)', () => {
     expect(r.json().error.message).toContain('1 ta qabul')
   })
 
+  it('hammani koʻradigan xodim shifokorni tanlamasa — 400, oʻziga yozilmaydi', async () => {
+    const r = await call('POST', '/api/time-blocks', {
+      fromDate: '2027-04-03',
+      fromTime: '09:00',
+      toDate: '2027-04-03',
+      toTime: '10:00',
+    })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields).toHaveProperty('doctorId')
+  })
+
   it('tugash boshlanishdan oldin — 400', async () => {
     const r = await call('POST', '/api/time-blocks', {
       doctorId,

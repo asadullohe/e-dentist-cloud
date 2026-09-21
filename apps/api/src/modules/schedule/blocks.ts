@@ -92,7 +92,10 @@ export function create(
 ) {
   const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
-    const doctorId = viewer.all ? (input.doctorId ?? viewer.userId) : viewer.userId
+    // Hammani koʻradigan xodim shifokorni aniq tanlaydi — «berilmasa oʻziga»
+    // yashirin xulq edi: egasi oʻziga band vaqt yozib qoʻyganini sezmasdi
+    const doctorId = viewer.all ? input.doctorId : viewer.userId
+    if (!doctorId) throw errors.validation({ doctorId: APPOINTMENT_TEXT.block_doctor_required })
     if (!(await auth.isDoctorTx(tx, doctorId)))
       throw errors.notFound(APPOINTMENT_TEXT.block_doctor_required)
     const startsAt = instant(input.fromDate, input.fromTime)

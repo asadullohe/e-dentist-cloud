@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import type { TimeBlock } from '@/entities/appointment'
+import { useSession } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import { applyServerErrors } from '@/shared/lib'
 import {
@@ -57,7 +58,9 @@ const time = z
   .regex(TIME, { error: () => APPOINTMENT_TEXT.time_invalid })
 
 const schema = z.object({
-  doctorId: z.string(),
+  /// Shifokor tanlanmagan boʻlsa saqlanmaydi (`ownOnly` da maydon yoʻq —
+  /// server oʻzi qoʻyadi, forma uni toʻldirib yuboradi)
+  doctorId: z.string().min(1, { error: () => APPOINTMENT_TEXT.block_doctor_required }),
   fromDate: displayDate,
   fromTime: time,
   toDate: displayDate,
@@ -114,6 +117,7 @@ export function TimeBlockDialog({
 }) {
   const { mutateAsync, isPending } = useSaveTimeBlock(block?.id ?? null)
   const { data: doctors } = useDoctors()
+  const { data: session } = useSession()
   const [allDay, setAllDay] = useState(false)
   const [formError, setFormError] = useState('')
   const form = useForm<Values>({
@@ -123,12 +127,17 @@ export function TimeBlockDialog({
 
   useEffect(() => {
     if (open) {
-      const values = toValues(block, { date: defaultDate, doctorId: defaultDoctorId })
+      // Sukut: jadvaldagi shifokor filtri; shifokorning oʻzi boʻlsa — oʻzi
+      // (tanlovda koʻrinib turadi, yashirin emas)
+      const values = toValues(block, {
+        date: defaultDate,
+        doctorId: defaultDoctorId ?? (ownOnly ? session?.user.id : undefined),
+      })
       form.reset(values)
       setAllDay(!block || (values.fromTime === DAY_FROM && values.toTime === DAY_TO))
       setFormError('')
     }
-  }, [open, block, defaultDate, defaultDoctorId, form])
+  }, [open, block, defaultDate, defaultDoctorId, ownOnly, session?.user.id, form])
 
   function toggleAllDay(next: boolean) {
     setAllDay(next)
@@ -142,7 +151,7 @@ export function TimeBlockDialog({
     setFormError('')
     try {
       await mutateAsync({
-        ...(ownOnly || !values.doctorId ? {} : { doctorId: values.doctorId }),
+        ...(ownOnly ? {} : { doctorId: values.doctorId }),
         fromDate: parseDisplayDate(values.fromDate) as string,
         fromTime: values.fromTime,
         toDate: parseDisplayDate(values.toDate) as string,
