@@ -94,6 +94,11 @@ export function totalsByDoctor(tx: ClinicTx, from?: Date, to?: Date, doctorId?: 
   })
 }
 
+/// Toʻliq eksport uchun: klinikaning barcha fikrlari
+export function all(tx: ClinicTx) {
+  return tx.feedback.findMany({ select: FEEDBACK_SELECT, orderBy: [{ createdAt: 'asc' }] })
+}
+
 export function countNew(tx: ClinicTx, doctorId?: string) {
   return tx.feedback.count({ where: { status: 'new', ...(doctorId ? { doctorId } : {}) } })
 }

@@ -5,6 +5,9 @@ import {
   APPOINTMENT_STATUS_LABELS,
   EXPENSE_CATEGORY_LABELS,
   EXPORT_COLUMNS,
+  FEEDBACK_SOURCE_LABELS,
+  FEEDBACK_STATUS_LABELS,
+  FEEDBACK_TAG_LABELS,
   formatDate,
   formatDateTime,
   formatMonth,
@@ -300,6 +303,50 @@ export function payrollSheet(
       row.total,
       row.paid,
       row.remaining,
+    ]),
+  )
+}
+
+/// Bemor fikrlari: ismsiz boʻlishi mumkin — bemor ustuni boʻsh qoladi
+export function feedbackSheet(
+  rows: {
+    createdAt: Date
+    rating: number
+    doctorId: string | null
+    patientId: string | null
+    tags: string[]
+    comment: string | null
+    phone: string | null
+    source: string
+    status: string
+  }[],
+  people: Map<string, string>,
+  staff: Map<string, string>,
+): SheetData {
+  return sheet(
+    [
+      EXPORT_COLUMNS.date,
+      EXPORT_COLUMNS.rating,
+      EXPORT_COLUMNS.doctor,
+      EXPORT_COLUMNS.patient,
+      EXPORT_COLUMNS.tags,
+      EXPORT_COLUMNS.note,
+      EXPORT_COLUMNS.phone,
+      EXPORT_COLUMNS.source,
+      EXPORT_COLUMNS.status,
+    ],
+    rows.map((row) => [
+      formatDateTime(row.createdAt),
+      row.rating,
+      row.doctorId ? (staff.get(row.doctorId) ?? '') : '',
+      row.patientId ? nameOf(people, row.patientId) : '',
+      row.tags
+        .map((tag) => FEEDBACK_TAG_LABELS[tag as keyof typeof FEEDBACK_TAG_LABELS] ?? tag)
+        .join(', '),
+      row.comment,
+      row.phone,
+      FEEDBACK_SOURCE_LABELS[row.source as keyof typeof FEEDBACK_SOURCE_LABELS] ?? row.source,
+      FEEDBACK_STATUS_LABELS[row.status as keyof typeof FEEDBACK_STATUS_LABELS] ?? row.status,
     ]),
   )
 }

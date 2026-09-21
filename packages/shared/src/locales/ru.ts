@@ -722,6 +722,7 @@ export const ru: DeepPartial<Strings> = {
     lab: 'naryady.xlsx',
     services: 'prajs-list.xlsx',
     payroll: 'zarplata.xlsx',
+    feedback: 'otzyvy.xlsx',
     readme: 'opisanie.txt',
   },
 
@@ -761,6 +762,10 @@ export const ru: DeepPartial<Strings> = {
     received_by: 'Принял',
     cancelled: 'Отменён',
     cancel_reason: 'Причина отмены',
+    rating: 'Оценка',
+    tags: 'Теги',
+    phone: 'Телефон',
+    source: 'Откуда',
   },
 
   EXPORT_UI: {

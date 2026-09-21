@@ -88,6 +88,7 @@ describe('toʻliq eksport', () => {
         'naryadlar.xlsx',
         'narxnoma.xlsx',
         'ish-haqi.xlsx',
+        'fikrlar.xlsx',
         'malumot.txt',
       ]),
     )

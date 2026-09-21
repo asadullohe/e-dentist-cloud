@@ -13,6 +13,7 @@ import { withClinic } from '../../platform/tenant.js'
 import * as auth from '../auth/service.js'
 import * as clinics from '../clinics/service.js'
 import * as expenses from '../expenses/service.js'
+import * as feedback from '../feedback/service.js'
 import * as lab from '../lab/service.js'
 import * as patients from '../patients/service.js'
 import * as payments from '../payments/service.js'
@@ -41,6 +42,7 @@ const WIDTH = {
   lab: [14, 28, 20, 20, 10, 20, 24, 16, 16, 12, 40],
   services: [40, 16],
   payroll: [16, 28, 16, 10, 16, 8, 16, 16, 16, 16, 16],
+  feedback: [18, 8, 28, 28, 30, 50, 18, 14, 14],
 }
 
 export function buildArchive(deps: ExportDeps, clinicId: string, userId: string): Promise<Archive> {
@@ -54,15 +56,23 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       visits.exportTeethTx(tx),
       visits.exportBridgesTx(tx),
     ])
-    const [paymentRows, appointmentRows, expenseRows, labRows, serviceRows, payrollRows] =
-      await Promise.all([
-        payments.exportPaymentsTx(tx),
-        schedule.exportAppointmentsTx(tx),
-        expenses.exportExpensesTx(tx),
-        lab.exportOrdersTx(tx),
-        services.listTx(tx),
-        payroll.exportRowsTx(tx),
-      ])
+    const [
+      paymentRows,
+      appointmentRows,
+      expenseRows,
+      labRows,
+      serviceRows,
+      payrollRows,
+      feedbackRows,
+    ] = await Promise.all([
+      payments.exportPaymentsTx(tx),
+      schedule.exportAppointmentsTx(tx),
+      expenses.exportExpensesTx(tx),
+      lab.exportOrdersTx(tx),
+      services.listTx(tx),
+      payroll.exportRowsTx(tx),
+      feedback.exportRowsTx(tx),
+    ])
 
     const names = new Map(people.map((person) => [person.id, person.fio]))
     // Bitta soʻrovda: naryaddagi texniklar, tashrifdagi shifokorlar,
@@ -73,6 +83,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
           ...labRows.map((row) => row.techId),
           ...visitRows.map((row) => row.doctorId),
           ...paymentRows.map((row) => row.createdBy),
+          ...feedbackRows.map((row) => row.doctorId),
         ].filter((id): id is string => id !== null),
       ),
     ])
@@ -88,6 +99,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       labFile,
       servicesFile,
       payrollFile,
+      feedbackFile,
     ] = await Promise.all([
       patients.buildPatientsSheet(people),
       sheets.toBuffer('Tashriflar', sheets.visitsSheet(visitRows, names, staffNames), WIDTH.visits),
@@ -111,6 +123,11 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       ),
       sheets.toBuffer('Narxnoma', sheets.servicesSheet(serviceRows), WIDTH.services),
       sheets.toBuffer('Ish haqi', sheets.payrollSheet(payrollRows), WIDTH.payroll),
+      sheets.toBuffer(
+        'Fikrlar',
+        sheets.feedbackSheet(feedbackRows, names, staffNames),
+        WIDTH.feedback,
+      ),
     ])
 
     const zip = new AdmZip()
@@ -124,6 +141,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
     zip.addFile(EXPORT_FILES.lab, labFile)
     zip.addFile(EXPORT_FILES.services, servicesFile)
     zip.addFile(EXPORT_FILES.payroll, payrollFile)
+    zip.addFile(EXPORT_FILES.feedback, feedbackFile)
     zip.addFile(
       EXPORT_FILES.readme,
       Buffer.from(EXPORT_UI.readme(clinic.name, formatDate(todayISO())), 'utf8'),

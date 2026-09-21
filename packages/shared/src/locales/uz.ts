@@ -775,6 +775,7 @@ export const EXPORT_FILES = {
   lab: 'naryadlar.xlsx',
   services: 'narxnoma.xlsx',
   payroll: 'ish-haqi.xlsx',
+  feedback: 'fikrlar.xlsx',
   readme: 'malumot.txt',
 } as const
 
@@ -816,6 +817,11 @@ export const EXPORT_COLUMNS = {
   received_by: 'Qabul qildi',
   cancelled: 'Bekor qilingan',
   cancel_reason: 'Bekor sababi',
+  // fikrlar.xlsx
+  rating: 'Baho',
+  tags: 'Teglar',
+  phone: 'Telefon',
+  source: 'Qayerdan',
 } as const
 
 export const EXPORT_UI = {

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** yoʻq — 10-bosqich yopildi _(17/09/2026)_
+**Hozirgi task:** 12.6 — serverga chiqarish tekshiruvi _(21/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1333,8 +1333,10 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       davr 400); hisobot jamlanmasi davr uchun, grafik davr oxiri oyidan 12
       oy; shared `periodRange/shiftPeriod/formatPeriod` (hafta dushanbadan);
       `PeriodNav` (tur tanlovi + ‹ › + «Bugun/Shu hafta/Shu oy/Shu yil»),
-      xarajat va hisobotda; ish haqi oylik qoladi. Testlar: davr chegaralari
-- [ ] **12.6 Serverga chiqarish** — push, migratsiya, jonli tekshiruv
+      xarajat va hisobotda; ish haqi oylik qoladi. Testlar: davr chegaralari.
+      Eksport arxiviga `fikrlar.xlsx` qoʻshildi
+- [~] **12.6 Serverga chiqarish** — push 21/09/2026; migratsiya va jonli
+      tekshiruv egasi tomonidan
 
 ---
 

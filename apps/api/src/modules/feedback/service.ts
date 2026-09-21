@@ -199,6 +199,11 @@ export function setStatus(
   })
 }
 
+/// Boshqa modul uchun (export): barcha fikrlar
+export function exportRowsTx(tx: ClinicTx): Promise<FeedbackRow[]> {
+  return repo.all(tx)
+}
+
 function round1(value: number): number {
   return Math.round(value * 10) / 10
 }
