@@ -54,8 +54,19 @@ jobs:
       - name: Bogʻliqliklar
         run: npm ci
 
+      # Bir xil commit uchun CI va Deploy parallel yuradi — ikkalasi Docker Hub
+      # dan rasm tortadi; ulushli IP dagi pull chegarasi yoki Garage sogʻliq
+      # tekshiruvi vaqti-vaqti bilan tasodifan yiqiladi (21/09/2026). Uch urinish
       - name: Muhit konteynerlari
-        run: docker compose up -d --wait
+        run: |
+          for attempt in 1 2 3; do
+            docker compose up -d --wait && exit 0
+            echo "::warning::konteynerlar koʻtarilmadi ($attempt-urinish)"
+            docker compose logs --tail 30
+            docker compose down --remove-orphans
+            sleep 20
+          done
+          exit 1
 
       - name: Migratsiya
         run: npm run db:migrate:deploy
