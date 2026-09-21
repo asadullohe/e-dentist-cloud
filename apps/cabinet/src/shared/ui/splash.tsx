@@ -25,6 +25,13 @@ export function dismissStaticSplash(): void {
   if (holders === 0) hide()
 }
 
+/// Ilova xato bilan yiqilganda: kim ushlab turganidan qatʼi nazar yopiladi —
+/// xato ekrani yuklanish ekrani ostida qolib ketmasin
+export function hideStaticSplash(): void {
+  holders = 0
+  hide()
+}
+
 /// Sessiya kelguncha va shunga oʻxshash «hali hech narsa yoʻq» holatlarda.
 /// Oʻzi hech narsa chizmaydi — index.html dagi ekranni ochiq tutadi
 export function Splash() {

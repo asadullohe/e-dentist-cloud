@@ -1,5 +1,6 @@
 import { useLayoutEffect } from 'react'
 import { dismissStaticSplash } from '@/shared/ui'
+import { ErrorBoundary } from './ErrorBoundary'
 import { Providers } from './Providers'
 import { Router } from './router'
 
@@ -8,9 +9,12 @@ export function App() {
   // biror <Splash/> uni ushlab turmagan boʻlsa (sessiya hali kelmagan)
   useLayoutEffect(() => dismissStaticSplash(), [])
 
+  // Chegara provayderlardan tashqarida — ular yiqilsa ham ekran boʻsh qolmasin
   return (
-    <Providers>
-      <Router />
-    </Providers>
+    <ErrorBoundary>
+      <Providers>
+        <Router />
+      </Providers>
+    </ErrorBoundary>
   )
 }

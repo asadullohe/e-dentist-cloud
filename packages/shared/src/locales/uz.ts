@@ -89,6 +89,10 @@ export const UI_TEXT = {
   no_account: 'Hisobingiz yoʻqmi?',
   sending: 'Yuborilmoqda…',
   loading: 'Yuklanmoqda…',
+  // Kutilmagan xato — ildizdagi ErrorBoundary
+  error_title: 'Xatolik yuz berdi',
+  error_text: 'Sahifani yangilang. Takrorlansa, qoʻllab-quvvatlashga yozing.',
+  reload: 'Sahifani yangilash',
   mail_sent: 'Pochtangizga tasdiqlash havolasi yuborildi',
   mail_sent_hint: 'Xatni ochib havolani bosing. Xat koʻrinmasa, «Spam» papkasini ham tekshiring.',
   verifying: 'Tasdiqlanmoqda…',
