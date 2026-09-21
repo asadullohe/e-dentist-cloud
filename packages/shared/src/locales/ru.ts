@@ -513,6 +513,8 @@ export const ru: DeepPartial<Strings> = {
     appointment_created: 'Приём записан',
     appointment_updated: 'Приём изменён',
     appointment_deleted: 'Приём удалён',
+    block_saved: 'Занятое время сохранено',
+    block_deleted: 'Занятое время удалено',
     appointment_arrived: 'Отмечено: пациент пришёл',
     appointment_no_show: 'Отмечено: пациент не пришёл',
     appointment_done: 'Приём завершён — визит записан',

@@ -1,8 +1,17 @@
-import { SCHEDULE_UI, WEEKDAYS } from '@e-dentist/shared'
+import { SCHEDULE_UI, UI_TEXT, WEEKDAYS } from '@e-dentist/shared'
 import { cn } from 'cn'
+import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import type { Appointment } from '@/entities/appointment'
-import { Card, Skeleton } from '@/shared/ui'
+import type { Appointment, TimeBlock } from '@/entities/appointment'
+import { blockMinutes } from '@/features/appointment-form'
+import {
+  Card,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Skeleton,
+} from '@/shared/ui'
 import { type AppointmentActions, AppointmentMenu } from './AppointmentMenu'
 import { blockClass, layoutDay, mondayFirst, pad, parseIso, timeOf } from './scheduleUtils'
 
@@ -38,17 +47,23 @@ export function TimeGrid({
   days,
   today,
   byDay,
+  blocks,
   loading,
   actions,
   onPickSlot,
+  onEditBlock,
+  onDeleteBlock,
 }: {
   /// 1 (kun) yoki 7 (hafta) ta ISO sana
   days: readonly string[]
   today: string
   byDay: Map<string, Appointment[]>
+  blocks: readonly TimeBlock[]
   loading: boolean
   actions: AppointmentActions
   onPickSlot: (date: string, time: string) => void
+  onEditBlock: (block: TimeBlock) => void
+  onDeleteBlock: (block: TimeBlock) => void
 }) {
   const nowMinutes = useNowMinutes()
   const scroller = useRef<HTMLDivElement>(null)
@@ -137,6 +152,45 @@ export function TimeGrid({
                     style={{ top: topOf(hour * 60) }}
                   />
                 ))}
+                {/* Shifokorning band vaqti — shtrixli, qabullar ostida */}
+                {blocks.map((block) => {
+                  const range = blockMinutes(block, day)
+                  if (!range) return null
+                  const top = topOf(Math.max(range.start, START * 60))
+                  const bottom = topOf(Math.min(range.end, END * 60))
+                  if (bottom <= top) return null
+                  return (
+                    <DropdownMenu key={block.id}>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          onClick={(event) => event.stopPropagation()}
+                          className="bg-muted-foreground/10 text-muted-foreground absolute inset-x-0.5 overflow-hidden rounded-md border border-dashed px-1 py-0.5 text-left text-[10px] leading-tight [background-image:repeating-linear-gradient(135deg,transparent_0_6px,rgba(100,116,139,.12)_6px_7px)] sm:text-[11px]"
+                          style={{ top, height: bottom - top - 2 }}
+                          title={block.reason ?? SCHEDULE_UI.block}
+                        >
+                          <span className="block truncate font-medium">
+                            {block.reason || SCHEDULE_UI.block_default}
+                          </span>
+                          {!week && <span className="block truncate">{block.doctorName}</span>}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-44">
+                        <DropdownMenuItem onClick={() => onEditBlock(block)}>
+                          <PencilIcon />
+                          {UI_TEXT.edit}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onClick={() => onDeleteBlock(block)}
+                        >
+                          <Trash2Icon />
+                          {UI_TEXT.remove}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )
+                })}
                 {layoutDay(byDay.get(day) ?? []).map(({ item, lane, lanes }) => {
                   const start = minutesOf(item.at)
                   return (

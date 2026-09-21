@@ -1,4 +1,4 @@
-import type { Appointment } from '@/entities/appointment'
+import type { Appointment, TimeBlock } from '@/entities/appointment'
 
 /// Ish kuni: 08:00–20:00. Keyinroq klinika sozlamasi boʻladi
 export const WORK_START = 8
@@ -20,6 +20,29 @@ export function localTime(iso: string): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+/// Band vaqtning shu kundagi daqiqa oraligʻi; kun tashqarisida — null.
+/// Oldingi kundan boshlangan taʼtil 0 dan, keyingi kunga oʻtgani 1440 gacha
+export function blockMinutes(
+  block: TimeBlock,
+  date?: string,
+): { start: number; end: number } | null {
+  const day = date ?? localDate(block.startsAt)
+  const dayStart = new Date(`${day}T00:00:00`).getTime()
+  const dayEnd = dayStart + 24 * 60 * 60_000
+  const s = new Date(block.startsAt).getTime()
+  const e = new Date(block.endsAt).getTime()
+  if (e <= dayStart || s >= dayEnd) return null
+  return {
+    start: Math.max(0, Math.round((s - dayStart) / 60_000)),
+    end: Math.min(24 * 60, Math.round((e - dayStart) / 60_000)),
+  }
+}
+
+export function localDate(iso: string): string {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
 export interface Slot {
   time: string
   busy: boolean
@@ -32,6 +55,9 @@ export function daySlots(
   appointments: readonly Appointment[],
   duration: number,
   excludeId?: string,
+  blocks: readonly TimeBlock[] = [],
+  /// YYYY-MM-DD — koʻp kunlik band vaqt shu kunga qirqiladi
+  date?: string,
 ): Slot[] {
   const step = Math.min(30, Math.max(15, duration))
   const busy = appointments
@@ -40,6 +66,10 @@ export function daySlots(
       const start = minutesOf(localTime(a.at))
       return { start, end: start + a.duration }
     })
+  for (const block of blocks) {
+    const range = blockMinutes(block, date)
+    if (range) busy.push(range)
+  }
   const slots: Slot[] = []
   for (let t = WORK_START * 60; t + duration <= WORK_END * 60; t += step) {
     const end = t + duration

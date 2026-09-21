@@ -1,7 +1,7 @@
 import { SCHEDULE_UI } from '@e-dentist/shared'
 import { cn } from 'cn'
 import { BanIcon } from 'lucide-react'
-import { type Appointment, useAppointments } from '@/entities/appointment'
+import { type Appointment, useAppointments, useTimeBlocks } from '@/entities/appointment'
 import { Skeleton } from '@/shared/ui'
 import { daySlots } from './slots'
 
@@ -24,12 +24,13 @@ export function SlotGrid({
   onPick: (time: string) => void
 }) {
   const { data, isPending } = useAppointments(date, date, doctorId ?? undefined)
+  const { data: blocks } = useTimeBlocks(date, date, doctorId ?? undefined)
   if (!doctorId) {
     return <p className="text-muted-foreground text-xs">{SCHEDULE_UI.pick_doctor_first}</p>
   }
   if (isPending) return <Skeleton className="h-24 w-full" />
 
-  const slots = daySlots((data ?? []) as Appointment[], duration, excludeId)
+  const slots = daySlots((data ?? []) as Appointment[], duration, excludeId, blocks ?? [], date)
   const free = slots.filter((slot) => !slot.busy)
   if (free.length === 0) {
     return <p className="text-muted-foreground text-xs">{SCHEDULE_UI.no_slots}</p>

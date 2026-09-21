@@ -1,13 +1,20 @@
 import { CARD_UI, formatDate, localISODate, SCHEDULE_UI, todayISO } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
+import { CalendarOffIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
-import { type Appointment, useAppointments } from '@/entities/appointment'
+import {
+  type Appointment,
+  type TimeBlock,
+  useAppointments,
+  useTimeBlocks,
+} from '@/entities/appointment'
 import { useHasPermission } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
+  TimeBlockDialog,
   useDeleteAppointment,
+  useDeleteTimeBlock,
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
 import { VisitFormDialog } from '@/features/visit-form'
@@ -78,6 +85,11 @@ export function Schedule() {
   const [deleting, setDeleting] = useState<Appointment | null>(null)
   // «Yakunlandi» — qilingan ish yoziladi, tashrif boʻladi (10.6)
   const [completing, setCompleting] = useState<Appointment | null>(null)
+  // Shifokorning band vaqti
+  const [blockOpen, setBlockOpen] = useState(false)
+  const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>(undefined)
+  const [deletingBlock, setDeletingBlock] = useState<TimeBlock | null>(null)
+  const { mutateAsync: removeBlock } = useDeleteTimeBlock()
 
   const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
@@ -88,6 +100,7 @@ export function Schedule() {
 
   const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
+  const { data: blocks } = useTimeBlocks(from, to, doctorFilter || undefined)
   const byDay = groupByDay(appointments ?? [])
 
   function changeView(next: View) {
@@ -152,6 +165,19 @@ export function Schedule() {
               </SelectContent>
             </Select>
           )}
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label={SCHEDULE_UI.block_add}
+            title={SCHEDULE_UI.block_add}
+            onClick={() => {
+              setEditingBlock(undefined)
+              setBlockOpen(true)
+            }}
+          >
+            <CalendarOffIcon />
+          </Button>
           <Button size="sm" onClick={() => openNew()}>
             <PlusIcon />
             {SCHEDULE_UI.add}
@@ -227,9 +253,15 @@ export function Schedule() {
           days={view === 'day' ? [selected] : weekOf(selected)}
           today={today}
           byDay={byDay}
+          blocks={blocks ?? []}
           loading={isPending && !appointments}
           actions={actions}
           onPickSlot={(date, time) => openNew(date, time)}
+          onEditBlock={(block) => {
+            setEditingBlock(block)
+            setBlockOpen(true)
+          }}
+          onDeleteBlock={setDeletingBlock}
         />
       )}
 
@@ -249,6 +281,38 @@ export function Schedule() {
           if (doctorFilter && saved.doctorId !== doctorFilter) setDoctorFilter('')
         }}
       />
+
+      <TimeBlockDialog
+        open={blockOpen}
+        onOpenChange={setBlockOpen}
+        defaultDate={selected}
+        defaultDoctorId={doctorFilter || undefined}
+        block={editingBlock}
+        ownOnly={!seesAll}
+      />
+
+      <AlertDialog
+        open={deletingBlock !== null}
+        onOpenChange={(open) => !open && setDeletingBlock(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{SCHEDULE_UI.block_delete_title}</AlertDialogTitle>
+            <AlertDialogDescription>{SCHEDULE_UI.delete_text}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (deletingBlock) await removeBlock(deletingBlock.id)
+                setDeletingBlock(null)
+              }}
+            >
+              {CARD_UI.delete}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {completing && (
         <VisitFormDialog

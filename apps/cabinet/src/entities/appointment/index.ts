@@ -1,3 +1,3 @@
-export { fetchAppointments } from './api'
-export { APPOINTMENT_KEYS, useAppointments } from './hooks'
-export type { Appointment, AppointmentStatus } from './model'
+export { fetchAppointments, fetchTimeBlocks } from './api'
+export { APPOINTMENT_KEYS, useAppointments, useTimeBlocks } from './hooks'
+export type { Appointment, AppointmentStatus, TimeBlock } from './model'

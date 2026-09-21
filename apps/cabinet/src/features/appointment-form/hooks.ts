@@ -49,3 +49,23 @@ export function useCreatePatientInline() {
     meta: { inlineErrors: true },
   })
 }
+
+/// Band vaqt: saqlangach jadval (qabullar va bloklar) qayta oʻqiladi
+export function useSaveTimeBlock(id: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: api.TimeBlockPayload) =>
+      id ? api.updateTimeBlock(id, payload) : api.createTimeBlock(payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.block_saved, inlineErrors: true },
+  })
+}
+
+export function useDeleteTimeBlock() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: api.deleteTimeBlock,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    meta: { success: () => TOAST_TEXT.block_deleted },
+  })
+}

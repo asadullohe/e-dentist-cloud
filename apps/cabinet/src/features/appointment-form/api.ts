@@ -1,4 +1,4 @@
-import type { Appointment, AppointmentStatus } from '@/entities/appointment'
+import type { Appointment, AppointmentStatus, TimeBlock } from '@/entities/appointment'
 import type { Patient } from '@/entities/patient'
 import { apiRequest } from '@/shared/api'
 
@@ -27,3 +27,21 @@ export const createPatientInline = (payload: { fio: string; phone?: string; doct
 
 export const deleteAppointment = (id: string) =>
   apiRequest<{ deleted: true }>(`/appointments/${id}`, { method: 'DELETE' })
+
+export interface TimeBlockPayload {
+  doctorId?: string
+  fromDate: string
+  fromTime: string
+  toDate: string
+  toTime: string
+  reason?: string | null
+}
+
+export const createTimeBlock = (payload: TimeBlockPayload) =>
+  apiRequest<TimeBlock>('/time-blocks', { method: 'POST', body: payload })
+
+export const updateTimeBlock = (id: string, payload: TimeBlockPayload) =>
+  apiRequest<TimeBlock>(`/time-blocks/${id}`, { method: 'PATCH', body: payload })
+
+export const deleteTimeBlock = (id: string) =>
+  apiRequest<{ deleted: true }>(`/time-blocks/${id}`, { method: 'DELETE' })

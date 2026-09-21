@@ -535,6 +535,8 @@ export const TOAST_TEXT = {
   appointment_created: 'Qabul yozildi',
   appointment_updated: 'Qabul tahrirlandi',
   appointment_deleted: 'Qabul oʻchirildi',
+  block_saved: 'Band vaqt saqlandi',
+  block_deleted: 'Band vaqt oʻchirildi',
   // Holat oʻzgarishi — qaysi holatga oʻtgani aytiladi
   appointment_arrived: 'Bemor keldi deb belgilandi',
   appointment_no_show: 'Bemor kelmadi deb belgilandi',

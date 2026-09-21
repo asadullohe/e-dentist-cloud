@@ -1,3 +1,14 @@
+/// Shifokorning band vaqti — bu oraliqqa qabul yozilmaydi
+export interface TimeBlock {
+  id: string
+  doctorId: string
+  doctorName: string | null
+  /// ISO lahzalar
+  startsAt: string
+  endsAt: string
+  reason: string | null
+}
+
 export type AppointmentStatus = 'scheduled' | 'arrived' | 'no_show' | 'done' | 'cancelled'
 
 export interface Appointment {
