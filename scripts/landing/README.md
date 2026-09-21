@@ -10,7 +10,9 @@
 3. Rasmlar: `npm i --no-save playwright-core` (ildizda), brauzer yoʻq boʻlsa
    `npx playwright-core install chromium-headless-shell`, keyin
    `node scripts/landing/shots.mjs ./shots` — `patients, teeth, visits, calendar, queue,
-   reports, dashboard, queue-phone, queue-screen`. Ruscha interfeys uchun (`img/ru/`):
+   reports, dashboard, queue-phone, queue-screen, feedback-phone, feedback-cabinet`.
+   Fikrlar ochiq sahifa orqali yoziladi — IP soatiga 10 ta: seed ikkinchi marta
+   toʻsiqqa urilsa `docker exec ed-redis redis-cli DEL ratelimit:feedback:ip:127.0.0.1`. Ruscha interfeys uchun (`img/ru/`):
    `node scripts/landing/shots.mjs ./shots-ru ru`.
 4. WebP: `cwebp -q 82 -resize 1600 0 shots/patients.png -o apps/landing/img/patients.webp`
    (telefon: `-resize 780 0`, keyin `-crop 0 0 780 1180`).

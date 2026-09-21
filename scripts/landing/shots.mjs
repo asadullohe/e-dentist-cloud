@@ -4,6 +4,8 @@
 //   npm i --no-save playwright-core            # repo ildizida, bir marta
 //   npx playwright-core install chromium-headless-shell   # brauzer yoʻq boʻlsa
 //   node scripts/landing/shots.mjs ./shots
+//   (patients, teeth, visits, calendar, queue, reports, dashboard, queue-phone,
+//    queue-screen, feedback-phone, feedback-cabinet)
 //
 // Keyin WebP: cwebp -q 82 -resize 1600 0 shots/patients.png -o patients.webp
 // (telefon: -resize 780 0 -crop 0 0 780 1180) → e-dentist/web/img/
@@ -113,6 +115,24 @@ await pp.reload({ waitUntil: 'load' })
 await pp.waitForTimeout(1200)
 await pp.screenshot({ path: `${OUT}/queue-phone.png` })
 console.log('✓ queue-phone')
+
+// Telefon: fikr sahifasi — 5 yulduz, ikki teg, izoh yozilgan holat
+const fp = await phone.newPage()
+await fp.goto(`${BASE}/f/${code}?from=qr&rating=5`, { waitUntil: 'load' })
+await fp.waitForTimeout(1200)
+const TAGS = LOCALE === 'ru' ? ['Отношение', 'Лечение'] : ['Muomala', 'Davolash']
+for (const tag of TAGS) await fp.getByRole('button', { name: tag, exact: true }).click()
+await fp.locator('#feedback-comment').fill(
+  LOCALE === 'ru'
+    ? 'Всё прошло без боли, врач всё объяснил. Спасибо!'
+    : 'Ogʻriqsiz oʻtdi, shifokor hammasini tushuntirdi. Rahmat!',
+)
+await fp.waitForTimeout(300)
+await fp.screenshot({ path: `${OUT}/feedback-phone.png` })
+console.log('✓ feedback-phone')
+
+// Kabinet: Sozlamalar → Fikrlar
+await shot('/settings/fikrlar', 'feedback-cabinet')
 
 // Kutish xonasi ekrani (televizor)
 const tv = await browser.newContext({

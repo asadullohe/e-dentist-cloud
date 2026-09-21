@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>E-Dentist — stomatologiya klinikasi uchun onlayn dastur | Bemorlar, navbat, hisob-kitob</title>
-<meta name="description" content="E-Dentist — stomatologiya klinikasi uchun brauzerda ishlaydigan dastur (CRM): bemorlar kartotekasi, tish xaritasi, qabul jadvali, QR navbat, toʻlovlar, xodimlar va ish haqi. Oʻrnatish shart emas. 14 kun bepul." />
+<meta name="description" content="E-Dentist — stomatologiya klinikasi uchun brauzerda ishlaydigan dastur (CRM): bemorlar kartotekasi, tish xaritasi, qabul jadvali, QR navbat, bemor fikrlari, toʻlovlar, xodimlar va ish haqi. Oʻrnatish shart emas. 14 kun bepul." />
 <meta name="robots" content="index, follow, max-image-preview:large" />
 <meta name="theme-color" content="#0e1226" />
 <link rel="canonical" href="https://e-dentist.uz/" />
@@ -81,6 +81,7 @@
         "Tish xaritasi (FDI odontogramma), koʻpriklar, sut tishlari",
         "Qabul jadvali, shifokor boʻyicha",
         "QR orqali navbat va kutish xonasi ekrani",
+        "Bemor fikrlari: QR orqali baho, faqat egasiga koʻrinadi",
         "Toʻlovlar, qarzdorlar, xarajatlar va hisobot",
         "Xodimlar, rollar va ish haqi hisobi",
         "Texnik ishlari (naryadlar)",
@@ -133,6 +134,11 @@
           "@type": "Question",
           "name": "Rus tilida bormi?",
           "acceptedAnswer": { "@type": "Answer", "text": "Ha. Interfeys oʻzbek va rus tillarida — har xodim oʻziga qulayini tanlaydi." }
+        },
+        {
+          "@type": "Question",
+          "name": "Bemorlarning fikrini kim koʻradi?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Faqat klinika egasi. Fikr saytda yoki internetda chiqmaydi — 5 yulduz bergan bemorga esa Google yoki Yandex xaritada baholash taklif qilinadi." }
         }
       ]
     }
@@ -148,6 +154,7 @@
     <nav>
       <a href="#imkoniyatlar">Imkoniyatlar</a>
       <a href="#navbat">QR navbat</a>
+      <a href="#fikrlar">Bemor fikrlari</a>
       <a href="#xavfsizlik">Xavfsizlik</a>
       <a href="#narx">Narx va sinov</a>
       <a href="#savollar">Savollar</a>
@@ -171,7 +178,7 @@
         <h1>Stomatologiya klinikasi uchun dastur — <em>brauzerda</em>.</h1>
         <p class="lead">
           Oʻrnatish shart emas. Bemorlar kartotekasi, tish xaritasi, qabul jadvali, QR navbat,
-          toʻlovlar, xodimlar va ish haqi — bitta manzilda, kompyuterda ham, telefonda ham.
+          bemor fikrlari, toʻlovlar, xodimlar va ish haqi — bitta manzilda, kompyuterda ham, telefonda ham.
         </p>
         <div class="cta-row">
           <a class="btn" href="https://cabinet.e-dentist.uz/register">14 kun bepul boshlash</a>
@@ -278,6 +285,28 @@
             <li><b>Kabinetdagi taxta</b> — qabulxona tasdiqlaydi, chaqiradi, «keldi / kelmadi» belgilaydi</li>
             <li><b>Soxta yozuvdan himoya</b> — QR sahifadan yozilgan bemor qabulxona tasdiqlaguncha navbatga kirmaydi</li>
             <li><b>QR ni tizim oʻzi yasaydi</b> — Sozlamalarda A4 varaq: chop etib eshikka osasiz</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="fikrlar">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Bemor fikrlari — har qabuldan keyin</h2>
+        <p>Qabul tugagach bemorning telefonida «Qabul qanday oʻtdi?» chiqadi: yulduz qoʻyadi, nima yoqqan-yoqmaganini belgilaydi, xohlasa izoh yozadi. Bir daqiqa. Fikr faqat sizga keladi — mamnun bemorni esa tizim Google yoki Yandex xaritaga yoʻnaltiradi.</p>
+      </div>
+
+      <div class="queue-grid">
+        <div class="shot phone"><img src="img/feedback-phone.webp" width="780" height="1180" alt="Bemor telefonida fikr sahifasi: 5 yulduz, «nima yoqdi» teglari va izoh" loading="lazy" /></div>
+        <div class="queue-side">
+          <div class="shot"><img src="img/feedback-cabinet.webp" width="1600" height="1000" alt="Kabinetdagi Fikrlar boʻlimi: oʻrtacha baho 4.3, yangi fikrlar, past baho qizil belgilangan" loading="lazy" /></div>
+          <ul class="checks">
+            <li><b>Uch yoʻl</b> — qabul tugagach telefonda, chiqish eshigidagi QR, har shifokor xonasidagi oʻz QR i</li>
+            <li><b>Faqat egasiga</b> — past baho tashqariga chiqmaydi. Bemor telefon qoldirsa, bir bosishda qoʻngʻiroq qilasiz</li>
+            <li><b>Xaritadagi reyting oʻsadi</b> — 5 yulduz bergan bemorga «Google da ham baholang» tugmasi chiqadi</li>
+            <li><b>Shifokorlar boʻyicha</b> — kim qanday baho olayotgani bosh sahifada, bir qarashda</li>
           </ul>
         </div>
       </div>
@@ -410,6 +439,10 @@
       <details>
         <summary>Rus tilida bormi?</summary>
         <p>Ha. Interfeys oʻzbek va rus tillarida — har xodim oʻziga qulayini tanlaydi. Bemorning navbat sahifasi ham ikki tilda.</p>
+      </details>
+      <details>
+        <summary>Bemorlarning fikrini kim koʻradi?</summary>
+        <p>Faqat klinika egasi. Fikr saytda yoki internetda chiqmaydi — 5 yulduz bergan bemorga esa Google yoki Yandex xaritada baholash taklif qilinadi. Shifokor oʻzi haqidagi fikrni koʻrishini egasi Rollar boʻlimida oʻzi hal qiladi.</p>
       </details>
 
       <div class="help">
