@@ -64,6 +64,22 @@ export function paymentColumns({ onEdit, onCancel, canEdit }: Actions): ColumnDe
             ) : (
               <div className="text-muted-foreground hidden sm:block">—</div>
             )}
+            {/* Qaysi ish uchun — bogʻlanishlar; yoʻq boʻlsa avans */}
+            {!cancelled(payment) &&
+              (payment.allocations.length > 0 ? (
+                <ul className="text-muted-foreground space-y-0.5 text-xs">
+                  {payment.allocations.map((item) => (
+                    <li key={item.visitId} className="tabular-nums">
+                      → {item.visitDate ? formatDate(item.visitDate) : '—'} ·{' '}
+                      {item.treatment ?? '—'}
+                      {item.tooth !== null && ` · ${item.tooth}`}
+                      {payment.allocations.length > 1 && ` · ${formatSom(item.amount)}`}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-muted-foreground text-xs">{PAYMENT_UI.unlinked}</div>
+              ))}
             {payment.createdByName && (
               <div className="text-muted-foreground text-xs">
                 {PAYMENT_UI.received_by}: {payment.createdByName}

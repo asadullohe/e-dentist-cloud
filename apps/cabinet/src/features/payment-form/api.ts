@@ -6,6 +6,8 @@ export interface PaymentPayload {
   date: string
   amount: number
   note: string | null
+  /// Qaysi ishga qancha; berilmasa server eng eski yopilmagan ishdan yopadi
+  allocations?: { visitId: string; amount: number }[]
 }
 
 export const createPayment = (payload: PaymentPayload) =>

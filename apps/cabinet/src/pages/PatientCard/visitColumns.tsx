@@ -1,5 +1,14 @@
-import { CARD_UI, formatDate, formatSom, TABLE_UI, UI_TEXT } from '@e-dentist/shared'
+import {
+  CARD_UI,
+  formatDate,
+  formatMoney,
+  formatSom,
+  PAYMENT_UI,
+  TABLE_UI,
+  UI_TEXT,
+} from '@e-dentist/shared'
 import type { ColumnDef } from '@tanstack/react-table'
+import { cn } from 'cn'
 import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import type { Visit } from '@/entities/visit'
 import {
@@ -87,7 +96,25 @@ export function visitColumns({ onEdit, onRemove, canEdit }: Actions): ColumnDef<
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title={CARD_UI.price} className="justify-end" />
       ),
-      cell: ({ row }) => <span className="tabular-nums">{formatSom(row.original.price)}</span>,
+      cell: ({ row }) => {
+        const { price, paid } = row.original
+        const unpaid = price - paid
+        return (
+          <div className="tabular-nums">
+            <div>{formatSom(price)}</div>
+            {/* Olingan / olinmagan — toʻlov ishga bogʻlangan (qaror 21/09/2026) */}
+            {price > 0 && (
+              <div className={cn('text-[11px]', unpaid > 0 ? 'text-destructive' : 'text-ok')}>
+                {unpaid <= 0
+                  ? PAYMENT_UI.paid_full
+                  : paid > 0
+                    ? PAYMENT_UI.paid_part(formatMoney(String(paid)), formatMoney(String(unpaid)))
+                    : PAYMENT_UI.paid_none(formatMoney(String(unpaid)))}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       id: 'actions',

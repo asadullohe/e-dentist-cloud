@@ -11,6 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { Payment } from '@/entities/payment'
+import { useVisits } from '@/entities/visit'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
@@ -32,6 +33,7 @@ import {
 } from '@/shared/ui'
 import { useSavePayment } from './hooks'
 import { EMPTY_PAYMENT, type PaymentValues, paymentSchema } from './model'
+import { openWorks, type Picked, pickedTotal, WorksPicker } from './WorksPicker'
 
 interface PaymentFormDialogProps {
   open: boolean
@@ -60,6 +62,10 @@ export function PaymentFormDialog({
 }: PaymentFormDialogProps) {
   const { mutateAsync, isPending } = useSavePayment(payment?.id ?? null)
   const [formError, setFormError] = useState('')
+  // Qaysi ish uchun — yangi toʻlovda; belgilanganda summa shundan yigʻiladi
+  const { data: visits } = useVisits(payment ? undefined : patientId)
+  const [picked, setPicked] = useState<Picked>(new Map())
+  const works = openWorks(visits ?? [])
 
   const form = useForm<PaymentValues>({
     resolver: zodResolver(paymentSchema),
@@ -70,8 +76,14 @@ export function PaymentFormDialog({
     if (open) {
       form.reset(toValues(payment))
       setFormError('')
+      setPicked(new Map())
     }
   }, [open, payment, form])
+
+  function pick(next: Picked) {
+    setPicked(next)
+    if (next.size > 0) form.setValue('amount', formatMoney(String(pickedTotal(next))))
+  }
 
   // Tahrirda summa va sana qulf: pul yozuvi keyin «tuzatilmaydi» — xato boʻlsa
   // bekor qilib, yangisi kiritiladi (qaror 19/09/2026)
@@ -85,6 +97,13 @@ export function PaymentFormDialog({
         date: parseDisplayDate(values.date) as string,
         amount: Number(moneyDigits(values.amount) || 0),
         note: values.note || null,
+        ...(picked.size > 0
+          ? {
+              allocations: [...picked.entries()]
+                .map(([visitId, value]) => ({ visitId, amount: Number(moneyDigits(value) || 0) }))
+                .filter((row) => row.amount > 0),
+            }
+          : {}),
       })
       onOpenChange(false)
     } catch (error) {
@@ -94,7 +113,7 @@ export function PaymentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className={locked ? 'sm:max-w-sm' : 'sm:max-w-md'}>
         <DialogHeader>
           <DialogTitle>{locked ? PAYMENT_UI.edit_note : PAYMENT_UI.add}</DialogTitle>
           {locked && <DialogDescription>{PAYMENT_UI.edit_hint}</DialogDescription>}
@@ -115,6 +134,7 @@ export function PaymentFormDialog({
                 </FormItem>
               )}
             />
+            {!locked && <WorksPicker works={works} picked={picked} onChange={pick} />}
             <FormField
               control={form.control}
               name="amount"
@@ -125,6 +145,8 @@ export function PaymentFormDialog({
                     <Input
                       inputMode="numeric"
                       disabled={locked}
+                      // Ishlar belgilangan — summa ularning yigʻindisi
+                      readOnly={picked.size > 0}
                       {...field}
                       onChange={(event) => field.onChange(formatMoney(event.target.value))}
                     />

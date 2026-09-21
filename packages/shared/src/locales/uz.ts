@@ -369,6 +369,18 @@ export const PAYMENT_UI = {
   received_by: 'Qabul qildi',
   edit_note: 'Izohni tahrirlash',
   edit_hint: 'Summa va sana oʻzgarmaydi. Xato boʻlsa toʻlovni bekor qilib, yangisini kiriting.',
+  // Toʻlovni ishga bogʻlash (qaror 21/09/2026)
+  for_works: 'Qaysi ish uchun',
+  for_works_hint:
+    'Belgilanganda summa oʻzi yigʻiladi; qisman boʻlsa ish yonidagi summani kamaytiring',
+  for_works_none: 'Yopilmagan ish yoʻq — toʻlov avans sifatida yoziladi',
+  for_works_auto: 'Ish belgilanmasa — eng eski yopilmagan ishlardan boshlab yopiladi',
+  remaining_of: (sum: string) => `qolgan ${sum}`,
+  linked_to: 'Ishlar',
+  unlinked: 'Ishga bogʻlanmagan (avans)',
+  paid_full: 'toʻliq olingan',
+  paid_part: (paid: string, unpaid: string) => `olingan ${paid} · qarz ${unpaid}`,
+  paid_none: (unpaid: string) => `qarz ${unpaid}`,
 } as const
 
 export const DEBTORS_UI = {

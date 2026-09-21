@@ -17,5 +17,7 @@ export interface Visit {
   labOrderId: string | null
   /// Texnik narxi (snapshot): naryaddan yoki xizmatdan; 0 — yoʻq
   labCost: number
+  /// Bu ishga bogʻlangan toʻlovlar — olinmagan = narx − olingan
+  paid: number
   note: string | null
 }

@@ -358,6 +358,17 @@ export const ru: DeepPartial<Strings> = {
     received_by: 'Принял',
     edit_note: 'Изменить примечание',
     edit_hint: 'Сумма и дата не меняются. Если ошибка — отмените платёж и введите новый.',
+    for_works: 'За какую работу',
+    for_works_hint:
+      'При отметке сумма складывается сама; при частичной оплате уменьшите сумму у работы',
+    for_works_none: 'Незакрытых работ нет — платёж запишется как аванс',
+    for_works_auto: 'Если работа не отмечена — закроются самые старые незакрытые работы',
+    remaining_of: (sum: string) => `остаток ${sum}`,
+    linked_to: 'Работы',
+    unlinked: 'Не привязан к работе (аванс)',
+    paid_full: 'получено полностью',
+    paid_part: (paid: string, unpaid: string) => `получено ${paid} · долг ${unpaid}`,
+    paid_none: (unpaid: string) => `долг ${unpaid}`,
   },
 
   DEBTORS_UI: {

@@ -1,3 +1,13 @@
+/// Toʻlovning bogʻlangan ishi — «qaysi ish uchun»
+export interface PaymentAllocation {
+  visitId: string
+  amount: number
+  /// YYYY-MM-DD; tashrif oʻchirilgan boʻlsa boʻsh
+  visitDate: string | null
+  treatment: string | null
+  tooth: number | null
+}
+
 export interface Payment {
   id: string
   patientId: string
@@ -13,6 +23,7 @@ export interface Payment {
   cancelledAt: string | null
   cancelledByName: string | null
   cancelReason: string | null
+  allocations: PaymentAllocation[]
 }
 
 export interface Balance {

@@ -3,11 +3,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PAYMENT_KEYS } from '@/entities/payment'
 import * as api from './api'
 
-/// Toʻlov oʻzgarsa hisob ham, qarzdorlar roʻyxati ham eskiradi
+/// Toʻlov oʻzgarsa hisob, qarzdorlar, tashriflardagi «olingan» va ish haqi eskiradi
 function invalidate(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: PAYMENT_KEYS.all })
   queryClient.invalidateQueries({ queryKey: ['balance'] })
   queryClient.invalidateQueries({ queryKey: ['debtors'] })
+  queryClient.invalidateQueries({ queryKey: ['visits'] })
+  queryClient.invalidateQueries({ queryKey: ['payroll'] })
 }
 
 export function useSavePayment(id: string | null) {
