@@ -35,7 +35,7 @@ export function PeriodNav({
 
   return (
     <div className={cn('flex w-full flex-wrap items-center gap-2 sm:w-auto', className)}>
-      <div className="bg-muted flex w-full rounded-md p-0.5 sm:w-auto" role="group">
+      <div className="bg-muted flex w-full rounded-md p-0.5 sm:w-auto">
         {PERIOD_KINDS.map((kind) => (
           <button
             key={kind}
