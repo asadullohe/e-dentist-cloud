@@ -16,12 +16,12 @@ import { type AppointmentActions, AppointmentMenu } from './AppointmentMenu'
 import { blockClass, layoutDay, pad, timeOf } from './scheduleUtils'
 
 /// Toʻr sutka boʻyi (tungi navbat, erta taʼtil ham koʻrinsin), ochilganda
-/// ish boshi — 08:00 koʻrinadigan joyga suriladi. Bir soat — 56px
-/// (telefonda 30 daqiqalik blokka ism sigʻadi)
+/// ish boshi — 08:00 koʻrinadigan joyga suriladi. Bir soat — 72px: 15
+/// daqiqalik blok (18px) bir qatorga, 30 daqiqalik (36px) ikki qatorga sigʻadi
 const START = 0
 const END = 24
 const WORK_START = 8
-const HOUR = 56
+const HOUR = 72
 const HOURS = Array.from({ length: END - START }, (_, i) => START + i)
 /// Toʻr tepasidagi boʻsh joy: 00:00 yozuvi chiziq markazida — yarmi
 /// kartochka chetidan chiqib kesilmasin
@@ -190,26 +190,32 @@ export function TimeGrid({
                 })}
                 {layoutDay(byDay.get(day) ?? []).map(({ item, lane, lanes }) => {
                   const start = minutesOf(item.at)
+                  // Qisqa blok (≤ 15 daq) — vaqt va ism bir qatorda; balandlik
+                  // hech qachon oʻz oraligʻidan oshmaydi — keyingisini bosmasin
+                  const short = item.duration <= 15
                   return (
                     <AppointmentMenu key={item.id} item={item} actions={actions}>
                       <button
                         type="button"
                         onClick={(event) => event.stopPropagation()}
                         className={cn(
-                          'absolute overflow-hidden rounded-md border-l-[3px] px-1 py-0.5 text-left text-[10px] leading-tight sm:text-[11px]',
+                          'absolute overflow-hidden rounded-md border-l-[3px] px-1 text-left text-[10px] sm:text-[11px]',
+                          short ? 'flex items-center gap-1 leading-none' : 'py-0.5 leading-tight',
                           blockClass(item.status),
                           // Navbat yozuvi: vaqti — kelgan lahza, davomiyligi yoʻq
                           item.fromQueue && 'border-dashed border',
                         )}
                         style={{
                           top: topOf(start),
-                          height: Math.max(18, (item.duration / 60) * HOUR - 2),
+                          height: Math.max(12, (item.duration / 60) * HOUR - 2),
                           left: `calc(${(lane / lanes) * 100}% + 2px)`,
                           width: `calc(${100 / lanes}% - 3px)`,
                         }}
                       >
-                        <span className="block font-semibold tabular-nums">{timeOf(item.at)}</span>
-                        <span className="block truncate">{item.fio}</span>
+                        <span className={cn('font-semibold tabular-nums', !short && 'block')}>
+                          {timeOf(item.at)}
+                        </span>
+                        <span className={cn('truncate', !short && 'block')}>{item.fio}</span>
                       </button>
                     </AppointmentMenu>
                   )
