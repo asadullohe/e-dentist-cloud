@@ -321,20 +321,59 @@ const feedbackList = await api('GET', '/feedback?page=1&pageSize=1')
 if (feedbackList.total < 5) {
   const code = me.clinic.queueCode
   const FEEDBACK = [
-    { rating: 5, doctor: null, tags: ['cleanliness', 'attitude'], comment: 'Bolam qoʻrqmadi — shifokor juda yaxshi muomala qildi.' },
-    { rating: 5, doctor: 0, tags: ['attitude', 'treatment'], comment: 'Doktor juda eʼtiborli, ogʻriqsiz davoladi. Rahmat!' },
-    { rating: 5, doctor: 1, tags: ['treatment', 'cleanliness'], comment: 'Всё быстро и аккуратно, кабинет чистый. Спасибо!' },
+    {
+      rating: 5,
+      doctor: null,
+      tags: ['cleanliness', 'attitude'],
+      comment: 'Bolam qoʻrqmadi — shifokor juda yaxshi muomala qildi.',
+    },
+    {
+      rating: 5,
+      doctor: 0,
+      tags: ['attitude', 'treatment'],
+      comment: 'Doktor juda eʼtiborli, ogʻriqsiz davoladi. Rahmat!',
+    },
+    {
+      rating: 5,
+      doctor: 1,
+      tags: ['treatment', 'cleanliness'],
+      comment: 'Всё быстро и аккуратно, кабинет чистый. Спасибо!',
+    },
     { rating: 4, doctor: 0, tags: ['treatment'], comment: 'Davolash yaxshi, faqat biroz kutdim.' },
     { rating: 5, doctor: 1, tags: ['attitude'], comment: null },
-    { rating: 3, doctor: 0, tags: ['waiting'], comment: 'Navbatda 40 daqiqa kutdim, qabulning oʻzi yaxshi.' },
-    { rating: 5, doctor: 1, tags: ['price', 'treatment'], comment: 'Narxi ham oʻrtacha, natija zoʻr.' },
-    { rating: 2, doctor: 0, tags: ['waiting', 'attitude'], comment: 'Регистратура долго не отвечала, ждал у двери.', phone: '+998 90 555 44 33' },
-    { rating: 5, doctor: 1, tags: ['treatment'], comment: 'Implant qoʻydirdim, hammasi tushuntirib berildi. Tavsiya qilaman.' },
+    {
+      rating: 3,
+      doctor: 0,
+      tags: ['waiting'],
+      comment: 'Navbatda 40 daqiqa kutdim, qabulning oʻzi yaxshi.',
+    },
+    {
+      rating: 5,
+      doctor: 1,
+      tags: ['price', 'treatment'],
+      comment: 'Narxi ham oʻrtacha, natija zoʻr.',
+    },
+    {
+      rating: 2,
+      doctor: 0,
+      tags: ['waiting', 'attitude'],
+      comment: 'Регистратура долго не отвечала, ждал у двери.',
+      phone: '+998 90 555 44 33',
+    },
+    {
+      rating: 5,
+      doctor: 1,
+      tags: ['treatment'],
+      comment: 'Implant qoʻydirdim, hammasi tushuntirib berildi. Tavsiya qilaman.',
+    },
   ]
   for (const [i, f] of FEEDBACK.entries()) {
     const r = await fetch(`${BASE}/f/${code}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', cookie: `ed_device=demo-fikr-${i}-${Date.now()}` },
+      headers: {
+        'content-type': 'application/json',
+        cookie: `ed_device=demo-fikr-${i}-${Date.now()}`,
+      },
       body: JSON.stringify({
         rating: f.rating,
         tags: f.tags,

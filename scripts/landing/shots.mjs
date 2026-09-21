@@ -122,11 +122,13 @@ await fp.goto(`${BASE}/f/${code}?from=qr&rating=5`, { waitUntil: 'load' })
 await fp.waitForTimeout(1200)
 const TAGS = LOCALE === 'ru' ? ['Отношение', 'Лечение'] : ['Muomala', 'Davolash']
 for (const tag of TAGS) await fp.getByRole('button', { name: tag, exact: true }).click()
-await fp.locator('#feedback-comment').fill(
-  LOCALE === 'ru'
-    ? 'Всё прошло без боли, врач всё объяснил. Спасибо!'
-    : 'Ogʻriqsiz oʻtdi, shifokor hammasini tushuntirdi. Rahmat!',
-)
+await fp
+  .locator('#feedback-comment')
+  .fill(
+    LOCALE === 'ru'
+      ? 'Всё прошло без боли, врач всё объяснил. Спасибо!'
+      : 'Ogʻriqsiz oʻtdi, shifokor hammasini tushuntirdi. Rahmat!',
+  )
 await fp.waitForTimeout(300)
 await fp.screenshot({ path: `${OUT}/feedback-phone.png` })
 console.log('✓ feedback-phone')
