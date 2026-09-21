@@ -13,5 +13,9 @@ export interface Visit {
   serviceId: string | null
   /// Soʻm, butun son
   price: number
+  /// Naryad topshirilganda yozilgan tashrif — texnik narxi naryaddan
+  labOrderId: string | null
+  /// Texnik narxi (snapshot): naryaddan yoki xizmatdan; 0 — yoʻq
+  labCost: number
   note: string | null
 }

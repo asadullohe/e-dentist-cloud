@@ -32,6 +32,7 @@ import {
   DialogTitle,
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -111,6 +112,7 @@ function toValues(
     treatment: visit.treatment,
     tooth: visit.tooth === null ? '' : String(visit.tooth),
     price: formatMoney(String(visit.price)),
+    labCost: visit.labCost > 0 ? formatMoney(String(visit.labCost)) : '',
     note: visit.note ?? '',
   }
 }
@@ -174,6 +176,11 @@ export function VisitFormDialog({
     }
   }, [open, visit, appointment, labOrder, form, defaultDoctorId])
 
+  // Texnik narxi maydoni: qiymat bor yoki tanlangan xizmatda texnik ishi bor
+  const labCostValue = form.watch('labCost')
+  const pickedService = services?.find((item) => item.id === serviceId)
+  const showLabCost = labCostValue !== '' || Boolean(pickedService?.techPrice)
+
   async function onSubmit(values: VisitValues) {
     setFormError('')
     setDoctorError('')
@@ -184,6 +191,7 @@ export function VisitFormDialog({
       tooth: values.tooth ? Number(values.tooth) : null,
       serviceId,
       price: Number(moneyDigits(values.price) || 0),
+      labCost: Number(moneyDigits(values.labCost) || 0),
       note: values.note || null,
     }
     try {
@@ -303,6 +311,11 @@ export function VisitFormDialog({
                     if (picked) {
                       form.setValue('treatment', picked.name)
                       form.setValue('price', formatMoney(String(picked.price)))
+                      // Texnik narxi ham xizmatdan — snapshot, keyin tahrirlash mumkin
+                      form.setValue(
+                        'labCost',
+                        picked.techPrice ? formatMoney(String(picked.techPrice)) : '',
+                      )
                     }
                   }}
                 >
@@ -373,6 +386,30 @@ export function VisitFormDialog({
                 )}
               />
             </div>
+
+            {/* Texnik narxi — xizmatdan koʻchgan yoki qoʻlda; naryad rejimida
+                naryadniki (yuqorida koʻrsatilgan), bogʻlangan tashrifda oʻzgarmaydi */}
+            {!labOrder && (showLabCost || Boolean(visit?.labOrderId)) && (
+              <FormField
+                control={form.control}
+                name="labCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SERVICE_UI.tech_price}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        readOnly={Boolean(visit?.labOrderId)}
+                        {...field}
+                        onChange={(event) => field.onChange(formatMoney(event.target.value))}
+                      />
+                    </FormControl>
+                    <FormDescription>{SERVICE_UI.tech_hint}</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

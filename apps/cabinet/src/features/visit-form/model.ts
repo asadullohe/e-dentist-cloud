@@ -35,6 +35,8 @@ export const visitSchema = z.object({
     .refine((value) => !value || isToothNo(value), { error: () => VISIT_TEXT.tooth_invalid }),
   /// Maskalangan matn: «250 000»
   price: z.string().trim(),
+  /// Texnik narxi — xizmatdan koʻchadi, boʻsh — yoʻq
+  labCost: z.string().trim(),
   note: z.string().trim().max(2000),
 })
 
@@ -46,5 +48,6 @@ export const EMPTY_VISIT: VisitValues = {
   treatment: '',
   tooth: '',
   price: '',
+  labCost: '',
   note: '',
 }

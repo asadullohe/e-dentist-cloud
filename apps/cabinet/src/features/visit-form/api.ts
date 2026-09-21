@@ -11,6 +11,8 @@ export interface VisitPayload {
   tooth: number | null
   serviceId?: string | null
   price: number
+  /// Texnik narxi; naryad topshirishda server naryadnikini oladi
+  labCost?: number
   note: string | null
 }
 

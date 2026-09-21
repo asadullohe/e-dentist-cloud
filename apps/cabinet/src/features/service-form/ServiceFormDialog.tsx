@@ -21,16 +21,19 @@ import {
   DialogTitle,
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
   Input,
+  Label,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Switch,
 } from '@/shared/ui'
 import { useSaveService } from './hooks'
 
@@ -43,6 +46,7 @@ const schema = z.object({
     .max(200),
   /// Maskalangan matn: «250 000»
   price: z.string().trim(),
+  techPrice: z.string().trim(),
 })
 
 type Values = z.infer<typeof schema>
@@ -65,10 +69,12 @@ export function ServiceFormDialog({
   const { mutateAsync, isPending } = useSaveService(service?.id ?? null)
   const { data: types } = useServiceTypes()
   const [formError, setFormError] = useState('')
+  // Texnik ishi bor xizmat: narxi tashrifga koʻchadi (switch — maydon)
+  const [hasTech, setHasTech] = useState(false)
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { typeId: '', name: '', price: '' },
+    defaultValues: { typeId: '', name: '', price: '', techPrice: '' },
   })
 
   useEffect(() => {
@@ -77,7 +83,9 @@ export function ServiceFormDialog({
         typeId: service?.typeId ?? defaultTypeId ?? '',
         name: service?.name ?? '',
         price: service ? formatMoney(String(service.price)) : '',
+        techPrice: service?.techPrice != null ? formatMoney(String(service.techPrice)) : '',
       })
+      setHasTech(service?.techPrice != null)
       setFormError('')
     }
   }, [open, service, defaultTypeId, form])
@@ -89,6 +97,7 @@ export function ServiceFormDialog({
         typeId: values.typeId,
         name: values.name,
         price: Number(moneyDigits(values.price) || 0),
+        techPrice: hasTech ? Number(moneyDigits(values.techPrice) || 0) : null,
       })
       onOpenChange(false)
     } catch (error) {
@@ -159,6 +168,32 @@ export function ServiceFormDialog({
                 </FormItem>
               )}
             />
+
+            <div className="flex items-center gap-2.5">
+              <Switch id="service-tech" checked={hasTech} onCheckedChange={setHasTech} />
+              <Label htmlFor="service-tech">{SERVICE_UI.tech_switch}</Label>
+            </div>
+            {hasTech && (
+              <FormField
+                control={form.control}
+                name="techPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{SERVICE_UI.tech_price}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        autoFocus
+                        {...field}
+                        onChange={(event) => field.onChange(formatMoney(event.target.value))}
+                      />
+                    </FormControl>
+                    <FormDescription>{SERVICE_UI.tech_hint}</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
 

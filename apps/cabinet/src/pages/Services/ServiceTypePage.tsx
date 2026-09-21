@@ -81,7 +81,14 @@ export function ServiceTypePage() {
           renderItem={(item, handle) => (
             <div className="bg-card flex items-center gap-2 rounded-xl border py-2 pr-2 pl-1 shadow-xs">
               <DragHandle handle={handle} label={SERVICE_UI.drag} />
-              <div className="min-w-0 flex-1 font-medium">{item.name}</div>
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">{item.name}</div>
+                {item.techPrice !== null && (
+                  <div className="text-muted-foreground text-xs tabular-nums">
+                    {SERVICE_UI.tech_short(formatSom(item.techPrice))}
+                  </div>
+                )}
+              </div>
               <span className="font-semibold tabular-nums">{formatSom(item.price)}</span>
               <ItemMenu
                 onEdit={() => {

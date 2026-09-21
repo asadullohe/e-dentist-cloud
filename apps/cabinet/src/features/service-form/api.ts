@@ -5,6 +5,8 @@ export interface ServicePayload {
   typeId: string
   name: string
   price: number
+  /// null — texnik ishi yoʻq
+  techPrice: number | null
 }
 
 export const createService = (payload: ServicePayload) =>

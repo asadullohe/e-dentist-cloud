@@ -14,6 +14,8 @@ export interface Service {
   name: string
   /// Soʻm, butun son
   price: number
+  /// Texnik narxi; null — texnik ishi yoʻq. Tashrifga snapshot boʻlib koʻchadi
+  techPrice: number | null
   /// Tur ichidagi tartib
   position: number
 }
