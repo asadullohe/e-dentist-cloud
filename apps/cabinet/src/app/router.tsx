@@ -26,7 +26,7 @@ import { QueueScreen } from '@/pages/QueueScreen'
 import { Register } from '@/pages/Register'
 import { Reports } from '@/pages/Reports'
 import { Schedule } from '@/pages/Schedule'
-import { Services } from '@/pages/Services'
+import { Services, ServiceTypePage } from '@/pages/Services'
 import {
   AccountSection,
   ClinicSection,
@@ -123,6 +123,7 @@ export function Router() {
           </Route>
           <Route element={<RequirePermission anyOf={['services.manage']} />}>
             <Route path="services" element={<Services />} />
+            <Route path="services/:typeId" element={<ServiceTypePage />} />
           </Route>
           <Route element={<RequirePermission anyOf={['schedule.write']} />}>
             <Route path="schedule" element={<Schedule />} />

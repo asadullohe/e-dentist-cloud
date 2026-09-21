@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
-import type { Service } from '@/entities/service'
+import { type Service, useServiceTypes } from '@/entities/service'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
@@ -26,10 +26,16 @@ import {
   FormLabel,
   FormMessage,
   Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/shared/ui'
 import { useSaveService } from './hooks'
 
 const schema = z.object({
+  typeId: z.string().min(1, { error: () => SERVICE_TEXT.type_required }),
   name: z
     .string()
     .trim()
@@ -45,31 +51,45 @@ interface ServiceFormDialogProps {
   open: boolean
   onOpenChange(open: boolean): void
   service?: Service | undefined
+  /// Yangi xizmat — ochilgan tur sahifasidan; tahrirda xizmatning oʻz turi
+  defaultTypeId?: string
 }
 
-export function ServiceFormDialog({ open, onOpenChange, service }: ServiceFormDialogProps) {
+/// Xizmat: turi (boshqa turga koʻchirish ham shu yerdan), nomi, narxi
+export function ServiceFormDialog({
+  open,
+  onOpenChange,
+  service,
+  defaultTypeId,
+}: ServiceFormDialogProps) {
   const { mutateAsync, isPending } = useSaveService(service?.id ?? null)
+  const { data: types } = useServiceTypes()
   const [formError, setFormError] = useState('')
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', price: '' },
+    defaultValues: { typeId: '', name: '', price: '' },
   })
 
   useEffect(() => {
     if (open) {
       form.reset({
+        typeId: service?.typeId ?? defaultTypeId ?? '',
         name: service?.name ?? '',
         price: service ? formatMoney(String(service.price)) : '',
       })
       setFormError('')
     }
-  }, [open, service, form])
+  }, [open, service, defaultTypeId, form])
 
   async function onSubmit(values: Values) {
     setFormError('')
     try {
-      await mutateAsync({ name: values.name, price: Number(moneyDigits(values.price) || 0) })
+      await mutateAsync({
+        typeId: values.typeId,
+        name: values.name,
+        price: Number(moneyDigits(values.price) || 0),
+      })
       onOpenChange(false)
     } catch (error) {
       setFormError(applyServerErrors(form, error))
@@ -85,6 +105,30 @@ export function ServiceFormDialog({ open, onOpenChange, service }: ServiceFormDi
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
+            <FormField
+              control={form.control}
+              name="typeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{SERVICE_UI.type}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={SERVICE_UI.type} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {types?.map((type) => (
+                        <SelectItem key={type.id} value={type.id}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="name"

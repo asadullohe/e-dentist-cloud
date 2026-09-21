@@ -15,7 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { usePatient } from '@/entities/patient'
-import { useServices } from '@/entities/service'
+import { type Service, useServices } from '@/entities/service'
 import { useHasPermission, useSession } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import type { Visit } from '@/entities/visit'
@@ -40,7 +40,9 @@ import {
   Label,
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
   Textarea,
@@ -111,6 +113,14 @@ function toValues(
     price: formatMoney(String(visit.price)),
     note: visit.note ?? '',
   }
+}
+
+/// Xizmatlar tur boʻyicha, kelgan tartibda (tur tartibi → tur ichidagi tartib)
+function groupByType(services: readonly Service[]): [string, Service[]][] {
+  const groups = new Map<string, Service[]>()
+  for (const item of services)
+    groups.set(item.typeName, [...(groups.get(item.typeName) ?? []), item])
+  return [...groups.entries()]
 }
 
 export function VisitFormDialog({
@@ -285,7 +295,7 @@ export function VisitFormDialog({
                 <Select
                   value={serviceId ?? ''}
                   onValueChange={(id) => {
-                    // Narxnomadan tanlash — muolaja nomi va narxni toʻldiradi.
+                    // Xizmatlardan tanlash — muolaja nomi va narxni toʻldiradi.
                     // Ikkalasi ham keyin qoʻlda oʻzgartirilishi mumkin:
                     // tashrifda ular matn va son sifatida saqlanadi
                     setServiceId(id)
@@ -300,10 +310,16 @@ export function VisitFormDialog({
                     <SelectValue placeholder={SERVICE_UI.pick_placeholder} />
                   </SelectTrigger>
                   <SelectContent>
-                    {services.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
-                        {item.name} · {formatSom(item.price)}
-                      </SelectItem>
+                    {/* Tur boʻyicha guruhlar — roʻyxat tur tartibida keladi */}
+                    {groupByType(services).map(([typeName, items]) => (
+                      <SelectGroup key={typeName}>
+                        <SelectLabel>{typeName}</SelectLabel>
+                        {items.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name} · {formatSom(item.price)}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
                     ))}
                   </SelectContent>
                 </Select>
