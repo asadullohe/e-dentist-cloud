@@ -16,3 +16,4 @@ export {
   type RegisterValues,
   registerSchema,
 } from './model'
+export { UserMenu } from './UserMenu'

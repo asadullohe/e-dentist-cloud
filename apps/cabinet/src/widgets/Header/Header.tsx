@@ -1,6 +1,8 @@
-import { LOCALE_LABELS, LOCALES, UI_TEXT } from '@e-dentist/shared'
+import { LOCALE_LABELS, LOCALES, roleLabel, UI_TEXT } from '@e-dentist/shared'
 import { CheckIcon, MoonIcon, PanelLeftIcon, SunIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useSession } from '@/entities/session'
+import { UserMenu } from '@/features/auth'
 import { useLocale, useTheme } from '@/shared/lib'
 import {
   Button,
@@ -12,17 +14,18 @@ import {
 } from '@/shared/ui'
 
 interface Props {
-  title: string
   onToggleMenu: () => void
   /// Sinov muddati / obuna holati — tepa panelning oʻng tomonida
   notice?: ReactNode
 }
 
-/// Tepa panel. Katta ekranda sahifa nomi kontent ichida — bu yerda
-/// takrorlanmaydi; telefonda yon menyu yopiq, shuning uchun nom shu yerda
-export function Header({ title, onToggleMenu, notice }: Props) {
+/// Tepa panel. Keng ekranda yon menyu tugmasi; telefonda yon menyu yoʻq
+/// (pastki dok), shuning uchun xodim menyusi shu yerda — chapda
+export function Header({ onToggleMenu, notice }: Props) {
   const { theme, toggle } = useTheme()
   const { locale, setLocale } = useLocale()
+  const { data: session } = useSession()
+  const initial = (session?.user.fullName ?? session?.user.email ?? '?').trim().charAt(0)
 
   return (
     <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
@@ -36,7 +39,22 @@ export function Header({ title, onToggleMenu, notice }: Props) {
       >
         <PanelLeftIcon />
       </Button>
-      <h1 className="truncate text-sm font-medium md:hidden">{title}</h1>
+      <UserMenu
+        side="bottom"
+        className="-ml-1 flex min-w-0 items-center gap-2.5 rounded-md py-1 pr-2 pl-1 text-left outline-none hover:bg-accent focus-visible:ring-[3px] focus-visible:ring-ring/50 md:hidden"
+      >
+        <span className="bg-primary/12 text-primary flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold uppercase">
+          {initial}
+        </span>
+        <span className="min-w-0 leading-tight">
+          <span className="block truncate text-sm font-medium">
+            {session?.user.fullName ?? session?.user.email}
+          </span>
+          <span className="text-muted-foreground block truncate text-[11px]">
+            {session?.role ? roleLabel(session.role) : ''}
+          </span>
+        </span>
+      </UserMenu>
 
       <div className="ml-auto flex min-w-0 items-center gap-1">
         {notice}

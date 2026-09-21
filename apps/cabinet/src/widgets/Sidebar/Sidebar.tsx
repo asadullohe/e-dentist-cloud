@@ -1,19 +1,11 @@
-import { clinicLogoUrl, roleLabel, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
+import { clinicLogoUrl, roleLabel, UI_TEXT } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ChevronRightIcon, LogOutIcon, UserCogIcon } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useHasPermission, useSession } from '@/entities/session'
-import { LogoutDialog } from '@/features/auth'
+import { UserMenu } from '@/features/auth'
 import { type NavSection, navSections } from '@/shared/config'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/shared/ui'
 
 interface Props {
   collapsed: boolean
@@ -26,8 +18,6 @@ interface Props {
 export function Sidebar({ collapsed, onNavigate }: Props) {
   const { data: session } = useSession()
   const hasPermission = useHasPermission()
-  const navigate = useNavigate()
-  const [logoutOpen, setLogoutOpen] = useState(false)
 
   const clinic = session?.clinic ?? null
   const sections = navSections().filter(
@@ -38,7 +28,9 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 flex flex-col border-r bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 md:static',
+        // Keng ekranda yopishqoq va ekran boʻyi: sahifa aylanganda menyu
+        // joyida qoladi, roʻyxat oʻzi aylanadi, xodim doim pastda koʻrinadi
+        'fixed inset-y-0 left-0 z-40 flex flex-col border-r bg-sidebar text-sidebar-foreground transition-[width,transform] duration-200 md:sticky md:top-0 md:h-dvh md:self-start',
         collapsed ? 'w-64 md:w-16' : 'w-64',
         collapsed ? '-translate-x-full md:translate-x-0' : 'translate-x-0',
       )}
@@ -88,45 +80,24 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
       </nav>
 
       <div className="border-t p-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              'flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm outline-none',
-              'hover:bg-sidebar-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
-              collapsed && 'md:justify-center md:px-0',
-            )}
-          >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary uppercase">
-              {initial}
+        <UserMenu
+          className={cn(
+            'flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm outline-none',
+            'hover:bg-sidebar-accent focus-visible:ring-[3px] focus-visible:ring-ring/50',
+            collapsed && 'md:justify-center md:px-0',
+          )}
+        >
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary uppercase">
+            {initial}
+          </div>
+          <div className={cn('min-w-0 flex-1', collapsed && 'md:hidden')}>
+            <div className="truncate text-sm">{session?.user.fullName ?? session?.user.email}</div>
+            <div className="truncate text-xs text-muted-foreground">
+              {session?.role && roleLabel(session.role)}
             </div>
-            <div className={cn('min-w-0 flex-1', collapsed && 'md:hidden')}>
-              <div className="truncate text-sm">
-                {session?.user.fullName ?? session?.user.email}
-              </div>
-              <div className="truncate text-xs text-muted-foreground">
-                {session?.role && roleLabel(session.role)}
-              </div>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" side="top" className="w-56">
-            <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
-              {session?.user.email}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {/* Parolni almashtirish har xodimga kerak — Sozlamalar menyuda
-                boʻlsa ham, shu yerdan topish osonroq */}
-            <DropdownMenuItem onSelect={() => navigate('/settings')}>
-              <UserCogIcon />
-              {STAFF_UI.account_tab}
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={() => setLogoutOpen(true)}>
-              <LogOutIcon />
-              {UI_TEXT.logout}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          </div>
+        </UserMenu>
       </div>
-      <LogoutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
     </aside>
   )
 }

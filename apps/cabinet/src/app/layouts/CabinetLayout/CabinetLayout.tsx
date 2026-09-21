@@ -1,8 +1,7 @@
 import { UI_TEXT } from '@e-dentist/shared'
 import { useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { useSession } from '@/entities/session'
-import { navSections } from '@/shared/config'
 import { BottomNav } from '@/widgets/BottomNav'
 import { FetchBar } from '@/widgets/FetchBar'
 import { Header } from '@/widgets/Header'
@@ -23,17 +22,9 @@ function initialCollapsed(): boolean {
   }
 }
 
-function pageTitle(pathname: string): string {
-  const section = navSections().find((s) =>
-    s.path === '/' ? pathname === '/' : pathname.startsWith(s.path),
-  )
-  return section?.label ?? UI_TEXT.brand
-}
-
 export function CabinetLayout() {
   const { data: session } = useSession()
   const [collapsed, setCollapsed] = useState(initialCollapsed)
-  const { pathname } = useLocation()
 
   const toggle = () => {
     setCollapsed((prev) => {
@@ -69,7 +60,6 @@ export function CabinetLayout() {
       <div className="flex min-w-0 flex-1 flex-col">
         <FetchBar />
         <Header
-          title={pageTitle(pathname)}
           onToggleMenu={toggle}
           notice={<TrialBanner subscription={session?.subscription ?? null} />}
         />
