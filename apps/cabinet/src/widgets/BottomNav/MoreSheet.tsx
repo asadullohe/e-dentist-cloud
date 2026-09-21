@@ -1,12 +1,11 @@
-import { DOCK_UI, formatSom, UI_TEXT } from '@e-dentist/shared'
-import { LogOutIcon, SearchIcon } from 'lucide-react'
+import { DOCK_UI, formatSom } from '@e-dentist/shared'
+import { SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDebtors } from '@/entities/debtor'
 import { useFeedbackSummary } from '@/entities/feedback'
 import { useLabOrders } from '@/entities/lab-order'
 import { useHasPermission } from '@/entities/session'
-import { LogoutDialog } from '@/features/auth'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui'
 import { type DockItem, moreItems } from './dockItems'
 
@@ -41,7 +40,7 @@ function gridHeight(count: number): number {
 }
 
 /// «Yana» — pastdan chiqadigan shisha varaq: qidiruv, dokka sigʻmagan
-/// boʻlimlar plitkalari (jonli izohlar bilan), hisob va chiqish
+/// boʻlimlar plitkalari (jonli izohlar bilan). Xodim va chiqish — tepa panelda
 export function MoreSheet({
   open,
   onOpenChange,
@@ -51,72 +50,55 @@ export function MoreSheet({
 }) {
   const hasPermission = useHasPermission()
   const [query, setQuery] = useState('')
-  const [logoutOpen, setLogoutOpen] = useState(false)
 
   const items = moreItems(hasPermission)
   const q = query.trim().toLowerCase()
   const shown = q ? items.filter((item) => item.label.toLowerCase().includes(q)) : items
 
   return (
-    <>
-      <Sheet
-        open={open}
-        onOpenChange={(next) => {
-          if (!next) setQuery('')
-          onOpenChange(next)
-        }}
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setQuery('')
+        onOpenChange(next)
+      }}
+    >
+      <SheetContent
+        side="bottom"
+        showCloseButton={false}
+        className="glass inset-x-0 bottom-0 gap-0 rounded-t-[28px] rounded-b-none border-x-0 border-b-0 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
       >
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          className="glass inset-x-0 bottom-0 gap-0 rounded-t-[28px] rounded-b-none border-x-0 border-b-0 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
-        >
-          <SheetTitle className="sr-only">{DOCK_UI.more}</SheetTitle>
-          <div className="bg-foreground/15 relative mx-auto mb-3 h-1 w-10 rounded-full" />
+        <SheetTitle className="sr-only">{DOCK_UI.more}</SheetTitle>
+        <div className="bg-foreground/15 relative mx-auto mb-3 h-1 w-10 rounded-full" />
 
-          <label className="bg-background/80 text-muted-foreground relative mb-3 flex h-10 items-center gap-2 rounded-xl border border-foreground/10 px-3 text-sm dark:border-white/10">
-            <SearchIcon className="size-4 shrink-0" aria-hidden="true" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={DOCK_UI.search}
-              className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
-            />
-          </label>
+        <label className="bg-background/80 text-muted-foreground relative mb-3 flex h-10 items-center gap-2 rounded-xl border border-foreground/10 px-3 text-sm dark:border-white/10">
+          <SearchIcon className="size-4 shrink-0" aria-hidden="true" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={DOCK_UI.search}
+            className="text-foreground placeholder:text-muted-foreground w-full bg-transparent outline-none"
+          />
+        </label>
 
-          {/* Balandlik toʻliq roʻyxatdan hisoblanadi va qidiruvda oʻzgarmaydi —
+        {/* Balandlik toʻliq roʻyxatdan hisoblanadi va qidiruvda oʻzgarmaydi —
               varaq sakramasin. Kichik ekranda ichida aylanadi */}
-          <div
-            className="relative max-h-[60dvh] overflow-y-auto"
-            style={{ minHeight: gridHeight(items.length) }}
-          >
-            {shown.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">{DOCK_UI.nothing}</p>
-            ) : (
-              <div className="grid grid-cols-3 content-start gap-2">
-                {shown.map((item) => (
-                  <Tile key={item.path} item={item} onPick={() => onOpenChange(false)} />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Xodim kartasi tepa panelda (profil menyusi) — bu yerda faqat chiqish */}
-          <button
-            type="button"
-            onClick={() => {
-              onOpenChange(false)
-              setLogoutOpen(true)
-            }}
-            className="text-muted-foreground hover:text-foreground relative mt-3 flex w-full items-center gap-2 border-t border-foreground/10 pt-3 text-sm dark:border-white/10"
-          >
-            <LogOutIcon className="size-4" aria-hidden="true" />
-            {UI_TEXT.logout}
-          </button>
-        </SheetContent>
-      </Sheet>
-      <LogoutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
-    </>
+        <div
+          className="relative max-h-[60dvh] overflow-y-auto"
+          style={{ minHeight: gridHeight(items.length) }}
+        >
+          {shown.length === 0 ? (
+            <p className="text-muted-foreground py-8 text-center text-sm">{DOCK_UI.nothing}</p>
+          ) : (
+            <div className="grid grid-cols-3 content-start gap-2">
+              {shown.map((item) => (
+                <Tile key={item.path} item={item} onPick={() => onOpenChange(false)} />
+              ))}
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
   )
 }
 
