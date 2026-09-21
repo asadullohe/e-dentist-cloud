@@ -4,6 +4,7 @@ import { useHasPermission, useSession } from '@/entities/session'
 import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
 import { Expenses } from '@/pages/Expenses'
+import { Feedback } from '@/pages/Feedback'
 import { Invite } from '@/pages/Invite'
 import { Lab } from '@/pages/Lab'
 import { Login } from '@/pages/Login'
@@ -80,9 +81,10 @@ export function Router() {
       <Route path="/verify" element={<VerifyEmail />} />
       {/* Panel klinika ochganda egasi shu yerda parol qoʻyadi */}
       <Route path="/taklif" element={<Invite />} />
-      {/* Navbat — yagona loginsiz sahifa (tz.md 14-boʻlim) */}
+      {/* Loginsiz sahifalar: navbat va bemor fikri (tz.md 14-boʻlim) */}
       <Route path="/n/:code" element={<Queue />} />
       <Route path="/n/:code/ekran" element={<QueueScreen />} />
+      <Route path="/f/:code" element={<Feedback />} />
 
       <Route element={<RequireAuth />}>
         {/* Eshikka osiladigan QR varaq — chop etish uchun yon menyusiz (10.8) */}

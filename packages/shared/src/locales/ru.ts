@@ -809,7 +809,7 @@ export const ru: DeepPartial<Strings> = {
     screen_next: 'Следующие',
     closed: 'Очередь закрыта',
     step_doctor: 'Врач',
-    step_name: 'Данные',
+    step_name: 'Имя',
     step_number: 'Номер',
     now_serving: (n: number) => `Сейчас на приёме: №${n}`,
     free_now: 'Сейчас свободен',

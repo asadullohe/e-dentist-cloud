@@ -867,7 +867,7 @@ export const QUEUE_UI = {
   closed: 'Navbat yopiq',
   // Bosqichli sahifa (12-bosqich)
   step_doctor: 'Shifokor',
-  step_name: 'Maʼlumotlar',
+  step_name: 'Ism',
   step_number: 'Raqam',
   now_serving: (n: number) => `Hozir qabulda: №${n}`,
   free_now: 'Hozir boʻsh',

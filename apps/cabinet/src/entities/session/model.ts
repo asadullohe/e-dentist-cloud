@@ -18,6 +18,10 @@ export interface SessionClinic {
   queueEnabled: boolean
   /// Logotip fayl kaliti. `null` — logotip qoʻyilmagan
   logoKey: string | null
+  /// Bemor sahifasi kontaktlari va xarita sharh havolasi (12-bosqich)
+  publicPhone: string | null
+  address: string | null
+  reviewUrl: string | null
 }
 
 export interface SessionRole {

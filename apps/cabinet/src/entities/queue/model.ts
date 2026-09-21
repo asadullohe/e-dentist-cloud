@@ -6,12 +6,17 @@ export interface QueueDoctor {
   /// Navbatda turgan (tasdiqlangan) odamlar soni
   waiting: number
   waitMinutes: number
+  /// Hozir chaqirilgan raqam
+  nowServing: number | null
 }
 
 export interface QueueBoard {
   clinicName: string
   /// Rasmning oʻzi alohida manzilda: clinicLogoUrl(kod)
   hasLogo: boolean
+  /// «Qoʻngʻiroq» va «Manzil» tugmalari; boʻsh boʻlsa tugma chiqmaydi
+  publicPhone: string | null
+  address: string | null
   doctors: QueueDoctor[]
 }
 
@@ -20,6 +25,7 @@ export interface QueueTicket {
   number: number
   ahead: number
   status: QueueStatus
+  doctorId: string | null
   doctorName: string
   waitMinutes: number
 }

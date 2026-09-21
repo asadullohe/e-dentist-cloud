@@ -66,6 +66,7 @@ export interface Ticket {
   number: number
   ahead: number
   status: QueueStatus
+  doctorId: string | null
   doctorName: string
   waitMinutes: number
 }
@@ -326,6 +327,7 @@ function toTicket(
     number: entry.queueNumber ?? 0,
     ahead,
     status: entry.queueStatus as QueueStatus,
+    doctorId: entry.doctorId,
     doctorName,
     waitMinutes: ahead * minutes,
   }
