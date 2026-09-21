@@ -35,15 +35,16 @@ export function BottomNav() {
       >
         <nav
           aria-label={DOCK_UI.more}
-          className="glass flex h-[72px] grow items-center rounded-full p-[7px]"
+          className="glass flex h-16 grow items-center rounded-full p-[5px]"
         >
-          {/* Linza: faol tab kengligida, transform bilan suzadi */}
+          {/* Linza: faol tab kengligida, transform bilan suzadi. 64 = 1px
+              hoshiya ×2 + 5px joy ×2 + 52px tab — linza va tab bir sathda */}
           {activeIndex >= 0 && (
             <span
               aria-hidden="true"
-              className="ease-spring absolute top-[7px] left-[7px] h-14 rounded-full bg-(--glass-lens) shadow-[inset_0_1px_0_rgba(255,255,255,.8),0_4px_12px_-6px_rgba(20,30,60,.3)] transition-transform duration-500 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
+              className="ease-spring absolute top-[5px] left-[5px] h-13 rounded-full bg-(--glass-lens) shadow-[inset_0_1px_0_rgba(255,255,255,.8),0_4px_12px_-6px_rgba(20,30,60,.3)] transition-transform duration-500 dark:shadow-[inset_0_1px_0_rgba(255,255,255,.25)]"
               style={{
-                width: `calc((100% - 14px) / ${items.length})`,
+                width: `calc((100% - 10px) / ${items.length})`,
                 transform: `translateX(${activeIndex * 100}%)`,
               }}
             />
@@ -56,11 +57,11 @@ export function BottomNav() {
                 to={item.path}
                 aria-current={on ? 'page' : undefined}
                 className={cn(
-                  'relative z-10 flex h-14 flex-1 flex-col items-center justify-center gap-1.5 rounded-full text-[11px] leading-none font-medium transition-[transform,color] active:scale-95',
+                  'relative z-10 flex h-13 flex-1 flex-col items-center justify-center gap-1 rounded-full text-[11px] leading-none font-medium transition-[transform,color] active:scale-95',
                   on ? 'text-primary' : 'text-muted-foreground',
                 )}
               >
-                <item.icon className={cn('size-[22px]', on && 'stroke-[2.4]')} aria-hidden="true" />
+                <item.icon className={cn('size-5', on && 'stroke-[2.4]')} aria-hidden="true" />
                 <span className="whitespace-nowrap">{DOCK_UI.short[item.path] ?? item.label}</span>
                 {item.path === '/queue' && <QueueBadge />}
               </Link>
@@ -74,7 +75,7 @@ export function BottomNav() {
           aria-expanded={moreOpen}
           onClick={() => setMoreOpen(true)}
           className={cn(
-            'glass relative flex size-[72px] shrink-0 items-center justify-center rounded-full transition-transform active:scale-95',
+            'glass relative flex size-16 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95',
             moreActive ? 'text-primary' : 'text-foreground',
           )}
         >

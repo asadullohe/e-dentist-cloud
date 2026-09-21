@@ -64,7 +64,7 @@ export function CabinetLayout() {
           notice={<TrialBanner subscription={session?.subscription ?? null} />}
         />
         {/* Telefonda pastki dok kontent ustida suzadi — pastda joy qoldiriladi */}
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 pb-30 md:px-6 md:py-6">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 pb-28 md:px-6 md:py-6">
           <Outlet />
         </main>
         <BottomNav />

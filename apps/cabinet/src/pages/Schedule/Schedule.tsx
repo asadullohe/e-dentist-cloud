@@ -393,7 +393,7 @@ export function Schedule() {
           <Button
             size="icon"
             aria-label={SCHEDULE_UI.add}
-            className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
+            className="fixed right-4 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+5rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
           >
             <PlusIcon />
           </Button>

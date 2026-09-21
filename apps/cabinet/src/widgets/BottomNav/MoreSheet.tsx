@@ -1,11 +1,11 @@
-import { DOCK_UI, formatSom, roleLabel, UI_TEXT } from '@e-dentist/shared'
+import { DOCK_UI, formatSom, UI_TEXT } from '@e-dentist/shared'
 import { LogOutIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDebtors } from '@/entities/debtor'
 import { useFeedbackSummary } from '@/entities/feedback'
 import { useLabOrders } from '@/entities/lab-order'
-import { useHasPermission, useSession } from '@/entities/session'
+import { useHasPermission } from '@/entities/session'
 import { LogoutDialog } from '@/features/auth'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui'
 import { type DockItem, moreItems } from './dockItems'
@@ -50,14 +50,12 @@ export function MoreSheet({
   onOpenChange: (open: boolean) => void
 }) {
   const hasPermission = useHasPermission()
-  const { data: session } = useSession()
   const [query, setQuery] = useState('')
   const [logoutOpen, setLogoutOpen] = useState(false)
 
   const items = moreItems(hasPermission)
   const q = query.trim().toLowerCase()
   const shown = q ? items.filter((item) => item.label.toLowerCase().includes(q)) : items
-  const initial = (session?.user.fullName ?? session?.user.email ?? '?').trim().charAt(0)
 
   return (
     <>
@@ -103,31 +101,18 @@ export function MoreSheet({
             )}
           </div>
 
-          <div className="relative mt-3 flex items-center gap-3 border-t border-foreground/10 pt-3 dark:border-white/10">
-            <span className="bg-primary/15 text-primary flex size-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold">
-              {initial}
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">
-                {session?.user.fullName ?? session?.user.email}
-              </div>
-              <div className="text-muted-foreground truncate text-xs">
-                {session?.role ? roleLabel(session.role) : ''}
-                {session?.clinic ? ` · ${session.clinic.name}` : ''}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                onOpenChange(false)
-                setLogoutOpen(true)
-              }}
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-sm"
-            >
-              <LogOutIcon className="size-4" aria-hidden="true" />
-              {UI_TEXT.logout}
-            </button>
-          </div>
+          {/* Xodim kartasi tepa panelda (profil menyusi) — bu yerda faqat chiqish */}
+          <button
+            type="button"
+            onClick={() => {
+              onOpenChange(false)
+              setLogoutOpen(true)
+            }}
+            className="text-muted-foreground hover:text-foreground relative mt-3 flex w-full items-center gap-2 border-t border-foreground/10 pt-3 text-sm dark:border-white/10"
+          >
+            <LogOutIcon className="size-4" aria-hidden="true" />
+            {UI_TEXT.logout}
+          </button>
         </SheetContent>
       </Sheet>
       <LogoutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
