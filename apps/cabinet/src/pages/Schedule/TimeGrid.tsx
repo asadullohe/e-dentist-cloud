@@ -23,6 +23,9 @@ const END = 24
 const WORK_START = 8
 const HOUR = 56
 const HOURS = Array.from({ length: END - START }, (_, i) => START + i)
+/// Toʻr tepasidagi boʻsh joy: 00:00 yozuvi chiziq markazida — yarmi
+/// kartochka chetidan chiqib kesilmasin
+const TOP_PAD = 8
 
 const minutesOf = (iso: string): number => {
   const date = new Date(iso)
@@ -86,7 +89,8 @@ export function TimeGrid({
     const sticky = document.querySelector<HTMLElement>('[data-sticky="schedule"]')
     const stuckTop = sticky ? Number.parseFloat(getComputedStyle(sticky).top) || 0 : 56
     const offset = stuckTop + (sticky?.offsetHeight ?? 56) + 8
-    const y = el.getBoundingClientRect().top + window.scrollY + topOf(WORK_START * 60) - offset
+    const y =
+      el.getBoundingClientRect().top + window.scrollY + TOP_PAD + topOf(WORK_START * 60) - offset
     window.scrollTo({ top: Math.max(0, y) })
   }, [loading])
 
@@ -106,7 +110,10 @@ export function TimeGrid({
         <div ref={grid}>
           <div
             className="grid"
-            style={{ gridTemplateColumns: `2.75rem repeat(${days.length}, minmax(0, 1fr))` }}
+            style={{
+              gridTemplateColumns: `2.75rem repeat(${days.length}, minmax(0, 1fr))`,
+              paddingTop: TOP_PAD,
+            }}
           >
             {/* Vaqt oʻqi */}
             <div className="relative" style={{ height: HOURS.length * HOUR }}>

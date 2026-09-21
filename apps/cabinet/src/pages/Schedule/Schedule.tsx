@@ -355,7 +355,8 @@ export function Schedule() {
         )}
       </div>
 
-      <div {...swipe}>
+      {/* Surish bilan davr almashadi; sichqoncha bilan surganda matn belgilanmasin */}
+      <div {...swipe} className="select-none">
         {view === 'month' ? (
           <MonthView
             year={parseIso(selected).getFullYear()}
