@@ -34,6 +34,7 @@ import {
   Money,
   Skeleton,
 } from '@/shared/ui'
+import { FeedbackWidget } from './FeedbackWidget'
 
 interface StatProps {
   label: string
@@ -266,6 +267,7 @@ export function Dashboard() {
   const canSchedule = hasPermission('schedule.write') && canPatients
   const canReports = hasPermission('reports.read')
   const canPayments = hasPermission('payments.read')
+  const canFeedback = hasPermission(['feedback.read', 'feedback.own'])
 
   return (
     <>
@@ -287,10 +289,18 @@ export function Dashboard() {
         {canPayments && <DebtStat />}
       </div>
 
-      {/* min-w-0: karta ichidagi uzun ism kartani ekrandan chiqarib yubormasin */}
+      {/* min-w-0: karta ichidagi uzun ism kartani ekrandan chiqarib yubormasin.
+          Oʻng ustun: qarzdorlar va bemorlar bahosi ustma-ust */}
       <div className="mt-4 grid gap-4 lg:grid-cols-7 [&>*]:min-w-0">
         {canSchedule && <TodayList today={today} className="lg:col-span-4" />}
-        {canPayments && <TopDebtors className={canSchedule ? 'lg:col-span-3' : 'lg:col-span-7'} />}
+        {(canPayments || canFeedback) && (
+          <div
+            className={cn('flex flex-col gap-4', canSchedule ? 'lg:col-span-3' : 'lg:col-span-7')}
+          >
+            {canPayments && <TopDebtors />}
+            {canFeedback && <FeedbackWidget month={month} />}
+          </div>
+        )}
       </div>
     </>
   )

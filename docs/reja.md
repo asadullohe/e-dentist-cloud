@@ -1299,6 +1299,39 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 
 ---
 
+## Bosqich 12 — Bemor sahifasi va fikrlar · ~3 kun
+
+> **Nega** _(qaror 19/09/2026)_
+>
+> Navbat sahifasi «forma» edi, chiroyli emas edi. Bemorning fikri hech
+> qayerga tushmasdi — klinika rivoji uchun bu eng kerakli maʼlumot.
+> Mamnun bemor xaritada baho qoldirsa, ochiq reyting oʻsadi.
+
+- [x] **12.1 API: fikrlar** — `feedback` jadvali (RLS, `TENANT_MODELS`),
+      `clinics.public_phone/address/review_url`, `clinic_by_queue_code`
+      kengaytirildi; `feedback` moduli: ochiq `GET/POST /f/:kod` (IP va
+      qurilma cheklovi, raqamga bogʻlash — shifokor va bemor raqamdan, bitta
+      raqamga bitta, tugamaganiga yoʻq), kabinet `GET /feedback`,
+      `/feedback/summary`, `PATCH /feedback/:id`; `PATCH /clinic/public`;
+      navbat taxtasida `publicPhone`, `address`, shifokorda `nowServing`,
+      raqamda `doctorId`. Ruxsatlar `feedback.read` (egasi, migratsiya) va
+      `feedback.own`. Qurilma cookie si `platform/device.ts` ga chiqdi.
+      Testlar: `feedback.test.ts` (16)
+- [x] **12.2 Bemor sahifasi qaytadan** — uch qadam (shifokor → ism → raqam),
+      «hozir qabulda», kontaktlar (qoʻngʻiroq, manzil), «Fikr bildirish»;
+      raqam tugagach «Qabul qanday oʻtdi?» yulduzlari; umumiy `PublicShell`
+- [x] **12.3 Fikr sahifasi `/f/:kod`** — yulduz, teglar, izoh, telefon,
+      shifokor tanlovi (raqamdan kelganda soʻralmaydi, `?doctor=` bilan
+      oldindan tanlangan), rahmat + «Xaritada ham baholang» (4–5 ★,
+      `review_url`), past bahoga kechirim
+- [x] **12.4 Kabinet** — Sozlamalar → Fikrlar (jamlanma, filtr, kartalar,
+      holat), bemor sahifasi kontaktlari formasi, fikr QR varagʻi
+      (`/fikr-varaq`, umumiy yoki shifokor xonasi uchun), bosh sahifada
+      «Bemorlar bahosi», yon menyuda «Fikrlar» (`feedback.read` yoki `.own`)
+- [ ] **12.5 Serverga chiqarish** — push, migratsiya, jonli tekshiruv
+
+---
+
 ## Ochiq savollar
 
 Kod yozishga halaqit bermaydi, lekin bosqich 5 gacha javob kerak:

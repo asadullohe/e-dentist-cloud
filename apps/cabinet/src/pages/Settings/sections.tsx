@@ -1,8 +1,16 @@
-import { EXPORT_UI, LOGO_UI, QUEUE_CABINET_UI, SETTINGS_UI, STAFF_UI } from '@e-dentist/shared'
+import {
+  EXPORT_UI,
+  FEEDBACK_CABINET_UI,
+  LOGO_UI,
+  QUEUE_CABINET_UI,
+  SETTINGS_UI,
+  STAFF_UI,
+} from '@e-dentist/shared'
 import { ClinicLogoCard } from '@/features/clinic-logo'
 import { ContentSection } from '@/shared/ui'
 import { AccountTab } from './AccountTab'
 import { DataTab } from './DataTab'
+import { FeedbackTab } from './FeedbackTab'
 import { QueueTab } from './QueueTab'
 import { RolesTab } from './RolesTab'
 import { StaffTab } from './StaffTab'
@@ -49,6 +57,19 @@ export function QueueSection() {
       desc={SETTINGS_UI.queue_hint}
     >
       <QueueTab />
+    </ContentSection>
+  )
+}
+
+export function FeedbackSection() {
+  return (
+    <ContentSection
+      heading="page"
+      title={FEEDBACK_CABINET_UI.tab}
+      desc={SETTINGS_UI.feedback_hint}
+      wide
+    >
+      <FeedbackTab />
     </ContentSection>
   )
 }

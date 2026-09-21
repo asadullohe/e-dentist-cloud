@@ -15,7 +15,13 @@ export function useSession() {
 
 /// Menyu va tugmalarni koʻrsatish uchun. Haqiqiy himoya serverda —
 /// bu yerdagisi faqat koʻrinish
-export function useHasPermission(): (permission: Permission) => boolean {
+/// Roʻyxat berilsa — istalgan biri yetarli (masalan, «hammasi» yoki «oʻziniki»)
+export function useHasPermission(): (permission: Permission | readonly Permission[]) => boolean {
   const { data } = useSession()
-  return (permission) => data?.permissions.includes(permission) ?? false
+  return (permission) => {
+    const granted = data?.permissions ?? []
+    return Array.isArray(permission)
+      ? permission.some((item) => granted.includes(item))
+      : granted.includes(permission as Permission)
+  }
 }

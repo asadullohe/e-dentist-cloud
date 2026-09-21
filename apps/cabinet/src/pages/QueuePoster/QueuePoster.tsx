@@ -53,7 +53,14 @@ export function QueuePoster() {
 
         {/* Kvadrat: A4 kengligining yarmidan koʻprogʻi — 2-3 metrdan skanerlanadi */}
         <div className="rounded-2xl border-4 border-neutral-900 bg-white p-6">
-          <QRCodeSVG value={address} size={380} level="M" marginSize={0} />
+          {/* Telefonda ekranga sigʻadi, chop etishda 380px */}
+          <QRCodeSVG
+            value={address}
+            size={380}
+            level="M"
+            marginSize={0}
+            className="h-auto w-full max-w-[380px]"
+          />
         </div>
 
         <div className="space-y-3">

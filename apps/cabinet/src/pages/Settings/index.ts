@@ -3,6 +3,7 @@ export {
   AccountSection,
   ClinicSection,
   DataSection,
+  FeedbackSection,
   QueueSection,
   RolesSection,
   StaffSection,

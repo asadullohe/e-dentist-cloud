@@ -1,9 +1,17 @@
-import { EXPORT_UI, LOGO_UI, type Permission, QUEUE_CABINET_UI, STAFF_UI } from '@e-dentist/shared'
+import {
+  EXPORT_UI,
+  FEEDBACK_CABINET_UI,
+  LOGO_UI,
+  type Permission,
+  QUEUE_CABINET_UI,
+  STAFF_UI,
+} from '@e-dentist/shared'
 import {
   BellIcon,
   BuildingIcon,
   DatabaseIcon,
   type LucideIcon,
+  MessageSquareIcon,
   ShieldIcon,
   UserCogIcon,
   UsersIcon,
@@ -13,8 +21,8 @@ export interface SettingsItem {
   to: string
   label: string
   icon: LucideIcon
-  /// Boʻlim faqat shu ruxsat bilan koʻrinadi
-  permission?: Permission
+  /// Boʻlim faqat shu ruxsat bilan koʻrinadi; roʻyxat — istalgan biri
+  permission?: Permission | readonly Permission[]
 }
 
 /// Sozlamalar boʻlimlari. Ikki joyda ishlatiladi: sahifaning chap
@@ -44,6 +52,13 @@ export const settingsItems = (): readonly SettingsItem[] => [
     label: QUEUE_CABINET_UI.settings_tab,
     icon: BellIcon,
     permission: 'staff.manage',
+  },
+  // Egasi hammasini, shifokor (`feedback.own` berilsa) oʻzi haqidagini koʻradi
+  {
+    to: '/settings/fikrlar',
+    label: FEEDBACK_CABINET_UI.tab,
+    icon: MessageSquareIcon,
+    permission: ['feedback.read', 'feedback.own'],
   },
   { to: '/settings/malumot', label: EXPORT_UI.tab, icon: DatabaseIcon, permission: 'data.export' },
 ]

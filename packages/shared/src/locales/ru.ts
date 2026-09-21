@@ -897,6 +897,8 @@ export const ru: DeepPartial<Strings> = {
     anonymous: 'Без имени',
     mark_seen: 'Просмотрен',
     mark_contacted: 'Связались',
+    patient_card: 'Карточка',
+    nothing_found: 'В этом фильтре отзывов нет',
     by_doctor: 'По врачам',
     period_month: 'Этот месяц',
     period_all: 'Все',
@@ -922,6 +924,7 @@ export const ru: DeepPartial<Strings> = {
     poster_title: 'Ваше мнение важно для нас',
     poster_scan: 'Отсканируйте QR и оцените за минуту',
     poster_steps: 'Поставьте звёзды, при желании напишите комментарий. Имя не обязательно.',
+    poster_print: 'Печать',
   },
 
   QUEUE_CABINET_UI: {

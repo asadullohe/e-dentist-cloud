@@ -21,7 +21,7 @@ export interface NavSection {
   icon: LucideIcon
   /// Shu ruxsat boʻlmasa boʻlim menyuda koʻrinmaydi. Berilmasa — hammaga.
   /// Diqqat: bu faqat koʻrinish — haqiqiy himoya serverda
-  permission?: Permission
+  permission?: Permission | readonly Permission[]
   /// Yon menyuda ochiladigan ichki havolalar (sozlamalar boʻlimlari)
   children?: readonly SettingsItem[]
 }

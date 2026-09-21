@@ -5,6 +5,7 @@ import { Dashboard } from '@/pages/Dashboard'
 import { Debtors } from '@/pages/Debtors'
 import { Expenses } from '@/pages/Expenses'
 import { Feedback } from '@/pages/Feedback'
+import { FeedbackPoster } from '@/pages/FeedbackPoster'
 import { Invite } from '@/pages/Invite'
 import { Lab } from '@/pages/Lab'
 import { Login } from '@/pages/Login'
@@ -30,6 +31,7 @@ import {
   AccountSection,
   ClinicSection,
   DataSection,
+  FeedbackSection,
   QueueSection,
   RolesSection,
   Settings,
@@ -90,6 +92,7 @@ export function Router() {
         {/* Eshikka osiladigan QR varaq — chop etish uchun yon menyusiz (10.8) */}
         <Route element={<RequirePermission anyOf={['staff.manage']} />}>
           <Route path="/navbat-varaq" element={<QueuePoster />} />
+          <Route path="/fikr-varaq" element={<FeedbackPoster />} />
         </Route>
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Home />} />
@@ -137,6 +140,9 @@ export function Router() {
               <Route path="rollar" element={<RolesSection />} />
               <Route path="klinika" element={<ClinicSection />} />
               <Route path="navbat" element={<QueueSection />} />
+            </Route>
+            <Route element={<RequirePermission anyOf={['feedback.read', 'feedback.own']} />}>
+              <Route path="fikrlar" element={<FeedbackSection />} />
             </Route>
             <Route element={<RequirePermission anyOf={['data.export']} />}>
               <Route path="malumot" element={<DataSection />} />

@@ -55,6 +55,13 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   sabab bilan bekor qilinadi, summa/sana tahrirlanmaydi. Naryad
   **topshirilganda tashrif yoziladi**, shifokor ulushi
   `(narx − texnik narxi) × foiz`
+- **Bemor fikrlari** _(qaror 19/09/2026, tz.md 14-boʻlim)_: bitta ochiq
+  sahifa `/f/<kod>`, uch kirish (navbat raqami tugagach, fikr QR varagʻi,
+  navbat sahifasidagi tugma). Faqat egasiga (`feedback.read`); shifokorga
+  oʻziniki `feedback.own` bilan — sukut yopiq. Ochiq reyting yoʻq; 4–5 ★
+  bergan bemorga xaritadagi sharh havolasi. Bemor sahifasi bosqichli
+  (shifokor → ism → raqam), kontaktlar `public_phone`/`address` — egasining
+  roʻyxat telefoni ochiq sahifaga chiqmaydi
 - Yuridik tekshiruv **toʻlov integratsiyasi bosqichiga** qoldirilgan
 
 ## Texnologiyalar

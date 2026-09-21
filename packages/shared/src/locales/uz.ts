@@ -957,6 +957,8 @@ export const FEEDBACK_CABINET_UI = {
   anonymous: 'Ismsiz',
   mark_seen: 'Koʻrildi',
   mark_contacted: 'Bogʻlanildi',
+  patient_card: 'Kartochka',
+  nothing_found: 'Bu filtrda fikr yoʻq',
   by_doctor: 'Shifokorlar boʻyicha',
   period_month: 'Shu oy',
   period_all: 'Hammasi',
@@ -982,6 +984,7 @@ export const FEEDBACK_CABINET_UI = {
   poster_title: 'Fikringiz biz uchun muhim',
   poster_scan: 'QR ni skanerlang va bir daqiqada baholang',
   poster_steps: 'Yulduz qoʻying, xohlasangiz izoh yozing. Ism shart emas.',
+  poster_print: 'Chop etish',
 } as const
 
 // Kabinetdagi navbat

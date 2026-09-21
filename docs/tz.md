@@ -680,6 +680,24 @@ Qabulxona bemorni yaratganda uni shifokorga yoʻnaltiradi — tizimda buning oʻ
 - **Shifokor faqat oʻz jadvalini koʻradi** _(qaror 17/09/2026)_ — `schedule.all` ruxsati: egasi va qabulxona shablonida bor, shifokorda yoʻq. U boʻlmasa `GET /appointments` faqat `doctor_id = oʻzi` qatorlarini qaytaradi (`doctorId` filtri eʼtiborga olinmaydi), yangi qabul doim oʻziga yoziladi (formada shifokor tanlovi yoʻq), boshqaning qabuli tahrir/yakunlash/oʻchirishda «topilmadi». Bosh sahifadagi «bugungi qabullar» ham shu soʻrovdan — shifokorga oʻziniki chiqadi
 - **Yakunlash = tashrif yozish** — «Yakunlandi» holati holat roʻyxatidan qoʻyilmaydi: jadvalda ham, navbat taxtasida ham u tashrif formasini ochadi (muolaja, tish, narx; sana va shifokor qabuldan, oʻzgartirish mumkin). `POST /appointments/:id/complete` bitta tranzaksiyada tashrifni yozadi (shifokor ulushi snapshot bilan), qabulni `done`, navbat yozuvini `finished` qiladi. `PATCH {status: done}` va navbatdagi `done` amali rad etiladi — qilingan ish yozilmay qabul yakunlanmaydi. Kelajakdagi qabul bugun yakunlansa tashrif sanasi bugun. Ruxsat — ilgari «Yakunlandi» qoʻya olganlar: `schedule.write` yoki `queue.manage` (qabulxona pulni oladi, narxni biladi)
 
+### Bemor sahifasi va fikrlar _(qaror 19/09/2026, 12-bosqich)_
+
+Navbat sahifasi «forma» edi — endi **bosqichli sahifa**: ① shifokor → ② ism → ③ raqam. Shifokor kartasida navbat, kutish vaqti va **«Hozir qabulda: №12»** (yoki «Hozir boʻsh» — faqat navbat ham boʻsh boʻlsa). Raqam kartasi: oldindagilar, hozirgi raqam, «sahifani yopmang». Pastda kontaktlar: **Qoʻngʻiroq** (`clinics.public_phone` — egasining roʻyxat telefoni emas, u ochiq sahifaga chiqmaydi) va **Manzil** (`clinics.address`, xaritaga havola). Ikkalasi Sozlamalar → Fikrlar da.
+
+**Fikr (otziv)** — klinika va shifokor haqidagi baho, faqat egasiga koʻrinadi (ochiq reyting 1-versiyada yoʻq). Bitta sahifa `/f/<kod>`, uch kirish nuqtasi:
+
+| Qayerdan | Nima maʼlum | `source` |
+|---|---|---|
+| Navbat raqami tugagach — raqam kartasida yulduzlar | shifokor va bemor raqamdan (`appointment_id`, bittasiga bitta fikr) | `ticket` |
+| **Fikr QR varagʻi** (`/fikr-varaq`, `staff.manage`) — umumiy (chiqish eshigi) yoki shifokor xonasi uchun (`?doctor=`, shifokor oldindan tanlangan) | shifokor varaqdan yoki bemor tanlaydi | `qr` |
+| Navbat sahifasidagi «Fikr bildirish» | bemor tanlaydi yoki «aytmayman» | `page` |
+
+Forma: **1–5 yulduz** (majburiy, yagona majburiy maydon), tez tanlovlar `FEEDBACK_TAGS` (kutish · muomala · davolash · tozalik · narx; sarlavha bahoga qarab «nima yoqdi / yoqmadi»), izoh, telefon («bogʻlanishimizni xohlasangiz»). Ismsiz boʻlishi mumkin. Yuborilgach: rahmat; **4–5 yulduz** va `clinics.review_url` (Google/Yandex xaritadagi klinika sahifasi, faqat http(s)) boʻlsa — **«Xaritada ham baholang»** tugmasi: mamnun bemor ochiq reytingni oshiradi, norozi bemorning fikri ichkarida qoladi. 1–2 yulduz — kechirim matni.
+
+**Himoya** — navbatdagi kabi: kod taxmin qilib boʻlmaydi, IP soatiga 10 ta, qurilma (cookie) kuniga 3 ta, bitta raqamga bitta fikr (409), tugamagan raqamga fikr yoʻq (400). Navbat yozuvi yopiq boʻlsa ham fikr ishlaydi — bu alohida xizmat. `feedback` jadvali: `clinic_id`, `doctor_id?`, `appointment_id?` (unique), `patient_id?`, `rating` (CHECK 1–5), `tags[]`, `comment?`, `phone?`, `source`, `status` (new → seen → contacted), `device_id?`. RLS, `TENANT_MODELS`. Modul `feedback` — `appointments` ga schedule xizmati (`queue.ticketForFeedback`) orqali murojaat qiladi.
+
+**Kabinet** — `feedback.read` (egasi shablonida; migratsiya mavjud rollarga qoʻshadi) hammasini, `feedback.own` (sukut hech kimda — egasi Rollar sahifasida shifokorga ochadi) faqat oʻzi haqidagini koʻradi, boshqaniki 404. Sozlamalar → **Fikrlar**: oʻrtacha baho, soni, yangilari; filtr (hammasi / faqat yangi / past baho 1–2, shifokor); karta — yulduz, kim haqida, qachon, qayerdan, teglar, izoh, telefon (qoʻngʻiroq), bemor kartochkasi, holat tugmalari («Koʻrildi», «Bogʻlanildi»); past baho qizil chegara bilan. Shu sahifada bemor sahifasi kontaktlari (`PATCH /clinic/public`) va fikr QR varagʻi. Bosh sahifada «Bemorlar bahosi» kartasi (shu oy: oʻrtacha, soni, yangilari, shifokorlar boʻyicha). `GET /feedback`, `GET /feedback/summary?month`, `PATCH /feedback/:id`.
+
 ## 15. Ish haqi
 
 _Qaror 15/09/2026. Shifokor foizga ishlaydi, administrator oylikka — bu klinikaning kundalik hisobi, u tizimda boʻlmasa egasi daftar tutadi._
