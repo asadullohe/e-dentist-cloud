@@ -1,5 +1,6 @@
 export * from './email.js'
 export * from './format.js'
+export * from './period.js'
 export * from './roles.js'
 export * from './strings.js'
 export * from './types.js'

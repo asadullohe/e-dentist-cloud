@@ -1,14 +1,8 @@
-import { EXPENSE_TEXT } from '@e-dentist/shared'
-import { z } from 'zod'
+import type { z } from 'zod'
+import { periodSchema } from '../../platform/period.js'
 
-const ISO_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
-
-export const reportSchema = z.object({
-  /// YYYY-MM — hisobot shu oy uchun, grafik shu oy bilan tugaydigan 12 oy
-  month: z
-    .string()
-    .trim()
-    .regex(ISO_MONTH, { error: () => EXPENSE_TEXT.month_invalid }),
-})
+/// Davr (`month` yoki `from`/`to`): jamlanma shu davr uchun, grafik esa
+/// davr oxiri tushgan oy bilan tugaydigan 12 oy
+export const reportSchema = periodSchema
 
 export type ReportInput = z.infer<typeof reportSchema>

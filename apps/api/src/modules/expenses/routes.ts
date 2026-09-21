@@ -25,7 +25,7 @@ export const expenseRoutes: FastifyPluginAsync<ExpenseRouteOpts> = async (app, o
   app.get('/expenses', allow, async (req) => {
     const { clinicId } = clinicOf(req)
     const input = validateInput(expenseListSchema, req.query)
-    return ok(await service.listMonth(opts.deps, clinicId, input))
+    return ok(await service.listPeriod(opts.deps, clinicId, input))
   })
 
   app.post('/expenses', allow, async (req) => {

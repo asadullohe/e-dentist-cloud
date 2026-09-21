@@ -134,6 +134,31 @@ describe('oy boʻyicha roʻyxat', () => {
     const data = (await call('GET', '/api/expenses?month=2026-01')).json().data
     expect(data).toEqual({ items: [], total: 0, byCategory: [] })
   })
+
+  // Kun · hafta · yil — `from`/`to` bilan (12-bosqich)
+  it('davr: kun va hafta chegaralari ikkala tomondan kiradi', async () => {
+    await add({ date: '2026-07-06', description: 'Dushanba', amount: 10_000 })
+    await add({ date: '2026-07-12', description: 'Yakshanba', amount: 20_000 })
+    await add({ date: '2026-07-13', description: 'Keyingi hafta', amount: 40_000 })
+
+    const week = (await call('GET', '/api/expenses?from=2026-07-06&to=2026-07-12')).json().data
+    expect(week.total).toBe(30_000)
+    const day = (await call('GET', '/api/expenses?from=2026-07-13&to=2026-07-13')).json().data
+    expect(day.total).toBe(40_000)
+    const year = (await call('GET', '/api/expenses?from=2026-01-01&to=2026-12-31')).json().data
+    expect(year.total).toBeGreaterThanOrEqual(70_000)
+  })
+
+  it('davr notoʻgʻri boʻlsa 400: teskari, yildan uzun, yarim', async () => {
+    for (const query of [
+      'from=2026-07-13&to=2026-07-06',
+      'from=2025-01-01&to=2026-12-31',
+      'from=2026-07-06',
+      'from=2026-7-6&to=2026-07-12',
+    ]) {
+      expect((await call('GET', `/api/expenses?${query}`)).statusCode, query).toBe(400)
+    }
+  })
 })
 
 describe('tahrirlash va oʻchirish', () => {

@@ -17,6 +17,6 @@ export const reportRoutes: FastifyPluginAsync<ReportRouteOpts> = async (app, opt
     const session = requireAuth(req)
     if (!session.clinicId) throw errors.forbidden()
     const input = validateInput(reportSchema, req.query)
-    return ok(await service.monthly(opts.deps, session.clinicId, input))
+    return ok(await service.period(opts.deps, session.clinicId, input))
   })
 }

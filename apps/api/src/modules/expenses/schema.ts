@@ -1,8 +1,8 @@
 import { EXPENSE_CATEGORY_LABELS, EXPENSE_TEXT, VALIDATION_TEXT } from '@e-dentist/shared'
 import { z } from 'zod'
+import { periodSchema } from '../../platform/period.js'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
-const ISO_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/
 
 const CATEGORIES = Object.keys(EXPENSE_CATEGORY_LABELS) as [string, ...string[]]
 
@@ -18,13 +18,8 @@ const expenseDate = z
     error: () => VALIDATION_TEXT.date_in_future,
   })
 
-export const expenseListSchema = z.object({
-  /// YYYY-MM. Sahifa doim bitta oyni koʻrsatadi
-  month: z
-    .string()
-    .trim()
-    .regex(ISO_MONTH, { error: () => EXPENSE_TEXT.month_invalid }),
-})
+/// Davr: `month=YYYY-MM` yoki `from`/`to` — kun, hafta, oy, yil (platform/period)
+export const expenseListSchema = periodSchema
 
 export const expenseCreateSchema = z.object({
   date: expenseDate,

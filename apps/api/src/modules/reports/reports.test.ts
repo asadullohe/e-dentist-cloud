@@ -128,6 +128,41 @@ describe('oylik jamlanma', () => {
   })
 })
 
+describe('davr boʻyicha (kun · hafta · yil)', () => {
+  const range = (from: string, to: string) =>
+    call('GET', `/api/reports?from=${from}&to=${to}`).then((r) => r.json())
+
+  it('bir kun: faqat shu kunning tashrifi', async () => {
+    const summary: Summary = (await range('2026-03-05', '2026-03-05')).data.summary
+    expect(summary.visits).toBe(1)
+    expect(summary.charges).toBe(400_000)
+    expect(summary.payments).toBe(0)
+  })
+
+  it('hafta: chegaralar ikkala tomondan', async () => {
+    // 16–22 mart: tashrif 20-mart, toʻlov 21-mart
+    const summary: Summary = (await range('2026-03-16', '2026-03-22')).data.summary
+    expect(summary.visits).toBe(1)
+    expect(summary.charges).toBe(150_000)
+    expect(summary.payments).toBe(500_000)
+    expect(summary.expenses).toBe(0)
+  })
+
+  it('yil: hammasi kiradi, grafik oyna davr oxiri bilan tugaydi', async () => {
+    const data = (await range('2026-01-01', '2026-12-31')).data
+    expect(data.summary.charges).toBe(400_000 + 150_000 + 900_000)
+    expect(data.summary.expenses).toBe(300_000)
+    expect(data.months).toHaveLength(12)
+    expect(data.months[11].month).toBe('2026-12')
+    // Yil boshidagi fevral grafik oynasidan tashqarida boʻlsa ham jamlanmada bor
+    expect(data.months.find((m: { month: string }) => m.month === '2026-02')?.charges).toBe(900_000)
+  })
+
+  it('teskari davr 400', async () => {
+    expect((await call('GET', '/api/reports?from=2026-03-31&to=2026-03-01')).statusCode).toBe(400)
+  })
+})
+
 describe('oxirgi 12 oy', () => {
   it('12 ta oy, oxirgisi tanlangani', async () => {
     const months = (await report('2026-03')).data.months

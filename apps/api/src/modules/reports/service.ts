@@ -3,6 +3,7 @@
 
 import type { ExpenseCategory } from '../../../generated/prisma/client.js'
 import type { Db } from '../../platform/db.js'
+import { localDate, localDateAfter, utcDate } from '../../platform/period.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import * as expenses from '../expenses/service.js'
 import * as patients from '../patients/service.js'
@@ -46,20 +47,8 @@ function utcDay(year: number, monthIndex: number, day: number): Date {
   return new Date(Date.UTC(year, monthIndex, day))
 }
 
-/// `created_at` esa aniq vaqt. Jarayonning TZ si Asia/Tashkent (platform/
-/// timezone.ts tekshiradi), shuning uchun mahalliy yarim tun shu konstruktor
-/// bilan chiqadi — oy chegarasi klinika kuni boʻyicha boʻladi
-function localDay(year: number, monthIndex: number, day: number): Date {
-  return new Date(year, monthIndex, day)
-}
-
 function monthKey(date: Date): string {
   return date.toISOString().slice(0, 7)
-}
-
-function parseMonth(month: string): { year: number; index: number } {
-  const [year, month1] = month.split('-').map(Number) as [number, number]
-  return { year, index: month1 - 1 }
 }
 
 /// Kunlik jamlanmani oy kalitlariga yigʻadi
@@ -72,15 +61,26 @@ function foldByMonth(rows: { date: Date; total: number }[]): Map<string, number>
   return sums
 }
 
-async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
-  const { year, index } = parseMonth(input.month)
+/// Davr ichidagi kunlar yigʻindisi (DATE ustuni — UTC kun)
+function sumBetween(rows: { date: Date; total: number }[], from: Date, to: Date): number {
+  return rows
+    .filter((row) => row.date >= from && row.date <= to)
+    .reduce((sum, row) => sum + row.total, 0)
+}
 
-  // Grafik oynasi: tanlangan oy bilan tugaydigan 12 oy
-  const windowFrom = utcDay(year, index - (MONTHS_SHOWN - 1), 1)
-  const windowTo = utcDay(year, index + 1, 0)
-  // Tanlangan oy
-  const monthFrom = utcDay(year, index, 1)
-  const monthTo = utcDay(year, index + 1, 0)
+async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
+  // Davr chegaralari: DATE ustunlari uchun UTC kun
+  const from = utcDate(input.from)
+  const to = utcDate(input.to)
+
+  // Grafik oynasi: davr oxiri tushgan oy bilan tugaydigan 12 oy. Davr
+  // undan erta boshlansa (yil) — oyna boshi davr boshigacha kengayadi,
+  // jamlanma toʻliq boʻlsin
+  const endYear = to.getUTCFullYear()
+  const endMonth = to.getUTCMonth()
+  const chartFrom = utcDay(endYear, endMonth - (MONTHS_SHOWN - 1), 1)
+  const windowFrom = from < chartFrom ? from : chartFrom
+  const windowTo = utcDay(endYear, endMonth + 1, 0)
 
   const [visitDays, paymentDays, expenseDays] = await Promise.all([
     visits.dailyTotalsTx(tx, windowFrom, windowTo),
@@ -94,7 +94,7 @@ async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
 
   const months: ReportMonth[] = []
   for (let back = MONTHS_SHOWN - 1; back >= 0; back--) {
-    const key = monthKey(utcDay(year, index - back, 1))
+    const key = monthKey(utcDay(endYear, endMonth - back, 1))
     months.push({
       month: key,
       charges: chargeSums.get(key) ?? 0,
@@ -104,23 +104,24 @@ async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
   }
 
   const [topTreatments, topExpenses, newPatients] = await Promise.all([
-    visits.topTreatmentsTx(tx, monthFrom, monthTo, TOP_ROWS),
-    expenses.categoryTotalsTx(tx, monthFrom, monthTo, TOP_ROWS),
-    patients.countCreatedTx(tx, localDay(year, index, 1), localDay(year, index + 1, 1)),
+    visits.topTreatmentsTx(tx, from, to, TOP_ROWS),
+    expenses.categoryTotalsTx(tx, from, to, TOP_ROWS),
+    // `created_at` aniq vaqt — chegaralar klinika kuni boʻyicha (mahalliy)
+    patients.countCreatedTx(tx, localDate(input.from), localDateAfter(input.to)),
   ])
 
   const visitCount = visitDays
-    .filter((row) => monthKey(row.date) === input.month)
+    .filter((row) => row.date >= from && row.date <= to)
     .reduce((sum, row) => sum + row.count, 0)
 
-  const paid = paymentSums.get(input.month) ?? 0
-  const spent = expenseSums.get(input.month) ?? 0
+  const paid = sumBetween(paymentDays, from, to)
+  const spent = sumBetween(expenseDays, from, to)
 
   return {
     months,
     summary: {
       visits: visitCount,
-      charges: chargeSums.get(input.month) ?? 0,
+      charges: sumBetween(visitDays, from, to),
       payments: paid,
       expenses: spent,
       profit: paid - spent,
@@ -131,6 +132,6 @@ async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
   }
 }
 
-export function monthly(deps: ReportDeps, clinicId: string, input: ReportInput): Promise<Report> {
+export function period(deps: ReportDeps, clinicId: string, input: ReportInput): Promise<Report> {
   return withClinic(deps.db, clinicId, (tx) => build(tx, input))
 }

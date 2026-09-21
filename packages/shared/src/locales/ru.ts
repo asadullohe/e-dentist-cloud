@@ -380,6 +380,7 @@ export const ru: DeepPartial<Strings> = {
     amount_required: 'Укажите сумму',
     category_invalid: 'Такой категории нет',
     month_invalid: 'Не удалось прочитать месяц',
+    range_invalid: 'Период неверный: начало позже конца или длиннее года',
   },
 
   EXPENSE_CATEGORY_LABELS: {
@@ -1158,6 +1159,13 @@ export const ru: DeepPartial<Strings> = {
     range_from: 'от',
     range_to: 'до',
     selected: (n: number) => `Выбрано: ${n}`,
+  },
+
+  PERIOD_UI: {
+    kinds: { day: 'День', week: 'Неделя', month: 'Месяц', year: 'Год' },
+    current: { day: 'Сегодня', week: 'Эта неделя', month: 'Этот месяц', year: 'Этот год' },
+    prev: 'Предыдущий период',
+    next: 'Следующий период',
   },
 
   SETTINGS_UI: {

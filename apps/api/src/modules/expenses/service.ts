@@ -38,15 +38,6 @@ function toIso(date: Date): string {
   return date.toISOString().slice(0, 10)
 }
 
-/// `YYYY-MM` → oyning birinchi va oxirgi kuni
-function monthRange(month: string): { from: Date; to: Date } {
-  const [year, index] = month.split('-').map(Number) as [number, number]
-  return {
-    from: new Date(Date.UTC(year, index - 1, 1)),
-    to: new Date(Date.UTC(year, index, 0)),
-  }
-}
-
 function toApi(row: {
   id: string
   date: Date
@@ -67,15 +58,14 @@ function notFound(error: unknown): never {
 }
 
 /// Roʻyxat va jamlanma bitta javobda: sahifa ikkalasini birga koʻrsatadi,
-/// oy boʻyicha yozuvlar kam — jamlanma xotirada sanaladi
-export function listMonth(
+/// davr boʻyicha yozuvlar kam (koʻpi bilan bir yil) — jamlanma xotirada
+export function listPeriod(
   deps: ExpenseDeps,
   clinicId: string,
   input: ExpenseListInput,
 ): Promise<ExpenseMonth> {
-  const { from, to } = monthRange(input.month)
   return withClinic(deps.db, clinicId, async (tx) => {
-    const rows = await repo.listBetween(tx, from, to)
+    const rows = await repo.listBetween(tx, toDate(input.from), toDate(input.to))
 
     const sums = new Map<ExpenseCategory, number>()
     let total = 0

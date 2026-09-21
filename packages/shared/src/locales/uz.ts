@@ -392,6 +392,7 @@ export const EXPENSE_TEXT = {
   amount_required: 'Summani kiriting',
   category_invalid: 'Bunday turkum yoʻq',
   month_invalid: 'Oyni oʻqib boʻlmadi',
+  range_invalid: 'Davr notoʻgʻri: boshi oxiridan keyin yoki bir yildan uzun',
 } as const
 
 /// Turkum nomlari. Bazada inglizcha kalit, ekranda shu matn
@@ -1237,6 +1238,14 @@ export const SETTINGS_UI = {
   queue_hint: 'Bemorlar uchun navbat sahifasi va kutish xonasi ekrani',
   feedback_hint: 'Bemorlarning bahosi, fikr QR varagʻi va bemor sahifasi kontaktlari',
   data_hint: 'Barcha maʼlumotni yuklab olish',
+} as const
+
+// Davr tanlovi: kun · hafta · oy · yil (xarajatlar, hisobotlar)
+export const PERIOD_UI = {
+  kinds: { day: 'Kun', week: 'Hafta', month: 'Oy', year: 'Yil' },
+  current: { day: 'Bugun', week: 'Shu hafta', month: 'Shu oy', year: 'Shu yil' },
+  prev: 'Oldingi davr',
+  next: 'Keyingi davr',
 } as const
 
 // Klinika logotipi
