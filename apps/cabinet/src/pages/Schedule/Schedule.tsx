@@ -7,7 +7,14 @@ import {
   todayISO,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { CalendarOffIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
+import {
+  CalendarCheckIcon,
+  CalendarOffIcon,
+  CalendarPlusIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import {
   type Appointment,
@@ -36,6 +43,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -43,6 +54,7 @@ import {
   SelectValue,
 } from '@/shared/ui'
 import type { AppointmentActions } from './AppointmentMenu'
+import { DayStrip } from './DayStrip'
 import { MonthView } from './MonthView'
 import { groupByDay, isoOf, monthTitle, parseIso, shiftDays, weekOf } from './scheduleUtils'
 import { TimeGrid } from './TimeGrid'
@@ -113,6 +125,8 @@ export function Schedule() {
 
   function changeView(next: View) {
     setView(next)
+    // Toʻrdan oyga oʻtganda sahifa aylantirilgan qoladi — kalendar tepada boʻlsin
+    if (next === 'month') window.scrollTo({ top: 0 })
     try {
       localStorage.setItem(VIEW_KEY, next)
     } catch {
@@ -151,43 +165,74 @@ export function Schedule() {
     () => shift(-1),
   )
 
+  const openBlock = () => {
+    setEditingBlock(undefined)
+    setBlockOpen(true)
+  }
+
+  const doctorSelect = seesAll && (
+    <Select
+      value={doctorFilter || ALL_DOCTORS}
+      onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
+    >
+      <SelectTrigger
+        size="sm"
+        className="min-w-0 flex-1 md:w-48 md:flex-none"
+        aria-label={SCHEDULE_UI.doctor}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
+        {doctors?.map((item) => (
+          <SelectItem key={item.id} value={item.id}>
+            {item.fullName}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+
+  const viewSwitch = (
+    <div className="bg-muted flex shrink-0 rounded-md p-0.5">
+      {(
+        [
+          ['day', SCHEDULE_UI.view_day],
+          ['week', SCHEDULE_UI.view_week],
+          ['month', SCHEDULE_UI.view_month],
+        ] as const
+      ).map(([key, label]) => (
+        <button
+          key={key}
+          type="button"
+          aria-pressed={view === key}
+          onClick={() => changeView(key)}
+          className={cn(
+            'rounded px-2 py-1.5 text-[13px] transition-colors sm:px-3 sm:text-sm',
+            view === key ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground',
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+
   return (
     <>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      {/* Keng ekran: sarlavha va amallar. Telefonda joy tejaladi — sarlavha
+          yoʻq, amallar pastki oʻngdagi «+» tugmasida */}
+      <div className="mb-3 hidden items-center justify-between gap-2 md:flex">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-          {seesAll && (
-            <Select
-              value={doctorFilter || ALL_DOCTORS}
-              onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
-            >
-              <SelectTrigger
-                size="sm"
-                className="min-w-0 flex-1 sm:w-48"
-                aria-label={SCHEDULE_UI.doctor}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
-                {doctors?.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>
-                    {item.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+        <div className="flex items-center gap-2">
+          {doctorSelect}
           <Button
             variant="outline"
             size="icon"
             className="size-8 shrink-0"
             aria-label={SCHEDULE_UI.block_add}
             title={SCHEDULE_UI.block_add}
-            onClick={() => {
-              setEditingBlock(undefined)
-              setBlockOpen(true)
-            }}
+            onClick={openBlock}
           >
             <CalendarOffIcon />
           </Button>
@@ -198,57 +243,116 @@ export function Schedule() {
         </div>
       </div>
 
-      {/* Davr almashtirgich + koʻrinish: telefonda ikki qator. Yopishqoq —
-          toʻr uzun, kunni almashtirish uchun tepaga qaytish shart boʻlmasin */}
+      {/* Yopishqoq blok: davr/koʻrinish qatori va hafta tasmasi — toʻr uzun,
+          kunni almashtirish uchun tepaga qaytish shart boʻlmasin */}
       <div
         data-sticky="schedule"
-        className="bg-background/95 sticky top-14 z-20 -mx-4 mb-3 flex flex-wrap items-center justify-between gap-2 px-4 py-2 backdrop-blur md:-mx-6 md:px-6"
+        className="bg-background sticky top-14 z-20 -mx-4 mb-3 border-b px-4 md:-mx-6 md:px-6"
       >
-        <div className="flex w-full items-center gap-1 sm:w-auto">
-          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.prev} onClick={() => shift(-1)}>
-            <ChevronLeftIcon />
-          </Button>
-          <span className="flex-1 text-center font-semibold tabular-nums sm:min-w-56 sm:flex-none">
-            {title}
-          </span>
-          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.next} onClick={() => shift(1)}>
-            <ChevronRightIcon />
-          </Button>
-          {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
-              «Bugun» ga tushib qaytib qolardi */}
+        {/* Telefon: bitta ixcham qator — shifokor · koʻrinish · bugun.
+            Sana hafta tasmasida; oy koʻrinishida — alohida qator */}
+        <div className="flex items-center gap-2 py-2 md:hidden">
+          {doctorSelect || (
+            <span className="flex-1 truncate text-sm font-semibold">{SCHEDULE_UI.title}</span>
+          )}
+          {viewSwitch}
+          {/* Doim joyida: paydo boʻlib qatorni surib yubormasin */}
           <Button
-            variant="outline"
-            size="sm"
-            className={cn(!showToday && 'invisible')}
+            variant="ghost"
+            size="icon"
+            className={cn('size-8 shrink-0', !showToday && 'invisible')}
             tabIndex={showToday ? 0 : -1}
             aria-hidden={!showToday}
+            aria-label={SCHEDULE_UI.today}
+            title={SCHEDULE_UI.today}
             onClick={() => setSelected(today)}
           >
-            {SCHEDULE_UI.today}
+            <CalendarCheckIcon />
           </Button>
         </div>
-        <div className="bg-muted flex w-full rounded-md p-0.5 sm:w-auto">
-          {(
-            [
-              ['day', SCHEDULE_UI.view_day],
-              ['week', SCHEDULE_UI.view_week],
-              ['month', SCHEDULE_UI.view_month],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={view === key}
-              onClick={() => changeView(key)}
-              className={cn(
-                'flex-1 rounded px-3 py-1.5 text-sm transition-colors sm:flex-none',
-                view === key ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground',
-              )}
+        {view === 'month' && (
+          <div className="flex items-center justify-center gap-1 pb-2 md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label={PERIOD_UI.prev}
+              onClick={() => shift(-1)}
             >
-              {label}
-            </button>
-          ))}
+              <ChevronLeftIcon />
+            </Button>
+            <span className="min-w-40 text-center text-sm font-semibold tabular-nums">{title}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              aria-label={PERIOD_UI.next}
+              onClick={() => shift(1)}
+            >
+              <ChevronRightIcon />
+            </Button>
+          </div>
+        )}
+
+        {/* Keng ekran: davr almashtirgich + koʻrinish */}
+        <div className="hidden items-center justify-between gap-2 py-2 md:flex">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={PERIOD_UI.prev}
+              onClick={() => shift(-1)}
+            >
+              <ChevronLeftIcon />
+            </Button>
+            <span className="min-w-56 text-center font-semibold tabular-nums">{title}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={PERIOD_UI.next}
+              onClick={() => shift(1)}
+            >
+              <ChevronRightIcon />
+            </Button>
+            {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
+                «Bugun» ga tushib qaytib qolardi */}
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(!showToday && 'invisible')}
+              tabIndex={showToday ? 0 : -1}
+              aria-hidden={!showToday}
+              onClick={() => setSelected(today)}
+            >
+              {SCHEDULE_UI.today}
+            </Button>
+          </div>
+          {viewSwitch}
         </div>
+
+        {/* Hafta tasmasi: haftada — toʻr ustunlari tepasida (kun bosilsa kun
+            koʻrinishi); kun koʻrinishida faqat telefonda — kunni tanlash */}
+        {view === 'week' && (
+          <DayStrip
+            days={weekOf(selected)}
+            today={today}
+            onPick={(day) => {
+              setSelected(day)
+              changeView('day')
+            }}
+            onShift={(by) => shift(by)}
+          />
+        )}
+        {view === 'day' && (
+          <DayStrip
+            className="md:hidden"
+            days={weekOf(selected)}
+            today={today}
+            selected={selected}
+            onPick={setSelected}
+            onShift={(by) => setSelected(shiftDays(selected, by * 7))}
+          />
+        )}
       </div>
 
       <div {...swipe}>
@@ -281,6 +385,29 @@ export function Schedule() {
           />
         )}
       </div>
+
+      {/* Telefon: suzuvchi «+» — dok tepasida, oʻngda; qabul yoki band vaqt */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="icon"
+            aria-label={SCHEDULE_UI.add}
+            className="fixed right-4 bottom-[calc(env(safe-area-inset-bottom)+5.75rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
+          >
+            <PlusIcon />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-52">
+          <DropdownMenuItem onSelect={() => openNew()}>
+            <CalendarPlusIcon />
+            {SCHEDULE_UI.add}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={openBlock}>
+            <CalendarOffIcon />
+            {SCHEDULE_UI.block_add}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <AppointmentFormDialog
         open={formOpen}

@@ -1,4 +1,4 @@
-import { SCHEDULE_UI, UI_TEXT, WEEKDAYS } from '@e-dentist/shared'
+import { SCHEDULE_UI, UI_TEXT } from '@e-dentist/shared'
 import { cn } from 'cn'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -13,11 +13,11 @@ import {
   Skeleton,
 } from '@/shared/ui'
 import { type AppointmentActions, AppointmentMenu } from './AppointmentMenu'
-import { blockClass, layoutDay, mondayFirst, pad, parseIso, timeOf } from './scheduleUtils'
+import { blockClass, layoutDay, pad, timeOf } from './scheduleUtils'
 
 /// Toʻr sutka boʻyi (tungi navbat, erta taʼtil ham koʻrinsin), ochilganda
-/// ish boshi — 08:00 (bugun boʻlsa hozirgi vaqt) koʻrinadigan joyga
-/// suriladi. Bir soat — 56px (telefonda 30 daqiqalik blokka ism sigʻadi)
+/// ish boshi — 08:00 koʻrinadigan joyga suriladi. Bir soat — 56px
+/// (telefonda 30 daqiqalik blokka ism sigʻadi)
 const START = 0
 const END = 24
 const WORK_START = 8
@@ -72,21 +72,21 @@ export function TimeGrid({
   const week = days.length > 1
 
   // Ichki scroll yoʻq — sahifa oʻzi aylanadi (telefonda ikki scroll chalkash).
-  // Faqat birinchi ochilganda (Schedule `key={view}` bilan qayta ochadi):
-  // bugun koʻrinishda boʻlsa hozirgi vaqtdan bir soat tepa, aks holda ish
-  // boshi. Kun/hafta almashganda oʻrin saqlanadi — sahifa sakramasin
-  const initialToday = useRef(days.includes(today))
+  // Faqat birinchi ochilganda (Schedule `key={view}` bilan qayta ochadi)
+  // ish boshi — 08:00 — yopishqoq sarlavha ostiga keladi. Kunni
+  // almashtirganda oʻrin saqlanadi — sahifa sakramasin
   const positioned = useRef(false)
   useEffect(() => {
     const el = grid.current
     // Yuklanayotganda toʻr oʻrnida skelet — toʻr chizilgach bir marta
     if (loading || !el || positioned.current) return
     positioned.current = true
-    const target = initialToday.current ? nowMinutesOf() - 60 : WORK_START * 60
-    // Yopishqoq sarlavha va davr qatori ostidan boshlanadigan qilib
-    const sticky = document.querySelector('[data-sticky="schedule"]')?.getBoundingClientRect()
-    const offset = (sticky?.bottom ?? 112) + 8
-    const y = el.getBoundingClientRect().top + window.scrollY + topOf(Math.max(0, target)) - offset
+    // Yopishqoq blok ostidan boshlanadigan qilib. Blok hali yopishmagan
+    // (sahifa tepada) — joyi emas, yopishadigan balandligi (top + height) olinadi
+    const sticky = document.querySelector<HTMLElement>('[data-sticky="schedule"]')
+    const stuckTop = sticky ? Number.parseFloat(getComputedStyle(sticky).top) || 0 : 56
+    const offset = stuckTop + (sticky?.offsetHeight ?? 56) + 8
+    const y = el.getBoundingClientRect().top + window.scrollY + topOf(WORK_START * 60) - offset
     window.scrollTo({ top: Math.max(0, y) })
   }, [loading])
 
@@ -100,32 +100,6 @@ export function TimeGrid({
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
-      {/* Kun sarlavhalari — haftada; bir kunda kerak emas */}
-      {week && (
-        <div className="grid grid-cols-[2.75rem_repeat(7,1fr)] border-b">
-          <div />
-          {days.map((day) => {
-            const date = parseIso(day)
-            const isToday = day === today
-            return (
-              <div key={day} className="flex flex-col items-center gap-0.5 py-1.5">
-                <span className="text-muted-foreground text-[11px]">
-                  {WEEKDAYS[mondayFirst(date)]}
-                </span>
-                <span
-                  className={cn(
-                    'flex size-7 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
-                    isToday && 'bg-primary text-primary-foreground',
-                  )}
-                >
-                  {date.getDate()}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
       {loading ? (
         <Skeleton className="m-3 h-80" />
       ) : (
