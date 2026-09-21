@@ -1,4 +1,11 @@
-import { CARD_UI, formatDate, localISODate, SCHEDULE_UI, todayISO } from '@e-dentist/shared'
+import {
+  CARD_UI,
+  formatDate,
+  localISODate,
+  PERIOD_UI,
+  SCHEDULE_UI,
+  todayISO,
+} from '@e-dentist/shared'
 import { cn } from 'cn'
 import { CalendarOffIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
@@ -188,23 +195,13 @@ export function Schedule() {
       {/* Davr almashtirgich + koʻrinish: telefonda ikki qator */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex w-full items-center gap-1 sm:w-auto">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={SCHEDULE_UI.today}
-            onClick={() => shift(-1)}
-          >
+          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.prev} onClick={() => shift(-1)}>
             <ChevronLeftIcon />
           </Button>
           <span className="flex-1 text-center font-semibold tabular-nums sm:min-w-56 sm:flex-none">
             {title}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={SCHEDULE_UI.today}
-            onClick={() => shift(1)}
-          >
+          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.next} onClick={() => shift(1)}>
             <ChevronRightIcon />
           </Button>
           {showToday && (
