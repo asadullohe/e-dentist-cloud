@@ -10,7 +10,6 @@ import {
   VALIDATION_TEXT,
 } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronDownIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -37,12 +36,11 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
-  TimePicker,
 } from '@/shared/ui'
 import { useCreatePatientInline, useSaveAppointment } from './hooks'
 import { type NewPatient, PatientBlock } from './PatientBlock'
-import { SlotGrid } from './SlotGrid'
-import { DURATIONS, localTime, minutesOf, timeOfMinutes } from './slots'
+import { localTime } from './slots'
+import { TimeSection } from './TimeSection'
 
 /// Radix Select boʻsh satrni qabul qilmaydi — «shifokorsiz» uchun belgi
 const NO_DOCTOR = '__none__'
@@ -131,7 +129,6 @@ export function AppointmentFormDialog({
   const [patientName, setPatientName] = useState('')
   const [newPatient, setNewPatient] = useState<NewPatient | null>(null)
   const [patientError, setPatientError] = useState('')
-  const [slotsOpen, setSlotsOpen] = useState(false)
   const [formError, setFormError] = useState('')
 
   const form = useForm<Values>({
@@ -147,14 +144,12 @@ export function AppointmentFormDialog({
       setPatientName(appointment?.fio ?? '')
       setNewPatient(null)
       setPatientError('')
-      setSlotsOpen(false)
       setFormError('')
     }
   }, [open, appointment, defaultDate, defaultTime, defaultDoctorId, form])
 
   const [date, time, duration, doctorId] = form.watch(['date', 'time', 'duration', 'doctorId'])
   const isoDate = parseDisplayDate(date)
-  const endTime = TIME.test(time) ? timeOfMinutes(minutesOf(time) + duration) : ''
 
   async function onSubmit(values: Values) {
     setFormError('')
@@ -267,77 +262,16 @@ export function AppointmentFormDialog({
               )}
             </div>
 
-            {/* Boshlanish · davomiylik → tugash */}
-            <div className="grid grid-cols-[1fr_1fr_auto] items-end gap-3">
-              <FormField
-                control={form.control}
-                name="time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{SCHEDULE_UI.time}</FormLabel>
-                    <FormControl>
-                      <TimePicker {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{SCHEDULE_UI.duration}</FormLabel>
-                    <Select
-                      value={String(field.value)}
-                      onValueChange={(value) => field.onChange(Number(value))}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {DURATIONS.map((minutes) => (
-                          <SelectItem key={minutes} value={String(minutes)}>
-                            {SCHEDULE_UI.minutes(minutes)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="text-muted-foreground h-9 whitespace-nowrap pb-2 text-sm font-medium tabular-nums">
-                {endTime && SCHEDULE_UI.ends_at(endTime)}
-              </div>
-            </div>
-
-            {/* Boʻsh vaqtlar — yigʻilgan; ochilganda kun va shifokor boʻyicha toʻr */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                className="text-primary flex items-center gap-1 text-sm font-medium"
-                aria-expanded={slotsOpen}
-                onClick={() => setSlotsOpen((v) => !v)}
-              >
-                <ChevronDownIcon
-                  className={`size-4 transition-transform ${slotsOpen ? 'rotate-180' : ''}`}
-                />
-                {SCHEDULE_UI.free_slots}
-              </button>
-              {slotsOpen && isoDate && (
-                <SlotGrid
-                  date={isoDate}
-                  doctorId={ownOnly ? (appointment?.doctorId ?? null) : doctorId || null}
-                  duration={duration}
-                  value={time}
-                  excludeId={appointment?.id}
-                  onPick={(picked) => form.setValue('time', picked, { shouldValidate: true })}
-                />
-              )}
-            </div>
+            <TimeSection
+              date={isoDate}
+              doctorId={ownOnly ? (appointment?.doctorId ?? null) : doctorId || null}
+              time={time}
+              duration={duration}
+              excludeId={appointment?.id}
+              error={form.formState.errors.time?.message}
+              onTime={(value) => form.setValue('time', value, { shouldValidate: true })}
+              onDuration={(value) => form.setValue('duration', value)}
+            />
 
             {appointment && (
               <FormField

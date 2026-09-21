@@ -43,37 +43,35 @@ export function localDate(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
-export interface Slot {
-  time: string
-  busy: boolean
+export const overlaps = (r: { start: number; end: number }, from: number, to: number) =>
+  r.start < to && r.end > from
+
+export interface BusyRange {
+  start: number
+  end: number
+  /// Toʻr katagida koʻrinadigan nom: bemor familiyasi yoki band vaqt sababi
+  label: string
 }
 
-/// Kunning slotlari: qadam — davomiylik (15 daq dan kam emas, 30 dan koʻp
-/// emas — 90 daqiqalik qabul uchun ham yarim soatlik qadam qulay). Slot
-/// band — oʻsha oraliq shifokorning ochiq qabuli bilan kesishsa
-export function daySlots(
+/// Shifokorning shu kundagi band oraliqlari (daqiqada): ochiq qabullar
+/// (tahrirlanayotgani hisobga olinmaydi) va band vaqtlar
+export function busyRanges(
   appointments: readonly Appointment[],
-  duration: number,
   excludeId?: string,
   blocks: readonly TimeBlock[] = [],
   /// YYYY-MM-DD — koʻp kunlik band vaqt shu kunga qirqiladi
   date?: string,
-): Slot[] {
-  const step = Math.min(30, Math.max(15, duration))
-  const busy = appointments
+  blockLabel = '',
+): BusyRange[] {
+  const busy: BusyRange[] = appointments
     .filter((a) => a.id !== excludeId && (a.status === 'scheduled' || a.status === 'arrived'))
     .map((a) => {
       const start = minutesOf(localTime(a.at))
-      return { start, end: start + a.duration }
+      return { start, end: start + a.duration, label: a.fio.split(' ')[0] ?? a.fio }
     })
   for (const block of blocks) {
     const range = blockMinutes(block, date)
-    if (range) busy.push(range)
+    if (range) busy.push({ ...range, label: block.reason || blockLabel })
   }
-  const slots: Slot[] = []
-  for (let t = WORK_START * 60; t + duration <= WORK_END * 60; t += step) {
-    const end = t + duration
-    slots.push({ time: timeOfMinutes(t), busy: busy.some((b) => b.start < end && b.end > t) })
-  }
-  return slots
+  return busy
 }

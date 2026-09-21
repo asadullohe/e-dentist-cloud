@@ -66,7 +66,7 @@ const schema = z.object({
 })
 type Values = z.infer<typeof schema>
 
-/// «Butun kun» — ish kuni chegaralari (SlotGrid bilan bir xil)
+/// «Butun kun» — ish kuni chegaralari (vaqt toʻri bilan bir xil)
 const DAY_FROM = '08:00'
 const DAY_TO = '20:00'
 
