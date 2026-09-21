@@ -85,6 +85,8 @@ export const ru: DeepPartial<Strings> = {
   UI_TEXT: {
     brand: 'E-Dentist',
     offline: 'Нет связи с сервером. Проверьте интернет и попробуйте снова',
+    offline_title: 'Нет связи с сервером',
+    retry: 'Повторить',
     login: 'Войти',
     logout: 'Выйти',
     logout_confirm_title: 'Выйти из аккаунта?',

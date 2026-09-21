@@ -8,8 +8,11 @@ export function useSession() {
   return useQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
-    // 401 — javob, xato emas. Qayta urinishning maʼnosi yoʻq
-    retry: false,
+    // 401 — javob (null), xato emas. Xato — server javob bermadi (qayta
+    // ishga tushyapti, tarmoq): ikki marta kutib qayta soʻraymiz, aks holda
+    // kirgan foydalanuvchi bir lahzalik uzilishda login sahifasiga tushardi
+    retry: 2,
+    retryDelay: (attempt) => 1500 * (attempt + 1),
   })
 }
 

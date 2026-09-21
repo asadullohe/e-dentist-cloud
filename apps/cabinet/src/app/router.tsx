@@ -39,17 +39,23 @@ import {
 } from '@/pages/Settings'
 import { VerifyEmail } from '@/pages/VerifyEmail'
 import { Splash } from '@/shared/ui'
+import { ConnectionLost } from './ConnectionLost'
 import { CabinetLayout } from './layouts/CabinetLayout'
 
 function RequireAuth() {
-  const { data: session, isPending, isFetching } = useSession()
+  const { data: session, isPending, isFetching, isError, refetch } = useSession()
 
   // Sahifa yangilanganda sessiya javobini kutamiz — aks holda kirgan
   // foydalanuvchi bir lahzaga kirish oynasiga otilib ketardi. Keshda
   // «kirmagan» turib qayta soʻralayotgan boʻlsa ham kutamiz: eski javob
   // asosida kirish sahifasiga qaytarib yubormaslik uchun
   if (isPending || (!session && isFetching)) return <Splash />
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) {
+    // Javob kelmadi (server qayta ishga tushyapti, tarmoq) — bu «kirmagan»
+    // emas: cookie joyida, login ga otish oʻrniga qayta urinish taklif qilinadi
+    if (isError) return <ConnectionLost onRetry={() => void refetch()} />
+    return <Navigate to="/login" replace />
+  }
   return <Outlet />
 }
 

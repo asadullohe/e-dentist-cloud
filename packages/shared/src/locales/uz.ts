@@ -75,6 +75,8 @@ export const AUTH_TEXT = {
 export const UI_TEXT = {
   brand: 'E-Dentist',
   offline: 'Server bilan aloqa yoʻq. Internetni tekshirib, qayta urinib koʻring',
+  offline_title: 'Server bilan aloqa yoʻq',
+  retry: 'Qayta urinish',
   login: 'Kirish',
   logout: 'Chiqish',
   logout_confirm_title: 'Hisobdan chiqasizmi?',
