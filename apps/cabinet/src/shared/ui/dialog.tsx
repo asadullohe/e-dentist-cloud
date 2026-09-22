@@ -76,9 +76,9 @@ function DialogContent({
           // `overscroll-contain`: mazmun oxiriga yetganda aylantirish orqadagi
           // sahifaga oʻtmasin; `svh` (dvh emas): iOS da asboblar paneli
           // yigʻilganda varaq balandligi sakramasin
-          // `scroll-pt`: maydonga fokus tushib aylantirilganda u yopishqoq
-          // tutqich qatori ostida qolmasin
-          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92svh] w-full flex-col gap-4 overflow-y-auto overscroll-contain rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:scroll-pt-12 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
+          // `scroll-pt`/`scroll-pb`: maydonga fokus tushib aylantirilganda
+          // (xato maydoni, avtofokus) u tutqich qatori yoki tugmalar ostida qolmasin
+          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92svh] w-full flex-col gap-4 overflow-y-auto overscroll-contain rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:scroll-pt-12 max-sm:scroll-pb-32 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
           'sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:p-6 sm:pb-6',
           className,
         )}
@@ -139,10 +139,12 @@ function DialogFooter({
       data-slot="dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
-        // Telefonda pastda yopishqoq: tepasidagi oraliqni (pt-4 -mt-4) va
-        // pastki xavfsiz joyni oʻzi yopadi — varaqning `after` joyini ham,
-        // undan oldingi oraliqni ham (-mb) yutadi, oxirida ortiqcha boʻsh joy qolmaydi
-        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mt-4 max-sm:-mb-[calc(max(1.25rem,env(safe-area-inset-bottom))_+_1rem)] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-4 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
+        // Telefonda pastda yopishqoq. Tepada oʻz joyi (pt-3) — ostidan oʻtayotgan
+        // mazmun tugmalarga yopishmasin; manfiy ustki chekka yoʻq: u oxirgi
+        // maydonning fokus halqasini (3px) yopib qoʻyardi. Pastki xavfsiz joyni
+        // oʻzi yopadi — varaqning `after` joyini ham, undan oldingi oraliqni ham
+        // (-mb) yutadi, oxirida ortiqcha boʻsh joy qolmaydi
+        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mb-[calc(max(1.25rem,env(safe-area-inset-bottom))_+_1rem)] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-3 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
         className,
       )}
       {...props}
