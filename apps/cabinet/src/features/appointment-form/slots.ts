@@ -75,3 +75,18 @@ export function busyRanges(
   }
   return busy
 }
+
+/// Kunning birinchi boʻsh oraligʻi: `from` daqiqadan boshlab 15 daqiqalik
+/// qadam bilan, davomiylik sigʻadigan va band bilan kesishmaydigan joy.
+/// Topilmasa null
+export function firstFreeSlot(
+  busy: readonly BusyRange[],
+  duration: number,
+  from = WORK_START * 60,
+): string | null {
+  const start = Math.max(WORK_START * 60, Math.ceil(from / 15) * 15)
+  for (let t = start; t + duration <= WORK_END * 60; t += 15) {
+    if (!busy.some((r) => overlaps(r, t, t + duration))) return timeOfMinutes(t)
+  }
+  return null
+}

@@ -291,6 +291,7 @@ export function AppointmentFormDialog({
               error={form.formState.errors.time?.message}
               onTime={(value) => form.setValue('time', value, { shouldValidate: true })}
               onDuration={(value) => form.setValue('duration', value)}
+              onDate={(iso) => form.setValue('date', formatDate(iso), { shouldValidate: true })}
             />
 
             {appointment && (

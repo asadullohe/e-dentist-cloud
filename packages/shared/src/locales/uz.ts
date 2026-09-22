@@ -1522,6 +1522,12 @@ export const SCHEDULE_UI = {
   legend_new: 'Yangi qabul',
   legend_busy: 'Band',
   overlap: 'Band vaqt bilan kesishadi',
+  // Boʻsh joyga qoʻyish — vaqtni tizim topadi, koʻrsatadi, saqlash — qoʻlda
+  auto_slot: 'Boʻsh joyga qoʻyish',
+  auto_slot_none: 'Bu kunda sigʻmaydi',
+  auto_slot_next: (date: string, time: string) => `Keyingi boʻsh: ${date}, ${time}`,
+  auto_slot_go: 'Oʻsha kunga oʻtish',
+  auto_slot_none_ahead: 'Yaqin ikki haftada boʻsh joy yoʻq',
   new_patient: 'Yangi bemor',
   new_patient_hint: 'Bemorlar roʻyxatiga qoʻshiladi',
   existing_patient: 'Mavjud bemorni tanlash',

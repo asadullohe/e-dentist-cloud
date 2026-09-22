@@ -1,11 +1,12 @@
 import { SCHEDULE_UI, todayISO } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { ClockIcon, PencilLineIcon } from 'lucide-react'
+import { ClockIcon, PencilLineIcon, WandSparklesIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type Appointment, useAppointments, useTimeBlocks } from '@/entities/appointment'
 import { Button, Label, Skeleton, TimePicker } from '@/shared/ui'
 import { type BusyRange, busyRanges, DURATIONS, minutesOf, overlaps, timeOfMinutes } from './slots'
 import { TimeGridPicker } from './TimeGridPicker'
+import { useAutoSlot } from './useAutoSlot'
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 
@@ -22,6 +23,7 @@ export function TimeSection({
   error,
   onTime,
   onDuration,
+  onDate,
 }: {
   /// YYYY-MM-DD yoki null (sana notoʻgʻri)
   date: string | null
@@ -32,6 +34,8 @@ export function TimeSection({
   error?: string
   onTime: (time: string) => void
   onDuration: (minutes: number) => void
+  /// «Keyingi boʻsh kunga oʻtish» — sana formada
+  onDate?: (iso: string) => void
 }) {
   const [manual, setManual] = useState(false)
   const valid = TIME.test(time)
@@ -51,6 +55,15 @@ export function TimeSection({
     : []
   const conflict =
     valid && busy.some((r) => overlaps(r, minutesOf(time), minutesOf(time) + duration))
+  const auto = useAutoSlot({
+    date,
+    doctorId,
+    busy,
+    duration,
+    excludeId,
+    blockLabel: SCHEDULE_UI.block_default,
+    onTime,
+  })
   // Tahrirda nostandart davomiylik (20 daq) boʻlsa, u ham chip boʻlib chiqadi
   const durations = DURATIONS.includes(duration as (typeof DURATIONS)[number])
     ? DURATIONS
@@ -123,12 +136,48 @@ export function TimeSection({
       </div>
 
       <div className="space-y-1.5">
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-center justify-between gap-2">
           <Label>{SCHEDULE_UI.time}</Label>
-          <span className="text-muted-foreground text-xs">
-            {doctorId ? SCHEDULE_UI.time_hint : SCHEDULE_UI.busy_needs_doctor}
-          </span>
+          {doctorId ? (
+            // Vaqtni tizim topadi, koʻrsatadi — saqlash qoʻlda (qaror 22/09/2026)
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              disabled={!date || auto.searching}
+              onClick={() => void auto.place()}
+            >
+              <WandSparklesIcon className="size-3.5" />
+              {SCHEDULE_UI.auto_slot}
+            </Button>
+          ) : (
+            <span className="text-muted-foreground text-xs">{SCHEDULE_UI.busy_needs_doctor}</span>
+          )}
         </div>
+        {auto.result?.kind === 'next' && (
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs">
+            {SCHEDULE_UI.auto_slot_none}.{' '}
+            {SCHEDULE_UI.auto_slot_next(auto.result.label, auto.result.time)}
+            {onDate && (
+              <button
+                type="button"
+                className="text-primary font-medium"
+                onClick={() => {
+                  if (auto.result?.kind !== 'next') return
+                  onDate(auto.result.date)
+                  onTime(auto.result.time)
+                  auto.clear()
+                }}
+              >
+                {SCHEDULE_UI.auto_slot_go}
+              </button>
+            )}
+          </p>
+        )}
+        {auto.result?.kind === 'none' && (
+          <p className="text-destructive text-xs">{SCHEDULE_UI.auto_slot_none_ahead}</p>
+        )}
         {date ? (
           doctorId && isPending ? (
             <Skeleton className="h-64 w-full" />
