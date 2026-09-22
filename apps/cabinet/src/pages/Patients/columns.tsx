@@ -3,12 +3,12 @@ import {
   formatDate,
   formatUzPhone,
   PATIENT_UI,
-  QUEUE_CABINET_UI,
+  SCHEDULE_UI,
   TABLE_UI,
   UI_TEXT,
 } from '@e-dentist/shared'
 import type { ColumnDef } from '@tanstack/react-table'
-import { BellPlusIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
+import { CalendarPlusIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
 import type { Patient } from '@/entities/patient'
 import {
   Button,
@@ -24,8 +24,8 @@ import {
 interface Actions {
   onEdit: (patient: Patient) => void
   onRemove: (patient: Patient) => void
-  /// Bugungi navbatga qoʻshish — `queue.manage` boʻlsa (10.3)
-  onEnqueue?: ((patient: Patient) => void) | undefined
+  /// Qabulga yozish — `schedule.write` boʻlsa; jadvaldagi forma ochiladi
+  onBook?: ((patient: Patient) => void) | undefined
   /// `patients.write` boʻlmasa amallar ustuni chiqmaydi (kuzatuvchi)
   canEdit: boolean
   /// thead filtri uchun shifokorlar roʻyxati
@@ -36,7 +36,7 @@ interface Actions {
 export function patientColumns({
   onEdit,
   onRemove,
-  onEnqueue,
+  onBook,
   canEdit,
   doctorOptions,
 }: Actions): ColumnDef<Patient>[] {
@@ -140,10 +140,10 @@ export function patientColumns({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              {onEnqueue && (
-                <DropdownMenuItem onClick={() => onEnqueue(row.original)}>
-                  <BellPlusIcon />
-                  {QUEUE_CABINET_UI.enqueue}
+              {onBook && (
+                <DropdownMenuItem onClick={() => onBook(row.original)}>
+                  <CalendarPlusIcon />
+                  {SCHEDULE_UI.book}
                 </DropdownMenuItem>
               )}
               {canEdit && (
@@ -165,6 +165,6 @@ export function patientColumns({
     },
   ]
   // Amallar ustuni: tahrir/oʻchirish yoki navbatga qoʻshish — bittasi boʻlsa ham
-  const hasActions = canEdit || onEnqueue !== undefined
+  const hasActions = canEdit || onBook !== undefined
   return hasActions ? columns : columns.filter((column) => column.id !== 'actions')
 }

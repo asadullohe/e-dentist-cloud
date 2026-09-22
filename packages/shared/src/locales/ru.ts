@@ -1399,6 +1399,7 @@ export const ru: DeepPartial<Strings> = {
   SCHEDULE_UI: {
     title: 'Расписание',
     add: 'Добавить приём',
+    book: 'Записать на приём',
     edit: 'Изменить приём',
     empty_day: 'На этот день приёмов нет',
     today: 'Сегодня',

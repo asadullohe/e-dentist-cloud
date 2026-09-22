@@ -30,6 +30,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  Label,
   Select,
   SelectContent,
   SelectItem,
@@ -79,6 +80,9 @@ interface AppointmentFormDialogProps {
   /// Vaqt toʻrida bosilgan katak — «SS:DD»
   defaultTime?: string
   defaultDoctorId?: string
+  /// Bemor oldindan maʼlum (roʻyxat yoki kartochkadan «Qabulga yozish») —
+  /// bemor tanlovi koʻrsatilmaydi, shifokor sukut — biriktirilgani
+  patient?: { id: string; fio: string; doctorId: string | null } | undefined
   appointment?: Appointment | undefined
   /// `schedule.all` yoʻq (shifokor): qabul doim oʻziga yoziladi — shifokor
   /// tanlovi koʻrsatilmaydi, server oʻzi qoʻyadi (10.7)
@@ -89,11 +93,11 @@ interface AppointmentFormDialogProps {
 
 function toValues(
   appointment: Appointment | undefined,
-  defaults: { date: string; time?: string; doctorId?: string },
+  defaults: { date: string; time?: string; doctorId?: string; patientId?: string },
 ): Values {
   if (!appointment) {
     return {
-      patientId: '',
+      patientId: defaults.patientId ?? '',
       doctorId: defaults.doctorId ?? '',
       date: formatDate(defaults.date),
       time: defaults.time ?? '',
@@ -119,6 +123,7 @@ export function AppointmentFormDialog({
   defaultDate,
   defaultTime,
   defaultDoctorId,
+  patient,
   appointment,
   ownOnly = false,
   onSaved,
@@ -139,14 +144,19 @@ export function AppointmentFormDialog({
   useEffect(() => {
     if (open) {
       form.reset(
-        toValues(appointment, { date: defaultDate, time: defaultTime, doctorId: defaultDoctorId }),
+        toValues(appointment, {
+          date: defaultDate,
+          time: defaultTime,
+          doctorId: defaultDoctorId ?? patient?.doctorId ?? undefined,
+          patientId: patient?.id,
+        }),
       )
-      setPatientName(appointment?.fio ?? '')
+      setPatientName(appointment?.fio ?? patient?.fio ?? '')
       setNewPatient(null)
       setPatientError('')
       setFormError('')
     }
-  }, [open, appointment, defaultDate, defaultTime, defaultDoctorId, form])
+  }, [open, appointment, defaultDate, defaultTime, defaultDoctorId, patient, form])
 
   const [date, time, duration, doctorId] = form.watch(['date', 'time', 'duration', 'doctorId'])
   const isoDate = parseDisplayDate(date)
@@ -189,14 +199,24 @@ export function AppointmentFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      {/* Sana maydoniga avtomatik fokus tushmasin — telefonda klaviatura chiqib,
+          asosiy tanlov (vaqt toʻri) yopilib qolardi */}
+      <DialogContent className="sm:max-w-md" onOpenAutoFocus={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{appointment ? SCHEDULE_UI.edit : SCHEDULE_UI.add}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
-            {!appointment && (
+            {!appointment && patient && (
+              <div className="space-y-1.5">
+                <Label>{SCHEDULE_UI.patient}</Label>
+                <div className="bg-muted/40 rounded-md border px-3 py-2 text-sm font-medium">
+                  {patient.fio}
+                </div>
+              </div>
+            )}
+            {!appointment && !patient && (
               <PatientBlock
                 patientId={form.watch('patientId')}
                 patientName={patientName}

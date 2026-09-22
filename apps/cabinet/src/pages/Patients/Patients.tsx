@@ -1,4 +1,4 @@
-import { EXCEL_UI, IMPORT_UI, PATIENT_UI, TABLE_UI, UI_TEXT } from '@e-dentist/shared'
+import { EXCEL_UI, IMPORT_UI, PATIENT_UI, TABLE_UI, todayISO, UI_TEXT } from '@e-dentist/shared'
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -21,9 +21,10 @@ import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
 import { useHasPermission } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
+import { AppointmentFormDialog } from '@/features/appointment-form'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
 import { PatientImportDialog } from '@/features/patient-import'
-import { EnqueueDialog, useEnqueue } from '@/features/queue-manage'
+import { useEnqueue } from '@/features/queue-manage'
 import { ApiError, downloadFile } from '@/shared/api'
 import { useDebounced, useElementHeight } from '@/shared/lib'
 import {
@@ -107,7 +108,9 @@ export function Patients() {
   const { mutate: enqueue } = useEnqueue()
   const hasPermission = useHasPermission()
   const canEnqueue = hasPermission('queue.manage')
-  const [enqueuing, setEnqueuing] = useState<Patient | null>(null)
+  // Qabulga yozish — jadvaldagi forma, bemor oldindan tanlangan
+  const canBook = hasPermission('schedule.write')
+  const [booking, setBooking] = useState<Patient | null>(null)
   // Kuzatuvchi roʻyxatni koʻradi va Excelga chiqaradi, lekin yozmaydi
   const canWrite = hasPermission('patients.write')
   const { data: doctors } = useDoctors()
@@ -122,7 +125,7 @@ export function Patients() {
     columns: patientColumns({
       onEdit: openEdit,
       onRemove: setRemoving,
-      onEnqueue: canEnqueue ? setEnqueuing : undefined,
+      onBook: canBook ? setBooking : undefined,
       canEdit: canWrite,
       doctorOptions,
     }),
@@ -301,7 +304,13 @@ export function Patients() {
           }
         }}
       />
-      <EnqueueDialog patient={enqueuing} onClose={() => setEnqueuing(null)} />
+      <AppointmentFormDialog
+        open={booking !== null}
+        onOpenChange={(open) => !open && setBooking(null)}
+        defaultDate={todayISO()}
+        patient={booking ?? undefined}
+        ownOnly={!hasPermission('schedule.all')}
+      />
 
       <AlertDialog open={removing !== null} onOpenChange={(open) => !open && setRemoving(null)}>
         <AlertDialogContent>

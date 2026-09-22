@@ -7,13 +7,14 @@ import {
   LAB_UI,
   PATIENT_UI,
   PAYMENT_UI,
-  QUEUE_CABINET_UI,
+  SCHEDULE_UI,
+  todayISO,
 } from '@e-dentist/shared'
 import { crownMaterialLabel } from '@e-dentist/teeth'
 import {
   ArrowLeftIcon,
-  BellPlusIcon,
   CalendarIcon,
+  CalendarPlusIcon,
   CreditCardIcon,
   FlaskConicalIcon,
   ImageIcon,
@@ -27,9 +28,9 @@ import { Link, Outlet, useParams } from 'react-router-dom'
 import { usePatient } from '@/entities/patient'
 import { useHasPermission } from '@/entities/session'
 import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
+import { AppointmentFormDialog } from '@/features/appointment-form'
 import { BridgeFormDialog, useDeleteBridge } from '@/features/bridge-form'
 import { PatientFormDialog } from '@/features/patient-form'
-import { EnqueueDialog } from '@/features/queue-manage'
 import { ToothEditDialog } from '@/features/tooth-edit'
 import {
   AlertDialog,
@@ -224,7 +225,7 @@ export function PatientCard() {
   const { data: patient, isPending } = usePatient(id)
   const hasPermission = useHasPermission()
   const [editOpen, setEditOpen] = useState(false)
-  const [enqueueOpen, setEnqueueOpen] = useState(false)
+  const [bookOpen, setBookOpen] = useState(false)
 
   if (isPending) {
     return (
@@ -257,10 +258,10 @@ export function PatientCard() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {hasPermission('queue.manage') && (
-            <Button variant="outline" size="sm" onClick={() => setEnqueueOpen(true)}>
-              <BellPlusIcon />
-              {QUEUE_CABINET_UI.enqueue}
+          {hasPermission('schedule.write') && (
+            <Button variant="outline" size="sm" onClick={() => setBookOpen(true)}>
+              <CalendarPlusIcon />
+              {SCHEDULE_UI.book}
             </Button>
           )}
           {hasPermission('patients.write') && (
@@ -287,10 +288,15 @@ export function PatientCard() {
       </SideNavLayout>
 
       <PatientFormDialog open={editOpen} onOpenChange={setEditOpen} patient={patient} />
-      <EnqueueDialog
-        patient={enqueueOpen && patient ? patient : null}
-        onClose={() => setEnqueueOpen(false)}
-      />
+      {patient && (
+        <AppointmentFormDialog
+          open={bookOpen}
+          onOpenChange={setBookOpen}
+          defaultDate={todayISO()}
+          patient={patient}
+          ownOnly={!hasPermission('schedule.all')}
+        />
+      )}
     </>
   )
 }

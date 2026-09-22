@@ -1481,6 +1481,8 @@ export const APPOINTMENT_STATUS_LABELS = {
 export const SCHEDULE_UI = {
   title: 'Qabul jadvali',
   add: 'Qabul qoʻshish',
+  /// Aniq bemor uchun — bemorlar roʻyxati va kartochkasidan
+  book: 'Qabulga yozish',
   edit: 'Qabulni tahrirlash',
   empty_day: 'Bu kunga qabul yoʻq',
   today: 'Bugun',
