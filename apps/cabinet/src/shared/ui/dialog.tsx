@@ -58,7 +58,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         // Telefonda birinchi maydonga avtomatik fokus yoʻq: klaviatura chiqib
-        // varaqni yopib qoʻyardi, maydon esa yopishqoq sarlavha ostiga surilardi.
+        // varaqni yopib qoʻyardi, maydon esa tutqich qatori ostiga surilardi.
         // Fokus varaqning oʻziga — Escape va fokus qamovi ishlayveradi
         onOpenAutoFocus={(event) => {
           onOpenAutoFocus?.(event)
@@ -70,24 +70,23 @@ function DialogContent({
           // `*:min-w-0`: bolalar oʻz mazmunidan kengaymasin — uzun summa yoki
           // jadval telefonda oynadan chiqib ketmasin. Flex ustun, grid emas:
           // grid bolasi oʻz katagidan tashqariga yopisha olmaydi (sticky).
-          // Telefonda tutqich chizigʻi, sarlavha (DialogHeader) va tugmalar
-          // (DialogFooter) yopishqoq — faqat mazmun aylanadi; pastki joy
-          // `after` orqali (pastki padding boʻlsa sticky uning ustida toʻxtaydi)
+          // Telefonda tutqich chizigʻi va tugmalar (DialogFooter) yopishqoq,
+          // sarlavha mazmun bilan aylanadi; pastki joy `after` orqali (pastki
+          // padding boʻlsa sticky uning ustida toʻxtaydi)
           // `overscroll-contain`: mazmun oxiriga yetganda aylantirish orqadagi
           // sahifaga oʻtmasin; `svh` (dvh emas): iOS da asboblar paneli
           // yigʻilganda varaq balandligi sakramasin
           // `scroll-pt`: maydonga fokus tushib aylantirilganda u yopishqoq
-          // sarlavha ostida qolmasin
-          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92svh] w-full flex-col gap-4 overflow-y-auto overscroll-contain rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:scroll-pt-32 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
+          // tutqich qatori ostida qolmasin
+          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92svh] w-full flex-col gap-4 overflow-y-auto overscroll-contain rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:scroll-pt-12 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
           'sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:p-6 sm:pb-6',
           className,
         )}
         {...props}
       >
-        {/* Tutqich chizigʻi + yopish — yopishqoq tepa. Balandligi 52px, pastki
-            16px oraliqni (gap-4) yopadi (-mb-4): joyda 36px — DialogHeader
-            shu balandlikda (top-9) yopishadi, aylanayotgan mazmun koʻrinmaydi */}
-        <div className="sticky top-0 z-30 -mx-4 -mb-4 flex h-13 shrink-0 items-center bg-background px-4 pt-2 pb-4 sm:hidden">
+        {/* Tutqich chizigʻi + yopish — yopishqoq tepa (36px). Sarlavha va
+            mazmun aylanadi, faqat tugmalar (DialogFooter) pastda turadi */}
+        <div className="sticky top-0 z-30 -mx-4 flex h-9 shrink-0 items-center bg-background px-4 pt-2 pb-1 sm:hidden">
           <span className="w-7" />
           <span aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-foreground/15" />
           {showCloseButton ? (
@@ -121,16 +120,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn(
-        'flex flex-col gap-2 text-center sm:text-left',
-        // Telefonda tutqich ostida yopishqoq: tutqich qatori 52px (joyda 36 +
-        // 16 oraliq) — sarlavha shu balandlikdan (top-13). Ostida 8px ochiq
-        // oraliq qoladi — soya bilan mazmun ostidan oʻtayotgani koʻrinadi
-        'max-sm:sticky max-sm:top-13 max-sm:z-20 max-sm:-mx-4 max-sm:-mb-2 max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pb-3',
-        // Pastki soya — mazmun ostidan oʻtayotgani bilinsin
-        'max-sm:shadow-[0_8px_12px_-10px_rgba(15,23,42,.35)]',
-        className,
-      )}
+      className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
       {...props}
     />
   )
@@ -149,11 +139,10 @@ function DialogFooter({
       data-slot="dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
-        // Telefonda pastda yopishqoq: tepasida 8px ochiq oraliq (soya bilan),
-        // pastki xavfsiz joyni oʻzi yopadi (varaq pastki joyi shu yerda)
-        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mt-2 max-sm:-mb-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-3 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
-        // Tepa soya — mazmun ostidan oʻtayotgani bilinsin
-        'max-sm:shadow-[0_-8px_12px_-10px_rgba(15,23,42,.35)]',
+        // Telefonda pastda yopishqoq: tepasidagi oraliqni (pt-4 -mt-4) va
+        // pastki xavfsiz joyni oʻzi yopadi — varaqning `after` joyini ham,
+        // undan oldingi oraliqni ham (-mb) yutadi, oxirida ortiqcha boʻsh joy qolmaydi
+        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mt-4 max-sm:-mb-[calc(max(1.25rem,env(safe-area-inset-bottom))_+_1rem)] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-4 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
         className,
       )}
       {...props}
