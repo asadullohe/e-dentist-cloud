@@ -15,7 +15,7 @@ import {
   XIcon,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { type PlanStatus, usePlan } from '@/entities/plan'
 import { useHasPermission } from '@/entities/session'
 import { PlanFormDialog, StatusDialog, useSetPlanStatus } from '@/features/plan-form'
@@ -34,13 +34,16 @@ import { PlanStages } from './PlanStages'
 /// Bitta reja: sarlavha, holat amallari, bosqichlar va jamlanma
 export function PlanPage() {
   const { id = '', planId = '' } = useParams()
-  const { data: plan, isPending } = usePlan(planId)
+  const { data: plan, isPending, isError } = usePlan(planId)
   const { mutate: setStatus } = useSetPlanStatus(planId)
   const hasPermission = useHasPermission()
   const [formOpen, setFormOpen] = useState(false)
   // Sabab talab qiladigan amallar oynada soʻraladi
   const [asking, setAsking] = useState<PlanStatus | null>(null)
 
+  // Reja yoʻq (oʻchirilgan, begona yoki shifokorga koʻrinmaydi) — roʻyxatga.
+  // Busiz sahifa abadiy skeletonda qolardi
+  if (isError) return <Navigate to={`/patients/${id}/reja`} replace />
   if (isPending || !plan) return <Skeleton className="h-64 w-full" />
 
   // Bajarilgan va bekor qilingan reja qotadi — server ham rad etadi
