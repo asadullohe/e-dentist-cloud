@@ -250,8 +250,10 @@ Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta t
 | `billing.manage` | Obuna va toʻlov |
 | `data.export` | Barcha maʼlumotni yuklab olish |
 | `queue.manage` | Navbat: tasdiqlash, chaqirish, kabinetdan qoʻshish (14-boʻlim) |
+| `plans.read` | Davolash rejalari (18-boʻlim) |
+| `plans.write` | Reja tuzish, tahrirlash, bemorga yuborish, bekor qilish |
 
-Roʻyxat ataylab qisqa — 21 ta ruxsat. Har boʻlim uchun alohida «koʻrish/qoʻshish/oʻchirish» uchligini yasash matritsani uch barobar kattalashtiradi va hech kimga kerak boʻlmaydi.
+Roʻyxat ataylab qisqa — 23 ta ruxsat. Har boʻlim uchun alohida «koʻrish/qoʻshish/oʻchirish» uchligini yasash matritsani uch barobar kattalashtiradi va hech kimga kerak boʻlmaydi.
 
 > **Qaror**
 >
@@ -360,6 +362,7 @@ _Har modul mustaqil ishlab chiqiladi va alohida testlanadi._
 | `services` | Xizmatlar katalogi: turlar va xizmatlar | clinics |
 | `expenses` | Xarajatlar | clinics |
 | `lab` | Naryadlar, texnik ishlari, holatlar | patients, expenses, visits |
+| `plans` | Davolash rejalari: bosqichlar, bandlar, bemor tasdigʻi (18-boʻlim) | patients, services, visits |
 | `reports` | Oylik tushum, sof foyda, statistika | visits, payments, expenses |
 | `payroll` | Ish haqi hisobi, toʻlab berish. **`staff_payouts` jadvaliga egalik qiladi** | auth, visits, expenses |
 | `billing` | Obuna holati, muddat, bloklash | clinics |
@@ -518,6 +521,7 @@ _Klinika kundalik ishlaydigan asosiy ilova. Mavjud desktop ilovaning tuzilishini
 | Bemor kartochkasi | Tashriflar · Tish xaritasi · Toʻlovlar · Rasmlar | Hammasi |
 | Qabul jadvali | Kun · Hafta · Oy: vaqt toʻri (24 soat, 08:00 dan ochiladi), bloklar davomiylik boʻyicha; **blokni ushlab turib sudrash** — boshqa vaqt/kunga (barmoq 300 ms ushlab, sichqoncha darhol), qoʻyilganda darhol saqlanadi, 409 boʻlsa qaytadi; chetda ushlab turilsa davr almashadi _(22/09/2026)_. Qabul formasi: bemor, sana, shifokor, soat × chorak toʻri, davomiylik chiplari, «Boʻsh joyga qoʻyish» | Hammasi |
 | Texnik ishlari | Naryadlar roʻyxati, holat va texnik boʻyicha filtr, muddati oʻtganlari tepada | Shifokor, texnik, egasi |
+| Bemor kartochkasi → Reja | Davolash rejalari: bosqichlar, bandlar, jami, bemor havolasi (18-boʻlim) | Egasi, shifokor, qabulxona |
 | Qarzdorlar | Qarzi bor bemorlar, jami summa | Egasi, qabulxona |
 | Xizmatlar | Katalog: tur plitkalari → turning xizmatlari (nom, narx); tortib tartiblash | Egasi |
 | Xarajatlar | Oylik xarajatlar, turlari boʻyicha | Egasi |
@@ -801,3 +805,89 @@ _Kod yozishdan oldin javob berilishi kerak boʻlgan narsalar._
 4. ~~**Domen.**~~ Hal qilindi: `e-dentist.uz`. Landing Netlify'da apex'da qoladi, ilova `cabinet.e-dentist.uz`, panel `admin.e-dentist.uz`.
 5. **Xodim soni tarifga taʼsir qiladimi?** Cheklovsizmi yoki «5 xodimgacha» kabi bosqichlarmi? Bu `billing` va xodim qoʻshish oqimiga taʼsir qiladi.
 6. **Kim quradi.** Oʻzingizmi yoki dasturchi yollaysizmi? Yollasangiz bu TZ shartnomaga ilova boʻladi.
+
+---
+
+## 18. Davolash rejasi _(qaror 22/09/2026)_
+
+_Raqobat tahlilidan chiqqan boʻlim. MDH MIS larida (IDENT, Dentist Plus,
+DentalPRO) davolash rejasi — sotuvning yuragi; bizda u yoʻq edi._
+
+### Nega
+
+Shifokor bemorga «sizga implant kerak» deydi, bemor «qancha turadi?» deb
+soʻraydi va javob **ogʻzaki** boʻladi. Bemor oʻylab ketadi va qaytmaydi.
+
+Yozma, bosqichli, narxi koʻrsatilgan reja ikki narsani beradi: bemorga «ha»
+deyish osonlashadi, klinikaga esa nima kelishilgani yozib qoʻyiladi — tortishuv
+chiqsa hujjat bor.
+
+### Model — uch qatlam
+
+**Reja** (`treatment_plans`) — `patient_id`, `doctor_id` (kim tuzdi, snapshot),
+`title`, `status`, `discount` (soʻm), `valid_until` (narx qachongacha amal
+qiladi), `public_code`, `accepted_at` / `declined_at` / `decline_reason`, `note`.
+
+Bir bemorda **bir nechta reja** boʻlishi mumkin — «arzon / oʻrta / qimmat»
+variantlari uchun alohida model kerak emas, har biri oʻz nomi bilan turadi.
+
+**Bosqich** (`treatment_plan_stages`) — `plan_id`, `name` («1-bosqich:
+davolash»), `position`, `note`. Uzun ishda («avval tozalash, keyin implant,
+3 oydan keyin protez») bemor nimaga qachon pul toʻlashini koʻradi.
+
+**Band** (`treatment_plan_items`) — `stage_id`, `position`, `tooth` (FDI),
+`service_id`, `treatment` (matn), `price`, `qty`, `status`, `visit_id`.
+
+> **Narx snapshot**
+>
+> Rejaga xizmatning oʻsha paytdagi nomi va narxi **koʻchadi**. Narxnoma keyin
+> oʻzgarsa tuzilgan reja oʻzgarmaydi — tashrifdagi (`visits.treatment`) va
+> ish haqidagi (`doctor_percent`) qoida bilan bir xil.
+
+### Holatlar
+
+`qoralama` → `yuborildi` → `qabul qilindi` / `rad etildi` → `bajarildi`.
+Har qanday holatdan `bekor qilindi` ga oʻtish mumkin.
+
+Reja **oʻchirilmaydi** — bekor qilinadi. Toʻlovdagi qoida bilan bir xil
+_(11.1)_: bemorga koʻrsatilgan narx izsiz yoʻqolmasligi kerak.
+
+### Bemor tomoni — ochiq sahifa `/r/<kod>`
+
+Navbat va fikr sahifalari bilan bir qatorda, `PublicShell` da:
+
+- Klinika, shifokor, sana va amal muddati
+- **Tish xaritasi** — rejadagi tishlar belgilangan (`packages/teeth`)
+- Bosqichlar, ichidagi ishlar va har birining narxi
+- Jami · chegirma · toʻlash kerak
+- «Roziman» — telefon oxirgi **4 raqami** bilan tasdiq (fikr sahifasidagi kabi
+  suiisteʼmoldan himoya), yoki rad etish sababi
+
+Chop etish ham qoladi: A4, shartnomaga ilova qilish uchun — bemorning hammasi
+ham havolani ochmaydi.
+
+### Tashrif bilan bogʻlanishi
+
+Band «bajarildi» boʻlganda **tashrif formasi ochiladi** — naryad topshirishdagi
+kabi _(11.5)_. Muolaja, tish va narx rejadan keladi, shifokor rejaniki; tashrif
+yozilgach band `visit_id` oladi va ish haqi ulushi oʻz-oʻzidan hisoblanadi.
+
+Barcha bandlar bajarilgach reja `bajarildi` boʻladi.
+
+### Ruxsatlar
+
+| Ruxsat | Nimaga ochadi |
+|---|---|
+| `plans.read` | Rejalarni koʻrish |
+| `plans.write` | Reja tuzish, tahrirlash, bemorga yuborish, bekor qilish |
+
+Sukut: egasi va shifokor — ikkalasi, qabulxona va kuzatuvchi — faqat `read`.
+`patients.all` yoʻq shifokor faqat **oʻz** bemorlarining rejasini koʻradi
+_(11.3 qoidasi)_.
+
+### Hisobot — konversiya
+
+Hisobotlar sahifasida davr uchun: nechta reja tuzildi, nechtasi qabul qilindi,
+qabul qilinganlarning summasi va foizi, shifokorlar boʻyicha. Bu klinikaga
+«qaysi shifokor koʻndira oladi» ni koʻrsatadi — raqobatchilarda bu
+«sotuv voronkasi» deb ataladi.

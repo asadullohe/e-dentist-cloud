@@ -8,10 +8,11 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 12.6 — serverga chiqarish tekshiruvi _(21/09/2026)_
+**Hozirgi task:** 13.1 — API: davolash rejalari _(22/09/2026)_
 
-0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
-boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
+0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
+boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
+chiqqan birinchi ish _(22/09/2026)_
 
 ---
 
@@ -1357,6 +1358,53 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       telefon), sana · shifokor, vaqt · davomiylik → tugash, «Boʻsh
       vaqtlar» toʻri (band slotlar oʻchirilgan). Testlar: davomiylik,
       409, tahrirda kesishuv, bekor qilingan band emas
+
+---
+
+## Bosqich 13 — Davolash rejasi · ~1 hafta
+
+> **Nega** _(qaror 22/09/2026, raqobat tahlilidan)_
+>
+> MDH MIS larida (IDENT, Dentist Plus, DentalPRO) davolash rejasi — sotuvning
+> yuragi: bemorga yozma, bosqichli, narxi koʻrsatilgan reja beriladi va u «ha»
+> deydi. Bizda bu yoʻq edi — shifokor ogʻzaki aytadi, bemor oʻylab ketadi va
+> qaytmaydi. Onlayn tasdiqlash (havola bilan) esa MDH da ham kam uchraydi —
+> bizda ochiq sahifa infratuzilmasi (`/f/`, `/n/`) allaqachon bor, shuning
+> uchun arzonga tushadi. Tafsilot: [`tz.md` 18-boʻlim](tz.md).
+
+- [ ] **13.1 API: rejalar** — uch jadval (`treatment_plans`,
+      `treatment_plan_stages`, `treatment_plan_items`), RLS va `TENANT_MODELS`;
+      `plans` moduli: reja CRUD, bosqich va band qoʻshish/tartiblash, jami va
+      chegirma hisobi, holat oʻtishlari (qoralama → yuborildi → qabul/rad →
+      bajarildi; bekor qilish sabab bilan, oʻchirish yoʻq). Xizmat tanlanganda
+      nom va narx **snapshot** boʻlib koʻchadi. Ruxsatlar `plans.read` /
+      `plans.write` + mavjud rollarga migratsiya; `patients.all` yoʻq shifokor
+      faqat oʻz bemorlariniki (11.3 qoidasi). Testlar: koʻp ijarachilik, holat
+      oʻtishlari, narx snapshot, shifokor koʻrinishi
+- [ ] **13.2 Kabinet: kartochkada «Reja» tabi** — rejalar roʻyxati (holat,
+      jami, sana), yangi reja oynasi: bosqich qoʻshish, band qoʻshish (tish
+      xaritasidan tish, xizmat tanlansa narx tushadi, miqdor), bandlarni va
+      bosqichlarni tortib tartiblash (dnd-kit, xizmatlar sahifasidagi kabi),
+      chegirma (soʻm yoki foizdan hisoblash), amal muddati. Yon menyuda emas —
+      bemor kartochkasi ichida
+- [ ] **13.3 Ochiq sahifa `/r/:kod`** — `PublicShell` da: klinika, shifokor,
+      amal muddati, tish xaritasi (rejadagi tishlar belgilangan), bosqichlar va
+      narxlar, jami · chegirma · toʻlash kerak; «Roziman» telefon oxirgi 4
+      raqami bilan (fikr sahifasidagi himoya), rad etish sababi. Kabinetda
+      havola nusxalash va QR
+- [ ] **13.4 Band bajarildi → tashrif** — `POST /plans/:id/items/:itemId/complete`
+      tashrif formasini rejadan toʻldirib ochadi (11.5 dagi naryad topshirish
+      kabi: muolaja, tish, narx rejadan, shifokor rejaniki), `visits.plan_item_id`;
+      tashrif yozilgach band «bajarildi», barcha bandlar bajarilgach reja
+      «bajarildi». Ish haqi ulushi oʻz-oʻzidan hisoblanadi
+- [ ] **13.5 Chop etish** — A4 (print CSS): klinika sarlavhasi, bemor, bosqichlar
+      jadvali, jami, amal muddati, imzo joyi. Shartnomaga ilova qilish uchun
+- [ ] **13.6 Hisobot: konversiya** — davr uchun tuzildi / qabul qilindi / summa /
+      foiz, shifokorlar boʻyicha; Hisobotlar sahifasiga karta. Eksport arxiviga
+      `rejalar.xlsx`
+- [ ] **13.7 Landing** — «Davolash rejasi» boʻlimi (uz + ru), skrinshotlar, FAQ,
+      `featureList`; seed-demo da ikkita reja
+- [ ] **13.8 Serverga chiqarish**
 
 ---
 
