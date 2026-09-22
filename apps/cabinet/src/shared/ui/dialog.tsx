@@ -60,7 +60,10 @@ function DialogContent({
           // Telefonda tutqich chizigʻi, sarlavha (DialogHeader) va tugmalar
           // (DialogFooter) yopishqoq — faqat mazmun aylanadi; pastki joy
           // `after` orqali (pastki padding boʻlsa sticky uning ustida toʻxtaydi)
-          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] w-full flex-col gap-4 overflow-y-auto rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
+          // `overscroll-contain`: mazmun oxiriga yetganda aylantirish orqadagi
+          // sahifaga oʻtmasin; `svh` (dvh emas): iOS da asboblar paneli
+          // yigʻilganda varaq balandligi sakramasin
+          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92svh] w-full flex-col gap-4 overflow-y-auto overscroll-contain rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
           'sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:p-6 sm:pb-6',
           className,
         )}
@@ -108,7 +111,9 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
         // Telefonda tutqich ostida yopishqoq: tutqich qatori 52px (joyda 36 +
         // 16 oraliq) — sarlavha shu balandlikdan (top-13); ostidagi oraliqni
         // ham yopadi
-        'max-sm:sticky max-sm:top-13 max-sm:z-20 max-sm:-mx-4 max-sm:-mb-4 max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pb-4',
+        'max-sm:sticky max-sm:top-13 max-sm:z-20 max-sm:-mx-4 max-sm:-mb-4 max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pb-3',
+        // Pastki soya — mazmun ostidan oʻtayotgani bilinsin
+        'max-sm:shadow-[0_8px_12px_-10px_rgba(15,23,42,.35)]',
         className,
       )}
       {...props}
@@ -131,7 +136,9 @@ function DialogFooter({
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
         // Telefonda pastda yopishqoq: tepasidagi oraliqni va pastki xavfsiz
         // joyni oʻzi yopadi (varaq pastki joyi shu yerda takrorlanadi)
-        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mt-4 max-sm:-mb-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-4 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
+        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mt-4 max-sm:-mb-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-3 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
+        // Tepa soya — mazmun ostidan oʻtayotgani bilinsin
+        'max-sm:shadow-[0_-8px_12px_-10px_rgba(15,23,42,.35)]',
         className,
       )}
       {...props}
