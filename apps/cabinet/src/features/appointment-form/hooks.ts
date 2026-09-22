@@ -9,7 +9,12 @@ export function useSaveAppointment(id: string | null) {
   return useMutation({
     mutationFn: (payload: api.AppointmentPayload) =>
       id ? api.updateAppointment(id, payload) : api.createAppointment(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    // Kutilmaydi (void): kutilsa mutateAsync yangi maʼlumot kelgandan keyin
+    // qaytadi — forma hali ochiq, endigina yozilgan qabul oʻz vaqti bilan
+    // «kesishadi» deb bir lahza qizarib koʻrinadi. Avval oyna yopilsin
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all })
+    },
     meta: {
       success: () => (id ? TOAST_TEXT.appointment_updated : TOAST_TEXT.appointment_created),
       inlineErrors: true,

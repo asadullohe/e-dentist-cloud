@@ -135,6 +135,9 @@ export function AppointmentFormDialog({
   const [newPatient, setNewPatient] = useState<NewPatient | null>(null)
   const [patientError, setPatientError] = useState('')
   const [formError, setFormError] = useState('')
+  /// Endigina yozilgan qabul — oyna yopilayotganda band vaqtlar yangilanadi,
+  /// oʻzi bilan «kesishmasin» (TimeSection uni chetlab oʻtadi)
+  const [savedId, setSavedId] = useState<string | null>(null)
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
@@ -155,6 +158,7 @@ export function AppointmentFormDialog({
       setNewPatient(null)
       setPatientError('')
       setFormError('')
+      setSavedId(null)
     }
   }, [open, appointment, defaultDate, defaultTime, defaultDoctorId, patient, form])
 
@@ -190,6 +194,7 @@ export function AppointmentFormDialog({
         duration: values.duration,
         note: values.note || null,
       })
+      setSavedId(saved.id)
       onOpenChange(false)
       onSaved?.(saved)
     } catch (error) {
@@ -287,7 +292,7 @@ export function AppointmentFormDialog({
               doctorId={ownOnly ? (appointment?.doctorId ?? null) : doctorId || null}
               time={time}
               duration={duration}
-              excludeId={appointment?.id}
+              excludeId={appointment?.id ?? savedId ?? undefined}
               error={form.formState.errors.time?.message}
               onTime={(value) => form.setValue('time', value, { shouldValidate: true })}
               onDuration={(value) => form.setValue('duration', value)}
