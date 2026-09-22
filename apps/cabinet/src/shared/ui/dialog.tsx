@@ -54,23 +54,41 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          // `*:min-w-0`: grid bolalari oʻz mazmunidan kengaymasin — uzun
-          // summa yoki jadval telefonda oynadan chiqib ketmasin
-          'dialog-content fixed inset-x-0 bottom-0 z-50 grid max-h-[92dvh] w-full gap-4 overflow-y-auto rounded-t-[20px] border bg-background px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-lg outline-none *:min-w-0',
-          'sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:p-6',
+          // `*:min-w-0`: bolalar oʻz mazmunidan kengaymasin — uzun summa yoki
+          // jadval telefonda oynadan chiqib ketmasin. Flex ustun, grid emas:
+          // grid bolasi oʻz katagidan tashqariga yopisha olmaydi (sticky).
+          // Telefonda tutqich chizigʻi, sarlavha (DialogHeader) va tugmalar
+          // (DialogFooter) yopishqoq — faqat mazmun aylanadi; pastki joy
+          // `after` orqali (pastki padding boʻlsa sticky uning ustida toʻxtaydi)
+          'dialog-content fixed inset-x-0 bottom-0 z-50 flex max-h-[92dvh] w-full flex-col gap-4 overflow-y-auto rounded-t-[20px] border bg-background px-4 pt-0 pb-0 shadow-lg outline-none *:min-w-0 max-sm:after:block max-sm:after:h-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:after:shrink-0',
+          'sm:inset-x-auto sm:top-1/2 sm:bottom-auto sm:left-1/2 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-lg sm:p-6 sm:pb-6',
           className,
         )}
         {...props}
       >
-        <div
-          aria-hidden="true"
-          className="mx-auto h-1 w-10 rounded-full bg-foreground/15 sm:hidden"
-        />
+        {/* Tutqich chizigʻi + yopish — yopishqoq tepa. Balandligi 52px, pastki
+            16px oraliqni (gap-4) yopadi (-mb-4): joyda 36px — DialogHeader
+            shu balandlikda (top-9) yopishadi, aylanayotgan mazmun koʻrinmaydi */}
+        <div className="sticky top-0 z-30 -mx-4 -mb-4 flex h-13 shrink-0 items-center bg-background px-4 pt-2 pb-4 sm:hidden">
+          <span className="w-7" />
+          <span aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-foreground/15" />
+          {showCloseButton ? (
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              className="-mr-1 flex size-7 items-center justify-center rounded-md opacity-70 hover:opacity-100 [&_svg]:size-4"
+            >
+              <XIcon />
+              <span className="sr-only">{UI_TEXT.close}</span>
+            </DialogPrimitive.Close>
+          ) : (
+            <span className="w-7" />
+          )}
+        </div>
         {children}
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="absolute top-3 right-3 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground sm:top-4 sm:right-4 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="absolute top-4 right-4 hidden rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground sm:inline-flex [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
             <span className="sr-only">{UI_TEXT.close}</span>
@@ -85,7 +103,14 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
+      className={cn(
+        'flex flex-col gap-2 text-center sm:text-left',
+        // Telefonda tutqich ostida yopishqoq: tutqich qatori 52px (joyda 36 +
+        // 16 oraliq) — sarlavha shu balandlikdan (top-13); ostidagi oraliqni
+        // ham yopadi
+        'max-sm:sticky max-sm:top-13 max-sm:z-20 max-sm:-mx-4 max-sm:-mb-4 max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pb-4',
+        className,
+      )}
       {...props}
     />
   )
@@ -102,7 +127,13 @@ function DialogFooter({
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      className={cn(
+        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        // Telefonda pastda yopishqoq: tepasidagi oraliqni va pastki xavfsiz
+        // joyni oʻzi yopadi (varaq pastki joyi shu yerda takrorlanadi)
+        'max-sm:sticky max-sm:bottom-0 max-sm:z-20 max-sm:-mx-4 max-sm:-mt-4 max-sm:-mb-[max(1.25rem,env(safe-area-inset-bottom))] max-sm:shrink-0 max-sm:bg-background max-sm:px-4 max-sm:pt-4 max-sm:pb-[max(1.25rem,env(safe-area-inset-bottom))]',
+        className,
+      )}
       {...props}
     >
       {children}
