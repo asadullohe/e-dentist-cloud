@@ -613,6 +613,7 @@ export const TOAST_TEXT = {
   payment_cancelled: 'Toʻlov bekor qilindi',
   appointment_created: 'Qabul yozildi',
   appointment_updated: 'Qabul tahrirlandi',
+  appointment_moved: (when: string) => `Qabul koʻchirildi: ${when}`,
   appointment_deleted: 'Qabul oʻchirildi',
   block_saved: 'Band vaqt saqlandi',
   block_deleted: 'Band vaqt oʻchirildi',
@@ -1528,6 +1529,8 @@ export const SCHEDULE_UI = {
   auto_slot_next: (date: string, time: string) => `Keyingi boʻsh: ${date}, ${time}`,
   auto_slot_go: 'Oʻsha kunga oʻtish',
   auto_slot_none_ahead: 'Yaqin ikki haftada boʻsh joy yoʻq',
+  // Toʻrda blokni sudrab koʻchirish
+  drag_hint: 'Ushlab turib suring — boshqa vaqt yoki kunga',
   new_patient: 'Yangi bemor',
   new_patient_hint: 'Bemorlar roʻyxatiga qoʻshiladi',
   existing_patient: 'Mavjud bemorni tanlash',

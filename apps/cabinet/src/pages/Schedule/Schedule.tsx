@@ -29,6 +29,7 @@ import {
   TimeBlockDialog,
   useDeleteAppointment,
   useDeleteTimeBlock,
+  useMoveAppointment,
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
 import { VisitFormDialog } from '@/features/visit-form'
@@ -113,6 +114,8 @@ export function Schedule() {
 
   const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
+  const { mutate: move } = useMoveAppointment()
+  const canWrite = useHasPermission()('schedule.write')
   // `schedule.all` yoʻq (shifokor): server faqat oʻz qabullarini qaytaradi —
   // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
   const seesAll = useHasPermission()('schedule.all')
@@ -378,6 +381,8 @@ export function Schedule() {
             loading={isPending && !appointments}
             actions={actions}
             onPickSlot={(date, time) => openNew(date, time)}
+            onMove={canWrite ? (item, date, time) => move({ id: item.id, date, time }) : undefined}
+            onShift={(by) => shift(by)}
             onEditBlock={(block) => {
               setEditingBlock(block)
               setBlockOpen(true)

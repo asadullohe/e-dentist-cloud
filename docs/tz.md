@@ -516,7 +516,7 @@ _Klinika kundalik ishlaydigan asosiy ilova. Mavjud desktop ilovaning tuzilishini
 |---|---|---|
 | Bemorlar | Roʻyxat, qidiruv, ustun filtrlari, yangi bemor, Exceldan yuklash, Excelga chiqarish | Hammasi |
 | Bemor kartochkasi | Tashriflar · Tish xaritasi · Toʻlovlar · Rasmlar | Hammasi |
-| Qabul jadvali | Oylik kalendar, kunlik roʻyxat | Hammasi |
+| Qabul jadvali | Kun · Hafta · Oy: vaqt toʻri (24 soat, 08:00 dan ochiladi), bloklar davomiylik boʻyicha; **blokni ushlab turib sudrash** — boshqa vaqt/kunga (barmoq 300 ms ushlab, sichqoncha darhol), qoʻyilganda darhol saqlanadi, 409 boʻlsa qaytadi; chetda ushlab turilsa davr almashadi _(22/09/2026)_. Qabul formasi: bemor, sana, shifokor, soat × chorak toʻri, davomiylik chiplari, «Boʻsh joyga qoʻyish» | Hammasi |
 | Texnik ishlari | Naryadlar roʻyxati, holat va texnik boʻyicha filtr, muddati oʻtganlari tepada | Shifokor, texnik, egasi |
 | Qarzdorlar | Qarzi bor bemorlar, jami summa | Egasi, qabulxona |
 | Xizmatlar | Katalog: tur plitkalari → turning xizmatlari (nom, narx); tortib tartiblash | Egasi |

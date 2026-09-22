@@ -1,6 +1,6 @@
-import { TOAST_TEXT } from '@e-dentist/shared'
+import { formatDate, TOAST_TEXT } from '@e-dentist/shared'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { APPOINTMENT_KEYS, type AppointmentStatus } from '@/entities/appointment'
+import { APPOINTMENT_KEYS, type Appointment, type AppointmentStatus } from '@/entities/appointment'
 import { PATIENT_KEYS } from '@/entities/patient'
 import * as api from './api'
 
@@ -13,6 +13,35 @@ export function useSaveAppointment(id: string | null) {
     meta: {
       success: () => (id ? TOAST_TEXT.appointment_updated : TOAST_TEXT.appointment_created),
       inlineErrors: true,
+    },
+  })
+}
+
+/// Toʻrda sudrab koʻchirish: sana/vaqt. Optimistik — blok darhol yangi joyda,
+/// server rad etsa (409 — shifokor band) eski joyiga qaytadi, xato toastda
+export function useMoveAppointment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, date, time }: { id: string; date: string; time: string }) =>
+      api.updateAppointment(id, { date, time }),
+    onMutate: async ({ id, date, time }) => {
+      await queryClient.cancelQueries({ queryKey: APPOINTMENT_KEYS.all })
+      const snapshots = queryClient.getQueriesData<Appointment[]>({
+        queryKey: APPOINTMENT_KEYS.all,
+      })
+      const at = new Date(`${date}T${time}:00`).toISOString()
+      queryClient.setQueriesData<Appointment[]>({ queryKey: APPOINTMENT_KEYS.all }, (old) =>
+        Array.isArray(old) ? old.map((item) => (item.id === id ? { ...item, at } : item)) : old,
+      )
+      return { snapshots }
+    },
+    onError: (_error, _vars, context) => {
+      for (const [key, data] of context?.snapshots ?? []) queryClient.setQueryData(key, data)
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: APPOINTMENT_KEYS.all }),
+    meta: {
+      success: (_data, { date, time }: { date: string; time: string }) =>
+        TOAST_TEXT.appointment_moved(`${formatDate(date)}, ${time}`),
     },
   })
 }

@@ -26,13 +26,19 @@ export function AppointmentMenu({
   item,
   actions,
   children,
+  open,
+  onOpenChange,
 }: {
   item: Appointment
   actions: AppointmentActions
   children: ReactNode
+  /// Toʻrda blok sudraladi — menyu bosilganda emas, qoʻyib yuborilganda
+  /// (sudralmagan boʻlsa) ochiladi; shuning uchun boshqaruv tashqarida
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }) {
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel>{SCHEDULE_UI.set_status}</DropdownMenuLabel>
