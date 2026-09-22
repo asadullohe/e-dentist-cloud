@@ -11,10 +11,10 @@ import {
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import { generatePublicCode } from '../../platform/publicCode.js'
 import type { Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
-import { generateQueueCode } from './queueCode.js'
 import * as repo from './repo.js'
 import type { PublicProfileInput } from './schema.js'
 
@@ -26,7 +26,7 @@ export async function createClinicWithRoles(
   tx: ClinicTx,
   m: Omit<repo.NewClinic, 'queueCode'>,
 ): Promise<{ ownerRoleId: string }> {
-  await repo.create(tx, { ...m, queueCode: generateQueueCode() })
+  await repo.create(tx, { ...m, queueCode: generatePublicCode() })
   return { ownerRoleId: await repo.createRoleTemplates(tx) }
 }
 

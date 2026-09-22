@@ -62,6 +62,8 @@ export const PERMISSIONS = [
   'queue.manage',
   'feedback.read',
   'feedback.own',
+  'plans.read',
+  'plans.write',
 ] as const
 
 // --- Bemor fikrlari ---
@@ -75,6 +77,17 @@ export type FeedbackSource = (typeof FEEDBACK_SOURCES)[number]
 
 export const FEEDBACK_STATUSES = ['new', 'seen', 'contacted'] as const
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number]
+
+// --- Davolash rejalari (tz.md 18-boʻlim) ---
+// Reja oʻchirilmaydi — bekor qilinadi, toʻlovdagi qoida bilan bir xil:
+// bemorga koʻrsatilgan narx izsiz yoʻqolmasligi kerak
+export const PLAN_STATUSES = ['draft', 'sent', 'accepted', 'declined', 'done', 'cancelled'] as const
+export type PlanStatus = (typeof PLAN_STATUSES)[number]
+
+// Band «bajarildi» boʻlishi uchun tashrif yoziladi (13.4) — qoʻlda faqat
+// «oʻtkazib yuborildi» ga oʻtkaziladi
+export const PLAN_ITEM_STATUSES = ['pending', 'done', 'skipped'] as const
+export type PlanItemStatus = (typeof PLAN_ITEM_STATUSES)[number]
 
 export type Permission = (typeof PERMISSIONS)[number]
 

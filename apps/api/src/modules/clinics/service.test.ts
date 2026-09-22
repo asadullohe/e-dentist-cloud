@@ -1,6 +1,6 @@
 import { OWNER_REQUIRED_PERMISSIONS, PERMISSIONS } from '@e-dentist/shared'
 import { describe, expect, it } from 'vitest'
-import { generateQueueCode } from './queueCode.js'
+import { generatePublicCode } from '../../platform/publicCode.js'
 import { assertRolePermissions } from './service.js'
 
 describe('assertRolePermissions', () => {
@@ -33,13 +33,13 @@ describe('assertRolePermissions', () => {
 describe('navbat kodi', () => {
   it('8 belgi, faqat chalkashmaydigan harflar', () => {
     for (let i = 0; i < 50; i++) {
-      expect(generateQueueCode()).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{8}$/)
+      expect(generatePublicCode()).toMatch(/^[abcdefghjkmnpqrstuvwxyz23456789]{8}$/)
     }
   })
 
   // Kod ochiq sahifaning yagona himoyasi — takrorlanmasligi kerak
   it('takrorlanmaydi', () => {
-    const codes = new Set(Array.from({ length: 2000 }, () => generateQueueCode()))
+    const codes = new Set(Array.from({ length: 2000 }, () => generatePublicCode()))
     expect(codes.size).toBe(2000)
   })
 })

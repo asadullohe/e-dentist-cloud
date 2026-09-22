@@ -47,6 +47,10 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'payments.write',
       'lab.write',
       'payroll.own',
+      // Davolash rejasi (18-boʻlim): rejani shifokor tuzadi va bemorga
+      // koʻrsatadi — bu uning ishi, qabulxonaniki emas
+      'plans.read',
+      'plans.write',
     ],
   },
 
@@ -69,6 +73,9 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'payments.read',
       'payments.write',
       'queue.manage',
+      // Rejani koʻradi — bemor «qancha boʻladi?» deb soʻraganda javob
+      // beradi. Tuzish shifokorniki
+      'plans.read',
     ],
   },
 
@@ -97,6 +104,7 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'payments.read',
       'expenses.read',
       'reports.read',
+      'plans.read',
     ],
   },
 }

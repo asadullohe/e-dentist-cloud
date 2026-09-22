@@ -6,8 +6,8 @@
 // uchun «umumiy shablon qatori» degan tushuncha kerak emas.
 
 import { addDays, ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
-import { generateQueueCode } from '../src/modules/clinics/queueCode.js'
 import { createDb } from '../src/platform/db.js'
+import { generatePublicCode } from '../src/platform/publicCode.js'
 
 const DEMO_CLINIC_ID = '00000000-0000-7000-8000-000000000001'
 const TRIAL_DAYS = 14
@@ -29,7 +29,7 @@ async function main(): Promise<void> {
       name: 'Namuna stomatologiya',
       phone: '+998901234567',
       isTrial: true,
-      queueCode: generateQueueCode(),
+      queueCode: generatePublicCode(),
       expiresAt: addDays(TRIAL_DAYS),
     },
     update: {},

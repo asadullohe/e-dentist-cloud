@@ -73,6 +73,9 @@ model Clinic {
   staffPayouts StaffPayout[]
   feedback     Feedback[]
   timeBlocks   TimeBlock[]
+  plans        TreatmentPlan[]
+  planStages   TreatmentPlanStage[]
+  planItems    TreatmentPlanItem[]
 
   @@index([status])
   @@map("clinics")
@@ -222,7 +225,7 @@ model Patient {
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic       Clinic         @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  clinic       Clinic          @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   visits       Visit[]
   teeth        Tooth[]
   bridges      Bridge[]
@@ -230,6 +233,7 @@ model Patient {
   appointments Appointment[]
   images       PatientImage[]
   labOrders    LabOrder[]
+  plans        TreatmentPlan[]
 
   @@index([clinicId, fioSearch])
   @@index([clinicId, phone])
@@ -277,6 +281,7 @@ model Visit {
   service     Service?            @relation(fields: [serviceId], references: [id], onDelete: SetNull)
   labOrder    LabOrder?           @relation(fields: [labOrderId], references: [id], onDelete: SetNull)
   allocations PaymentAllocation[]
+  planItem    TreatmentPlanItem?
 
   @@index([clinicId, patientId, date])
   @@index([clinicId, date])
@@ -549,10 +554,11 @@ model Service {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic Clinic      @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  clinic    Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   /// Ichida xizmati bor tur oʻchirilmaydi — avval koʻchiriladi
-  type   ServiceType @relation(fields: [typeId], references: [id], onDelete: Restrict)
-  visits Visit[]
+  type      ServiceType         @relation(fields: [typeId], references: [id], onDelete: Restrict)
+  visits    Visit[]
+  planItems TreatmentPlanItem[]
 
   @@unique([typeId, name])
   @@index([typeId, position])
@@ -718,4 +724,124 @@ model PatientImage {
 
   @@index([clinicId, patientId])
   @@map("images")
+}
+
+// ──────────────────────────  Davolash rejalari  ──────────────────────────
+
+/// Reja oʻchirilmaydi — bekor qilinadi (tz.md 18-boʻlim). Bemorga
+/// koʻrsatilgan narx izsiz yoʻqolmasligi kerak, toʻlovdagi qoida bilan bir xil
+enum PlanStatus {
+  draft
+  sent
+  accepted
+  declined
+  done
+  cancelled
+}
+
+enum PlanItemStatus {
+  pending
+  done
+  skipped
+}
+
+/// Bemorga taklif qilinadigan ish: bosqichlar va ularning ichidagi bandlar.
+/// Bir bemorda bir nechta reja boʻlishi mumkin — «arzon / oʻrta / qimmat»
+/// variantlari uchun alohida model kerak emas, har biri oʻz nomi bilan turadi
+model TreatmentPlan {
+  id        String @id @default(uuid(7)) @db.Uuid
+  clinicId  String @map("clinic_id") @db.Uuid
+  patientId String @map("patient_id") @db.Uuid
+  /// Rejani tuzgan shifokor. Ish haqi hisobiga tegmaydi — ulush tashrif
+  /// yozilganda, oʻsha paytdagi foizdan hisoblanadi
+  doctorId  String @map("doctor_id") @db.Uuid
+
+  title      String
+  status     PlanStatus @default(draft)
+  /// Soʻm, butun son. Foizdan hisoblash interfeysda — bazada bitta son
+  /// (qaror 22/09/2026)
+  discount   Int        @default(0)
+  /// Narx qachongacha amal qiladi. Boʻsh — muddatsiz
+  validUntil DateTime?  @map("valid_until") @db.Date
+  /// Ochiq sahifaning kodi: /r/<kod>. Taxmin qilib boʻlmaydigan — u
+  /// sahifaning yagona himoyasi (navbat va fikr sahifalaridagi kabi)
+  publicCode String     @unique @map("public_code")
+  note       String?
+
+  acceptedAt    DateTime? @map("accepted_at") @db.Timestamptz(3)
+  declinedAt    DateTime? @map("declined_at") @db.Timestamptz(3)
+  declineReason String?   @map("decline_reason")
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  cancelReason  String?   @map("cancel_reason")
+
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic               @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient Patient              @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  stages  TreatmentPlanStage[]
+
+  @@index([clinicId, patientId, createdAt])
+  @@index([clinicId, status])
+  @@index([clinicId, doctorId])
+  @@map("treatment_plans")
+}
+
+/// «1-bosqich: davolash», «2-bosqich: protez». Uzun ishda bemor nimaga
+/// qachon pul toʻlashini koʻradi
+model TreatmentPlanStage {
+  id       String @id @default(uuid(7)) @db.Uuid
+  clinicId String @map("clinic_id") @db.Uuid
+  planId   String @map("plan_id") @db.Uuid
+
+  name     String
+  position Int     @default(0)
+  note     String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  plan   TreatmentPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  items  TreatmentPlanItem[]
+
+  @@index([clinicId])
+  @@index([planId, position])
+  @@map("treatment_plan_stages")
+}
+
+/// Bosqich ichidagi bitta ish. Nom va narx — **snapshot**: narxnoma keyin
+/// oʻzgarsa tuzilgan reja oʻzgarmaydi (tashrifdagi qoida bilan bir xil)
+model TreatmentPlanItem {
+  id       String @id @default(uuid(7)) @db.Uuid
+  clinicId String @map("clinic_id") @db.Uuid
+  stageId  String @map("stage_id") @db.Uuid
+
+  position  Int            @default(0)
+  /// FDI raqami. Umumiy ish (masalan «Professional tozalash») — boʻsh
+  tooth     Int?
+  serviceId String?        @map("service_id") @db.Uuid
+  treatment String
+  /// Soʻm, butun son — bitta dona uchun
+  price     Int            @default(0)
+  qty       Int            @default(1)
+  status    PlanItemStatus @default(pending)
+  /// Bajarilganda yozilgan tashrif (13.4). Bandning bajarilgani shu
+  /// bogʻlanish bilan isbotlanadi — tashrif oʻchirilsa band «kutilmoqda» ga
+  /// qaytadi
+  visitId   String?        @unique @map("visit_id") @db.Uuid
+  note      String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic  Clinic             @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  stage   TreatmentPlanStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  service Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  visit   Visit?             @relation(fields: [visitId], references: [id], onDelete: SetNull)
+
+  @@index([clinicId])
+  @@index([stageId, position])
+  @@map("treatment_plan_items")
 }

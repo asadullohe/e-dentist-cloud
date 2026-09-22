@@ -20,6 +20,7 @@ import { patientRoutes } from '../modules/patients/routes.js'
 import { paymentRoutes } from '../modules/payments/routes.js'
 import * as payments from '../modules/payments/service.js'
 import { payrollRoutes } from '../modules/payroll/routes.js'
+import { planRoutes } from '../modules/plans/routes.js'
 import { reportRoutes } from '../modules/reports/routes.js'
 import { queueRoutes } from '../modules/schedule/queueRoutes.js'
 import { scheduleRoutes } from '../modules/schedule/routes.js'
@@ -206,6 +207,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     },
   })
   app.register(labRoutes, { prefix: '/api', deps: { db: deps.db } })
+  app.register(planRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(exportRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app

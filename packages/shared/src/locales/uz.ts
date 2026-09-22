@@ -736,6 +736,8 @@ export const PERMISSION_LABELS = {
   'queue.manage': 'Navbat',
   'feedback.read': 'Bemor fikrlari: hammasi',
   'feedback.own': 'Bemor fikrlari: oʻzi haqida',
+  'plans.read': 'Davolash rejalari',
+  'plans.write': 'Reja tuzish va bemorga koʻrsatish',
   'staff.manage': 'Xodimlar va rollar',
   'billing.manage': 'Obuna va toʻlov',
   'data.export': 'Maʼlumotni yuklab olish',
@@ -782,6 +784,45 @@ export const LAB_STATUS_LABELS = {
   issued: 'Berildi',
   ready: 'Tayyor',
   delivered: 'Topshirildi',
+} as const
+
+// Davolash rejasi (tz.md 18-boʻlim)
+export const PLAN_TEXT = {
+  not_found: 'Reja topilmadi',
+  stage_not_found: 'Bosqich topilmadi',
+  item_not_found: 'Band topilmadi',
+  title_required: 'Reja nomini kiriting',
+  stage_name_required: 'Bosqich nomini kiriting',
+  treatment_required: 'Muolaja nomini kiriting',
+  tooth_invalid: 'Bunday tish raqami yoʻq',
+  price_negative: 'Narx manfiy boʻlishi mumkin emas',
+  qty_invalid: 'Miqdor kamida 1 boʻlsin',
+  discount_negative: 'Chegirma manfiy boʻlishi mumkin emas',
+  discount_too_big: 'Chegirma jami summadan katta',
+  doctor_not_found: 'Shifokor topilmadi',
+  status_flow: 'Reja bu holatga bu bosqichdan oʻta olmaydi',
+  /// Bajarilgan va bekor qilingan reja qotadi — tarix oʻzgarmaydi
+  locked: 'Bajarilgan yoki bekor qilingan reja oʻzgartirilmaydi',
+  reason_required: 'Sababini yozing',
+  item_done_remove: 'Bajarilgan bandni oʻchirib boʻlmaydi',
+  /// Sukut nomlar — yangi reja tuzilganda
+  default_title: 'Davolash rejasi',
+  default_stage: '1-bosqich',
+} as const
+
+export const PLAN_STATUS_LABELS = {
+  draft: 'Qoralama',
+  sent: 'Bemorga yuborildi',
+  accepted: 'Qabul qilindi',
+  declined: 'Rad etildi',
+  done: 'Bajarildi',
+  cancelled: 'Bekor qilindi',
+} as const
+
+export const PLAN_ITEM_STATUS_LABELS = {
+  pending: 'Kutilmoqda',
+  done: 'Bajarildi',
+  skipped: 'Oʻtkazib yuborildi',
 } as const
 
 export const LAB_RETURN_REASON_LABELS = {
@@ -1257,6 +1298,9 @@ export const AUDIT_LABELS = {
   lab_returned: 'Naryad qaytarildi',
   data_exported: 'Maʼlumot yuklab olindi',
   queue_changed: 'Navbat oʻzgardi',
+  plan_created: 'Reja tuzildi',
+  plan_updated: 'Reja tahrirlandi',
+  plan_status_changed: 'Reja holati oʻzgardi',
   payroll_recalculated: 'Ish haqi qayta hisoblandi',
   payout_created: 'Ish haqi toʻlandi',
   payout_deleted: 'Ish haqi toʻlovi oʻchirildi',

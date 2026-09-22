@@ -45,6 +45,10 @@ export const AUDIT_ACTION = {
   lab_returned: 'lab_returned',
   data_exported: 'data_exported',
   queue_changed: 'queue_changed',
+  /// Davolash rejasi (tz.md 18-boʻlim)
+  plan_created: 'plan_created',
+  plan_updated: 'plan_updated',
+  plan_status_changed: 'plan_status_changed',
   clinic_logo_changed: 'clinic_logo_changed',
   /// Ish haqi (tz.md 15-boʻlim)
   payroll_recalculated: 'payroll_recalculated',

@@ -5,12 +5,12 @@
 // boʻlmaydi.
 
 import type { FastifyInstance } from 'fastify'
-import { generateQueueCode } from '../modules/clinics/queueCode.js'
 import { memoryBus } from '../platform/bus.js'
 import { createDb, type Db } from '../platform/db.js'
 import { createImportStore } from '../platform/importStore.js'
 import { type Mail, memoryMailer } from '../platform/mailer.js'
 import { memoryNotifier } from '../platform/notify.js'
+import { generatePublicCode } from '../platform/publicCode.js'
 import { createRateLimiter, type RateLimiter } from '../platform/rateLimit.js'
 import { createServer } from '../platform/server.js'
 import { createSessionStore, type SessionStore } from '../platform/session.js'
@@ -150,7 +150,7 @@ export async function startHarness(): Promise<Harness> {
 /// takrorlanmasin deb shu yerda
 export function createOtherClinic(ownerDb: Db, name = 'B klinikasi') {
   return ownerDb.clinic.create({
-    data: { name, expiresAt: new Date('2030-01-01'), queueCode: generateQueueCode() },
+    data: { name, expiresAt: new Date('2030-01-01'), queueCode: generatePublicCode() },
   })
 }
 
@@ -160,6 +160,9 @@ export async function removeClinic(ownerDb: Db, clinicId: string): Promise<void>
   await ownerDb.auditLog.deleteMany(where)
   await ownerDb.feedback.deleteMany(where)
   await ownerDb.timeBlock.deleteMany(where)
+  await ownerDb.treatmentPlanItem.deleteMany(where)
+  await ownerDb.treatmentPlanStage.deleteMany(where)
+  await ownerDb.treatmentPlan.deleteMany(where)
   await ownerDb.paymentAllocation.deleteMany(where)
   await ownerDb.payment.deleteMany(where)
   await ownerDb.appointment.deleteMany(where)

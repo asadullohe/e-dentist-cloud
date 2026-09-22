@@ -1,7 +1,7 @@
-// Navbat sahifasining kodi: /n/<kod>.
+// Ochiq sahifalarning kodi: navbat /n/<kod>, davolash rejasi /r/<kod>.
 //
 // Kod taxmin qilib boʻlmaydigan boʻlishi kerak — u ochiq sahifaning yagona
-// himoyasi (tz.md 14-boʻlim). Shuning uchun tasodifiy sonlar
+// himoyasi (tz.md 14- va 18-boʻlimlar). Shuning uchun tasodifiy sonlar
 // `crypto` dan olinadi, `Math.random` dan emas.
 
 import { randomInt } from 'node:crypto'
@@ -11,7 +11,7 @@ import { randomInt } from 'node:crypto'
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'
 const LENGTH = 8
 
-export function generateQueueCode(): string {
+export function generatePublicCode(): string {
   let code = ''
   for (let i = 0; i < LENGTH; i++) {
     code += ALPHABET[randomInt(ALPHABET.length)]

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.1 — API: davolash rejalari _(22/09/2026)_
+**Hozirgi task:** 13.2 — kabinet: kartochkada «Reja» tabi
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1372,15 +1372,21 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 > bizda ochiq sahifa infratuzilmasi (`/f/`, `/n/`) allaqachon bor, shuning
 > uchun arzonga tushadi. Tafsilot: [`tz.md` 18-boʻlim](tz.md).
 
-- [ ] **13.1 API: rejalar** — uch jadval (`treatment_plans`,
+- [x] **13.1 API: rejalar** — uch jadval (`treatment_plans`,
       `treatment_plan_stages`, `treatment_plan_items`), RLS va `TENANT_MODELS`;
-      `plans` moduli: reja CRUD, bosqich va band qoʻshish/tartiblash, jami va
-      chegirma hisobi, holat oʻtishlari (qoralama → yuborildi → qabul/rad →
-      bajarildi; bekor qilish sabab bilan, oʻchirish yoʻq). Xizmat tanlanganda
-      nom va narx **snapshot** boʻlib koʻchadi. Ruxsatlar `plans.read` /
-      `plans.write` + mavjud rollarga migratsiya; `patients.all` yoʻq shifokor
-      faqat oʻz bemorlariniki (11.3 qoidasi). Testlar: koʻp ijarachilik, holat
-      oʻtishlari, narx snapshot, shifokor koʻrinishi
+      `plans` moduli: `GET/POST /plans`, `GET/PATCH /plans/:id`,
+      `PUT /plans/:id/content` (bosqichlar va bandlar **birgalikda** —
+      brauzer nimani koʻrsatayotgan boʻlsa oʻshani yuboradi, tortib
+      tartiblash uchun), `POST /plans/:id/status`. Jami, chegirma (soʻmda,
+      jamidan katta boʻlolmaydi), amal muddati; holat oqimi qoralama →
+      yuborildi → qabul/rad → (bajarildi); rad va bekor sabab bilan,
+      oʻchirish yoʻq; bajarilgan va bekor qilingan reja qotadi. Xizmat
+      tanlansa nom va narx **snapshot**. Ruxsatlar `plans.read` /
+      `plans.write` + mavjud rollarga migratsiya (shifokor tuzadi, qabulxona
+      va kuzatuvchi koʻradi); `patients.all` yoʻq shifokor faqat oʻz
+      bemorlariniki (11.3). Yoʻlakay: navbat kodi generatori
+      `platform/publicCode.ts` ga chiqdi — reja ham ochiq kod oladi.
+      Testlar: `plans.test.ts` (21)
 - [ ] **13.2 Kabinet: kartochkada «Reja» tabi** — rejalar roʻyxati (holat,
       jami, sana), yangi reja oynasi: bosqich qoʻshish, band qoʻshish (tish
       xaritasidan tish, xizmat tanlansa narx tushadi, miqdor), bandlarni va
@@ -1394,7 +1400,8 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       havola nusxalash va QR
 - [ ] **13.4 Band bajarildi → tashrif** — `POST /plans/:id/items/:itemId/complete`
       tashrif formasini rejadan toʻldirib ochadi (11.5 dagi naryad topshirish
-      kabi: muolaja, tish, narx rejadan, shifokor rejaniki), `visits.plan_item_id`;
+      kabi: muolaja, tish, narx rejadan, shifokor rejaniki),
+      `treatment_plan_items.visit_id` (13.1 da tayyor);
       tashrif yozilgach band «bajarildi», barcha bandlar bajarilgach reja
       «bajarildi». Ish haqi ulushi oʻz-oʻzidan hisoblanadi
 - [ ] **13.5 Chop etish** — A4 (print CSS): klinika sarlavhasi, bemor, bosqichlar

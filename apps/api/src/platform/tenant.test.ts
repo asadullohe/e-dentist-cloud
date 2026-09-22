@@ -8,8 +8,8 @@
 
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { generateQueueCode } from '../modules/clinics/queueCode.js'
 import { createDb, type Db } from './db.js'
+import { generatePublicCode } from './publicCode.js'
 import { TENANT_MODELS, tenantScoped, withClinic } from './tenant.js'
 
 const ownerUrl = process.env.DATABASE_URL
@@ -41,7 +41,7 @@ beforeAll(async () => {
     [B, 'B klinikasi'],
   ] as const) {
     await ownerDb.clinic.create({
-      data: { id, name: label, expiresAt: testDate(), queueCode: generateQueueCode() },
+      data: { id, name: label, expiresAt: testDate(), queueCode: generatePublicCode() },
     })
   }
 
