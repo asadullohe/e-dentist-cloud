@@ -21,6 +21,7 @@ import {
 } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Payroll } from '@/pages/Payroll'
+import { PlanPublic } from '@/pages/PlanPublic'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
 import { QueuePoster } from '@/pages/QueuePoster'
@@ -91,10 +92,12 @@ export function Router() {
       <Route path="/verify" element={<VerifyEmail />} />
       {/* Panel klinika ochganda egasi shu yerda parol qoʻyadi */}
       <Route path="/taklif" element={<Invite />} />
-      {/* Loginsiz sahifalar: navbat va bemor fikri (tz.md 14-boʻlim) */}
+      {/* Loginsiz sahifalar: navbat, bemor fikri (14-boʻlim) va davolash
+          rejasi (18-boʻlim) */}
       <Route path="/n/:code" element={<Queue />} />
       <Route path="/n/:code/ekran" element={<QueueScreen />} />
       <Route path="/f/:code" element={<Feedback />} />
+      <Route path="/r/:code" element={<PlanPublic />} />
 
       <Route element={<RequireAuth />}>
         {/* Eshikka osiladigan QR varaq — chop etish uchun yon menyusiz (10.8) */}

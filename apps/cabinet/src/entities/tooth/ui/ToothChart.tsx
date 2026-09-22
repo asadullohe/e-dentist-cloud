@@ -314,10 +314,20 @@ interface OdontogramProps {
   byTooth: Map<number, ToothInfo>
   cfg: ArchConfig
   bridges?: BridgeInfo[]
+  /// Ajratib koʻrsatiladigan tishlar — davolash rejasidagi ishlar (18-boʻlim)
+  highlight?: readonly number[]
   onPick?: ((tooth: number) => void) | undefined
 }
 
-function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: OdontogramProps) {
+function Odontogram({
+  upper,
+  lower,
+  byTooth,
+  cfg,
+  bridges = [],
+  highlight = [],
+  onPick,
+}: OdontogramProps) {
   const positions = new Map<number, Position>()
   for (const [list, isUpper] of [
     [upper, true],
@@ -398,6 +408,27 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
         )
       })}
 
+      {/* Rejadagi tishlar — tish ostidagi dogʻ va halqa. Tishning oʻz rangi
+          (kariyes, plomba) bilan chalkashmasin uchun ustiga emas, ostiga */}
+      {highlight.map((no) => {
+        const p = positions.get(no)
+        if (!p) return null
+        return (
+          <g key={`reja-${no}`}>
+            <circle cx={p.x} cy={p.y} r={30 * cfg.scale} fill="var(--primary)" opacity="0.22" />
+            <circle
+              cx={p.x}
+              cy={p.y}
+              r={30 * cfg.scale}
+              fill="none"
+              stroke="var(--primary)"
+              strokeWidth={2 * cfg.scale}
+              opacity="0.7"
+            />
+          </g>
+        )
+      })}
+
       {[...upper, ...lower].map((no) => {
         const p = positions.get(no)
         if (!p) return null
@@ -422,10 +453,17 @@ function Odontogram({ upper, lower, byTooth, cfg, bridges = [], onPick }: Odonto
 export interface ToothChartProps {
   teeth: ToothInfo[]
   bridges?: BridgeInfo[]
+  /// Ajratib koʻrsatiladigan tishlar — davolash rejasining ochiq sahifasi
+  /// shu bilan «qaysi tishlarga ish bor» ni koʻrsatadi (18-boʻlim)
+  highlight?: readonly number[]
+  /// Sut tishlari tugmasi va holatlar izohi. Bemorga koʻrsatiladigan
+  /// sahifada ular ortiqcha: u yerda tishning holati emas, rejadagi
+  /// tishlar koʻrsatiladi
+  bare?: boolean
   onPick?: ((tooth: number) => void) | undefined
 }
 
-export function ToothChart({ teeth, bridges = [], onPick }: ToothChartProps) {
+export function ToothChart({ teeth, bridges = [], highlight, bare, onPick }: ToothChartProps) {
   const byTooth = new Map(teeth.map((t) => [t.tooth, t]))
   // Bemorda sut tishi belgilangan boʻlsa — pastki xarita oʻzi ochiladi
   const [showPrimary, setShowPrimary] = useState(() => teeth.some((t) => isPrimary(t.tooth)))
@@ -439,17 +477,20 @@ export function ToothChart({ teeth, bridges = [], onPick }: ToothChartProps) {
         byTooth={byTooth}
         cfg={PERMANENT_ARCH}
         bridges={bridges}
+        highlight={highlight}
         onPick={onPick}
       />
 
-      <div className="my-2 flex justify-center">
-        <Button variant="ghost" size="sm" onClick={() => setShowPrimary(!showPrimary)}>
-          {showPrimary ? <ChevronDownIcon /> : <ChevronRightIcon />}
-          {CHART_UI.primary_teeth}
-        </Button>
-      </div>
+      {!bare && (
+        <div className="my-2 flex justify-center">
+          <Button variant="ghost" size="sm" onClick={() => setShowPrimary(!showPrimary)}>
+            {showPrimary ? <ChevronDownIcon /> : <ChevronRightIcon />}
+            {CHART_UI.primary_teeth}
+          </Button>
+        </div>
+      )}
 
-      {showPrimary && (
+      {!bare && showPrimary && (
         <Odontogram
           upper={PRIMARY_UPPER}
           lower={PRIMARY_LOWER}
@@ -459,23 +500,25 @@ export function ToothChart({ teeth, bridges = [], onPick }: ToothChartProps) {
         />
       )}
 
-      <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs">
-        {TOOTH_STATUSES.map((status) => {
-          const style = STATUS_STYLE[status]
-          return (
-            <span key={status} className="flex items-center gap-1.5">
-              <span
-                className="inline-block size-3 rounded-sm border"
-                style={{
-                  background: `linear-gradient(160deg, ${style.grad[0]}, ${style.grad[1]})`,
-                  borderColor: style.stroke,
-                }}
-              />
-              {toothStatusLabel(status)}
-            </span>
-          )
-        })}
-      </div>
+      {!bare && (
+        <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs">
+          {TOOTH_STATUSES.map((status) => {
+            const style = STATUS_STYLE[status]
+            return (
+              <span key={status} className="flex items-center gap-1.5">
+                <span
+                  className="inline-block size-3 rounded-sm border"
+                  style={{
+                    background: `linear-gradient(160deg, ${style.grad[0]}, ${style.grad[1]})`,
+                    borderColor: style.stroke,
+                  }}
+                />
+                {toothStatusLabel(status)}
+              </span>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

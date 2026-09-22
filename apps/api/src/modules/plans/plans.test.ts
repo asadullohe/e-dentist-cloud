@@ -395,3 +395,122 @@ describe('ruxsatlar', () => {
     expect(r.statusCode).toBe(401)
   })
 })
+
+describe('ochiq sahifa /r/:kod', () => {
+  /// Sessiyasiz — bemorning brauzeri kabi
+  const open = (method: 'GET' | 'POST', url: string, payload?: object) =>
+    h.app.inject({ method, url, payload, remoteAddress: h.clientIp })
+
+  async function sentPlan(extra: Record<string, unknown> = {}) {
+    const plan = await newPlan(extra)
+    await call('POST', `/api/plans/${plan.id}/status`, { status: 'sent' })
+    return (await call('GET', `/api/plans/${plan.id}`)).json().data as Plan
+  }
+
+  it('yuborilgan reja koʻrinadi, bemor ismi qisqartirilgan', async () => {
+    const plan = await sentPlan()
+    const r = await open('GET', `/api/r/${plan.publicCode}`)
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({
+      // «Reja Bemori» — familiya + bosh harf
+      patientName: 'Reja B.',
+      doctorName: 'Sinov Egasi',
+      status: 'sent',
+      total: 2_300_000,
+      payable: 2_300_000,
+      canRespond: true,
+      needsPhone: false,
+    })
+    expect(r.json().data.teeth).toEqual([16, 26])
+    expect(r.json().data.stages).toHaveLength(2)
+  })
+
+  it('qoralama va bekor qilingan reja koʻrinmaydi', async () => {
+    const draft = await newPlan()
+    expect((await open('GET', `/api/r/${draft.publicCode}`)).statusCode).toBe(404)
+
+    const cancelled = await newPlan()
+    await call('POST', `/api/plans/${cancelled.id}/status`, {
+      status: 'cancelled',
+      reason: 'Sinov',
+    })
+    expect((await open('GET', `/api/r/${cancelled.publicCode}`)).statusCode).toBe(404)
+  })
+
+  it('notoʻgʻri kod 404', async () => {
+    expect((await open('GET', '/api/r/yoqkodxx')).statusCode).toBe(404)
+  })
+
+  it('telefonsiz bemor raqamsiz rozilik bildiradi', async () => {
+    const plan = await sentPlan()
+    const r = await open('POST', `/api/r/${plan.publicCode}`, { accept: true })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.status).toBe('accepted')
+
+    const saved = await call('GET', `/api/plans/${plan.id}`)
+    expect(saved.json().data.status).toBe('accepted')
+  })
+
+  it('telefonli bemorda oxirgi 4 raqam soʻraladi va tekshiriladi', async () => {
+    const withPhone = (
+      await call('POST', '/api/patients', { fio: 'Telefonli Bemor', phone: '+998901234567' })
+    ).json().data.id as string
+    const created = await call('POST', '/api/plans', { patientId: withPhone })
+    const id = created.json().data.id as string
+    await call('PUT', `/api/plans/${id}/content`, {
+      stages: [{ name: 'Bosqich', items: [{ treatment: 'Ish', price: 100_000 }] }],
+    })
+    await call('POST', `/api/plans/${id}/status`, { status: 'sent' })
+    const code = created.json().data.publicCode as string
+
+    expect((await open('GET', `/api/r/${code}`)).json().data.needsPhone).toBe(true)
+    // Raqamsiz va notoʻgʻri raqam bilan oʻtmaydi
+    expect((await open('POST', `/api/r/${code}`, { accept: true })).statusCode).toBe(400)
+    expect(
+      (await open('POST', `/api/r/${code}`, { accept: true, phoneTail: '0000' })).statusCode,
+    ).toBe(400)
+
+    const ok = await open('POST', `/api/r/${code}`, { accept: true, phoneTail: '4567' })
+    expect(ok.statusCode).toBe(200)
+  })
+
+  it('rad etish sababi kabinetda koʻrinadi', async () => {
+    const plan = await sentPlan()
+    const r = await open('POST', `/api/r/${plan.publicCode}`, {
+      accept: false,
+      reason: 'Hozircha imkonim yoʻq',
+    })
+    expect(r.json().data.status).toBe('declined')
+
+    const saved = await call('GET', `/api/plans/${plan.id}`)
+    expect(saved.json().data).toMatchObject({
+      status: 'declined',
+      declineReason: 'Hozircha imkonim yoʻq',
+    })
+  })
+
+  it('ikkinchi javob 409', async () => {
+    const plan = await sentPlan()
+    await open('POST', `/api/r/${plan.publicCode}`, { accept: true })
+    const again = await open('POST', `/api/r/${plan.publicCode}`, { accept: true })
+    expect(again.statusCode).toBe(409)
+  })
+
+  it('muddati oʻtgan rejaga javob berilmaydi', async () => {
+    const plan = await newPlan()
+    await call('PATCH', `/api/plans/${plan.id}`, { validUntil: '2020-01-01' })
+    await call('POST', `/api/plans/${plan.id}/status`, { status: 'sent' })
+
+    const page = await open('GET', `/api/r/${plan.publicCode}`)
+    expect(page.json().data).toMatchObject({ expired: true, canRespond: false })
+    expect((await open('POST', `/api/r/${plan.publicCode}`, { accept: true })).statusCode).toBe(400)
+  })
+
+  it('begona klinikaning kodi oʻz klinikasidan oʻqilmaydi', async () => {
+    const plan = await sentPlan()
+    // Ochiq sahifa sessiyaga qaramaydi — kod qaysi klinikaniki boʻlsa,
+    // javob oʻshaniki. Kod boshqa klinikada yoʻq boʻlsa — 404
+    const alien = await open('GET', `/api/r/${plan.publicCode.slice(0, 7)}z`)
+    expect(alien.statusCode).toBe(404)
+  })
+})

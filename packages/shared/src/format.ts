@@ -154,6 +154,12 @@ export function clinicLogoUrl(queueCode: string): string {
   return `/api/n/${encodeURIComponent(queueCode)}/logo`
 }
 
+/// Davolash rejasining ochiq sahifasidagi logotip (18-boʻlim). Rejaning
+/// kodi navbatnikidan boshqa — shuning uchun alohida manzil
+export function planLogoUrl(planCode: string): string {
+  return `/api/r/${encodeURIComponent(planCode)}/logo`
+}
+
 /// Bemor rasmining manzili.
 ///
 /// Logotipdagi sabab bilan bir xil: imzolangan havola serverdagi MinIO ga

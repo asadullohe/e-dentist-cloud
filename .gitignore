@@ -3,6 +3,9 @@ dist/
 build/
 .turbo/
 
+# Claude sessiyalari yaratadigan ish daraxtlari
+.claude/worktrees/
+
 # Muhit va maxfiy narsalar — HECH QACHON repoga tushmasin
 .env
 .env.*

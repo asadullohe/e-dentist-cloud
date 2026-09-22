@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
+import { deviceId } from '../../platform/device.js'
 import { errors } from '../../platform/errors.js'
 import { requireAuth, viewerOf } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
@@ -7,6 +8,7 @@ import {
   planContentSchema,
   planCreateSchema,
   planListSchema,
+  planRespondSchema,
   planStatusSchema,
   planUpdateSchema,
 } from './schema.js'
@@ -14,6 +16,8 @@ import * as service from './service.js'
 
 export interface PlanRouteOpts {
   deps: service.PlanDeps
+  /// Prod da qurilma cookie si faqat HTTPS orqali
+  secureCookie: boolean
 }
 
 function contextOf(req: FastifyRequest) {
@@ -25,6 +29,35 @@ function contextOf(req: FastifyRequest) {
 }
 
 export const planRoutes: FastifyPluginAsync<PlanRouteOpts> = async (app, opts) => {
+  // ─────────────  Ochiq sahifa: /r/<kod>  ─────────────
+  // Navbat va fikr sahifalari kabi loginsiz; javob tor — bemorning toʻliq
+  // ismi va telefoni chiqmaydi
+
+  app.get('/r/:code', async (req) => {
+    const { code } = req.params as { code: string }
+    return ok(await service.publicPage(opts.deps, code))
+  })
+
+  app.post('/r/:code', async (req, reply) => {
+    const { code } = req.params as { code: string }
+    const input = validateInput(planRespondSchema, req.body)
+    const device = deviceId(req, reply, opts.secureCookie)
+    return ok(await service.respond(opts.deps, code, input, { ip: req.ip, deviceId: device }))
+  })
+
+  // Logotipning oʻzi — navbat sahifasidagi `/n/<kod>/logo` bilan bir xil
+  app.get('/r/:code/logo', async (req, reply) => {
+    const { code } = req.params as { code: string }
+    const logo = await service.publicLogo(opts.deps, code)
+    if (!logo) throw errors.notFound()
+    return reply
+      .header('content-type', logo.contentType)
+      .header('cache-control', 'no-cache')
+      .send(logo.body)
+  })
+
+  // ─────────────  Kabinet  ─────────────
+
   const read = { preHandler: app.requireAnyPermission('plans.read', 'plans.write') }
   const write = { preHandler: app.requirePermission('plans.write') }
 

@@ -815,6 +815,13 @@ export const PLAN_TEXT = {
   /// Sukut nomlar — yangi reja tuzilganda
   default_title: 'Davolash rejasi',
   default_stage: '1-bosqich',
+  /// Ochiq sahifa (/r/<kod>)
+  not_available: 'Reja topilmadi yoki endi amal qilmaydi',
+  phone_required: 'Telefon raqamingizning oxirgi 4 raqamini kiriting',
+  phone_wrong: 'Raqam mos kelmadi',
+  already_answered: 'Bu rejaga javob berilgan',
+  expired_public: 'Bu narxning muddati tugagan — klinika bilan bogʻlaning',
+  too_many: 'Juda koʻp urinish. Birozdan keyin qayta urinib koʻring',
 } as const
 
 export const PLAN_STATUS_LABELS = {
@@ -892,6 +899,31 @@ export const PLAN_UI = {
   link_copy: 'Havolani nusxalash',
   link_copied: 'Havola nusxalandi',
   link_hint: 'Bemor telefonida ochadi va roziligini bildiradi',
+} as const
+
+/// Bemor koʻradigan ochiq sahifa: /r/<kod>
+export const PLAN_PUBLIC_UI = {
+  title: 'Davolash rejasi',
+  patient: 'Bemor',
+  doctor: 'Shifokor',
+  teeth_title: 'Qaysi tishlarga ish bor',
+  valid_until: 'Narx amal qiladi',
+  accept: 'Roziman',
+  decline: 'Hozircha yoʻq',
+  phone_label: 'Telefon raqamingizning oxirgi 4 raqami',
+  phone_hint: 'Bu reja aynan sizniki ekanini tasdiqlaydi',
+  reason_label: 'Sababini yozsangiz — klinikaga yordam beradi',
+  reason_placeholder: 'Masalan: hozircha imkonim yoʻq',
+  send: 'Yuborish',
+  back: 'Orqaga',
+  thanks_accept: 'Rahmat! Klinika siz bilan bogʻlanadi',
+  thanks_decline: 'Javobingiz uchun rahmat',
+  already_accepted: 'Siz bu rejaga rozilik bildirgansiz',
+  already_declined: 'Siz bu rejadan bosh tortgansiz',
+  already_done: 'Bu reja bajarilgan',
+  expired: 'Bu narxning muddati tugagan — klinika bilan bogʻlaning',
+  call: 'Qoʻngʻiroq qilish',
+  not_found: 'Reja topilmadi yoki endi amal qilmaydi',
 } as const
 
 export const LAB_RETURN_REASON_LABELS = {

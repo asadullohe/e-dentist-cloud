@@ -19,9 +19,12 @@ export default defineConfig({
     port: 5173,
     // API ni oʻsha manzilga uzatamiz. Shunda brauzer uchun kabinet ham,
     // API ham bitta manzil boʻladi — xuddi serverdagidek (Caddy ham shunday
-    // qiladi). CORS sozlash kerak emas va cookie muammosiz ishlaydi
+    // qiladi). CORS sozlash kerak emas va cookie muammosiz ishlaydi.
+    //
+    // Manzil sozlanadi: bitta notebookda ikkinchi nusxa (git worktree)
+    // koʻtarilganda API boshqa portda turadi
     proxy: {
-      '/api': { target: 'http://localhost:3000' },
+      '/api': { target: process.env.API_PROXY ?? 'http://localhost:3000' },
     },
   },
 })

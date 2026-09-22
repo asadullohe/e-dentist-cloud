@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
   Skeleton,
 } from '@/shared/ui'
+import { PlanLink } from './PlanLink'
 import { PlanStages } from './PlanStages'
 
 /// Bitta reja: sarlavha, holat amallari, bosqichlar va jamlanma
@@ -154,6 +155,12 @@ export function PlanPage() {
           </div>
         )}
       </Card>
+
+      {/* Havola qoralamada koʻrsatilmaydi: ochiq sahifa uni hali
+          bermaydi — avval «Bemorga yuborish» bosiladi */}
+      {plan.status !== 'draft' && plan.status !== 'cancelled' && (
+        <PlanLink publicCode={plan.publicCode} />
+      )}
 
       <PlanFormDialog open={formOpen} onOpenChange={setFormOpen} patientId={id} plan={plan} />
       <StatusDialog planId={planId} status={asking} onClose={() => setAsking(null)} />

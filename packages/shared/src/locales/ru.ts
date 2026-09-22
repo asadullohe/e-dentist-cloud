@@ -776,6 +776,12 @@ export const ru: DeepPartial<Strings> = {
     item_done_remove: 'Выполненный пункт удалить нельзя',
     default_title: 'План лечения',
     default_stage: '1-й этап',
+    not_available: 'План не найден или больше не действует',
+    phone_required: 'Введите последние 4 цифры вашего номера телефона',
+    phone_wrong: 'Цифры не совпали',
+    already_answered: 'На этот план уже дан ответ',
+    expired_public: 'Срок этой цены истёк — свяжитесь с клиникой',
+    too_many: 'Слишком много попыток. Повторите чуть позже',
   },
 
   PLAN_STATUS_LABELS: {
@@ -848,6 +854,30 @@ export const ru: DeepPartial<Strings> = {
     link_copy: 'Скопировать ссылку',
     link_copied: 'Ссылка скопирована',
     link_hint: 'Пациент откроет на телефоне и подтвердит согласие',
+  },
+
+  PLAN_PUBLIC_UI: {
+    title: 'План лечения',
+    patient: 'Пациент',
+    doctor: 'Врач',
+    teeth_title: 'На каких зубах работа',
+    valid_until: 'Цена действует до',
+    accept: 'Согласен',
+    decline: 'Пока нет',
+    phone_label: 'Последние 4 цифры вашего номера телефона',
+    phone_hint: 'Это подтвердит, что план именно ваш',
+    reason_label: 'Напишите причину — это поможет клинике',
+    reason_placeholder: 'Например: пока нет возможности',
+    send: 'Отправить',
+    back: 'Назад',
+    thanks_accept: 'Спасибо! Клиника свяжется с вами',
+    thanks_decline: 'Спасибо за ответ',
+    already_accepted: 'Вы уже согласились с этим планом',
+    already_declined: 'Вы отказались от этого плана',
+    already_done: 'Этот план выполнен',
+    expired: 'Срок этой цены истёк — свяжитесь с клиникой',
+    call: 'Позвонить',
+    not_found: 'План не найден или больше не действует',
   },
 
   LAB_RETURN_REASON_LABELS: {

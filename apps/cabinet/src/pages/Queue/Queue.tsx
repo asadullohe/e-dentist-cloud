@@ -1,14 +1,14 @@
-import { QUEUE_UI, UI_TEXT } from '@e-dentist/shared'
+import { clinicLogoUrl, QUEUE_UI, UI_TEXT } from '@e-dentist/shared'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { feedbackGiven } from '@/entities/feedback'
 import { useQueueBoard, useQueueStream, useQueueTicket } from '@/entities/queue'
 import { ApiError } from '@/shared/api'
 import { Skeleton } from '@/shared/ui'
+import { PublicShell } from '@/widgets/public-shell'
 import { Contacts } from './Contacts'
 import { DoctorList } from './DoctorList'
 import { JoinForm } from './JoinForm'
-import { PublicShell } from './PublicShell'
 import { Steps } from './Steps'
 import { Ticket } from './Ticket'
 
@@ -77,7 +77,7 @@ export function Queue() {
 
   return (
     <PublicShell
-      code={code}
+      logoUrl={clinicLogoUrl(code)}
       clinicName={data.clinicName}
       hasLogo={data.hasLogo}
       title={QUEUE_UI.title}

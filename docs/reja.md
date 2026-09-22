@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.3 — ochiq sahifa `/r/:kod`
+**Hozirgi task:** 13.4 — band bajarildi → tashrif
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1400,11 +1400,21 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       tugmalari holatga qarab (yuborish / rozi / rad / bekor, sabab oynada);
       bajarilgan band tahrirlanmaydi. Yoʻlakay: `DeleteDialog` va `ItemMenu`
       `pages/Services` dan `shared/ui` ga chiqdi — reja ham ishlatadi
-- [ ] **13.3 Ochiq sahifa `/r/:kod`** — `PublicShell` da: klinika, shifokor,
-      amal muddati, tish xaritasi (rejadagi tishlar belgilangan), bosqichlar va
-      narxlar, jami · chegirma · toʻlash kerak; «Roziman» telefon oxirgi 4
-      raqami bilan (fikr sahifasidagi himoya), rad etish sababi. Kabinetda
-      havola nusxalash va QR
+- [x] **13.3 Ochiq sahifa `/r/:kod`** — API: `clinic_by_plan_code`
+      (SECURITY DEFINER, navbatdagi kabi), ochiq `GET/POST /r/:kod` va
+      `/r/:kod/logo`; javobda bemorning **qisqartirilgan** ismi
+      («Karimova M. R.»), telefoni va boshqa tashriflari yoʻq. Qoralama va
+      bekor qilingan reja koʻrinmaydi. Javob: telefonli bemorda oxirgi 4
+      raqam tekshiriladi, IP va qurilma cheklovi; muddati oʻtgan yoki javob
+      berilgan rejaga qayta javob yoʻq (400/409). Sahifa: klinika logotipi,
+      shifokor, tish xaritasi (rejadagi tishlar halqa bilan), bosqichlar va
+      narxlar, jami · chegirma · toʻlash kerak, «Roziman» / «Hozircha yoʻq»
+      → rahmat ekrani va klinika telefoni; hal boʻlgan rejada holat xabari.
+      Kabinetda havola + QR kartasi (qoralamada koʻrsatilmaydi). Yoʻlakay:
+      `PublicShell` `widgets/` ga chiqdi va logotip manzilini tashqaridan
+      oladi; `ToothChart` ga `highlight` va `bare`; vite proxy manzili
+      `API_PROXY` bilan sozlanadi (ikkinchi nusxa uchun).
+      Testlar: `plans.test.ts` da 9 ta ochiq sahifa holati
 - [ ] **13.4 Band bajarildi → tashrif** — `POST /plans/:id/items/:itemId/complete`
       tashrif formasini rejadan toʻldirib ochadi (11.5 dagi naryad topshirish
       kabi: muolaja, tish, narx rejadan, shifokor rejaniki),

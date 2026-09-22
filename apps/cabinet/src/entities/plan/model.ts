@@ -72,3 +72,40 @@ export interface PlanStageDraft {
   note?: string | null
   items: PlanItemDraft[]
 }
+
+/// Ochiq sahifa (/r/<kod>) koʻradigan narsa. Bemorning toʻliq ismi,
+/// telefoni va boshqa tashriflari bu yerda yoʻq
+export interface PlanPublic {
+  clinicName: string
+  hasLogo: boolean
+  publicPhone: string | null
+  address: string | null
+  /// «Karimova M. R.»
+  patientName: string
+  doctorName: string
+  title: string
+  status: PlanStatus
+  validUntil: string | null
+  expired: boolean
+  total: number
+  discount: number
+  payable: number
+  /// Tish xaritasida belgilanadigan tishlar
+  teeth: number[]
+  stages: {
+    name: string
+    note: string | null
+    total: number
+    items: {
+      tooth: number | null
+      treatment: string
+      price: number
+      qty: number
+      total: number
+      done: boolean
+    }[]
+  }[]
+  canRespond: boolean
+  /// Bemorda telefon bor — javobda oxirgi 4 raqam soʻraladi
+  needsPhone: boolean
+}

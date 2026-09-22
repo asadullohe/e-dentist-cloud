@@ -4,6 +4,7 @@
 // clinicId ni kengaytma oʻzi qoʻyadi — bu yerda hech qayerda yozilmaydi.
 
 import type { PlanStatus, Prisma } from '../../../generated/prisma/client.js'
+import type { Db } from '../../platform/db.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
 const ITEM_SELECT = {
@@ -79,6 +80,24 @@ export function list(tx: ClinicTx, filter: PlanFilter) {
 
 export function findById(tx: ClinicTx, id: string) {
   return tx.treatmentPlan.findUnique({ where: { id }, select: FULL_SELECT })
+}
+
+/// Ochiq sahifa (/r/<kod>) sessiyasiz ochiladi va RLS jadvallarni yopib
+/// turadi — kodni klinikaga aylantirish uchun SECURITY DEFINER funksiya
+/// (navbat sahifasidagi `clinic_by_queue_code` bilan bir xil uslub).
+/// Rejaning oʻzi keyin odatdagi yoʻl bilan, `withClinic` ichida oʻqiladi
+export interface PlanCodeRow {
+  clinic_id: string
+  plan_id: string
+  name: string
+  logo_key: string | null
+  public_phone: string | null
+  address: string | null
+}
+
+export async function findByPublicCode(db: Db, code: string): Promise<PlanCodeRow | null> {
+  const rows = await db.$queryRaw<PlanCodeRow[]>`SELECT * FROM clinic_by_plan_code(${code})`
+  return rows[0] ?? null
 }
 
 export interface NewPlan {

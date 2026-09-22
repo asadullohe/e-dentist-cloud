@@ -13,6 +13,8 @@ import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
 import type { ScopedViewer } from '../../platform/guards.js'
 import { generatePublicCode } from '../../platform/publicCode.js'
+import type { RateLimiter } from '../../platform/rateLimit.js'
+import type { Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -22,12 +24,17 @@ import type {
   PlanContentInput,
   PlanCreateInput,
   PlanListInput,
+  PlanRespondInput,
   PlanStatusInput,
   PlanUpdateInput,
 } from './schema.js'
 
 export interface PlanDeps {
   db: Db
+  /// Ochiq sahifadagi javob uchun — kabinet marshrutlariga kerak emas
+  rateLimiter: RateLimiter
+  /// Klinika logotipi ochiq sahifada koʻrsatiladi
+  storage: Storage
 }
 
 export interface PlanItemView {
@@ -455,5 +462,203 @@ export function setStatus(
 
     const [view] = await toView(tx, [await load(tx, viewer, id)])
     return view as PlanView
+  })
+}
+
+// ──────────────────────  Ochiq sahifa: /r/<kod>  ──────────────────────
+//
+// Sessiya yoʻq: kod rejani ham, klinikani ham topadi. Bemor rejani koʻradi
+// va roziligini bildiradi — shundan keyin klinika ishni boshlaydi.
+
+// Suiisteʼmoldan himoya — fikrlar sahifasidagi kabi
+const IP_LIMIT = 30
+const IP_WINDOW = 60 * 60
+const DEVICE_LIMIT = 10
+const DEVICE_WINDOW = 24 * 60 * 60
+
+/// Bemor ochiq sahifada koʻradigan narsa. Bemorning toʻliq ismi, telefoni
+/// va boshqa tashriflari bu yerga chiqmaydi — havola begonaga tushsa ham
+/// kartoteka ochilmasin
+export interface PlanPublicView {
+  clinicName: string
+  hasLogo: boolean
+  publicPhone: string | null
+  address: string | null
+  /// «Karimova M. R.» — bemor «bu meniki» deb tanishi uchun yetadi
+  patientName: string
+  doctorName: string
+  title: string
+  status: PlanStatus
+  validUntil: string | null
+  expired: boolean
+  total: number
+  discount: number
+  payable: number
+  /// Tish xaritasida belgilanadigan tishlar
+  teeth: number[]
+  stages: {
+    name: string
+    note: string | null
+    total: number
+    items: {
+      tooth: number | null
+      treatment: string
+      price: number
+      qty: number
+      total: number
+      done: boolean
+    }[]
+  }[]
+  /// Javob berish mumkinmi: yuborilgan va muddati oʻtmagan
+  canRespond: boolean
+  /// Bemorda telefon bor — javobda oxirgi 4 raqam soʻraladi
+  needsPhone: boolean
+}
+
+/// «Karimova Madina Rustamovna» → «Karimova M. R.»
+function shortName(fio: string): string {
+  const [surname, ...rest] = fio.trim().split(/\s+/)
+  if (!surname) return ''
+  const initials = rest.map((word) => `${word[0]?.toUpperCase() ?? ''}.`).join(' ')
+  return initials ? `${surname} ${initials}` : surname
+}
+
+/// Qoralama va bekor qilingan reja ochiq sahifada yoʻq: birinchisi hali
+/// bemorga koʻrsatilmagan, ikkinchisi endi amal qilmaydi
+function publicVisible(status: PlanStatus): boolean {
+  return status !== 'draft' && status !== 'cancelled'
+}
+
+async function loadPublic(deps: PlanDeps, code: string) {
+  const found = await repo.findByPublicCode(deps.db, code)
+  if (!found) throw errors.notFound(PLAN_TEXT.not_available)
+  return found
+}
+
+export async function publicPage(deps: PlanDeps, code: string): Promise<PlanPublicView> {
+  const found = await loadPublic(deps, code)
+
+  return withClinic(deps.db, found.clinic_id, async (tx) => {
+    const row = await repo.findById(tx, found.plan_id)
+    if (!row || !publicVisible(row.status)) throw errors.notFound(PLAN_TEXT.not_available)
+
+    const [person] = await patients.findByIds(tx, [row.patientId])
+    const names = await auth.staffNamesTx(tx, [row.doctorId])
+
+    const total = planTotal(row.stages)
+    const validUntil = row.validUntil ? toIso(row.validUntil) : null
+    const expired = validUntil !== null && validUntil < todayISO() && row.status === 'sent'
+
+    return {
+      clinicName: found.name,
+      hasLogo: found.logo_key !== null,
+      publicPhone: found.public_phone,
+      address: found.address,
+      patientName: shortName(person?.fio ?? ''),
+      doctorName: names.get(row.doctorId) ?? '',
+      title: row.title,
+      status: row.status,
+      validUntil,
+      expired,
+      total,
+      discount: row.discount,
+      payable: Math.max(0, total - row.discount),
+      teeth: [
+        ...new Set(
+          row.stages.flatMap((stage) =>
+            stage.items.flatMap((item) => (item.tooth === null ? [] : [item.tooth])),
+          ),
+        ),
+      ],
+      stages: row.stages.map((stage) => ({
+        name: stage.name,
+        note: stage.note,
+        total: stage.items.reduce((sum, item) => sum + itemTotal(item), 0),
+        items: stage.items.map((item) => ({
+          tooth: item.tooth,
+          treatment: item.treatment,
+          price: item.price,
+          qty: item.qty,
+          total: itemTotal(item),
+          done: item.status === 'done',
+        })),
+      })),
+      canRespond: row.status === 'sent' && !expired,
+      needsPhone: Boolean(person?.phone),
+    }
+  })
+}
+
+/// Klinika logotipi ochiq sahifada. Navbatdagi `/n/<kod>/logo` bilan bir xil
+/// sabab: fayl serverdagi omborda turibdi, brauzer uning manzilini topa
+/// olmaydi — rasm API orqali beriladi
+export async function publicLogo(
+  deps: PlanDeps,
+  code: string,
+): Promise<{ body: Buffer; contentType: string } | null> {
+  const found = await repo.findByPublicCode(deps.db, code)
+  if (!found?.logo_key) return null
+  return deps.storage.get(found.logo_key)
+}
+
+/// Bemorning javobi. Qaytadigan narsa ataylab tor — sahifa shundan keyin
+/// «rahmat» ekranini koʻrsatadi
+export async function respond(
+  deps: PlanDeps,
+  code: string,
+  input: PlanRespondInput,
+  who: { ip: string; deviceId: string },
+): Promise<{ status: PlanStatus }> {
+  const found = await loadPublic(deps, code)
+
+  const byIp = await deps.rateLimiter.hit(`plan:ip:${who.ip}`, IP_LIMIT, IP_WINDOW)
+  if (!byIp.allowed) throw errors.rateLimited(PLAN_TEXT.too_many)
+  const byDevice = await deps.rateLimiter.hit(
+    `plan:device:${who.deviceId}`,
+    DEVICE_LIMIT,
+    DEVICE_WINDOW,
+  )
+  if (!byDevice.allowed) throw errors.rateLimited(PLAN_TEXT.too_many)
+
+  return withClinic(deps.db, found.clinic_id, async (tx) => {
+    const row = await repo.findById(tx, found.plan_id)
+    if (!row || !publicVisible(row.status)) throw errors.notFound(PLAN_TEXT.not_available)
+    if (row.status !== 'sent') throw errors.conflict(PLAN_TEXT.already_answered)
+
+    const validUntil = row.validUntil ? toIso(row.validUntil) : null
+    if (validUntil !== null && validUntil < todayISO()) {
+      throw errors.badRequest(PLAN_TEXT.expired_public)
+    }
+
+    // Kod tasodifan boshqa odamga tushsa — u rejani koʻrsa ham javob bera
+    // olmaydi. Bemorda telefon boʻlmasa tekshiradigan narsa yoʻq
+    const [person] = await patients.findByIds(tx, [row.patientId])
+    if (person?.phone) {
+      if (!input.phoneTail) throw errors.validation({ phoneTail: PLAN_TEXT.phone_required })
+      if (!person.phone.endsWith(input.phoneTail)) {
+        throw errors.validation({ phoneTail: PLAN_TEXT.phone_wrong })
+      }
+    }
+
+    const reason = input.reason?.trim() || null
+    const now = new Date()
+    const status: PlanStatus = input.accept ? 'accepted' : 'declined'
+
+    await repo.update(tx, row.id, {
+      status,
+      ...(input.accept
+        ? { acceptedAt: now, declinedAt: null, declineReason: null }
+        : { declinedAt: now, declineReason: reason }),
+    })
+    await writeAudit(tx, {
+      userId: null,
+      action: AUDIT_ACTION.plan_status_changed,
+      entity: 'treatment_plan',
+      entityId: row.id,
+      // Kabinetdan emas, bemorning oʻzidan kelgani koʻrinib tursin
+      meta: { status, via: 'public' },
+    })
+
+    return { status }
   })
 }

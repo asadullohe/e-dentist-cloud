@@ -101,10 +101,24 @@ export const planListSchema = z.object({
   status: z.enum(['draft', 'sent', 'accepted', 'declined', 'done', 'cancelled']).optional(),
 })
 
+/// Ochiq sahifadagi javob (/r/<kod>). Bemorda telefon boʻlsa uning oxirgi
+/// toʻrt raqami soʻraladi — kod tasodifan boshqa odamga tushsa, u rejani
+/// koʻrsa ham javob bera olmaydi
+export const planRespondSchema = z.object({
+  accept: z.boolean(),
+  phoneTail: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, { error: () => PLAN_TEXT.phone_wrong })
+    .optional(),
+  reason: z.string().trim().max(500).nullish(),
+})
+
 export type PlanCreateInput = z.infer<typeof planCreateSchema>
 export type PlanUpdateInput = z.infer<typeof planUpdateSchema>
 export type PlanContentInput = z.infer<typeof planContentSchema>
 export type PlanStatusInput = z.infer<typeof planStatusSchema>
 export type PlanListInput = z.infer<typeof planListSchema>
+export type PlanRespondInput = z.infer<typeof planRespondSchema>
 export type PlanStageInput = z.infer<typeof stageSchema>
 export type PlanItemInput = z.infer<typeof itemSchema>

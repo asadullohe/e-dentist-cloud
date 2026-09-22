@@ -1,19 +1,23 @@
-import { clinicLogoUrl, UI_TEXT } from '@e-dentist/shared'
+import { UI_TEXT } from '@e-dentist/shared'
 import type { ReactNode } from 'react'
 import { useLocale } from '@/shared/lib'
 import { Button, Flag } from '@/shared/ui'
 
-/// Ochiq sahifalarning umumiy ramkasi (navbat, fikr): til almashtirgich,
-/// logotip, klinika nomi, sarlavha. Tor ustun — telefon uchun
+/// Ochiq sahifalarning umumiy ramkasi (navbat, fikr, davolash rejasi):
+/// til almashtirgich, logotip, klinika nomi, sarlavha. Tor ustun — telefon
+/// uchun.
+///
+/// Logotip manzilini chaqiruvchi beradi: navbat va fikr sahifalari uni
+/// navbat kodidan oladi, reja sahifasining kodi esa boshqa
 export function PublicShell({
-  code,
+  logoUrl,
   clinicName,
   hasLogo,
   title,
   subtitle,
   children,
 }: {
-  code: string
+  logoUrl: string
   clinicName: string
   hasLogo: boolean
   title: string
@@ -38,7 +42,7 @@ export function PublicShell({
 
       <header className="mb-5 flex items-center gap-3">
         {hasLogo ? (
-          <img src={clinicLogoUrl(code)} alt="" className="size-12 rounded-xl object-contain" />
+          <img src={logoUrl} alt="" className="size-12 rounded-xl object-contain" />
         ) : (
           <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-xl text-lg font-bold">
             {clinicName.slice(0, 1)}

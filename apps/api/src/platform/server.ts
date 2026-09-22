@@ -207,7 +207,12 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     },
   })
   app.register(labRoutes, { prefix: '/api', deps: { db: deps.db } })
-  app.register(planRoutes, { prefix: '/api', deps: { db: deps.db } })
+  // Davolash rejalari: ochiq /api/r/<kod> va kabinetdagi /api/plans
+  app.register(planRoutes, {
+    prefix: '/api',
+    deps: { db: deps.db, rateLimiter: deps.rateLimiter, storage: deps.storage },
+    secureCookie: config.NODE_ENV === 'production',
+  })
   app.register(exportRoutes, { prefix: '/api', deps: { db: deps.db } })
 
   return app

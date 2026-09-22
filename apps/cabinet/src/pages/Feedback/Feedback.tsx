@@ -1,4 +1,5 @@
 import {
+  clinicLogoUrl,
   FEEDBACK_TEXT,
   FEEDBACK_UI,
   type FeedbackTag,
@@ -11,7 +12,7 @@ import { useParams, useSearchParams } from 'react-router-dom'
 import { rememberFeedback, useFeedbackPage, useSubmitFeedback } from '@/entities/feedback'
 import { ApiError } from '@/shared/api'
 import { Button, Card, Input, Label, Skeleton, Textarea } from '@/shared/ui'
-import { PublicShell } from '../Queue/PublicShell'
+import { PublicShell } from '@/widgets/public-shell'
 import { StarRating } from './StarRating'
 import { TagPicker } from './TagPicker'
 import { Thanks } from './Thanks'
@@ -86,7 +87,7 @@ export function Feedback() {
 
   return (
     <PublicShell
-      code={code}
+      logoUrl={clinicLogoUrl(code)}
       clinicName={data.clinicName}
       hasLogo={data.hasLogo}
       title={FEEDBACK_UI.title}
