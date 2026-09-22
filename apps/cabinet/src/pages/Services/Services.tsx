@@ -11,15 +11,15 @@ import {
 } from '@/features/service-form'
 import {
   Button,
+  DeleteDialog,
   DragHandle,
   type DragHandleProps,
   EmptyState,
   Input,
+  ItemMenu,
   Skeleton,
   SortableList,
 } from '@/shared/ui'
-import { DeleteDialog } from './DeleteDialog'
-import { ItemMenu } from './ItemMenu'
 
 /// Xizmatlar katalogi: tur plitkalari (tortib tartiblanadi), bosilsa —
 /// turning xizmatlari. Qidiruv hamma turdan izlaydi

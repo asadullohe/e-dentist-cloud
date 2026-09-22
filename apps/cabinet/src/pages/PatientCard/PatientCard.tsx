@@ -7,6 +7,7 @@ import {
   LAB_UI,
   PATIENT_UI,
   PAYMENT_UI,
+  PLAN_UI,
   SCHEDULE_UI,
   todayISO,
 } from '@e-dentist/shared'
@@ -15,6 +16,7 @@ import {
   ArrowLeftIcon,
   CalendarIcon,
   CalendarPlusIcon,
+  ClipboardListIcon,
   CreditCardIcon,
   FlaskConicalIcon,
   ImageIcon,
@@ -53,6 +55,8 @@ import {
 import { ImagesTab } from './ImagesTab'
 import { LabTab } from './LabTab'
 import { PaymentsTab } from './PaymentsTab'
+import { PlanPage } from './PlanPage'
+import { PlansTab } from './PlansTab'
 import { VisitsTab } from './VisitsTab'
 
 function ChartTab({ patientId }: { patientId: string }) {
@@ -159,12 +163,18 @@ function ChartTab({ patientId }: { patientId: string }) {
 /// Kartochka boʻlimlari. Funksiya — matnlar joriy tilda oʻqilishi uchun.
 /// Ruxsatga bogʻliq boʻlimlar (toʻlovlar, texnik) roʻyxatga kirmaydi —
 /// shifokor «Toʻlovlar» ni koʻrmaydi, haqiqiy himoya serverda
-function cardItems(id: string, can: { payments: boolean; lab: boolean }): SideNavItem[] {
+function cardItems(
+  id: string,
+  can: { payments: boolean; lab: boolean; plans: boolean },
+): SideNavItem[] {
   const base = `/patients/${id}`
   const items: SideNavItem[] = [
     { to: base, label: CARD_UI.tab_visits, icon: CalendarIcon },
     { to: `${base}/tishlar`, label: CARD_UI.tab_chart, icon: LayoutGridIcon },
   ]
+  if (can.plans) {
+    items.push({ to: `${base}/reja`, label: PLAN_UI.tab, icon: ClipboardListIcon })
+  }
   if (can.payments) {
     items.push({ to: `${base}/tolovlar`, label: PAYMENT_UI.tab, icon: CreditCardIcon })
   }
@@ -198,6 +208,25 @@ export function PaymentsSection() {
   return (
     <ContentSection title={PAYMENT_UI.tab} desc={CARD_UI.payments_hint} wide>
       <PaymentsTab patientId={id} />
+    </ContentSection>
+  )
+}
+
+export function PlansSection() {
+  const { id = '' } = useParams()
+  return (
+    <ContentSection title={PLAN_UI.tab} desc={PLAN_UI.hint} wide>
+      <PlansTab patientId={id} />
+    </ContentSection>
+  )
+}
+
+/// Bitta reja — oʻz sahifasi. `ContentSection` sarlavhasi bu yerda ortiqcha:
+/// rejaning oʻz sarlavhasi va holati bor
+export function PlanSection() {
+  return (
+    <ContentSection title={PLAN_UI.tab} desc={PLAN_UI.hint} wide>
+      <PlanPage />
     </ContentSection>
   )
 }
@@ -280,6 +309,7 @@ export function PatientCard() {
             items={cardItems(id, {
               payments: hasPermission('payments.read'),
               lab: hasPermission('lab.write'),
+              plans: hasPermission('plans.read') || hasPermission('plans.write'),
             })}
           />
         }

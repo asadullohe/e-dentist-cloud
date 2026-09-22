@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.2 — kabinet: kartochkada «Reja» tabi
+**Hozirgi task:** 13.3 — ochiq sahifa `/r/:kod`
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1387,12 +1387,19 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       bemorlariniki (11.3). Yoʻlakay: navbat kodi generatori
       `platform/publicCode.ts` ga chiqdi — reja ham ochiq kod oladi.
       Testlar: `plans.test.ts` (21)
-- [ ] **13.2 Kabinet: kartochkada «Reja» tabi** — rejalar roʻyxati (holat,
-      jami, sana), yangi reja oynasi: bosqich qoʻshish, band qoʻshish (tish
-      xaritasidan tish, xizmat tanlansa narx tushadi, miqdor), bandlarni va
-      bosqichlarni tortib tartiblash (dnd-kit, xizmatlar sahifasidagi kabi),
-      chegirma (soʻm yoki foizdan hisoblash), amal muddati. Yon menyuda emas —
-      bemor kartochkasi ichida
+- [x] **13.2 Kabinet: kartochkada «Reja» tabi** — `/patients/:id/reja`
+      roʻyxat (nom, holat, toʻlash kerak, bajarilgani, sana) va
+      `/patients/:id/reja/:planId` **alohida sahifa**: bosqichlar, ichida
+      ishlar, jamlanma. Oynada emas — rejada oʻnlab band boʻladi, telefonda
+      oyna tor. Reja xossalari oynada (nom, shifokor, chegirma soʻmda +
+      foizdan hisoblash tugmasi, amal muddati, izoh); band oynasida xizmat
+      tanlansa nom va narx tushadi (keyin qoʻlda tahrirlanadi — bazaga
+      snapshot), bitta tish tanlagich, miqdor. Bosqich ham, band ham tortib
+      tartiblanadi (ichma-ich `SortableList`), har oʻzgarish darhol
+      `PUT content` bilan saqlanadi — tartibda toast chiqmaydi. Holat
+      tugmalari holatga qarab (yuborish / rozi / rad / bekor, sabab oynada);
+      bajarilgan band tahrirlanmaydi. Yoʻlakay: `DeleteDialog` va `ItemMenu`
+      `pages/Services` dan `shared/ui` ga chiqdi — reja ham ishlatadi
 - [ ] **13.3 Ochiq sahifa `/r/:kod`** — `PublicShell` da: klinika, shifokor,
       amal muddati, tish xaritasi (rejadagi tishlar belgilangan), bosqichlar va
       narxlar, jami · chegirma · toʻlash kerak; «Roziman» telefon oxirgi 4

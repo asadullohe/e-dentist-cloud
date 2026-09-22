@@ -4,9 +4,15 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { type Service, useServices, useServiceTypes } from '@/entities/service'
 import { ServiceFormDialog, useDeleteService, useReorderServices } from '@/features/service-form'
-import { Button, DragHandle, EmptyState, Skeleton, SortableList } from '@/shared/ui'
-import { DeleteDialog } from './DeleteDialog'
-import { ItemMenu } from './ItemMenu'
+import {
+  Button,
+  DeleteDialog,
+  DragHandle,
+  EmptyState,
+  ItemMenu,
+  Skeleton,
+  SortableList,
+} from '@/shared/ui'
 
 /// Bitta turning xizmatlari: karta (nom · narx · «⋯»), tortib tartiblanadi
 export function ServiceTypePage() {

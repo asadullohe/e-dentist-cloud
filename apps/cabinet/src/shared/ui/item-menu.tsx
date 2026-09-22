@@ -1,14 +1,15 @@
 import { TABLE_UI, UI_TEXT } from '@e-dentist/shared'
 import { MoreHorizontalIcon, PencilIcon, Trash2Icon } from 'lucide-react'
+import { Button } from './button'
 import {
-  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/shared/ui'
+} from './dropdown-menu'
 
-/// «⋯» — tahrirlash va oʻchirish; tur plitkasi va xizmat kartasi uchun bitta
+/// «⋯» — tahrirlash va oʻchirish. Tur plitkasi, xizmat kartasi va
+/// reja bandi uchun bitta menyu
 export function ItemMenu({ onEdit, onRemove }: { onEdit: () => void; onRemove: () => void }) {
   return (
     <DropdownMenu>

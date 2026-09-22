@@ -15,6 +15,8 @@ import {
   LabSection,
   PatientCard,
   PaymentsSection,
+  PlanSection,
+  PlansSection,
   VisitsSection,
 } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
@@ -110,6 +112,10 @@ export function Router() {
               <Route path="tishlar" element={<ChartSection />} />
               <Route element={<RequirePermission anyOf={['payments.read']} />}>
                 <Route path="tolovlar" element={<PaymentsSection />} />
+              </Route>
+              <Route element={<RequirePermission anyOf={['plans.read', 'plans.write']} />}>
+                <Route path="reja" element={<PlansSection />} />
+                <Route path="reja/:planId" element={<PlanSection />} />
               </Route>
               <Route path="rasmlar" element={<ImagesSection />} />
               <Route element={<RequirePermission anyOf={['lab.write']} />}>

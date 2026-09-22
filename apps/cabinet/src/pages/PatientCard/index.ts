@@ -4,5 +4,7 @@ export {
   LabSection,
   PatientCard,
   PaymentsSection,
+  PlanSection,
+  PlansSection,
   VisitsSection,
 } from './PatientCard'

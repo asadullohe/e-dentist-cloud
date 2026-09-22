@@ -8,9 +8,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/shared/ui'
+} from './alert-dialog'
 
-/// Oʻchirish tasdigʻi — tur va xizmat uchun bitta
+/// Oʻchirish tasdigʻi. Matnlarni chaqiruvchi beradi — xizmat,
+/// reja bosqichi va boshqa joylar uchun bitta oyna
 export function DeleteDialog({
   open,
   title,
@@ -22,7 +23,7 @@ export function DeleteDialog({
   title: string
   text: string
   onOpenChange: (open: boolean) => void
-  onConfirm: () => Promise<void>
+  onConfirm: () => void | Promise<void>
 }) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

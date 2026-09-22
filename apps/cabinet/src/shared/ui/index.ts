@@ -36,6 +36,7 @@ export {
   type FacetOption,
 } from './data-table'
 export { DatePicker } from './date-picker'
+export { DeleteDialog } from './delete-dialog'
 export {
   Dialog,
   DialogContent,
@@ -64,6 +65,7 @@ export {
   FormMessage,
 } from './form'
 export { Input } from './input'
+export { ItemMenu } from './item-menu'
 export { Label } from './label'
 export { Money } from './money'
 export { MonthNav } from './month-nav'
