@@ -1,5 +1,5 @@
-// plans moduli uch jadvalga egalik qiladi: `treatment_plans`,
-// `treatment_plan_stages`, `treatment_plan_items`.
+// plans moduli toʻrt jadvalga egalik qiladi: `treatment_plans`,
+// `treatment_plan_stages`, `treatment_plan_groups`, `treatment_plan_items`.
 //
 // clinicId ni kengaytma oʻzi qoʻyadi — bu yerda hech qayerda yozilmaydi.
 
@@ -10,6 +10,7 @@ import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 const ITEM_SELECT = {
   id: true,
   stageId: true,
+  groupId: true,
   position: true,
   tooth: true,
   serviceId: true,
@@ -21,12 +22,22 @@ const ITEM_SELECT = {
   note: true,
 } satisfies Prisma.TreatmentPlanItemSelect
 
+const GROUP_SELECT = {
+  id: true,
+  stageId: true,
+  name: true,
+  teeth: true,
+  pontics: true,
+  material: true,
+} satisfies Prisma.TreatmentPlanGroupSelect
+
 const STAGE_SELECT = {
   id: true,
   planId: true,
   name: true,
   position: true,
   note: true,
+  groups: { select: GROUP_SELECT, orderBy: { createdAt: 'asc' } },
   items: { select: ITEM_SELECT, orderBy: { position: 'asc' } },
 } satisfies Prisma.TreatmentPlanStageSelect
 
@@ -56,6 +67,7 @@ const FULL_SELECT = {
 export type PlanFullRow = Prisma.TreatmentPlanGetPayload<{ select: typeof FULL_SELECT }>
 export type StageRow = Prisma.TreatmentPlanStageGetPayload<{ select: typeof STAGE_SELECT }>
 export type ItemRow = Prisma.TreatmentPlanItemGetPayload<{ select: typeof ITEM_SELECT }>
+export type GroupRow = Prisma.TreatmentPlanGroupGetPayload<{ select: typeof GROUP_SELECT }>
 
 export interface PlanFilter {
   patientId?: string
@@ -140,8 +152,39 @@ export function removeStages(tx: ClinicTx, ids: string[]) {
   return tx.treatmentPlanStage.deleteMany({ where: { id: { in: ids } } })
 }
 
+export interface GroupFields {
+  stageId: string
+  name: string
+  teeth: number[]
+  pontics: number[]
+  material: string | null
+}
+
+export function createGroup(tx: ClinicTx, id: string, data: GroupFields) {
+  return tx.treatmentPlanGroup.create({ data: tenantScoped({ id, ...data }), select: GROUP_SELECT })
+}
+
+export function updateGroup(tx: ClinicTx, id: string, data: Omit<GroupFields, 'stageId'>) {
+  return tx.treatmentPlanGroup.update({ where: { id }, data, select: GROUP_SELECT })
+}
+
+/// Guruh oʻchsa bandlar qoladi — `group_id` FK si SET NULL
+export function removeGroups(tx: ClinicTx, ids: string[]) {
+  return tx.treatmentPlanGroup.deleteMany({ where: { id: { in: ids } } })
+}
+
+/// Tashrif oʻchirilayotganda (15.2): shu tashrifga bogʻlangan band va uning
+/// guruhi. Guruh boʻlmasa koʻprik ham yoʻq
+export function findItemByVisit(tx: ClinicTx, visitId: string) {
+  return tx.treatmentPlanItem.findUnique({
+    where: { visitId },
+    select: { id: true, groupId: true },
+  })
+}
+
 export interface ItemFields {
   stageId: string
+  groupId: string | null
   position: number
   tooth: number | null
   serviceId: string | null

@@ -6,6 +6,7 @@ import {
   PLAN_UI,
   planLogoUrl,
 } from '@e-dentist/shared'
+import { cn } from 'cn'
 import { CheckCircle2Icon, PhoneIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
@@ -94,7 +95,16 @@ export function PlanPublic() {
       {plan.teeth.length > 0 && (
         <Card className="mb-3 gap-2 p-3">
           <div className="text-muted-foreground text-xs">{PLAN_PUBLIC_UI.teeth_title}</div>
-          <ToothChart teeth={[]} highlight={plan.teeth} bare />
+          {/* Koʻprik chizigʻi rejadagi guruhlardan (15.2): bemor qaysi
+              tishlar birga bogʻlanishini koʻradi */}
+          <ToothChart
+            teeth={[]}
+            bridges={plan.stages.flatMap((stage) =>
+              stage.groups.map((group) => ({ id: group.id, teeth: group.teeth })),
+            )}
+            highlight={plan.teeth}
+            bare
+          />
         </Card>
       )}
 
@@ -109,25 +119,49 @@ export function PlanPublic() {
             </div>
             {stage.note && <p className="text-muted-foreground text-xs">{stage.note}</p>}
             <div className="space-y-1">
-              {stage.items.map((item) => (
-                <div
-                  key={`${stage.name}-${item.treatment}-${item.tooth}`}
-                  className="flex items-baseline justify-between gap-2 text-sm"
-                >
-                  <span>
-                    {item.tooth !== null && (
-                      <span className="bg-muted mr-1.5 rounded px-1.5 py-0.5 text-xs tabular-nums">
-                        {item.tooth}
+              {stage.items.map((item, index) => {
+                const group = stage.groups.find((row) => row.id === item.groupId)
+                // Koʻprik bemorga ham bitta blok: sarlavha birinchi
+                // bandidan oldin, ichidagilar surilgan (15.2)
+                const first = group !== undefined && stage.items[index - 1]?.groupId !== group.id
+                return (
+                  <div key={`${stage.name}-${item.treatment}-${item.tooth}`}>
+                    {first && group && (
+                      <div className="text-muted-foreground mt-1.5 text-xs font-medium">
+                        {group.name}
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        'flex items-baseline justify-between gap-2 text-sm',
+                        group && 'pl-2',
+                      )}
+                    >
+                      <span>
+                        {item.tooth !== null && (
+                          <span className="bg-muted mr-1.5 rounded px-1.5 py-0.5 text-xs tabular-nums">
+                            {item.tooth}
+                          </span>
+                        )}
+                        {item.treatment}
+                        {group && item.tooth !== null && (
+                          <span className="text-muted-foreground text-xs">
+                            {' '}
+                            ·{' '}
+                            {group.pontics.includes(item.tooth)
+                              ? PLAN_UI.role_pontic
+                              : PLAN_UI.role_abutment}
+                          </span>
+                        )}
+                        {item.qty > 1 && (
+                          <span className="text-muted-foreground text-xs"> × {item.qty}</span>
+                        )}
                       </span>
-                    )}
-                    {item.treatment}
-                    {item.qty > 1 && (
-                      <span className="text-muted-foreground text-xs"> × {item.qty}</span>
-                    )}
-                  </span>
-                  <span className="tabular-nums">{formatSom(item.total)}</span>
-                </div>
-              ))}
+                      <span className="tabular-nums">{formatSom(item.total)}</span>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </Card>
         ))}

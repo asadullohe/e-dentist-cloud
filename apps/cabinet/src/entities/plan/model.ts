@@ -5,6 +5,8 @@ export type PlanItemStatus = keyof typeof PLAN_ITEM_STATUS_LABELS
 
 export interface PlanItem {
   id: string
+  /// Koʻprik guruhi (15.2) — boʻsh boʻlsa oddiy band
+  groupId: string | null
   /// FDI raqami yoki boʻsh (umumiy ish)
   tooth: number | null
   serviceId: string | null
@@ -19,11 +21,22 @@ export interface PlanItem {
   note: string | null
 }
 
+/// Bandlar guruhi — koʻprik (15.2). Rol shu yerdan: `pontics` ichidagi
+/// tish quyma, qolgani tayanch koronka
+export interface PlanGroup {
+  id: string
+  name: string
+  teeth: number[]
+  pontics: number[]
+  material: string | null
+}
+
 export interface PlanStage {
   id: string
   name: string
   note: string | null
   total: number
+  groups: PlanGroup[]
   items: PlanItem[]
 }
 
@@ -58,6 +71,8 @@ export interface Plan {
 /// `id` boʻlmasa — yangi yozuv, kelmagani oʻchadi
 export interface PlanItemDraft {
   id?: string
+  /// Shu bosqichning `groups` massividagi oʻrin; boʻsh — oddiy band
+  groupIndex?: number | null
   tooth?: number | null
   serviceId?: string | null
   treatment: string
@@ -66,10 +81,19 @@ export interface PlanItemDraft {
   note?: string | null
 }
 
+export interface PlanGroupDraft {
+  id?: string
+  name: string
+  teeth: number[]
+  pontics: number[]
+  material?: string | null
+}
+
 export interface PlanStageDraft {
   id?: string
   name: string
   note?: string | null
+  groups: PlanGroupDraft[]
   items: PlanItemDraft[]
 }
 
@@ -96,7 +120,10 @@ export interface PlanPublic {
     name: string
     note: string | null
     total: number
+    /// Koʻprik guruhlari — bandlar `groupId` orqali bogʻlanadi
+    groups: { id: string; name: string; teeth: number[]; pontics: number[] }[]
     items: {
+      groupId: string | null
       tooth: number | null
       treatment: string
       price: number

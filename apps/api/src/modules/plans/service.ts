@@ -42,6 +42,8 @@ export interface PlanDeps {
 
 export interface PlanItemView {
   id: string
+  /// Koʻprik guruhi (15.2) — boʻsh boʻlsa oddiy band
+  groupId: string | null
   tooth: number | null
   serviceId: string | null
   treatment: string
@@ -54,11 +56,22 @@ export interface PlanItemView {
   note: string | null
 }
 
+/// Bandlar guruhi — koʻprik (15.2). Rol shu yerdan: `pontics` ichidagi
+/// tish quyma, qolgani tayanch
+export interface PlanGroupView {
+  id: string
+  name: string
+  teeth: number[]
+  pontics: number[]
+  material: string | null
+}
+
 export interface PlanStageView {
   id: string
   name: string
   note: string | null
   total: number
+  groups: PlanGroupView[]
   items: PlanItemView[]
 }
 
@@ -181,8 +194,16 @@ async function toView(tx: ClinicTx, rows: repo.PlanFullRow[]): Promise<PlanView[
         name: stage.name,
         note: stage.note,
         total: stage.items.reduce((sum, item) => sum + itemTotal(item), 0),
+        groups: stage.groups.map((group) => ({
+          id: group.id,
+          name: group.name,
+          teeth: group.teeth,
+          pontics: group.pontics,
+          material: group.material,
+        })),
         items: stage.items.map((item) => ({
           id: item.id,
+          groupId: item.groupId,
           tooth: item.tooth,
           serviceId: item.serviceId,
           treatment: item.treatment,
@@ -358,9 +379,11 @@ export function saveContent(
 
     const oldStages = new Map(row.stages.map((stage) => [stage.id, stage]))
     const oldItems = new Map(row.stages.flatMap((s) => s.items).map((item) => [item.id, item]))
+    const oldGroups = new Map(row.stages.flatMap((s) => s.groups).map((group) => [group.id, group]))
 
     const keptStages = new Set<string>()
     const keptItems = new Set<string>()
+    const keptGroups = new Set<string>()
     let total = 0
 
     // Xizmatning qoʻllanish sohasi (19-boʻlim): `mouth`/`arch` bandida tish
@@ -391,9 +414,37 @@ export function saveContent(
       }
       keptStages.add(stageId)
 
+      // Guruhlar bandlardan oldin: band ularning idsiga bogʻlanadi.
+      // Bandda indeks keladi — yangi guruhning idsi hali berilmagan
+      const groupIds: string[] = []
+      for (const group of stage.groups) {
+        const fields = {
+          name: group.name,
+          teeth: group.teeth,
+          pontics: group.pontics,
+          material: group.material ?? null,
+        }
+        if (group.id !== undefined) {
+          if (!oldGroups.has(group.id)) throw errors.notFound(PLAN_TEXT.group_not_found)
+          await repo.updateGroup(tx, group.id, fields)
+          groupIds.push(group.id)
+          keptGroups.add(group.id)
+        } else {
+          const groupId = uuidV7()
+          await repo.createGroup(tx, groupId, { stageId, ...fields })
+          groupIds.push(groupId)
+          keptGroups.add(groupId)
+        }
+      }
+
       for (const [itemIndex, item] of stage.items.entries()) {
+        const groupId = item.groupIndex == null ? null : (groupIds[item.groupIndex] ?? null)
+        if (item.groupIndex != null && groupId === null) {
+          throw errors.notFound(PLAN_TEXT.group_not_found)
+        }
         const fields = {
           stageId,
+          groupId,
           position: itemIndex,
           tooth: services.toothForArea(
             item.serviceId ? areas.get(item.serviceId) : undefined,
@@ -436,6 +487,11 @@ export function saveContent(
       throw errors.badRequest(PLAN_TEXT.item_done_remove)
     }
     if (removedStages.length > 0) await repo.removeStages(tx, removedStages)
+
+    // Guruh oʻchirilsa bandlari joyida qoladi (FK si SET NULL): ular
+    // mustaqil ish, faqat birgalikda koʻrsatilishi tugaydi
+    const removedGroups = [...oldGroups.keys()].filter((groupId) => !keptGroups.has(groupId))
+    if (removedGroups.length > 0) await repo.removeGroups(tx, removedGroups)
 
     await writeAudit(tx, {
       userId: viewer.userId,
@@ -605,6 +661,57 @@ function loadItem(plan: repo.PlanFullRow, itemId: string): repo.ItemRow {
   return item
 }
 
+/// Guruhning hamma bandi bajarilgach koʻprik xaritaga tushadi (15.2):
+/// tayanchlarga koronka, oraliqqa quyma, material guruhdan. Band keyin
+/// bajarilmagan boʻlib qolsa koʻprik `onVisitRemovedTx` da olinadi
+async function bridgeIfGroupDone(
+  tx: ClinicTx,
+  userId: string,
+  patientId: string,
+  planId: string,
+  groupId: string,
+): Promise<void> {
+  const fresh = await repo.findById(tx, planId)
+  if (!fresh) return
+
+  const group = fresh.stages.flatMap((stage) => stage.groups).find((row) => row.id === groupId)
+  if (!group) return
+
+  const items = fresh.stages
+    .flatMap((stage) => stage.items)
+    .filter((item) => item.groupId === groupId)
+  if (items.length === 0 || !items.every((item) => itemStatus(item) === 'done')) return
+
+  const roles = Object.fromEntries(
+    group.teeth.map((tooth) => [
+      String(tooth),
+      group.pontics.includes(tooth) ? 'koprik' : 'koronka',
+    ]),
+  )
+  await visits.createBridgeTx(
+    tx,
+    userId,
+    patientId,
+    group.teeth,
+    group.material ?? '',
+    roles,
+    group.id,
+  )
+}
+
+/// Tashrif oʻchirilishidan **oldin** chaqiriladi (`VisitDeps.onVisitRemoved`,
+/// server.ts da ulanadi). Shu tashrif koʻprik guruhining birligi boʻlsa,
+/// guruh endi toʻliq bajarilmagan — koʻprik xaritadan olinadi va tishlar
+/// holati qaytariladi
+export async function onVisitRemovedTx(
+  tx: ClinicTx,
+  userId: string,
+  visitId: string,
+): Promise<void> {
+  const item = await repo.findItemByVisit(tx, visitId)
+  if (item?.groupId) await visits.removeBridgeOfGroupTx(tx, userId, item.groupId)
+}
+
 /// Oxirgi band hal boʻlgach reja «bajarildi» ga oʻtadi — qoʻlda belgilash
 /// kerak emas
 async function closeIfSettled(tx: ClinicTx, planId: string): Promise<void> {
@@ -639,6 +746,9 @@ export function completeItem(
     })
 
     await repo.setItemStatus(tx, itemId, { status: 'done', visitId: visit.id })
+    if (item.groupId) {
+      await bridgeIfGroupDone(tx, viewer.userId, plan.patientId, planId, item.groupId)
+    }
     await closeIfSettled(tx, planId)
 
     await writeAudit(tx, {
@@ -724,7 +834,10 @@ export interface PlanPublicView {
     name: string
     note: string | null
     total: number
+    /// Koʻprik guruhlari — bandlar `groupId` orqali bogʻlanadi (15.2)
+    groups: { id: string; name: string; teeth: number[]; pontics: number[] }[]
     items: {
+      groupId: string | null
       tooth: number | null
       treatment: string
       price: number
@@ -798,7 +911,15 @@ export async function publicPage(deps: PlanDeps, code: string): Promise<PlanPubl
         name: stage.name,
         note: stage.note,
         total: stage.items.reduce((sum, item) => sum + itemTotal(item), 0),
+        // Koʻprik bemorga ham bitta blok boʻlib koʻrinadi (15.2)
+        groups: stage.groups.map((group) => ({
+          id: group.id,
+          name: group.name,
+          teeth: group.teeth,
+          pontics: group.pontics,
+        })),
         items: stage.items.map((item) => ({
+          groupId: item.groupId,
           tooth: item.tooth,
           treatment: item.treatment,
           price: item.price,

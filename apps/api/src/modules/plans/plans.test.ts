@@ -31,12 +31,22 @@ interface PlanItem {
   tooth: number | null
   status: string
   visitId: string | null
+  groupId: string | null
+}
+
+interface PlanGroup {
+  id: string
+  name: string
+  teeth: number[]
+  pontics: number[]
+  material: string | null
 }
 
 interface PlanStage {
   id: string
   name: string
   total: number
+  groups: PlanGroup[]
   items: PlanItem[]
 }
 
@@ -362,6 +372,161 @@ describe('mazmunni qayta saqlash', () => {
     })
     expect(bad.statusCode).toBe(400)
     expect(bad.json().error.fields.tooth).toMatch(/tish/i)
+  })
+})
+
+// Bandlar guruhi va koʻprik (15.2, tz.md 19-boʻlim): koʻprik uchta oddiy
+// band, guruh — ustki qatlam. Hamma bandi bajarilgach xaritaga tushadi
+describe('koʻprik guruhi', () => {
+  /// 47–45 oraliq: 46 quyma, chetlari tayanch
+  const BRIDGE = {
+    name: 'Koʻprik 47–45',
+    teeth: [47, 46, 45],
+    pontics: [46],
+    material: 'metall-keramika',
+  }
+
+  /// Har testga oʻz bemori: koʻprik xaritaga yoziladi, qoʻshnisiga
+  /// aralashmasin
+  async function planWithBridge() {
+    const person = await call('POST', '/api/patients', { fio: 'Koʻprik Bemori' })
+    const patient = person.json().data.id as string
+    const created = await call('POST', '/api/plans', { patientId: patient })
+    const id = created.json().data.id as string
+    const saved = await call('PUT', `/api/plans/${id}/content`, {
+      stages: [
+        {
+          name: 'Protez',
+          groups: [BRIDGE],
+          items: BRIDGE.teeth.map((tooth) => ({
+            groupIndex: 0,
+            tooth,
+            treatment: 'Metall-keramika koronka',
+            price: 900_000,
+          })),
+        },
+      ],
+    })
+    expect(saved.statusCode).toBe(200)
+    return { plan: saved.json().data as Plan, patient }
+  }
+
+  function chart(patient: string) {
+    return call('GET', `/api/patients/${patient}/teeth`)
+  }
+
+  it('guruh saqlanadi, bandlar unga bogʻlanadi, jami — birliklar yigʻindisi', async () => {
+    const { plan } = await planWithBridge()
+    const stage = plan.stages[0] as PlanStage
+    const group = stage.groups[0] as PlanGroup
+
+    expect(group).toMatchObject({ name: BRIDGE.name, teeth: [47, 46, 45], pontics: [46] })
+    expect(stage.items.map((item) => item.groupId)).toEqual([group.id, group.id, group.id])
+    expect(plan.total).toBe(2_700_000)
+  })
+
+  it('hamma bandi bajarilgach koʻprik xaritaga tushadi', async () => {
+    const { plan, patient } = await planWithBridge()
+    const items = plan.stages[0]?.items as PlanItem[]
+
+    for (const [index, item] of items.entries()) {
+      const r = await call('POST', `/api/plans/${plan.id}/items/${item.id}/complete`, {
+        date: todayISO(),
+        treatment: item.treatment,
+        tooth: item.tooth,
+        price: item.total,
+      })
+      expect(r.statusCode).toBe(200)
+
+      // Oxirgisidan oldin koʻprik yoʻq — ish hali tugamagan
+      const bridges = (await chart(patient)).json().data.bridges as { teeth: number[] }[]
+      expect(bridges.length).toBe(index === items.length - 1 ? 1 : 0)
+    }
+
+    const { teeth, bridges } = (await chart(patient)).json().data as {
+      teeth: { tooth: number; status: string; material: string | null }[]
+      bridges: { teeth: number[]; material: string | null }[]
+    }
+    expect(bridges[0]).toMatchObject({ teeth: [47, 46, 45], material: 'metall-keramika' })
+
+    const statusOf = new Map(teeth.map((row) => [row.tooth, row.status]))
+    expect(statusOf.get(47)).toBe('koronka')
+    expect(statusOf.get(46)).toBe('koprik')
+    expect(statusOf.get(45)).toBe('koronka')
+  })
+
+  it('tashrif oʻchirilsa koʻprik ham olinadi va tishlar holati qaytadi', async () => {
+    const { plan, patient } = await planWithBridge()
+    const items = plan.stages[0]?.items as PlanItem[]
+    let lastVisitId = ''
+
+    for (const item of items) {
+      const r = await call('POST', `/api/plans/${plan.id}/items/${item.id}/complete`, {
+        date: todayISO(),
+        treatment: item.treatment,
+        tooth: item.tooth,
+        price: item.total,
+      })
+      lastVisitId = r.json().data.visit.id
+    }
+    expect(((await chart(patient)).json().data.bridges as unknown[]).length).toBe(1)
+
+    expect((await call('DELETE', `/api/visits/${lastVisitId}`)).statusCode).toBe(200)
+
+    const { teeth, bridges } = (await chart(patient)).json().data as {
+      teeth: { tooth: number; status: string }[]
+      bridges: unknown[]
+    }
+    expect(bridges.length).toBe(0)
+    const statusOf = new Map(teeth.map((row) => [row.tooth, row.status]))
+    // Quyma oʻrnida tish yoʻq edi, tayanchlar esa «sogʻlom» ga qaytadi
+    expect(statusOf.get(46)).toBe('olingan')
+    expect(statusOf.get(47)).toBeUndefined()
+
+    // Band ham «kutilmoqda» ga qaytdi — tashrif bilan bogʻlanish uzildi
+    const fresh = (await call('GET', `/api/plans/${plan.id}`)).json().data as Plan
+    expect(fresh.doneCount).toBe(2)
+  })
+
+  it('guruh oʻchirilsa bandlar joyida qoladi', async () => {
+    const { plan } = await planWithBridge()
+    const stage = plan.stages[0] as PlanStage
+
+    const r = await call('PUT', `/api/plans/${plan.id}/content`, {
+      stages: [
+        {
+          id: stage.id,
+          name: stage.name,
+          groups: [],
+          items: stage.items.map((item) => ({
+            id: item.id,
+            tooth: item.tooth,
+            treatment: item.treatment,
+            price: item.price,
+          })),
+        },
+      ],
+    })
+    expect(r.statusCode).toBe(200)
+    const saved = r.json().data as Plan
+    expect(saved.stages[0]?.groups).toEqual([])
+    expect(saved.stages[0]?.items.length).toBe(3)
+    expect(saved.stages[0]?.items.every((item) => item.groupId === null)).toBe(true)
+    expect(saved.total).toBe(2_700_000)
+  })
+
+  it('begona guruh indeksi bilan 404', async () => {
+    const created = await call('POST', '/api/plans', { patientId })
+    const r = await call('PUT', `/api/plans/${created.json().data.id}/content`, {
+      stages: [
+        {
+          name: 'Protez',
+          groups: [],
+          items: [{ groupIndex: 0, tooth: 47, treatment: 'Koronka', price: 900_000 }],
+        },
+      ],
+    })
+    expect(r.statusCode).toBe(404)
   })
 })
 

@@ -75,6 +75,7 @@ model Clinic {
   timeBlocks   TimeBlock[]
   plans        TreatmentPlan[]
   planStages   TreatmentPlanStage[]
+  planGroups   TreatmentPlanGroup[]
   planItems    TreatmentPlanItem[]
 
   @@index([status])
@@ -317,16 +318,20 @@ model Tooth {
 /// Koʻprik. Tayanch va oraliq tishlar `teeth` massividagi tartib boʻyicha
 /// aniqlanadi — hisoblash packages/teeth dagi bridgeSpan da
 model Bridge {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  clinicId  String   @map("clinic_id") @db.Uuid
-  patientId String   @map("patient_id") @db.Uuid
-  teeth     Int[]
-  material  String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id          String   @id @default(uuid(7)) @db.Uuid
+  clinicId    String   @map("clinic_id") @db.Uuid
+  patientId   String   @map("patient_id") @db.Uuid
+  teeth       Int[]
+  material    String?
+  /// Reja guruhidan tushgan boʻlsa — qaysi guruhdan (15.2). Qoʻlda
+  /// qoʻyilgan koʻprikda boʻsh
+  planGroupId String?  @unique @map("plan_group_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  clinic    Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  patient   Patient             @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  planGroup TreatmentPlanGroup? @relation(fields: [planGroupId], references: [id], onDelete: SetNull)
 
   @@index([clinicId, patientId])
   @@map("bridges")
@@ -821,9 +826,10 @@ model TreatmentPlanStage {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  plan   TreatmentPlan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  clinic Clinic               @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  plan   TreatmentPlan        @relation(fields: [planId], references: [id], onDelete: Cascade)
   items  TreatmentPlanItem[]
+  groups TreatmentPlanGroup[]
 
   @@index([clinicId])
   @@index([planId, position])
@@ -838,6 +844,8 @@ model TreatmentPlanItem {
   stageId  String @map("stage_id") @db.Uuid
 
   position  Int            @default(0)
+  /// Koʻprik guruhi (15.2) — boʻsh boʻlsa oddiy band
+  groupId   String?        @map("group_id") @db.Uuid
   /// FDI raqami. Umumiy ish (masalan «Professional tozalash») — boʻsh
   tooth     Int?
   serviceId String?        @map("service_id") @db.Uuid
@@ -855,12 +863,43 @@ model TreatmentPlanItem {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  clinic  Clinic             @relation(fields: [clinicId], references: [id], onDelete: Restrict)
-  stage   TreatmentPlanStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  service Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  visit   Visit?             @relation(fields: [visitId], references: [id], onDelete: SetNull)
+  clinic  Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  stage   TreatmentPlanStage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  group   TreatmentPlanGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  service Service?            @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  visit   Visit?              @relation(fields: [visitId], references: [id], onDelete: SetNull)
 
   @@index([clinicId])
   @@index([stageId, position])
+  @@index([groupId])
   @@map("treatment_plan_items")
+}
+
+/// Bandlar guruhi — koʻprik (15.2, tz.md 19-boʻlim). Band atomik boʻlib
+/// qoladi: guruh ustki qatlam, oʻchsa bandlar joyida qoladi. Rol bandda
+/// emas, shu yerda: `pontics` ichidagi tish — quyma, qolgani tayanch
+model TreatmentPlanGroup {
+  id       String @id @default(uuid(7)) @db.Uuid
+  clinicId String @map("clinic_id") @db.Uuid
+  stageId  String @map("stage_id") @db.Uuid
+
+  name     String
+  /// Koʻprik oraligʻi, FDI — bandlarning tishlari bilan bir xil
+  teeth    Int[]
+  /// Quyma tishlar (oraliqning ichki qismi); qolgani tayanch koronka
+  pontics  Int[]
+  material String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  stage  TreatmentPlanStage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  items  TreatmentPlanItem[]
+  /// Hamma bandi bajarilgach xaritaga tushgan koʻprik
+  bridge Bridge?
+
+  @@index([clinicId])
+  @@index([stageId])
+  @@map("treatment_plan_groups")
 }

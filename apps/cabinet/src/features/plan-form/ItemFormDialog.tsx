@@ -108,9 +108,13 @@ export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDia
   }
 
   // Tur boʻyicha guruhlangan roʻyxat: narxnoma katta boʻlsa tekis roʻyxatdan
-  // kerakli xizmatni topib boʻlmaydi
+  // kerakli xizmatni topib boʻlmaydi. `range` xizmat bu yerda yoʻq — u
+  // oraliqqa qoʻyiladi, «Koʻprik» oynasidan kiritiladi (15.2)
   const grouped = (types ?? [])
-    .map((type) => ({ type, items: (services ?? []).filter((item) => item.typeId === type.id) }))
+    .map((type) => ({
+      type,
+      items: (services ?? []).filter((item) => item.typeId === type.id && item.area !== 'range'),
+    }))
     .filter((group) => group.items.length > 0)
 
   return (

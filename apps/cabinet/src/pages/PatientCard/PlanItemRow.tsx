@@ -23,11 +23,16 @@ import {
 interface PlanItemRowProps {
   item: PlanItem
   editable: boolean
-  handle: DragHandleProps
+  /// Koʻprik guruhi ichida tartib oʻzgarmaydi — dastak berilmaydi (15.2)
+  handle?: DragHandleProps
+  /// «tayanch» yoki «quyma» — guruh ichidagi band uchun
+  role?: string
   onComplete(): void
-  onEdit(): void
   onSkip(skip: boolean): void
-  onRemove(): void
+  /// Guruh ichidagi band alohida tahrirlanmaydi va oʻchirilmaydi:
+  /// koʻprik butun boʻlib qoladi
+  onEdit?: () => void
+  onRemove?: () => void
 }
 
 /// Rejaning bitta bandi. Asosiy amal — «Bajarildi»: u tashrif formasini
@@ -37,6 +42,7 @@ export function PlanItemRow({
   item,
   editable,
   handle,
+  role,
   onComplete,
   onEdit,
   onSkip,
@@ -53,8 +59,8 @@ export function PlanItemRow({
         skipped && 'opacity-60',
       )}
     >
-      {editable && <DragHandle handle={handle} label={PLAN_UI.drag_item} />}
-      <div className={cn('min-w-0 flex-1', !editable && 'pl-2')}>
+      {editable && handle && <DragHandle handle={handle} label={PLAN_UI.drag_item} />}
+      <div className={cn('min-w-0 flex-1', (!editable || !handle) && 'pl-2')}>
         {/* Tish rozetkasi matn oqimida: telefonning tor ustunida u alohida
             qatorga tushib ketmasin */}
         <div className="text-sm">
@@ -64,6 +70,7 @@ export function PlanItemRow({
             </span>
           )}
           {item.treatment}
+          {role && <span className="text-muted-foreground"> · {role}</span>}
           {item.status !== 'pending' && (
             <Badge variant="outline" className="ml-1.5 text-xs">
               {PLAN_ITEM_STATUS_LABELS[item.status]}
@@ -108,7 +115,7 @@ export function PlanItemRow({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            {!skipped && (
+            {!skipped && onEdit && (
               <DropdownMenuItem onSelect={onEdit}>
                 <PencilIcon />
                 {UI_TEXT.edit}
@@ -118,10 +125,12 @@ export function PlanItemRow({
               {skipped ? <UndoIcon /> : <SkipForwardIcon />}
               {skipped ? PLAN_UI.mark_unskip : PLAN_UI.mark_skip}
             </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onSelect={onRemove}>
-              <Trash2Icon />
-              {UI_TEXT.remove}
-            </DropdownMenuItem>
+            {onRemove && (
+              <DropdownMenuItem variant="destructive" onSelect={onRemove}>
+                <Trash2Icon />
+                {UI_TEXT.remove}
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )}

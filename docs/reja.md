@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 15.2 — bandlar guruhi va koʻprik _(23/09/2026)_
+**Hozirgi task:** 15.3 — xaritadan ishlash _(23/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1486,13 +1486,18 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       ish turiga bogʻlangan. Xizmatsiz (qoʻlda yozilgan) muolajada tish
       ixtiyoriy qoladi. Testlar: migratsiya taxmini, majburiylik, `mouth`
       xizmatida tishning tozalanishi
-- [ ] **15.2 Bandlar guruhi va koʻprik** — `treatment_plan_items.group_id` +
-      `treatment_plan_groups` (nom, oraliq). Xaritada oraliq tanlanadi →
-      soha si `range` boʻlgan xizmat → tizim bandlarni yozadi: tishi
-      «olingan» boʻlsa quyma, boʻlmasa tayanch (rollar qoʻlda oʻzgartiriladi).
+- [x] **15.2 Bandlar guruhi va koʻprik** — `treatment_plan_items.group_id` +
+      `treatment_plan_groups` (nom, oraliq, quymalar, material). «Koʻprik»
+      oynasida oraliq tanlanadi (xaritadan tanlash 15.3 da) → har birlik
+      uchun xizmat → tizim bandlarni yozadi: tishi «olingan» boʻlsa quyma,
+      boʻlmasa tayanch (rollar qoʻlda oʻzgartiriladi, sukut xaritadan).
       Rejada, bemor sahifasida va A4 varaqda guruh bitta blok; bemor
       sahifasidagi xaritada koʻprik chizigʻi. Guruh oʻchsa bandlar qoladi.
-      Testlar: rollarning xaritadan aniqlanishi, guruh oʻchirilishi, jami
+      Hamma bandi bajarilgach koʻprik **xaritaga oʻzi tushadi**, tashrifi
+      oʻchirilsa **oʻzi olinadi** (`VisitDeps.onVisitRemoved` → `plans`).
+      `range` sohali xizmat oddiy «Yangi ish» roʻyxatida koʻrinmaydi.
+      Testlar: rollarning xaritadan aniqlanishi, koʻprikning tushishi va
+      olinishi, guruh oʻchirilishi, jami
 - [ ] **15.3 Xaritadan ishlash** — reja sahifasi tepasida tish xaritasi;
       tish (yoki oraliq) bosilsa «bu tishga ish qoʻshish» — xizmat tanlanadi,
       band oʻsha bosqichga tushadi. Band oynasidagi raqamlar qoladi (telefon
