@@ -1451,7 +1451,41 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       seed-demo da ikkita reja (biri bemorga yuborilgan — telefon skrinshoti,
       biri qabul qilingan va yarmi bajarilgan — kabinet). Yoʻlakay: seed-demo
       da `API_PORT`, shots.mjs da `BASE_URL` — ikkinchi nusxa boshqa portda
-- [ ] **13.8 Serverga chiqarish**
+- [~] **13.8 Serverga chiqarish**
+
+---
+
+## Bosqich 15 — Xizmat sohasi, koʻprik va xaritadan ishlash · ~4 kun
+
+> **Nega** _(qaror 23/09/2026)_
+>
+> Koʻprikni rejaga kiritib boʻlmasdi. Tekshiruv koʻrsatdiki muammo koʻprikda
+> emas: xizmat katalogida **qoʻllanish sohasi** maydoni yoʻq, shuning uchun
+> tish har joyda ixtiyoriy va koʻp tishli ish umuman ifodalanmaydi. Open
+> Dental va Dentrix da bu maydon bor, koʻprik esa uchta oddiy protsedura
+> boʻlib, xaritadan bitta tugma bilan qoʻyiladi. Tafsilot:
+> [`tz.md` 19-boʻlim](tz.md).
+>
+> Raqam 15: 14-bosqichni parallel sessiya qabul jadvaliga olgan _(23/09/2026)_.
+
+- [ ] **15.1 Xizmatga qoʻllanish sohasi** — `services.area`: `tooth` ·
+      `range` · `arch` · `mouth`. Xizmat formasida tanlov; migratsiyada
+      mavjudlariga nom boʻyicha taxmin (tozalash/oqartirish → ogʻiz, protez →
+      jagʻ, qolgani → tish) va Xizmatlar sahifasida egasi koʻrib chiqadi.
+      Reja bandi, tashrif va naryad formalari shunga qarab tish soʻraydi —
+      `mouth` da maydon koʻrsatilmaydi, `tooth` da majburiy. Testlar: soha
+      boʻyicha tekshiruv, migratsiya taxmini
+- [ ] **15.2 Bandlar guruhi va koʻprik** — `treatment_plan_items.group_id` +
+      `treatment_plan_groups` (nom, oraliq). Xaritada oraliq tanlanadi →
+      soha si `range` boʻlgan xizmat → tizim bandlarni yozadi: tishi
+      «olingan» boʻlsa quyma, boʻlmasa tayanch (rollar qoʻlda oʻzgartiriladi).
+      Rejada, bemor sahifasida va A4 varaqda guruh bitta blok; bemor
+      sahifasidagi xaritada koʻprik chizigʻi. Guruh oʻchsa bandlar qoladi.
+      Testlar: rollarning xaritadan aniqlanishi, guruh oʻchirilishi, jami
+- [ ] **15.3 Xaritadan ishlash** — reja sahifasi tepasida tish xaritasi;
+      tish (yoki oraliq) bosilsa «bu tishga ish qoʻshish» — xizmat tanlanadi,
+      band oʻsha bosqichga tushadi. Band oynasidagi raqamlar qoladi (telefon
+      uchun). Dentrix va Open Dental ning asosiy oqimi
 
 ---
 

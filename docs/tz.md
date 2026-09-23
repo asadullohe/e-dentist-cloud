@@ -891,3 +891,43 @@ Hisobotlar sahifasida davr uchun: nechta reja tuzildi, nechtasi qabul qilindi,
 qabul qilinganlarning summasi va foizi, shifokorlar boʻyicha. Bu klinikaga
 «qaysi shifokor koʻndira oladi» ni koʻrsatadi — raqobatchilarda bu
 «sotuv voronkasi» deb ataladi.
+
+---
+
+## 19. Xizmatning qoʻllanish sohasi va koʻprik _(qaror 23/09/2026)_
+
+_Koʻprikni rejaga kiritish talabidan chiqqan boʻlim. Tekshiruv koʻrsatdiki
+muammo koʻprikda emas — xizmat katalogida yetishmayotgan maydonda._
+
+### Nega
+
+Reja bandida tish **ixtiyoriy**: «Professional tozalash» ga ham, «Koronka» ga
+ham tish soʻraladi, foydalanuvchi oʻzi eslab qolishi kerak. Koʻprik esa
+umuman kiritilmaydi — u bir nechta tishga tegadi.
+
+Sanoat buni qanday hal qilgan (Open Dental, Dentrix): protsedura kodida
+**qoʻllanish sohasi** maydoni bor — `tooth`, `surface`, `quadrant`, `arch`,
+`mouth`, `tooth range`. Dastur shunga qarab tish soʻraydi yoki soʻramaydi.
+Koʻprik esa **bitta yozuv emas**: Open Dental qoʻllanmasi boʻyicha uch
+protsedura yoziladi — ikki tayanch (`retainer`) va bitta oraliq (`pontic`),
+lekin ular xaritada uch tish tanlanib **bitta tugma** bilan qoʻyiladi.
+
+### Qaror
+
+**Xizmatga soha qoʻshiladi** (`services.area`): `tooth` · `range` · `arch` ·
+`mouth`. Reja bandi, tashrif va naryad shunga qarab tish soʻraydi.
+
+**Band atomik boʻlib qoladi** — bitta tish, bitta xizmat, bitta narx. Koʻprik
+uchun maxsus band turi **qoʻshilmaydi**: u uchta oddiy band. Shunda 13.4 dagi
+«bajarildi → tashrif» buzilmaydi (har birlik oʻz tashrifini oladi, ulush har
+biriga alohida hisoblanadi) va tish xaritasiga toʻgʻri holat yoziladi —
+tayanchga koronka, oraligʻiga quyma.
+
+**Guruh — ustki qatlam**: bandlarga ixtiyoriy `group` (nom va oraliq). Reja,
+bemor sahifasi va A4 varaq guruhni bitta blok qilib koʻrsatadi, xaritada
+koʻprik chizigʻi chiziladi. Guruh oʻchsa bandlar joyida qoladi.
+
+**Kiritish — xaritadan**: shifokor oraliqni tanlaydi (45–47), soha si `range`
+boʻlgan xizmatni bosadi, tizim bandlarni oʻzi yozadi. Qaysi tish oraliq
+ekani **xaritadan** bilinadi: holati «olingan» boʻlsa quyma, boʻlmasa
+tayanch. Rollarni qoʻlda oʻzgartirish mumkin — 3 tayanchli koʻprik ham boʻladi.
