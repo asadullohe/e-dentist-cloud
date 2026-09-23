@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 14-bosqich tayyor, brauzerda tekshirish _(23/09/2026)_
+**Hozirgi task:** 14.4 — qabul oynasi _(23/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1384,6 +1384,22 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       (≥45 daq — ikonka + oraliq + yorliq, ism, izoh; 25–44 daq — ikonka +
       vaqt + ism; <25 daq — bitta qator). Ranglar mavjud tokenlardan. Ustun
       `@container`: tor boʻlsa (haftada, telefonda) ikonka va oraliq yashirinadi
+- [x] **14.3 Tepa qatori va ish soatlari** _(dizayn kelishildi 23/09/2026)_ —
+      sana bosilsa kalendar (Popover + Calendar); bitta almashtirgich
+      `Shifokorlar · Hafta` («Kun» va «Kunlar» olib tashlanadi); toʻr
+      08:00–20:00, oʻsha kunda tashqarida qabul yoki band vaqt boʻlsa
+      kengayadi; soat balandligi 96px; avtomatik surish yoʻq — sarlavha va
+      «Qabul qoʻshish» doim koʻrinadi; ustun sarlavhasida qabul soni, boʻsh
+      ustunda «Qabul yoʻq». Telefonda ham shifokor ustunlari: ustun eng kami
+      120px, yonga aylantiriladi (vaqt oʻqi yopishib turadi), kunni surish
+      bilan almashtirish olib tashlanadi — sana, ‹ › va hafta tasmasi qoladi
+- [ ] **14.4 Qabul oynasi** — kartochka bosilsa menyu emas, oyna (telefonda
+      pastdan tortma): yosh, holat, «Navbatdan», qarz (`payments.read` va
+      qarz boʻlsa; oldindan toʻlagan boʻlsa yashil), vaqt · shifokor ·
+      telefon (bosilsa qoʻngʻiroq) · izoh; holat chiplari Rejalashtirilgan ·
+      Keldi · Kelmadi · «Bekor qilish» (tanlangach «Bekor qilindi»); amallar
+      Yakunlash · Kartochka · Tahrirlash. **Qabul oʻchirilmaydi** — bekor
+      qilinadi (toʻlovdagi qoidaning oʻzi), `AppointmentMenu` oʻchadi
 
 ---
 

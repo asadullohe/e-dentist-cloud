@@ -82,6 +82,10 @@ export function layoutDay(items: readonly Appointment[]): Placed[] {
   return result
 }
 
+/// Toʻr va sarlavha tasmalari bitta toʻrda turadi: chapda vaqt oʻqi, keyin
+/// ustunlar. Telefonda ustun 7.5rem dan kichraymaydi — toʻr yonga suriladi
+export const COLUMNS_TEMPLATE = (count: number) => `2.75rem repeat(${count}, minmax(7.5rem, 1fr))`
+
 /// Toʻr ustuni. Kunlar rejimida har ustun — bir kun, hamma shifokor bilan;
 /// shifokorlar rejimida hammasi bitta kun, ustun — bitta shifokor.
 /// `doctorId`: `undefined` — hamma, `null` — shifokorsizlar ustuni
@@ -94,6 +98,30 @@ export interface GridColumn {
 const inColumn = (item: Appointment, column: GridColumn) =>
   isoOfDate(new Date(item.at)) === column.date &&
   (column.doctorId === undefined || item.doctorId === column.doctorId)
+
+/// Toʻr sukut boʻyicha ish soatlarini koʻrsatadi; undan tashqarida yozuv
+/// boʻlsa (erta kelgan navbat, kechki qabul) toʻr oʻsha tomonga kengayadi
+const WORK_START = 8
+const WORK_END = 20
+
+export function hourRange(
+  appointments: readonly Appointment[],
+  blocks: readonly { startsAt: string; endsAt: string }[],
+): { startHour: number; endHour: number } {
+  let start = WORK_START
+  let end = WORK_END
+  const stretch = (from: Date, to: Date) => {
+    start = Math.min(start, from.getHours())
+    // Tugash daqiqasi soat boshida boʻlmasa — keyingi soatgacha
+    end = Math.max(end, to.getHours() + (to.getMinutes() > 0 ? 1 : 0))
+  }
+  for (const item of appointments) {
+    const from = new Date(item.at)
+    stretch(from, new Date(from.getTime() + item.duration * 60_000))
+  }
+  for (const block of blocks) stretch(new Date(block.startsAt), new Date(block.endsAt))
+  return { startHour: Math.max(0, start), endHour: Math.min(24, Math.max(end, start + 1)) }
+}
 
 /// Har ustun uchun oʻz qabullari — ustunlar tartibida
 export function splitByColumn(

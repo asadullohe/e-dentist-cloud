@@ -1510,11 +1510,9 @@ export const SCHEDULE_UI = {
   // Vaqt toʻri (kun/hafta) va davomiylik (12-bosqich)
   view_day: 'Kun',
   view_week: 'Hafta',
-  // Davr va ustunlar nima boʻyicha boʻlinadi (14.1)
-  period: 'Davr',
-  group: 'Guruhlash',
+  // Ustunlar nima boʻyicha boʻlinadi (14.1, 14.3)
   group_doctors: 'Shifokorlar',
-  group_days: 'Kunlar',
+  empty_column: 'Qabul yoʻq',
   duration: 'Davomiylik',
   minutes: (n: number) => `${n} daq`,
   // Vaqt tanlash — soat × chorak toʻri

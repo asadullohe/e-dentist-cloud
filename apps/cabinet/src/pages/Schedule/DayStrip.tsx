@@ -1,7 +1,8 @@
 import { MONTHS_SHORT, WEEKDAYS } from '@e-dentist/shared'
 import { cn } from 'cn'
+import type { Ref } from 'react'
 import { useSwipe } from '@/shared/lib'
-import { mondayFirst, parseIso } from './scheduleUtils'
+import { COLUMNS_TEMPLATE, mondayFirst, parseIso } from './scheduleUtils'
 
 /// Hafta tasmasi: Du 21 · Se 22 … Yak 27. Chap katak — vaqt oʻqi kengligida,
 /// oy va yil shu yerda (davr qatori telefonda yoʻq). Kun bosilsa tanlanadi,
@@ -14,6 +15,8 @@ export function DayStrip({
   onPick,
   onShift,
   className,
+  aligned,
+  ref,
 }: {
   days: readonly string[]
   today: string
@@ -22,6 +25,10 @@ export function DayStrip({
   onPick: (iso: string) => void
   onShift: (by: -1 | 1) => void
   className?: string
+  /// Hafta koʻrinishida tasma toʻr ustunlari tepasida turadi — oʻsha
+  /// kengliklar bilan va toʻr yonga surilganda u bilan birga (ref)
+  aligned?: boolean
+  ref?: Ref<HTMLDivElement>
 }) {
   const swipe = useSwipe(
     () => onShift(1),
@@ -32,47 +39,55 @@ export function DayStrip({
   const middle = parseIso(days[3] ?? days[0] ?? today)
 
   return (
-    <div {...swipe} className={cn('grid grid-cols-[2.75rem_repeat(7,1fr)] items-end', className)}>
-      <div className="text-muted-foreground pb-1.5 pl-1 text-[10px] leading-tight">
-        <div className="font-medium">{MONTHS_SHORT[middle.getMonth()]}</div>
-        <div className="tabular-nums">{middle.getFullYear()}</div>
+    <div ref={ref} className={cn(aligned && 'overflow-hidden', className)}>
+      <div
+        {...swipe}
+        className="grid items-end"
+        style={{
+          gridTemplateColumns: aligned ? COLUMNS_TEMPLATE(days.length) : '2.75rem repeat(7, 1fr)',
+        }}
+      >
+        <div className="text-muted-foreground pb-1.5 pl-1 text-[10px] leading-tight">
+          <div className="font-medium">{MONTHS_SHORT[middle.getMonth()]}</div>
+          <div className="tabular-nums">{middle.getFullYear()}</div>
+        </div>
+        {days.map((day) => {
+          const date = parseIso(day)
+          const isToday = day === today
+          const isSelected = day === selected
+          return (
+            <button
+              key={day}
+              type="button"
+              aria-pressed={isSelected}
+              aria-current={isToday ? 'date' : undefined}
+              onClick={() => onPick(day)}
+              className="flex flex-col items-center gap-0.5 py-1.5"
+            >
+              <span
+                className={cn(
+                  'text-[11px]',
+                  isSelected || isToday ? 'text-primary font-medium' : 'text-muted-foreground',
+                )}
+              >
+                {WEEKDAYS[mondayFirst(date)]}
+              </span>
+              <span
+                className={cn(
+                  'flex size-7 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
+                  // Tanlangan — toʻq doira; bugun (tanlanmagan) — koʻk raqam;
+                  // haftada tanlov yoʻq, bugun toʻq doira
+                  isSelected || (selected === undefined && isToday)
+                    ? 'bg-primary text-primary-foreground'
+                    : isToday && 'text-primary',
+                )}
+              >
+                {date.getDate()}
+              </span>
+            </button>
+          )
+        })}
       </div>
-      {days.map((day) => {
-        const date = parseIso(day)
-        const isToday = day === today
-        const isSelected = day === selected
-        return (
-          <button
-            key={day}
-            type="button"
-            aria-pressed={isSelected}
-            aria-current={isToday ? 'date' : undefined}
-            onClick={() => onPick(day)}
-            className="flex flex-col items-center gap-0.5 py-1.5"
-          >
-            <span
-              className={cn(
-                'text-[11px]',
-                isSelected || isToday ? 'text-primary font-medium' : 'text-muted-foreground',
-              )}
-            >
-              {WEEKDAYS[mondayFirst(date)]}
-            </span>
-            <span
-              className={cn(
-                'flex size-7 items-center justify-center rounded-full text-sm font-semibold tabular-nums',
-                // Tanlangan — toʻq doira; bugun (tanlanmagan) — koʻk raqam;
-                // haftada tanlov yoʻq, bugun toʻq doira
-                isSelected || (selected === undefined && isToday)
-                  ? 'bg-primary text-primary-foreground'
-                  : isToday && 'text-primary',
-              )}
-            >
-              {date.getDate()}
-            </span>
-          </button>
-        )
-      })}
     </div>
   )
 }

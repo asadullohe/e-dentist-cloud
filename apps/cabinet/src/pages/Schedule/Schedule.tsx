@@ -1,21 +1,24 @@
 import {
   CARD_UI,
   formatDate,
+  getLocale,
   localISODate,
   PERIOD_UI,
   SCHEDULE_UI,
   todayISO,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
+import { ru, uz } from 'date-fns/locale'
 import {
-  CalendarCheckIcon,
+  CalendarIcon,
   CalendarOffIcon,
   CalendarPlusIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   PlusIcon,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   type Appointment,
   type TimeBlock,
@@ -33,7 +36,7 @@ import {
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
 import { VisitFormDialog } from '@/features/visit-form'
-import { useMediaQuery, useSwipe } from '@/shared/lib'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,10 +47,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Calendar,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -58,16 +65,25 @@ import type { AppointmentActions } from './AppointmentMenu'
 import { DayStrip } from './DayStrip'
 import { type DoctorHead, DoctorStrip } from './DoctorStrip'
 import { Segmented } from './Segmented'
-import { type GridColumn, isoOf, shiftDays, weekOf } from './scheduleUtils'
+import {
+  type GridColumn,
+  hourRange,
+  isoOf,
+  isoOfDate,
+  parseIso,
+  shiftDays,
+  weekOf,
+} from './scheduleUtils'
 import { TimeGrid } from './TimeGrid'
 
-type Period = 'day' | 'week'
-/// Ustunlar nima boʻyicha boʻlinadi: shifokorlar (kun) yoki kunlar (hafta)
-type Group = 'doctors' | 'days'
-const PERIOD_KEY = 'edentist-schedule-period'
-const GROUP_KEY = 'edentist-schedule-group'
+/// Ikki koʻrinish: bugungi kun shifokorlar ustuni bilan yoki bir hafta
+/// kunlar ustuni bilan. `schedule.all` yoʻq shifokorda «doctors» — oʻz kuni
+type View = 'doctors' | 'week'
+const VIEW_KEY = 'edentist-schedule-view'
 /// Radix Select boʻsh satrni qabul qilmaydi — «hammasi» uchun belgi
 const ALL_DOCTORS = '__all__'
+/// Kalendar oy va hafta kunlarini ilova tilida koʻrsatadi
+const CALENDAR_LOCALES = { uz, ru } as const
 
 function stored<T extends string>(key: string, values: readonly T[], fallback: T): T {
   try {
@@ -87,9 +103,9 @@ function remember(key: string, value: string) {
   }
 }
 
-/// Davrga qarab soʻrov oraligʻi va sarlavha
-function rangeOf(period: Period, selected: string): { from: string; to: string; title: string } {
-  if (period === 'day') return { from: selected, to: selected, title: formatDate(selected) }
+/// Koʻrinishga qarab soʻrov oraligʻi va sarlavha
+function rangeOf(view: View, selected: string): { from: string; to: string; title: string } {
+  if (view === 'doctors') return { from: selected, to: selected, title: formatDate(selected) }
   const days = weekOf(selected)
   const from = days[0] as string
   const to = days[6] as string
@@ -98,9 +114,9 @@ function rangeOf(period: Period, selected: string): { from: string; to: string; 
 
 export function Schedule() {
   const today = todayISO()
-  const [period, setPeriod] = useState<Period>(() => stored(PERIOD_KEY, ['day', 'week'], 'day'))
-  const [group, setGroup] = useState<Group>(() => stored(GROUP_KEY, ['doctors', 'days'], 'doctors'))
+  const [view, setView] = useState<View>(() => stored(VIEW_KEY, ['doctors', 'week'], 'doctors'))
   const [selected, setSelected] = useState(today)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [doctorFilter, setDoctorFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [draft, setDraft] = useState<{ date: string; time?: string; doctorId?: string }>({
@@ -124,40 +140,44 @@ export function Schedule() {
   // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
   const seesAll = useHasPermission()('schedule.all')
   const { data: doctors } = useDoctors()
-  // Shifokor ustunlari telefonga sigʻmaydi — u yerda kunlar boʻyicha
-  const wide = useMediaQuery('(min-width: 768px)')
+  // Toʻr yonga surilganda sarlavha tasmasi ham u bilan birga suriladi
+  const stripRef = useRef<HTMLDivElement>(null)
 
-  const { from, to, title } = rangeOf(period, selected)
+  const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
   const { data: blocks } = useTimeBlocks(from, to, doctorFilter || undefined)
 
-  // Ustun sarlavhalari: tanlangan shifokor boʻlsa — bitta ustun. Shifokorsiz
-  // qabullar boʻlsa, ular uchun oxirida alohida ustun
+  const countOf = (doctorId: string | null) =>
+    (appointments ?? []).filter((item) => item.doctorId === doctorId).length
+
+  // Ustunlar: tanlangan shifokor boʻlsa — bitta. Shifokorsiz qabullar boʻlsa,
+  // ular uchun oxirida alohida ustun
   const heads: DoctorHead[] = (doctors ?? [])
     .filter((doctor) => !doctorFilter || doctor.id === doctorFilter)
-    .map((doctor) => ({ id: doctor.id, name: doctor.fullName ?? SCHEDULE_UI.doctor_none }))
+    .map((doctor) => ({
+      id: doctor.id,
+      name: doctor.fullName ?? SCHEDULE_UI.doctor_none,
+      count: countOf(doctor.id),
+    }))
   if (!doctorFilter && (appointments ?? []).some((item) => item.doctorId === null))
-    heads.push({ id: null, name: SCHEDULE_UI.doctor_none })
+    heads.push({ id: null, name: SCHEDULE_UI.doctor_none, count: countOf(null) })
 
-  const canGroup = seesAll && wide && period === 'day'
-  const byDoctor = canGroup && group === 'doctors' && heads.length > 0
-  const days = period === 'day' ? [selected] : weekOf(selected)
+  // Shifokor faqat oʻz qabullarini koʻradi — unga ustunlar shart emas
+  const byDoctor = view === 'doctors' && seesAll && heads.length > 0
+  const days = view === 'doctors' ? [selected] : weekOf(selected)
   const columns: GridColumn[] = byDoctor
     ? heads.map((head) => ({ key: head.id ?? 'none', date: selected, doctorId: head.id }))
     : days.map((day) => ({ key: day, date: day }))
+  // Toʻr ish soatlarini koʻrsatadi; tashqarida yozuv boʻlsa kengayadi
+  const { startHour, endHour } = hourRange(appointments ?? [], blocks ?? [])
 
-  function changePeriod(next: Period) {
-    setPeriod(next)
-    remember(PERIOD_KEY, next)
-  }
-
-  function changeGroup(next: Group) {
-    setGroup(next)
-    remember(GROUP_KEY, next)
+  function changeView(next: View) {
+    setView(next)
+    remember(VIEW_KEY, next)
   }
 
   function shift(by: number) {
-    setSelected(shiftDays(selected, period === 'day' ? by : by * 7))
+    setSelected(shiftDays(selected, view === 'doctors' ? by : by * 7))
   }
 
   function openNew(date = selected, time?: string, doctorId?: string) {
@@ -177,11 +197,6 @@ export function Schedule() {
   }
 
   const showToday = !(today >= from && today <= to)
-  // T3: chapga surish — keyingi davr, oʻngga — oldingi
-  const swipe = useSwipe(
-    () => shift(1),
-    () => shift(-1),
-  )
 
   const openBlock = () => {
     setEditingBlock(undefined)
@@ -211,17 +226,20 @@ export function Schedule() {
     </Select>
   )
 
-  // Ustun sarlavhalari: shifokorlar — avatar va ism; hafta — kunlar tasmasi
-  // (kun bosilsa oʻsha kunga oʻtadi); kunda tasma faqat telefonda — kun tanlash
+  // Ustun sarlavhalari: shifokorlar — avatar, ism va qabul soni; hafta —
+  // kunlar tasmasi (kun bosilsa oʻsha kunga oʻtadi). Kun koʻrinishida tasma
+  // faqat telefonda — kunni tanlash uchun
   const columnHeads = byDoctor ? (
-    <DoctorStrip doctors={heads} />
-  ) : period === 'week' ? (
+    <DoctorStrip ref={stripRef} doctors={heads} />
+  ) : view === 'week' ? (
     <DayStrip
+      ref={stripRef}
+      aligned
       days={days}
       today={today}
       onPick={(day) => {
         setSelected(day)
-        changePeriod('day')
+        changeView('doctors')
       }}
       onShift={(by) => shift(by)}
     />
@@ -236,129 +254,115 @@ export function Schedule() {
     />
   )
 
-  const periodSwitch = (
-    <Segmented
-      value={period}
-      onChange={changePeriod}
-      options={[
-        ['day', SCHEDULE_UI.view_day],
-        ['week', SCHEDULE_UI.view_week],
-      ]}
-    />
+  // Sana — tugma: bosilsa kalendar. Shifokorga «Shifokorlar» emas «Kun»
+  const dateButton = (
+    <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 font-semibold tabular-nums">
+          <CalendarIcon />
+          <span className="truncate">{title}</span>
+          <ChevronDownIcon className="text-muted-foreground" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-0">
+        <Calendar
+          mode="single"
+          locale={CALENDAR_LOCALES[getLocale()]}
+          selected={parseIso(selected)}
+          defaultMonth={parseIso(selected)}
+          onSelect={(date) => {
+            if (date) setSelected(isoOfDate(date))
+            setPickerOpen(false)
+          }}
+        />
+      </PopoverContent>
+    </Popover>
   )
 
-  // Guruhlash faqat kunda maʼnoli: haftada ustunlar doim kunlar
-  const groupSwitch = canGroup && (
+  const viewSwitch = (
     <Segmented
-      value={group}
-      onChange={changeGroup}
+      value={view}
+      onChange={changeView}
       options={[
-        ['doctors', SCHEDULE_UI.group_doctors],
-        ['days', SCHEDULE_UI.group_days],
+        ['doctors', seesAll ? SCHEDULE_UI.group_doctors : SCHEDULE_UI.view_day],
+        ['week', SCHEDULE_UI.view_week],
       ]}
     />
   )
 
   return (
     <>
-      {/* Keng ekran: sarlavha va amallar. Telefonda joy tejaladi — sarlavha
-          yoʻq, amallar pastki oʻngdagi «+» tugmasida */}
+      {/* Keng ekran: sahifa nomi va shifokor filtri. Amallar yopishqoq
+          qatorda — aylantirilganda ham qoʻl ostida boʻlsin */}
       <div className="mb-3 hidden items-center justify-between gap-2 md:flex">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
-        <div className="flex items-center gap-2">
-          {doctorSelect}
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8 shrink-0"
-            aria-label={SCHEDULE_UI.block_add}
-            title={SCHEDULE_UI.block_add}
-            onClick={openBlock}
-          >
-            <CalendarOffIcon />
-          </Button>
-          <Button size="sm" onClick={() => openNew()}>
-            <PlusIcon />
-            {SCHEDULE_UI.add}
-          </Button>
-        </div>
+        {doctorSelect}
       </div>
 
-      {/* Yopishqoq blok: davr/koʻrinish qatori va ustun sarlavhalari — toʻr uzun,
-          kunni almashtirish uchun tepaga qaytish shart boʻlmasin */}
+      {/* Yopishqoq blok: boshqaruv qatori va ustun sarlavhalari — toʻr uzun,
+          kunni almashtirish yoki qabul qoʻshish uchun tepaga qaytish shart emas */}
       <div
         data-sticky="schedule"
         className="bg-background sticky top-14 z-20 -mx-4 mb-3 border-b px-4 md:-mx-6 md:px-6"
       >
-        {/* Telefon: bitta ixcham qator — shifokor · davr · bugun.
-            Sana hafta tasmasida */}
+        {/* Telefon: shifokor · sana · koʻrinish. Qabul qoʻshish — suzuvchi «+» */}
         <div className="flex items-center gap-2 py-2 md:hidden">
-          {doctorSelect || (
-            <span className="flex-1 truncate text-sm font-semibold">{SCHEDULE_UI.title}</span>
-          )}
-          {periodSwitch}
-          {/* Doim joyida: paydo boʻlib qatorni surib yubormasin */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn('size-8 shrink-0', !showToday && 'invisible')}
-            tabIndex={showToday ? 0 : -1}
-            aria-hidden={!showToday}
-            aria-label={SCHEDULE_UI.today}
-            title={SCHEDULE_UI.today}
-            onClick={() => setSelected(today)}
-          >
-            <CalendarCheckIcon />
-          </Button>
+          {doctorSelect}
+          {dateButton}
+          {viewSwitch}
         </div>
 
-        {/* Keng ekran: davr almashtirgich + guruhlash */}
-        <div className="hidden items-center justify-between gap-2 py-2 md:flex">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={PERIOD_UI.prev}
-              onClick={() => shift(-1)}
-            >
-              <ChevronLeftIcon />
-            </Button>
-            <span className="min-w-56 text-center font-semibold tabular-nums">{title}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={PERIOD_UI.next}
-              onClick={() => shift(1)}
-            >
-              <ChevronRightIcon />
-            </Button>
-            {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
-                «Bugun» ga tushib qaytib qolardi */}
+        {/* Keng ekran: ‹ sana › · bugun · koʻrinish · band vaqt · qabul qoʻshish */}
+        <div className="hidden items-center gap-2 py-2 md:flex">
+          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.prev} onClick={() => shift(-1)}>
+            <ChevronLeftIcon />
+          </Button>
+          {dateButton}
+          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.next} onClick={() => shift(1)}>
+            <ChevronRightIcon />
+          </Button>
+          {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
+              «Bugun» ga tushib qaytib qolardi */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(!showToday && 'invisible')}
+            tabIndex={showToday ? 0 : -1}
+            aria-hidden={!showToday}
+            onClick={() => setSelected(today)}
+          >
+            {SCHEDULE_UI.today}
+          </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {viewSwitch}
             <Button
               variant="outline"
-              size="sm"
-              className={cn(!showToday && 'invisible')}
-              tabIndex={showToday ? 0 : -1}
-              aria-hidden={!showToday}
-              onClick={() => setSelected(today)}
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label={SCHEDULE_UI.block_add}
+              title={SCHEDULE_UI.block_add}
+              onClick={openBlock}
             >
-              {SCHEDULE_UI.today}
+              <CalendarOffIcon />
             </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            {groupSwitch}
-            {periodSwitch}
+            <Button size="sm" onClick={() => openNew()}>
+              <PlusIcon />
+              {SCHEDULE_UI.add}
+            </Button>
           </div>
         </div>
 
         {columnHeads}
       </div>
 
-      {/* Surish bilan davr almashadi; sichqoncha bilan surganda matn belgilanmasin */}
-      <div {...swipe} className="select-none">
+      {/* Telefonda yonga surish ustunlarni aylantiradi (toʻr oʻzi suriladi) —
+          kun sana tugmasi, ‹ › va hafta tasmasidan almashadi */}
+      <div className="select-none">
         <TimeGrid
-          key={byDoctor ? 'doctors' : period}
+          key={view}
           columns={columns}
+          startHour={startHour}
+          endHour={endHour}
           today={today}
           appointments={appointments ?? []}
           blocks={blocks ?? []}
@@ -379,6 +383,9 @@ export function Schedule() {
               : undefined
           }
           onShift={(by) => shift(by)}
+          onScrollLeft={(left) => {
+            if (stripRef.current) stripRef.current.scrollLeft = left
+          }}
           onEditBlock={(block) => {
             setEditingBlock(block)
             setBlockOpen(true)
