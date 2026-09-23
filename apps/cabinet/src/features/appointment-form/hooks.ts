@@ -22,21 +22,36 @@ export function useSaveAppointment(id: string | null) {
   })
 }
 
-/// Toʻrda sudrab koʻchirish: sana/vaqt. Optimistik — blok darhol yangi joyda,
-/// server rad etsa (409 — shifokor band) eski joyiga qaytadi, xato toastda
+interface MoveInput {
+  id: string
+  date: string
+  time: string
+  /// Shifokor ustunlari rejimida boshqa ustunga qoʻyilsa — shifokor ham
+  /// almashadi; `undefined` — ustun shifokorni bildirmaydi (kunlar rejimi)
+  doctorId?: string | null
+  doctorName?: string | null
+}
+
+/// Toʻrda sudrab koʻchirish: sana/vaqt, kerak boʻlsa shifokor. Optimistik —
+/// blok darhol yangi joyda, server rad etsa (409 — shifokor band) eski joyiga
+/// qaytadi, xato toastda
 export function useMoveAppointment() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, date, time }: { id: string; date: string; time: string }) =>
-      api.updateAppointment(id, { date, time }),
-    onMutate: async ({ id, date, time }) => {
+    mutationFn: ({ id, date, time, doctorId }: MoveInput) =>
+      api.updateAppointment(id, doctorId === undefined ? { date, time } : { date, time, doctorId }),
+    onMutate: async ({ id, date, time, doctorId, doctorName }) => {
       await queryClient.cancelQueries({ queryKey: APPOINTMENT_KEYS.all })
       const snapshots = queryClient.getQueriesData<Appointment[]>({
         queryKey: APPOINTMENT_KEYS.all,
       })
       const at = new Date(`${date}T${time}:00`).toISOString()
+      const moved =
+        doctorId === undefined ? { at } : { at, doctorId, doctorName: doctorName ?? null }
       queryClient.setQueriesData<Appointment[]>({ queryKey: APPOINTMENT_KEYS.all }, (old) =>
-        Array.isArray(old) ? old.map((item) => (item.id === id ? { ...item, at } : item)) : old,
+        Array.isArray(old)
+          ? old.map((item) => (item.id === id ? { ...item, ...moved } : item))
+          : old,
       )
       return { snapshots }
     },

@@ -1496,8 +1496,6 @@ export const SCHEDULE_UI = {
   no_matches: 'Bemor topilmadi',
   delete_title: 'Qabul oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
-  month_total: (n: number) => `${n} ta qabul`,
-  day_total: (n: number) => `${n} ta`,
   set_status: 'Holatni oʻzgartirish',
   open_card: 'Kartochka',
   date_unreadable: 'Sanani oʻqib boʻlmadi',
@@ -1512,7 +1510,11 @@ export const SCHEDULE_UI = {
   // Vaqt toʻri (kun/hafta) va davomiylik (12-bosqich)
   view_day: 'Kun',
   view_week: 'Hafta',
-  view_month: 'Oy',
+  // Davr va ustunlar nima boʻyicha boʻlinadi (14.1)
+  period: 'Davr',
+  group: 'Guruhlash',
+  group_doctors: 'Shifokorlar',
+  group_days: 'Kunlar',
   duration: 'Davomiylik',
   minutes: (n: number) => `${n} daq`,
   // Vaqt tanlash — soat × chorak toʻri

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 12.6 — serverga chiqarish tekshiruvi _(21/09/2026)_
+**Hozirgi task:** 14-bosqich tayyor, brauzerda tekshirish _(23/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1357,6 +1357,33 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       telefon), sana · shifokor, vaqt · davomiylik → tugash, «Boʻsh
       vaqtlar» toʻri (band slotlar oʻchirilgan). Testlar: davomiylik,
       409, tahrirda kesishuv, bekor qilingan band emas
+
+---
+
+## Bosqich 14 — Jadval: shifokor ustunlari · ~1 kun
+
+> **Nega** _(qaror 23/09/2026)_
+>
+> Egasi, qabulxona va kuzatuvchi jadvalni ochganda hafta kunlarini koʻrardi —
+> bir katakda besh shifokorning qabullari aralash turardi, kim band, kim boʻsh
+> bilinmasdi. Klinika kuni shifokorlar boʻyicha oʻtadi, kunlar boʻyicha emas:
+> ustun — shifokor, sarlavhada uning avatari va ismi. Hafta qoladi (kelasi
+> haftaga yozish kerak), **oy olib tashlanadi** — undan foydalanilmasdi.
+
+- [x] **14.1 Guruhlash: kun × shifokorlar** — `Kun · Hafta` va
+      `Shifokorlar · Kunlar` — ikki alohida almashtirgich (`localStorage`);
+      `MonthView` oʻchadi. `TimeGrid` ustunlari umumlashadi (`days` →
+      `columns`): shifokor ustunida sarlavha — bosh harflar doirasi + F.I.O.,
+      qabullar `doctorId` boʻyicha, shifokorsizlar uchun alohida ustun. Band
+      vaqt faqat oʻz shifokorining ustunida (avval hamma ustunda koʻrinardi).
+      Blok ustundan ustunga sudralsa — shifokor almashadi (`PATCH` ga
+      `doctorId`, kesishsa server 409). `schedule.all` yoʻq shifokorda va
+      telefonda — guruhlash tanlovi yoʻq, kunlar boʻyicha
+- [x] **14.2 Qabul kartochkasi** — rangli yumshoq fon (chap hoshiya oʻrniga),
+      8px burchak, holat ikonkasi va yorligʻi; balandlikka qarab uch koʻrinish
+      (≥45 daq — ikonka + oraliq + yorliq, ism, izoh; 25–44 daq — ikonka +
+      vaqt + ism; <25 daq — bitta qator). Ranglar mavjud tokenlardan. Ustun
+      `@container`: tor boʻlsa (haftada, telefonda) ikonka va oraliq yashirinadi
 
 ---
 

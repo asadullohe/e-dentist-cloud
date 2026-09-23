@@ -23,7 +23,6 @@ function plural(n: number, forms: readonly [string, string, string]): string {
 
 const PATIENTS = ['пациент', 'пациента', 'пациентов'] as const
 const DAYS = ['день', 'дня', 'дней'] as const
-const RECORDS = ['запись', 'записи', 'записей'] as const
 const ROWS = ['строка', 'строки', 'строк'] as const
 const PEOPLE = ['человек', 'человека', 'человек'] as const
 const YEARS = ['год', 'года', 'лет'] as const
@@ -1413,8 +1412,6 @@ export const ru: DeepPartial<Strings> = {
     no_matches: 'Пациент не найден',
     delete_title: 'Удалить приём?',
     delete_text: 'Это действие нельзя отменить.',
-    month_total: (n: number) => `${n} ${plural(n, ['приём', 'приёма', 'приёмов'])}`,
-    day_total: (n: number) => `${n} ${plural(n, RECORDS)}`,
     set_status: 'Изменить статус',
     open_card: 'Карточка',
     date_unreadable: 'Не удалось прочитать дату',
@@ -1427,7 +1424,10 @@ export const ru: DeepPartial<Strings> = {
     complete_submit: 'Завершить',
     view_day: 'День',
     view_week: 'Неделя',
-    view_month: 'Месяц',
+    period: 'Период',
+    group: 'Группировка',
+    group_doctors: 'По врачам',
+    group_days: 'По дням',
     duration: 'Длительность',
     minutes: (n: number) => `${n} мин`,
     time_unset: 'Время не выбрано',

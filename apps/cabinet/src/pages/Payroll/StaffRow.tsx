@@ -2,14 +2,7 @@ import { formatMoney, PAYROLL_UI } from '@e-dentist/shared'
 import { cn } from 'cn'
 import { ChevronRightIcon } from 'lucide-react'
 import type { PayrollRow } from '@/entities/payroll'
-
-export const initialsOf = (name: string) =>
-  name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('')
+import { initialsOf } from '@/shared/lib'
 
 /// Roʻyxatdagi xodim: ism, rol · foiz · ishlar, olingan/olinmagan chizigʻi
 /// (foizdagilarda), jami va qoldiq. Bosilsa varaq ochiladi

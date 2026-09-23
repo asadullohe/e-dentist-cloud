@@ -1,4 +1,3 @@
-import { MONTHS } from '@e-dentist/shared'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
 
 export const pad = (n: number) => String(n).padStart(2, '0')
@@ -45,24 +44,9 @@ export function statusBadge(status: AppointmentStatus): string {
   return ''
 }
 
-/// Vaqt toʻridagi blok rangi: rejalashtirilgan — koʻk, keldi — yashil,
-/// yakunlangan — kulrang, kelmadi/bekor — xira qizil
-export function blockClass(status: AppointmentStatus): string {
-  if (status === 'arrived') return 'border-ok bg-ok/15 text-foreground'
-  if (status === 'done') return 'border-muted-foreground/60 bg-muted text-muted-foreground'
-  if (status === 'no_show' || status === 'cancelled')
-    return 'border-destructive/50 bg-destructive/10 text-muted-foreground line-through'
-  return 'border-primary bg-primary/12 text-foreground'
-}
-
 export const timeOf = (iso: string) => {
   const date = new Date(iso)
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
-export function monthTitle(year: number, month: number): string {
-  const name = MONTHS[month] ?? ''
-  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${year}`
 }
 
 /// Bir vaqtda kesishgan qabullar (masalan, ikki shifokorniki) ustma-ust
@@ -98,11 +82,23 @@ export function layoutDay(items: readonly Appointment[]): Placed[] {
   return result
 }
 
-export function groupByDay(appointments: readonly Appointment[]): Map<string, Appointment[]> {
-  const byDay = new Map<string, Appointment[]>()
-  for (const item of appointments) {
-    const key = isoOfDate(new Date(item.at))
-    byDay.set(key, [...(byDay.get(key) ?? []), item])
-  }
-  return byDay
+/// Toʻr ustuni. Kunlar rejimida har ustun — bir kun, hamma shifokor bilan;
+/// shifokorlar rejimida hammasi bitta kun, ustun — bitta shifokor.
+/// `doctorId`: `undefined` — hamma, `null` — shifokorsizlar ustuni
+export interface GridColumn {
+  key: string
+  date: string
+  doctorId?: string | null
+}
+
+const inColumn = (item: Appointment, column: GridColumn) =>
+  isoOfDate(new Date(item.at)) === column.date &&
+  (column.doctorId === undefined || item.doctorId === column.doctorId)
+
+/// Har ustun uchun oʻz qabullari — ustunlar tartibida
+export function splitByColumn(
+  columns: readonly GridColumn[],
+  appointments: readonly Appointment[],
+): Appointment[][] {
+  return columns.map((column) => appointments.filter((item) => inColumn(item, column)))
 }

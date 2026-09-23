@@ -1,5 +1,4 @@
 import { SCHEDULE_UI, UI_TEXT } from '@e-dentist/shared'
-import { cn } from 'cn'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { Appointment, TimeBlock } from '@/entities/appointment'
@@ -12,8 +11,9 @@ import {
   DropdownMenuTrigger,
   Skeleton,
 } from '@/shared/ui'
-import { type AppointmentActions, AppointmentMenu } from './AppointmentMenu'
-import { blockClass, layoutDay, pad, timeOf } from './scheduleUtils'
+import { AppointmentBlock } from './AppointmentBlock'
+import type { AppointmentActions } from './AppointmentMenu'
+import { type GridColumn, layoutDay, pad, splitByColumn, timeOf } from './scheduleUtils'
 import { useBlockDrag } from './useBlockDrag'
 
 /// Toʻr sutka boʻyi (tungi navbat, erta taʼtil ham koʻrinsin), ochilganda
@@ -58,13 +58,13 @@ function useNowMinutes(): number {
   return minutes
 }
 
-/// Kun/hafta koʻrinishi: vaqt oʻqi, har kun uchun ustun, qabul bloklari
-/// davomiyligiga qarab. Boʻsh joy bosilsa — oʻsha vaqtga yangi qabul,
-/// blok bosilsa — amallar menyusi
+/// Vaqt toʻri: chapda vaqt oʻqi, oʻngda ustunlar — kunlar (hafta) yoki
+/// shifokorlar (kun). Boʻsh joy bosilsa — oʻsha vaqtga yangi qabul, blok
+/// bosilsa — amallar menyusi, sudralsa — koʻchadi
 export function TimeGrid({
-  days,
+  columns,
   today,
-  byDay,
+  appointments,
   blocks,
   loading,
   actions,
@@ -74,49 +74,52 @@ export function TimeGrid({
   onMove,
   onShift,
 }: {
-  /// 1 (kun) yoki 7 (hafta) ta ISO sana
-  days: readonly string[]
+  columns: readonly GridColumn[]
   today: string
-  byDay: Map<string, Appointment[]>
+  appointments: readonly Appointment[]
   blocks: readonly TimeBlock[]
   loading: boolean
   actions: AppointmentActions
-  onPickSlot: (date: string, time: string) => void
+  onPickSlot: (column: GridColumn, time: string) => void
   onEditBlock: (block: TimeBlock) => void
   onDeleteBlock: (block: TimeBlock) => void
-  /// Blok sudrab qoʻyildi — yangi kun va vaqt (`schedule.write` boʻlmasa berilmaydi)
-  onMove?: (item: Appointment, date: string, time: string) => void
+  /// Blok sudrab qoʻyildi — yangi ustun va vaqt (`schedule.write` boʻlmasa berilmaydi)
+  onMove?: (item: Appointment, column: GridColumn, time: string) => void
   /// Sudrashda chetda ushlab turilsa — davr almashadi
   onShift?: (by: -1 | 1) => void
 }) {
   const nowMinutes = useNowMinutes()
   const grid = useRef<HTMLDivElement>(null)
-  const columns = useRef<HTMLDivElement>(null)
-  const week = days.length > 1
+  const columnsRef = useRef<HTMLDivElement>(null)
+  // Kunlar rejimida ustun — bir kun: blok ichida shifokor nomi ortiqcha
+  const byDoctor = columns.some((column) => column.doctorId !== undefined)
   const [menuFor, setMenuFor] = useState<string | null>(null)
   const justDropped = useRef(false)
   const { drag, begin, wasTap, cancel } = useBlockDrag({
-    gridRef: columns,
-    daysCount: days.length,
+    gridRef: columnsRef,
+    columnCount: columns.length,
     geometry: { gutter: GUTTER, hour: HOUR, topPad: TOP_PAD, startHour: START, endHour: END },
-    onDrop: (item, dayIndex, minutes) => {
+    onDrop: (item, columnIndex, minutes) => {
       // Qoʻyib yuborilgach keladigan click ustunga «yangi qabul» ochmasin
       justDropped.current = true
       window.setTimeout(() => {
         justDropped.current = false
       }, 0)
-      const date = days[dayIndex]
+      const column = columns[columnIndex]
       const time = `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`
-      if (!date || (date === localDateOf(item.at) && time === timeOf(item.at))) return
-      onMove?.(item, date, time)
+      if (!column) return
+      const sameSlot = column.date === localDateOf(item.at) && time === timeOf(item.at)
+      const sameDoctor = column.doctorId === undefined || column.doctorId === item.doctorId
+      if (sameSlot && sameDoctor) return
+      onMove?.(item, column, time)
     },
     onEdgeShift: onShift,
   })
 
   // Ichki scroll yoʻq — sahifa oʻzi aylanadi (telefonda ikki scroll chalkash).
-  // Faqat birinchi ochilganda (Schedule `key={view}` bilan qayta ochadi)
-  // ish boshi — 08:00 — yopishqoq sarlavha ostiga keladi. Kunni
-  // almashtirganda oʻrin saqlanadi — sahifa sakramasin
+  // Faqat birinchi ochilganda (Schedule `key` bilan qayta ochadi) ish boshi —
+  // 08:00 — yopishqoq sarlavha ostiga keladi. Kunni almashtirganda oʻrin
+  // saqlanadi — sahifa sakramasin
   const positioned = useRef(false)
   useEffect(() => {
     const el = grid.current
@@ -142,7 +145,7 @@ export function TimeGrid({
     return () => document.removeEventListener('keydown', onKey)
   }, [cancel])
 
-  function pickAt(day: string, event: React.MouseEvent<HTMLDivElement>) {
+  function pickAt(column: GridColumn, event: React.MouseEvent<HTMLDivElement>) {
     // Blok menyusi (portal) React daraxti boʻyicha ustun ichida — uning
     // bandlari bosilganda ham shu yerga keladi; DOM boʻyicha tashqarida
     if (!event.currentTarget.contains(event.target as Node)) return
@@ -151,8 +154,10 @@ export function TimeGrid({
     const minutes = START * 60 + ((event.clientY - rect.top) / HOUR) * 60
     // 15 daqiqaga yaxlitlab
     const rounded = Math.min(END * 60 - 15, Math.max(START * 60, Math.floor(minutes / 15) * 15))
-    onPickSlot(day, `${pad(Math.floor(rounded / 60))}:${pad(rounded % 60)}`)
+    onPickSlot(column, `${pad(Math.floor(rounded / 60))}:${pad(rounded % 60)}`)
   }
+
+  const byColumn = splitByColumn(columns, appointments)
 
   return (
     <Card className="gap-0 overflow-hidden p-0">
@@ -161,10 +166,10 @@ export function TimeGrid({
       ) : (
         <div ref={grid}>
           <div
-            ref={columns}
+            ref={columnsRef}
             className="grid"
             style={{
-              gridTemplateColumns: `2.75rem repeat(${days.length}, minmax(0, 1fr))`,
+              gridTemplateColumns: `2.75rem repeat(${columns.length}, minmax(0, 1fr))`,
               paddingTop: TOP_PAD,
             }}
           >
@@ -190,16 +195,18 @@ export function TimeGrid({
               )}
             </div>
 
-            {days.map((day) => (
+            {columns.map((column, columnIndex) => (
               // Ustun boʻsh joyi bosilganda oʻsha vaqtga yangi qabul. Klaviatura
               // uchun sahifadagi «Qabul qoʻshish» tugmasi bor
               // biome-ignore lint/a11y/noStaticElementInteractions: sichqoncha bilan vaqt tanlash
               // biome-ignore lint/a11y/useKeyWithClickEvents: klaviatura yoʻli — «Qabul qoʻshish» tugmasi
               <div
-                key={day}
-                className="relative cursor-pointer border-l"
+                key={column.key}
+                // Ustun — oʻlcham manbai: tor boʻlsa (haftada, telefonda) blok
+                // ichidagi belgilar va vaqt oraligʻi yashiriladi
+                className="@container relative cursor-pointer border-l"
                 style={{ height: HOURS.length * HOUR }}
-                onClick={(event) => pickAt(day, event)}
+                onClick={(event) => pickAt(column, event)}
               >
                 {HOURS.map((hour) => (
                   <div
@@ -208,9 +215,12 @@ export function TimeGrid({
                     style={{ top: topOf(hour * 60) }}
                   />
                 ))}
-                {/* Shifokorning band vaqti — shtrixli, qabullar ostida */}
+                {/* Shifokorning band vaqti — shtrixli, qabullar ostida. Shifokor
+                    ustunida faqat oʻzi, kun ustunida — hammaniki */}
                 {blocks.map((block) => {
-                  const range = blockMinutes(block, day)
+                  if (column.doctorId !== undefined && block.doctorId !== column.doctorId)
+                    return null
+                  const range = blockMinutes(block, column.date)
                   if (!range) return null
                   const top = topOf(Math.max(range.start, START * 60))
                   const bottom = topOf(Math.min(range.end, END * 60))
@@ -228,7 +238,9 @@ export function TimeGrid({
                           <span className="block truncate font-medium">
                             {block.reason || SCHEDULE_UI.block_default}
                           </span>
-                          {!week && <span className="block truncate">{block.doctorName}</span>}
+                          {!byDoctor && columns.length === 1 && (
+                            <span className="block truncate">{block.doctorName}</span>
+                          )}
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-44">
@@ -247,81 +259,36 @@ export function TimeGrid({
                     </DropdownMenu>
                   )
                 })}
-                {layoutDay(byDay.get(day) ?? []).map(({ item, lane, lanes }) => {
-                  const start = minutesOf(item.at)
-                  // Qisqa blok (≤ 15 daq) — vaqt va ism bir qatorda; balandlik
-                  // hech qachon oʻz oraligʻidan oshmaydi — keyingisini bosmasin
-                  const short = item.duration <= 15
+                {layoutDay(byColumn[columnIndex] ?? []).map(({ item, lane, lanes }) => {
                   const canDrag = Boolean(onMove) && movable(item)
                   return (
-                    <AppointmentMenu
+                    <AppointmentBlock
                       key={item.id}
                       item={item}
                       actions={actions}
-                      open={menuFor === item.id}
-                      onOpenChange={(open) => setMenuFor(open ? item.id : null)}
-                    >
-                      <button
-                        type="button"
-                        onClick={(event) => event.stopPropagation()}
-                        // Radix menyuni pointerdown da ochadi — biz oʻzimiz
-                        // boshqaramiz: sudralmasdan qoʻyib yuborilsa ochiladi
-                        // Boshlanish hodisasi yuqoriga chiqmaydi — hafta surish
-                        // (useSwipe) boshlanmasin; tugashi hujjatgacha boradi,
-                        // hook u yerda tinglaydi (stopPropagation qilinmaydi)
-                        onPointerDown={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                          if (event.pointerType !== 'mouse' || event.button !== 0) return
-                          if (canDrag) begin(item, event.clientX, event.clientY, 'mouse', null)
-                          else setMenuFor(item.id)
-                        }}
-                        onPointerUp={(event) => {
-                          if (event.pointerType !== 'mouse' || !canDrag) return
-                          if (wasTap()) setMenuFor(item.id)
-                        }}
-                        onTouchStart={(event) => {
-                          event.stopPropagation()
-                          const touch = event.touches[0]
-                          if (!touch) return
-                          if (canDrag)
-                            begin(item, touch.clientX, touch.clientY, 'touch', touch.identifier)
-                        }}
-                        onTouchEnd={() => {
-                          if (!canDrag || wasTap()) setMenuFor(item.id)
-                        }}
-                        title={canDrag ? SCHEDULE_UI.drag_hint : undefined}
-                        className={cn(
-                          'absolute overflow-hidden rounded-md border-l-[3px] px-1 text-left text-[10px] sm:text-[11px]',
-                          short ? 'flex items-center gap-1 leading-none' : 'py-0.5 leading-tight',
-                          blockClass(item.status),
-                          // Navbat yozuvi: vaqti — kelgan lahza, davomiyligi yoʻq
-                          item.fromQueue && 'border-dashed border',
-                          canDrag && 'touch-pan-y cursor-grab active:cursor-grabbing',
-                          drag?.item.id === item.id && 'opacity-40',
-                        )}
-                        style={{
-                          top: topOf(start),
-                          height: Math.max(12, (item.duration / 60) * HOUR - 2),
-                          left: `calc(${(lane / lanes) * 100}% + 2px)`,
-                          width: `calc(${100 / lanes}% - 3px)`,
-                        }}
-                      >
-                        <span className={cn('font-semibold tabular-nums', !short && 'block')}>
-                          {timeOf(item.at)}
-                        </span>
-                        <span className={cn('truncate', !short && 'block')}>{item.fio}</span>
-                      </button>
-                    </AppointmentMenu>
+                      canDrag={canDrag}
+                      dragging={drag?.item.id === item.id}
+                      menuOpen={menuFor === item.id}
+                      onMenuChange={(open) => setMenuFor(open ? item.id : null)}
+                      onDragStart={(x, y, kind, touchId) => begin(item, x, y, kind, touchId)}
+                      wasTap={wasTap}
+                      style={{
+                        top: topOf(minutesOf(item.at)),
+                        // Blok hech qachon oʻz oraligʻidan oshmaydi — keyingisini bosmasin
+                        height: Math.max(14, (item.duration / 60) * HOUR - 2),
+                        left: `calc(${(lane / lanes) * 100}% + 2px)`,
+                        width: `calc(${100 / lanes}% - 3px)`,
+                      }}
+                    />
                   )
                 })}
                 {/* Sudralayotgan blokning sharpasi — nishon ustunda, 15 daqiqaga yaxlitlab */}
-                {drag && days[drag.dayIndex] === day && (
+                {drag && drag.columnIndex === columnIndex && (
                   <div
                     className="border-primary bg-primary text-primary-foreground pointer-events-none absolute inset-x-0.5 z-20 overflow-hidden rounded-md border px-1 py-0.5 text-[10px] leading-tight shadow-lg sm:text-[11px]"
                     style={{
                       top: topOf(drag.minutes),
-                      height: Math.max(12, (drag.item.duration / 60) * HOUR - 2),
+                      height: Math.max(14, (drag.item.duration / 60) * HOUR - 2),
                     }}
                   >
                     <span className="block font-semibold tabular-nums">
@@ -330,7 +297,7 @@ export function TimeGrid({
                     <span className="block truncate">{drag.item.fio}</span>
                   </div>
                 )}
-                {day === today && nowMinutes >= START * 60 && nowMinutes <= END * 60 && (
+                {column.date === today && nowMinutes >= START * 60 && nowMinutes <= END * 60 && (
                   <div
                     className="bg-destructive pointer-events-none absolute inset-x-0 z-10 h-0.5"
                     style={{ top: topOf(nowMinutes) }}
