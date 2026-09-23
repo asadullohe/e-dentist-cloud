@@ -614,7 +614,6 @@ export const TOAST_TEXT = {
   appointment_created: 'Qabul yozildi',
   appointment_updated: 'Qabul tahrirlandi',
   appointment_moved: (when: string) => `Qabul koʻchirildi: ${when}`,
-  appointment_deleted: 'Qabul oʻchirildi',
   block_saved: 'Band vaqt saqlandi',
   block_deleted: 'Band vaqt oʻchirildi',
   // Holat oʻzgarishi — qaysi holatga oʻtgani aytiladi
@@ -1513,6 +1512,10 @@ export const SCHEDULE_UI = {
   // Ustunlar nima boʻyicha boʻlinadi (14.1, 14.3)
   group_doctors: 'Shifokorlar',
   empty_column: 'Qabul yoʻq',
+  // Qabul oynasi (14.4). «Bekor qilish» — holat tugmasi; tanlangach
+  // APPOINTMENT_STATUS_LABELS dagi «Bekor qilindi» koʻrinadi
+  from_queue: 'Navbatdan',
+  cancel: 'Bekor qilish',
   duration: 'Davomiylik',
   minutes: (n: number) => `${n} daq`,
   // Vaqt tanlash — soat × chorak toʻri

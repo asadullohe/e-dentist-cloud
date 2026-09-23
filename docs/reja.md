@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 14.4 — qabul oynasi _(23/09/2026)_
+**Hozirgi task:** 14-bosqich tayyor, egasi brauzerda tekshiradi _(23/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1393,7 +1393,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       ustunda «Qabul yoʻq». Telefonda ham shifokor ustunlari: ustun eng kami
       120px, yonga aylantiriladi (vaqt oʻqi yopishib turadi), kunni surish
       bilan almashtirish olib tashlanadi — sana, ‹ › va hafta tasmasi qoladi
-- [ ] **14.4 Qabul oynasi** — kartochka bosilsa menyu emas, oyna (telefonda
+- [x] **14.4 Qabul oynasi** — kartochka bosilsa menyu emas, oyna (telefonda
       pastdan tortma): yosh, holat, «Navbatdan», qarz (`payments.read` va
       qarz boʻlsa; oldindan toʻlagan boʻlsa yashil), vaqt · shifokor ·
       telefon (bosilsa qoʻngʻiroq) · izoh; holat chiplari Rejalashtirilgan ·

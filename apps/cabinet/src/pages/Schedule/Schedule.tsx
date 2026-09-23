@@ -30,7 +30,6 @@ import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
   TimeBlockDialog,
-  useDeleteAppointment,
   useDeleteTimeBlock,
   useMoveAppointment,
   useSetAppointmentStatus,
@@ -61,7 +60,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui'
-import type { AppointmentActions } from './AppointmentMenu'
+import { type AppointmentActions, AppointmentDetails } from './AppointmentDetails'
 import { DayStrip } from './DayStrip'
 import { type DoctorHead, DoctorStrip } from './DoctorStrip'
 import { Segmented } from './Segmented'
@@ -123,7 +122,8 @@ export function Schedule() {
     date: today,
   })
   const [editing, setEditing] = useState<Appointment | undefined>(undefined)
-  const [deleting, setDeleting] = useState<Appointment | null>(null)
+  // Kartochka bosilganda ochiladigan tafsilot oynasi (telefonda tortma)
+  const [details, setDetails] = useState<Appointment | null>(null)
   // «Yakunlandi» — qilingan ish yoziladi, tashrif boʻladi (10.6)
   const [completing, setCompleting] = useState<Appointment | null>(null)
   // Shifokorning band vaqti
@@ -132,7 +132,6 @@ export function Schedule() {
   const [deletingBlock, setDeletingBlock] = useState<TimeBlock | null>(null)
   const { mutateAsync: removeBlock } = useDeleteTimeBlock()
 
-  const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
   const { mutate: move } = useMoveAppointment()
   const canWrite = useHasPermission()('schedule.write')
@@ -187,13 +186,20 @@ export function Schedule() {
   }
 
   const actions: AppointmentActions = {
-    onStatus: (item, status) => setStatus({ id: item.id, status }),
-    onComplete: setCompleting,
+    onStatus: (item, status) => {
+      setStatus({ id: item.id, status })
+      // Oyna ochiq qolsin, lekin holat darhol yangilansin
+      setDetails({ ...item, status })
+    },
+    onComplete: (item) => {
+      setDetails(null)
+      setCompleting(item)
+    },
     onEdit: (item) => {
+      setDetails(null)
       setEditing(item)
       setFormOpen(true)
     },
-    onDelete: setDeleting,
   }
 
   const showToday = !(today >= from && today <= to)
@@ -367,7 +373,7 @@ export function Schedule() {
           appointments={appointments ?? []}
           blocks={blocks ?? []}
           loading={isPending && !appointments}
-          actions={actions}
+          onOpen={setDetails}
           onPickSlot={(column, time) => openNew(column.date, time, column.doctorId ?? undefined)}
           onMove={
             canWrite
@@ -416,6 +422,8 @@ export function Schedule() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AppointmentDetails item={details} onClose={() => setDetails(null)} actions={actions} />
 
       <AppointmentFormDialog
         open={formOpen}
@@ -478,26 +486,6 @@ export function Schedule() {
           }}
         />
       )}
-
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{SCHEDULE_UI.delete_title}</AlertDialogTitle>
-            <AlertDialogDescription>{SCHEDULE_UI.delete_text}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (deleting) await remove(deleting.id)
-                setDeleting(null)
-              }}
-            >
-              {CARD_UI.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

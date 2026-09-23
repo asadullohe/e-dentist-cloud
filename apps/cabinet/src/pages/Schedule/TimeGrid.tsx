@@ -12,7 +12,6 @@ import {
   Skeleton,
 } from '@/shared/ui'
 import { AppointmentBlock } from './AppointmentBlock'
-import type { AppointmentActions } from './AppointmentMenu'
 import {
   COLUMNS_TEMPLATE,
   type GridColumn,
@@ -71,7 +70,7 @@ export function TimeGrid({
   appointments,
   blocks,
   loading,
-  actions,
+  onOpen,
   onPickSlot,
   onEditBlock,
   onDeleteBlock,
@@ -87,7 +86,8 @@ export function TimeGrid({
   appointments: readonly Appointment[]
   blocks: readonly TimeBlock[]
   loading: boolean
-  actions: AppointmentActions
+  /// Kartochka bosilganda tafsilot oynasi
+  onOpen: (item: Appointment) => void
   onPickSlot: (column: GridColumn, time: string) => void
   onEditBlock: (block: TimeBlock) => void
   onDeleteBlock: (block: TimeBlock) => void
@@ -105,7 +105,6 @@ export function TimeGrid({
   const columnsRef = useRef<HTMLDivElement>(null)
   // Kunlar rejimida ustun — bir kun: blok ichida shifokor nomi ortiqcha
   const byDoctor = columns.some((column) => column.doctorId !== undefined)
-  const [menuFor, setMenuFor] = useState<string | null>(null)
   const justDropped = useRef(false)
   const { drag, begin, wasTap, cancel } = useBlockDrag({
     gridRef: columnsRef,
@@ -281,11 +280,9 @@ export function TimeGrid({
                     <AppointmentBlock
                       key={item.id}
                       item={item}
-                      actions={actions}
                       canDrag={canDrag}
                       dragging={drag?.item.id === item.id}
-                      menuOpen={menuFor === item.id}
-                      onMenuChange={(open) => setMenuFor(open ? item.id : null)}
+                      onOpen={() => onOpen(item)}
                       onDragStart={(x, y, kind, touchId) => begin(item, x, y, kind, touchId)}
                       wasTap={wasTap}
                       style={{

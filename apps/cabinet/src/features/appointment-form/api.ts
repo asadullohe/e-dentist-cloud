@@ -25,9 +25,6 @@ export const updateAppointment = (id: string, payload: AppointmentPayload) =>
 export const createPatientInline = (payload: { fio: string; phone?: string; doctorId?: string }) =>
   apiRequest<Patient>('/patients', { method: 'POST', body: payload })
 
-export const deleteAppointment = (id: string) =>
-  apiRequest<{ deleted: true }>(`/appointments/${id}`, { method: 'DELETE' })
-
 export interface TimeBlockPayload {
   doctorId?: string
   fromDate: string
