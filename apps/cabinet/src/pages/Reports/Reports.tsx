@@ -37,6 +37,7 @@ import {
   TableRow,
 } from '@/shared/ui'
 import { MonthsChart } from './MonthsChart'
+import { PlanConversionCard } from './PlanConversionCard'
 
 interface StatProps {
   label: string
@@ -154,7 +155,9 @@ export function Reports() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {data && <PlanConversionCard data={data.plans} />}
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card className="gap-3 overflow-hidden pb-0">
           <CardHeader>
             <CardTitle>{REPORT_UI.treatments_title}</CardTitle>

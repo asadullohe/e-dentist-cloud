@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.6 — hisobot: rejalar konversiyasi
+**Hozirgi task:** 13.7 — landing: «Davolash rejasi» boʻlimi
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1434,9 +1434,16 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       ikki imzo joyi. Bosqich qatorida fon **va** chiziq — brauzer fonni
       chop etmasligi mumkin. Rejadagi «⋯» menyusidan ochiladi; menyu
       bajarilgan rejada ham koʻrinadi (chop etish oʻshanda ham kerak)
-- [ ] **13.6 Hisobot: konversiya** — davr uchun tuzildi / qabul qilindi / summa /
-      foiz, shifokorlar boʻyicha; Hisobotlar sahifasiga karta. Eksport arxiviga
-      `rejalar.xlsx`
+- [x] **13.6 Hisobot: konversiya** — `/reports` javobiga `plans`: davrda
+      **tuzilgan** rejalar (`created_at` boʻyicha — «sentyabrda 20 ta reja
+      tuzildi, 12 tasi qabul qilindi» degan savolga javob), qabul qilingani
+      (`accepted` va `done`), rad etilgani, qabul qilinganlar summasi va
+      shifokorlar kesimi. Hisobotlar sahifasida karta: toʻrt raqam +
+      shifokorlar jadvali (telefonda «Qabul qilindi» ustuni yashirinadi).
+      `reports` moduli `plans` jadvaliga tegmaydi — `conversionTx` orqali.
+      Eksport arxiviga `rejalar.xlsx` (sana · bemor · shifokor · nom ·
+      holat · jami · chegirma · toʻlash · ishlar · bajarilgan · muddat).
+      Testlar: konversiya sanoqlari va boshqa oyda boʻshligi
 - [ ] **13.7 Landing** — «Davolash rejasi» boʻlimi (uz + ru), skrinshotlar, FAQ,
       `featureList`; seed-demo da ikkita reja
 - [ ] **13.8 Serverga chiqarish**

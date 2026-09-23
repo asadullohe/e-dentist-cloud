@@ -21,4 +21,21 @@ export interface Report {
   }
   topTreatments: { treatment: string; count: number; total: number }[]
   topExpenses: { category: ExpenseCategory; count: number; total: number }[]
+  /// Davolash rejalari: nechta tuzildi va qanchasiga bemor rozi boʻldi (13.6)
+  plans: PlanConversion
+}
+
+export interface PlanConversion {
+  created: number
+  accepted: number
+  declined: number
+  /// Qabul qilingan rejalarning toʻlanishi kerak boʻlgan summasi
+  acceptedTotal: number
+  byDoctor: {
+    doctorId: string
+    doctorName: string
+    created: number
+    accepted: number
+    acceptedTotal: number
+  }[]
 }

@@ -163,6 +163,25 @@ export function removeItems(tx: ClinicTx, ids: string[]) {
   return tx.treatmentPlanItem.deleteMany({ where: { id: { in: ids } } })
 }
 
+/// Konversiya hisoboti uchun: davrda **tuzilgan** rejalar. Sanash
+/// tuzilgan sana boʻyicha — «sentyabrda 20 ta reja tuzildi, 12 tasi qabul
+/// qilindi» degan savolga javob beradi (13.6)
+export function createdBetween(tx: ClinicTx, from: Date, to: Date) {
+  return tx.treatmentPlan.findMany({
+    where: { createdAt: { gte: from, lt: to } },
+    select: FULL_SELECT,
+    orderBy: { createdAt: 'asc' },
+  })
+}
+
+/// Toʻliq eksport uchun (export moduli)
+export function allPlans(tx: ClinicTx) {
+  return tx.treatmentPlan.findMany({
+    select: FULL_SELECT,
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+  })
+}
+
 export function findItem(tx: ClinicTx, id: string) {
   return tx.treatmentPlanItem.findUnique({ where: { id }, select: ITEM_SELECT })
 }

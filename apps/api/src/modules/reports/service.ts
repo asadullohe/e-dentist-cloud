@@ -8,6 +8,7 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import * as expenses from '../expenses/service.js'
 import * as patients from '../patients/service.js'
 import * as payments from '../payments/service.js'
+import * as plans from '../plans/service.js'
 import * as visits from '../visits/service.js'
 import type { ReportInput } from './schema.js'
 
@@ -40,6 +41,8 @@ export interface Report {
   }
   topTreatments: { treatment: string; count: number; total: number }[]
   topExpenses: { category: ExpenseCategory; count: number; total: number }[]
+  /// Davolash rejalari: nechta tuzildi va qanchasiga bemor rozi boʻldi (13.6)
+  plans: plans.PlanConversion
 }
 
 /// DATE ustunlari UTC yarim tunda saqlanadi — chegaralar ham UTC da
@@ -103,11 +106,13 @@ async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
     })
   }
 
-  const [topTreatments, topExpenses, newPatients] = await Promise.all([
+  const [topTreatments, topExpenses, newPatients, conversion] = await Promise.all([
     visits.topTreatmentsTx(tx, from, to, TOP_ROWS),
     expenses.categoryTotalsTx(tx, from, to, TOP_ROWS),
     // `created_at` aniq vaqt — chegaralar klinika kuni boʻyicha (mahalliy)
     patients.countCreatedTx(tx, localDate(input.from), localDateAfter(input.to)),
+    // Reja ham `created_at` bilan sanaladi — shu chegaralar
+    plans.conversionTx(tx, localDate(input.from), localDateAfter(input.to)),
   ])
 
   const visitCount = visitDays
@@ -129,6 +134,7 @@ async function build(tx: ClinicTx, input: ReportInput): Promise<Report> {
     },
     topTreatments,
     topExpenses,
+    plans: conversion,
   }
 }
 

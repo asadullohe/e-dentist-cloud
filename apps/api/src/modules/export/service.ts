@@ -18,6 +18,7 @@ import * as lab from '../lab/service.js'
 import * as patients from '../patients/service.js'
 import * as payments from '../payments/service.js'
 import * as payroll from '../payroll/service.js'
+import * as plans from '../plans/service.js'
 import * as schedule from '../schedule/service.js'
 import * as services from '../services/service.js'
 import * as visits from '../visits/service.js'
@@ -43,6 +44,7 @@ const WIDTH = {
   services: [24, 40, 16, 16],
   payroll: [16, 28, 16, 10, 16, 16, 16, 8, 16, 18, 16, 16, 16, 16],
   feedback: [18, 8, 28, 28, 30, 50, 18, 14, 14],
+  plans: [18, 28, 24, 28, 18, 16, 14, 16, 10, 12, 16],
 }
 
 export function buildArchive(deps: ExportDeps, clinicId: string, userId: string): Promise<Archive> {
@@ -73,6 +75,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       payroll.exportRowsTx(tx),
       feedback.exportRowsTx(tx),
     ])
+    const planRows = await plans.exportRowsTx(tx)
 
     const names = new Map(people.map((person) => [person.id, person.fio]))
     // Bitta soʻrovda: naryaddagi texniklar, tashrifdagi shifokorlar,
@@ -84,6 +87,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
           ...visitRows.map((row) => row.doctorId),
           ...paymentRows.map((row) => row.createdBy),
           ...feedbackRows.map((row) => row.doctorId),
+          ...planRows.map((row) => row.doctorId),
         ].filter((id): id is string => id !== null),
       ),
     ])
@@ -100,6 +104,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       servicesFile,
       payrollFile,
       feedbackFile,
+      plansFile,
     ] = await Promise.all([
       patients.buildPatientsSheet(people),
       sheets.toBuffer('Tashriflar', sheets.visitsSheet(visitRows, names, staffNames), WIDTH.visits),
@@ -128,6 +133,11 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
         sheets.feedbackSheet(feedbackRows, names, staffNames),
         WIDTH.feedback,
       ),
+      sheets.toBuffer(
+        'Davolash rejalari',
+        sheets.plansSheet(planRows, names, staffNames),
+        WIDTH.plans,
+      ),
     ])
 
     const zip = new AdmZip()
@@ -142,6 +152,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
     zip.addFile(EXPORT_FILES.services, servicesFile)
     zip.addFile(EXPORT_FILES.payroll, payrollFile)
     zip.addFile(EXPORT_FILES.feedback, feedbackFile)
+    zip.addFile(EXPORT_FILES.plans, plansFile)
     zip.addFile(
       EXPORT_FILES.readme,
       Buffer.from(EXPORT_UI.readme(clinic.name, formatDate(todayISO())), 'utf8'),

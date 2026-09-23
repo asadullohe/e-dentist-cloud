@@ -480,6 +480,105 @@ export function setStatus(
   })
 }
 
+/// Toʻliq eksport uchun (export moduli): reja, uning jamlanmasi va
+/// bandlari soni. Bosqichlar alohida varaqqa chiqarilmaydi — arxiv
+/// bemorga tushunarli boʻlib qolsin
+export async function exportRowsTx(tx: ClinicTx) {
+  const rows = await repo.allPlans(tx)
+  return rows.map((row) => {
+    const items = row.stages.flatMap((stage) => stage.items)
+    const total = planTotal(row.stages)
+    return {
+      createdAt: row.createdAt,
+      patientId: row.patientId,
+      doctorId: row.doctorId,
+      title: row.title,
+      status: row.status,
+      total,
+      discount: row.discount,
+      payable: Math.max(0, total - row.discount),
+      itemCount: items.length,
+      doneCount: items.filter((item) => itemStatus(item) === 'done').length,
+      validUntil: row.validUntil,
+    }
+  })
+}
+
+// ────────────────────────  Konversiya hisoboti  ────────────────────────
+//
+// «Nechta reja tuzildi va qanchasiga bemor rozi boʻldi» — klinikaga qaysi
+// shifokor koʻndira olishini koʻrsatadi (13.6).
+
+export interface PlanConversionRow {
+  doctorId: string
+  doctorName: string
+  created: number
+  accepted: number
+  /// Qabul qilingan rejalarning toʻlanishi kerak boʻlgan summasi
+  acceptedTotal: number
+}
+
+export interface PlanConversion {
+  created: number
+  accepted: number
+  declined: number
+  acceptedTotal: number
+  byDoctor: PlanConversionRow[]
+}
+
+/// Bajarilgan reja ham qabul qilingan: bemor rozi boʻlmasa ish
+/// boshlanmagan boʻlardi
+function isAccepted(status: PlanStatus): boolean {
+  return status === 'accepted' || status === 'done'
+}
+
+/// Hisobot moduli uchun (u `plans` jadvaliga oʻzi tegmaydi)
+export async function conversionTx(tx: ClinicTx, from: Date, to: Date): Promise<PlanConversion> {
+  const rows = await repo.createdBetween(tx, from, to)
+  const names = await auth.staffNamesTx(tx, [...new Set(rows.map((row) => row.doctorId))])
+
+  const byDoctor = new Map<string, PlanConversionRow>()
+  let created = 0
+  let accepted = 0
+  let declined = 0
+  let acceptedTotal = 0
+
+  for (const row of rows) {
+    const payable = Math.max(0, planTotal(row.stages) - row.discount)
+    const ok = isAccepted(row.status)
+
+    created += 1
+    if (ok) {
+      accepted += 1
+      acceptedTotal += payable
+    }
+    if (row.status === 'declined') declined += 1
+
+    const line = byDoctor.get(row.doctorId) ?? {
+      doctorId: row.doctorId,
+      doctorName: names.get(row.doctorId) ?? '',
+      created: 0,
+      accepted: 0,
+      acceptedTotal: 0,
+    }
+    line.created += 1
+    if (ok) {
+      line.accepted += 1
+      line.acceptedTotal += payable
+    }
+    byDoctor.set(row.doctorId, line)
+  }
+
+  return {
+    created,
+    accepted,
+    declined,
+    acceptedTotal,
+    // Koʻp ishlagan shifokor tepada
+    byDoctor: [...byDoctor.values()].sort((a, b) => b.acceptedTotal - a.acceptedTotal),
+  }
+}
+
 // ───────────────────  Bandni bajarish: tashrif yoziladi  ───────────────────
 //
 // Naryad topshirishdagi qoida bilan bir xil (11.5): ish qilingani tashrif

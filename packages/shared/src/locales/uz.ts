@@ -505,6 +505,16 @@ export const REPORT_UI = {
   total: 'Jami',
   empty_visits: 'Bu davrda tashrif boʻlmagan',
   empty_expenses: 'Bu davrda xarajat yozilmagan',
+  /// Davolash rejalari konversiyasi (13.6)
+  plans_title: 'Davolash rejalari',
+  plans_hint: 'Davrda tuzilgan rejalardan qanchasiga bemor rozi boʻldi',
+  plans_created: 'Tuzildi',
+  plans_accepted: 'Qabul qilindi',
+  plans_declined: 'Rad etildi',
+  plans_rate: 'Konversiya',
+  plans_sum: 'Qabul qilingan summa',
+  plans_doctor: 'Shifokor',
+  empty_plans: 'Bu davrda reja tuzilmagan',
 } as const
 
 // Ish haqi (tz.md 15-boʻlim)
@@ -1041,6 +1051,7 @@ export const EXPORT_FILES = {
   services: 'xizmatlar.xlsx',
   payroll: 'ish-haqi.xlsx',
   feedback: 'fikrlar.xlsx',
+  plans: 'rejalar.xlsx',
   readme: 'malumot.txt',
 } as const
 
@@ -1086,6 +1097,13 @@ export const EXPORT_COLUMNS = {
   received_by: 'Qabul qildi',
   cancelled: 'Bekor qilingan',
   cancel_reason: 'Bekor sababi',
+  // rejalar.xlsx
+  plan_title: 'Reja nomi',
+  discount: 'Chegirma',
+  payable: 'Toʻlash kerak',
+  items: 'Ishlar',
+  done_items: 'Bajarilgan',
+  valid_until: 'Narx amal qiladi',
   // fikrlar.xlsx
   rating: 'Baho',
   tags: 'Teglar',

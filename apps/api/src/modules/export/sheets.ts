@@ -14,6 +14,7 @@ import {
   LAB_MATERIAL_LABELS,
   LAB_STATUS_LABELS,
   LAB_WORK_TYPE_LABELS,
+  PLAN_STATUS_LABELS,
 } from '@e-dentist/shared'
 import { crownMaterialLabel, toothStatusLabel } from '@e-dentist/teeth'
 import writeXlsxFile, { type SheetData } from 'write-excel-file/node'
@@ -366,6 +367,55 @@ export function feedbackSheet(
       row.phone,
       FEEDBACK_SOURCE_LABELS[row.source as keyof typeof FEEDBACK_SOURCE_LABELS] ?? row.source,
       FEEDBACK_STATUS_LABELS[row.status as keyof typeof FEEDBACK_STATUS_LABELS] ?? row.status,
+    ]),
+  )
+}
+
+/// Davolash rejalari (13.6). Bosqichlar alohida varaqqa chiqarilmaydi —
+/// arxiv bemorga tushunarli boʻlib qolsin
+export function plansSheet(
+  rows: {
+    createdAt: Date
+    patientId: string
+    doctorId: string
+    title: string
+    status: string
+    total: number
+    discount: number
+    payable: number
+    itemCount: number
+    doneCount: number
+    validUntil: Date | null
+  }[],
+  people: Map<string, string>,
+  staff: Map<string, string>,
+): SheetData {
+  return sheet(
+    [
+      EXPORT_COLUMNS.date,
+      EXPORT_COLUMNS.patient,
+      EXPORT_COLUMNS.doctor,
+      EXPORT_COLUMNS.plan_title,
+      EXPORT_COLUMNS.status,
+      EXPORT_COLUMNS.total,
+      EXPORT_COLUMNS.discount,
+      EXPORT_COLUMNS.payable,
+      EXPORT_COLUMNS.items,
+      EXPORT_COLUMNS.done_items,
+      EXPORT_COLUMNS.valid_until,
+    ],
+    rows.map((row) => [
+      formatDateTime(row.createdAt),
+      nameOf(people, row.patientId),
+      staff.get(row.doctorId) ?? '',
+      row.title,
+      PLAN_STATUS_LABELS[row.status as keyof typeof PLAN_STATUS_LABELS] ?? row.status,
+      row.total,
+      row.discount,
+      row.payable,
+      row.itemCount,
+      row.doneCount,
+      row.validUntil ? formatDate(row.validUntil.toISOString().slice(0, 10)) : '',
     ]),
   )
 }

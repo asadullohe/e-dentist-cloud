@@ -253,6 +253,54 @@ describe('koʻp ijarachilik', () => {
   })
 })
 
+describe('rejalar konversiyasi', () => {
+  /// Rejalar tuzilgan sana boʻyicha sanaladi — shuning uchun joriy oy
+  async function plan(status?: 'accepted' | 'declined') {
+    const created = await call('POST', '/api/plans', { patientId, title: 'Reja' })
+    const id = created.json().data.id as string
+    await h.app.inject({
+      method: 'PUT',
+      url: `/api/plans/${id}/content`,
+      headers: { cookie: h.cookie },
+      payload: { stages: [{ name: 'Bosqich', items: [{ treatment: 'Ish', price: 500_000 }] }] },
+    })
+    if (status) {
+      await call('POST', `/api/plans/${id}/status`, { status: 'sent' })
+      await call('POST', `/api/plans/${id}/status`, {
+        status,
+        ...(status === 'declined' ? { reason: 'Qimmat' } : {}),
+      })
+    }
+    return id
+  }
+
+  it('tuzilgan, qabul qilingan va rad etilgan rejalar sanaladi', async () => {
+    await plan('accepted')
+    await plan('declined')
+    await plan()
+
+    const month = new Date().toISOString().slice(0, 7)
+    const data = (await call('GET', `/api/reports?month=${month}`)).json().data
+
+    expect(data.plans).toMatchObject({
+      created: 3,
+      accepted: 1,
+      declined: 1,
+      // Qabul qilinganining toʻlash summasi
+      acceptedTotal: 500_000,
+    })
+    // Shifokorlar kesimida ham — bu yerda hammasi egasi nomidan
+    expect(data.plans.byDoctor).toHaveLength(1)
+    expect(data.plans.byDoctor[0]).toMatchObject({ created: 3, accepted: 1 })
+  })
+
+  it('boshqa oyda rejalar koʻrinmaydi', async () => {
+    const data = (await call('GET', '/api/reports?month=2026-03')).json().data
+    expect(data.plans).toMatchObject({ created: 0, accepted: 0, acceptedTotal: 0 })
+    expect(data.plans.byDoctor).toEqual([])
+  })
+})
+
 describe('ruxsat', () => {
   it('qabulxona hisobotni koʻra olmaydi', async () => {
     const reception = await h.ownerDb.role.findFirst({
