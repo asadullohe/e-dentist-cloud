@@ -520,6 +520,21 @@ model TimeBlock {
 
 // ────────────────────────────────  Xizmatlar  ───────────────────────────────
 
+/// Xizmat nimaga qoʻllaniladi (tz.md 19-boʻlim). Dastur shunga qarab tish
+/// soʻraydi yoki soʻramaydi — sanoatda («treatment area») shunday qilingan.
+/// Dentrix dagi yettitadan toʻrttasi olindi: `surface` bizda yoʻq (xaritada
+/// yuzalar chizilmaydi), `quadrant`/`sextant` esa sugʻurta kodlari uchun
+enum ServiceArea {
+  /// Bitta tish: plomba, koronka, implant, kanal davolash
+  tooth
+  /// Tishlar oraligʻi: koʻprik. Bandlar guruhi — 15.2
+  range
+  /// Jagʻ: olinadigan toʻliq protez, bugel
+  arch
+  /// Butun ogʻiz: tozalash, oqartirish, koʻrik
+  mouth
+}
+
 /// Xizmat turi — katalogning birinchi darajasi: Jarrohlik, Terapiya… Ichida
 /// xizmatlar (nom + narx). Tartibni klinika oʻzi belgilaydi (tortib joylash)
 model ServiceType {
@@ -539,20 +554,24 @@ model ServiceType {
 }
 
 model Service {
-  id        String   @id @default(uuid(7)) @db.Uuid
-  clinicId  String   @map("clinic_id") @db.Uuid
-  typeId    String   @map("type_id") @db.Uuid
+  id        String      @id @default(uuid(7)) @db.Uuid
+  clinicId  String      @map("clinic_id") @db.Uuid
+  typeId    String      @map("type_id") @db.Uuid
   name      String
   /// Soʻm, butun son
   price     Int
   /// Texnik (protez ustasi) narxi — boʻsh: texnik ishi yoʻq. Tashrifga
   /// snapshot boʻlib koʻchadi (`visits.lab_cost`), shifokor ulushi
   /// (narx − texnik) dan (qaror 21/09/2026)
-  techPrice Int?     @map("tech_price")
+  techPrice Int?        @map("tech_price")
+  /// Nimaga qoʻllaniladi (qaror 23/09/2026, tz.md 19-boʻlim). Tashrif va
+  /// reja bandi shunga qarab tish soʻraydi: `tooth` da majburiy,
+  /// `mouth`/`arch` da maydon koʻrsatilmaydi
+  area      ServiceArea @default(tooth)
   /// Tur ichidagi tartib
-  position  Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  position  Int         @default(0)
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   clinic    Clinic              @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   /// Ichida xizmati bor tur oʻchirilmaydi — avval koʻchiriladi

@@ -14,6 +14,7 @@ import {
 let h: Harness
 let patientId = ''
 let serviceId = ''
+let typeId = ''
 let otherClinicId = ''
 /// Ikki shifokor: reja oʻzinikimi yoki begonaning bemorinikimi
 let doctorA = { id: '', cookie: '' }
@@ -116,9 +117,10 @@ beforeAll(async () => {
   patientId = (await call('POST', '/api/patients', { fio: 'Reja Bemori' })).json().data.id
 
   const type = await call('POST', '/api/service-types', { name: 'Terapiya' })
+  typeId = type.json().data.id
   serviceId = (
     await call('POST', '/api/services', {
-      typeId: type.json().data.id,
+      typeId,
       name: 'Kariyes davolash',
       price: 300_000,
     })
@@ -327,6 +329,39 @@ describe('mazmunni qayta saqlash', () => {
       stages: [{ name: 'Bosqich', items: [{ tooth: 99, treatment: 'Ish', price: 1000 }] }],
     })
     expect(r.statusCode).toBe(400)
+  })
+
+  // Xizmatning qoʻllanish sohasi (19-boʻlim) bandda ham amal qiladi
+  it('tish soʻramaydigan xizmat bandi tishsiz saqlanadi, tish xizmati — 400', async () => {
+    const mouth = (
+      await call('POST', '/api/services', {
+        typeId,
+        name: 'Professional tozalash',
+        price: 300_000,
+        area: 'mouth',
+      })
+    ).json().data.id
+
+    const plan = await newPlan()
+    const ok = await call('PUT', `/api/plans/${plan.id}/content`, {
+      stages: [
+        {
+          name: 'Bosqich',
+          // Tish yuborilsa ham soha butun ogʻiz — bandda qolmaydi
+          items: [{ tooth: 21, serviceId: mouth, treatment: 'Tozalash', price: 300_000 }],
+        },
+      ],
+    })
+    expect(ok.statusCode).toBe(200)
+    expect(ok.json().data.stages[0].items[0].tooth).toBeNull()
+
+    const bad = await call('PUT', `/api/plans/${plan.id}/content`, {
+      stages: [
+        { name: 'Bosqich', items: [{ serviceId, treatment: 'Kariyes davolash', price: 300_000 }] },
+      ],
+    })
+    expect(bad.statusCode).toBe(400)
+    expect(bad.json().error.fields.tooth).toMatch(/tish/i)
   })
 })
 

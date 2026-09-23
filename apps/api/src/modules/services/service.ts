@@ -1,7 +1,7 @@
 // Xizmatlar katalogi: tur (Jarrohlik, Terapiya…) → xizmat (nom + narx).
 // Tashrif yozishda narx shu yerdan tanlanadi.
 
-import { SERVICE_TEXT } from '@e-dentist/shared'
+import { areaNeedsTooth, SERVICE_TEXT, type ServiceArea } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
@@ -121,6 +121,37 @@ export function listTx(tx: ClinicTx) {
   return repo.list(tx)
 }
 
+/// Xizmatlarning qoʻllanish sohasi (19-boʻlim). Tashrif va reja bandi shunga
+/// qarab tish soʻraydi — ular `services` jadvaliga oʻzi tegmaydi
+export async function areasOfTx(
+  tx: ClinicTx,
+  ids: readonly string[],
+): Promise<Map<string, ServiceArea>> {
+  const wanted = [...new Set(ids)]
+  if (wanted.length === 0) return new Map()
+  const rows = await repo.list(tx)
+  return new Map(rows.filter((row) => wanted.includes(row.id)).map((row) => [row.id, row.area]))
+}
+
+/// Sohaga qarab tishni hal qiladi (19-boʻlim):
+///
+///   · xizmat tanlanmagan (qoʻlda yozilgan muolaja) — tish ixtiyoriy, tegilmaydi
+///   · `mouth` / `arch` — tish soʻralmaydi, boʻsh yoziladi
+///   · `tooth` / `range` — majburiy
+///
+/// Bitta joyda: `visits` ham, `plans` ham shu funksiyani chaqiradi
+export function toothForArea(
+  area: ServiceArea | undefined,
+  tooth: number | null | undefined,
+): number | null {
+  if (area === undefined) return tooth ?? null
+  if (!areaNeedsTooth(area)) return null
+  if (tooth === null || tooth === undefined) {
+    throw errors.validation({ tooth: SERVICE_TEXT.tooth_required })
+  }
+  return tooth
+}
+
 export function list(deps: ServiceDeps, clinicId: string) {
   return withClinic(deps.db, clinicId, (tx) => repo.list(tx))
 }
@@ -145,6 +176,7 @@ export function create(
         name: input.name,
         price: input.price,
         techPrice: input.techPrice ?? null,
+        area: input.area,
       })
       await audit(tx, userId, 'service', id)
       return created
@@ -171,6 +203,7 @@ export function update(
         ...(input.name === undefined ? {} : { name: input.name }),
         ...(input.price === undefined ? {} : { price: input.price }),
         ...(input.techPrice === undefined ? {} : { techPrice: input.techPrice }),
+        ...(input.area === undefined ? {} : { area: input.area }),
       })
       await audit(tx, userId, 'service', id)
       return updated

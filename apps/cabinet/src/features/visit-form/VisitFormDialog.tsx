@@ -1,4 +1,5 @@
 import {
+  areaNeedsTooth,
   CARD_UI,
   formatDate,
   formatMoney,
@@ -8,6 +9,7 @@ import {
   PLAN_UI,
   parseDisplayDate,
   SCHEDULE_UI,
+  SERVICE_TEXT,
   SERVICE_UI,
   todayISO,
   UI_TEXT,
@@ -220,9 +222,20 @@ export function VisitFormDialog({
   const pickedService = services?.find((item) => item.id === serviceId)
   const showLabCost = labCostValue !== '' || Boolean(pickedService?.techPrice)
 
+  // Xizmatning qoʻllanish sohasi (19-boʻlim): tanlanmagan boʻlsa tish
+  // ixtiyoriy, `tooth`/`range` da shart, `mouth`/`arch` da maydon yoʻq
+  const needsTooth = pickedService === undefined ? undefined : areaNeedsTooth(pickedService.area)
+  const showTooth = needsTooth !== false
+
   async function onSubmit(values: VisitValues) {
     setFormError('')
     setDoctorError('')
+    // Sxema tishni ixtiyoriy biladi — majburiyligi tanlangan xizmatga
+    // bogʻliq, shuning uchun shu yerda. Server ham baribir tekshiradi
+    if (needsTooth && !values.tooth) {
+      form.setError('tooth', { message: SERVICE_TEXT.tooth_required })
+      return
+    }
     const payload = {
       doctorId,
       time: values.time,
@@ -366,6 +379,12 @@ export function VisitFormDialog({
                         'labCost',
                         picked.techPrice ? formatMoney(String(picked.techPrice)) : '',
                       )
+                      // Tish soʻralmaydigan xizmat — oldingi tanlov ham,
+                      // maydon yashiringach koʻrinmay qoladigan xato ham qolmasin
+                      if (!areaNeedsTooth(picked.area)) {
+                        form.setValue('tooth', '')
+                        form.clearErrors('tooth')
+                      }
                     }
                   }}
                 >
@@ -403,8 +422,9 @@ export function VisitFormDialog({
               )}
             />
 
-            {/* Narx · tish bir qatorda — ikkalasi qisqa */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Narx · tish bir qatorda — ikkalasi qisqa. Tish soʻralmaydigan
+                xizmatda narx qatorni oʻzi egallaydi */}
+            <div className={showTooth ? 'grid grid-cols-2 gap-3' : ''}>
               <FormField
                 control={form.control}
                 name="price"
@@ -422,19 +442,28 @@ export function VisitFormDialog({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="tooth"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{CARD_UI.tooth}</FormLabel>
-                    <FormControl>
-                      <Input inputMode="numeric" placeholder="16" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {showTooth && (
+                <FormField
+                  control={form.control}
+                  name="tooth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {CARD_UI.tooth}
+                        {needsTooth && (
+                          <span className="text-destructive font-normal">
+                            · {SERVICE_UI.required_mark}
+                          </span>
+                        )}
+                      </FormLabel>
+                      <FormControl>
+                        <Input inputMode="numeric" placeholder="16" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Texnik narxi — xizmatdan koʻchgan yoki qoʻlda; naryad rejimida

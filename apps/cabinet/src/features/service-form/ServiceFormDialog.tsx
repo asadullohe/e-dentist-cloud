@@ -2,6 +2,9 @@ import {
   CARD_UI,
   formatMoney,
   moneyDigits,
+  SERVICE_AREA_HINTS,
+  SERVICE_AREA_LABELS,
+  SERVICE_AREAS,
   SERVICE_TEXT,
   SERVICE_UI,
   UI_TEXT,
@@ -47,6 +50,8 @@ const schema = z.object({
   /// Maskalangan matn: «250 000»
   price: z.string().trim(),
   techPrice: z.string().trim(),
+  /// Qoʻllanish sohasi — tashrifda tish soʻralishini shu hal qiladi
+  area: z.enum(SERVICE_AREAS),
 })
 
 type Values = z.infer<typeof schema>
@@ -74,7 +79,7 @@ export function ServiceFormDialog({
 
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { typeId: '', name: '', price: '', techPrice: '' },
+    defaultValues: { typeId: '', name: '', price: '', techPrice: '', area: 'tooth' },
   })
 
   useEffect(() => {
@@ -84,6 +89,7 @@ export function ServiceFormDialog({
         name: service?.name ?? '',
         price: service ? formatMoney(String(service.price)) : '',
         techPrice: service?.techPrice != null ? formatMoney(String(service.techPrice)) : '',
+        area: service?.area ?? 'tooth',
       })
       setHasTech(service?.techPrice != null)
       setFormError('')
@@ -98,6 +104,7 @@ export function ServiceFormDialog({
         name: values.name,
         price: Number(moneyDigits(values.price) || 0),
         techPrice: hasTech ? Number(moneyDigits(values.techPrice) || 0) : null,
+        area: values.area,
       })
       onOpenChange(false)
     } catch (error) {
@@ -164,6 +171,34 @@ export function ServiceFormDialog({
                       onChange={(event) => field.onChange(formatMoney(event.target.value))}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="area"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{SERVICE_UI.area}</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SERVICE_AREAS.map((area) => (
+                        <SelectItem key={area} value={area}>
+                          {SERVICE_AREA_LABELS[area]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {/* Izoh tanlangan sohaga qarab — qaysi xizmatlar shunga
+                      kirishini eslatadi */}
+                  <FormDescription>{SERVICE_AREA_HINTS[field.value]}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

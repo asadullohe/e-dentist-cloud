@@ -1,5 +1,6 @@
 // services moduli `service_types` va `services` jadvallariga egalik qiladi.
 
+import type { ServiceArea } from '@e-dentist/shared'
 import type { Prisma } from '../../../generated/prisma/client.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
@@ -10,6 +11,7 @@ const SELECT = {
   name: true,
   price: true,
   techPrice: true,
+  area: true,
   position: true,
   type: { select: { name: true } },
 } satisfies Prisma.ServiceSelect
@@ -24,6 +26,8 @@ export interface ServiceRow {
   name: string
   price: number
   techPrice: number | null
+  /// Nimaga qoʻllaniladi (19-boʻlim)
+  area: ServiceArea
   position: number
 }
 
@@ -34,6 +38,7 @@ const flat = (row: Row): ServiceRow => ({
   name: row.name,
   price: row.price,
   techPrice: row.techPrice,
+  area: row.area,
   position: row.position,
 })
 
@@ -92,7 +97,13 @@ export async function list(tx: ClinicTx): Promise<ServiceRow[]> {
 export async function create(
   tx: ClinicTx,
   id: string,
-  data: { typeId: string; name: string; price: number; techPrice: number | null },
+  data: {
+    typeId: string
+    name: string
+    price: number
+    techPrice: number | null
+    area: ServiceArea
+  },
 ): Promise<ServiceRow> {
   const last = await tx.service.aggregate({
     where: { typeId: data.typeId },
@@ -113,6 +124,7 @@ export async function update(
     name?: string
     price?: number
     techPrice?: number | null
+    area?: ServiceArea
     position?: number
   },
 ): Promise<ServiceRow> {

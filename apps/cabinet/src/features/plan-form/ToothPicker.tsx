@@ -3,27 +3,35 @@ import { LOWER, UPPER } from '@e-dentist/teeth'
 import { cn } from 'cn'
 
 /// Reja bandiga bitta tish: FDI raqamlari ikki qatorda, bosilgani
-/// belgilanadi, qayta bosilsa bekor qilinadi. «Professional tozalash» kabi
-/// umumiy ish tishsiz qoladi — shuning uchun boʻsh qiymat ham toʻgʻri javob
+/// belgilanadi, qayta bosilsa bekor qilinadi. Qoʻlda yozilgan umumiy ish
+/// tishsiz qoladi — shuning uchun boʻsh qiymat ham toʻgʻri javob.
+/// `required` — xizmatning sohasi tish soʻraydi (19-boʻlim): «tishsiz»
+/// tanlovi koʻrsatilmaydi va bosilgan tishni bekor qilib boʻlmaydi
 export function ToothPicker({
   value,
   onChange,
+  required = false,
 }: {
   value: number | null
   onChange(tooth: number | null): void
+  required?: boolean
 }) {
   return (
     <div className="space-y-1.5">
-      <button
-        type="button"
-        onClick={() => onChange(null)}
-        className={cn(
-          'rounded-md border px-2.5 py-1 text-xs transition-colors',
-          value === null ? 'border-primary bg-primary text-primary-foreground' : 'hover:bg-accent',
-        )}
-      >
-        {PLAN_UI.tooth_none}
-      </button>
+      {!required && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className={cn(
+            'rounded-md border px-2.5 py-1 text-xs transition-colors',
+            value === null
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'hover:bg-accent',
+          )}
+        >
+          {PLAN_UI.tooth_none}
+        </button>
+      )}
 
       {[
         { label: CHART_UI.upper_jaw, row: UPPER },
@@ -36,7 +44,7 @@ export function ToothPicker({
               <button
                 key={tooth}
                 type="button"
-                onClick={() => onChange(value === tooth ? null : tooth)}
+                onClick={() => onChange(value === tooth && !required ? null : tooth)}
                 className={cn(
                   'w-8 rounded-md border py-1 text-xs tabular-nums transition-colors',
                   value === tooth

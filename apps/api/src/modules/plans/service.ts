@@ -19,6 +19,7 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
+import * as services from '../services/service.js'
 import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
 import type {
@@ -362,6 +363,14 @@ export function saveContent(
     const keptItems = new Set<string>()
     let total = 0
 
+    // Xizmatning qoʻllanish sohasi (19-boʻlim): `mouth`/`arch` bandida tish
+    // boʻsh yoziladi, `tooth`/`range` da majburiy. Sohalar bir soʻrovda
+    // olinadi — bandlar koʻp boʻlishi mumkin
+    const areas = await services.areasOfTx(
+      tx,
+      input.stages.flatMap((stage) => stage.items.flatMap((item) => item.serviceId ?? [])),
+    )
+
     for (const [stageIndex, stage] of input.stages.entries()) {
       let stageId = stage.id
       if (stageId !== undefined) {
@@ -386,7 +395,10 @@ export function saveContent(
         const fields = {
           stageId,
           position: itemIndex,
-          tooth: item.tooth ?? null,
+          tooth: services.toothForArea(
+            item.serviceId ? areas.get(item.serviceId) : undefined,
+            item.tooth,
+          ),
           serviceId: item.serviceId ?? null,
           treatment: item.treatment,
           price: item.price,

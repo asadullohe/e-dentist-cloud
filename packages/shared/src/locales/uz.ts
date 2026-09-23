@@ -405,6 +405,23 @@ export const SERVICE_TEXT = {
   type_has_services: (n: number) =>
     `Bu turda ${n} ta xizmat bor — avval ularni boshqa turga koʻchiring`,
   order_invalid: 'Tartib roʻyxati toʻliq emas',
+  /// Qoʻllanish sohasi (19-boʻlim): `tooth` xizmatida tish koʻrsatilishi shart
+  tooth_required: 'Bu xizmat uchun tish koʻrsatilishi shart',
+} as const
+
+/// Xizmat nimaga qoʻllaniladi (tz.md 19-boʻlim)
+export const SERVICE_AREA_LABELS = {
+  tooth: 'Bitta tish',
+  range: 'Tishlar oraligʻi',
+  arch: 'Jagʻ',
+  mouth: 'Butun ogʻiz',
+} as const
+
+export const SERVICE_AREA_HINTS = {
+  tooth: 'Plomba, koronka, implant, kanal — tashrifda tish koʻrsatiladi',
+  range: 'Koʻprik — bir nechta tishga qoʻyiladi',
+  arch: 'Olinadigan toʻliq protez, bugel — tish soʻralmaydi',
+  mouth: 'Tozalash, oqartirish, koʻrik — tish soʻralmaydi',
 } as const
 
 export const SERVICE_UI = {
@@ -427,6 +444,9 @@ export const SERVICE_UI = {
   tech_price: 'Texnik narxi',
   tech_hint: 'Tashrifga koʻchadi; shifokor ulushi (narx − texnik narxi) dan hisoblanadi',
   tech_short: (price: string) => `Texnik: ${price}`,
+  area: 'Qoʻllanish sohasi',
+  /// Tish maydoni yonida — soha `tooth`/`range` boʻlganda
+  required_mark: 'shart',
   type: 'Turi',
   types: 'Turlar',
   type_add: 'Yangi tur',

@@ -1,4 +1,14 @@
-import { CARD_UI, formatMoney, formatSom, moneyDigits, PLAN_TEXT, PLAN_UI } from '@e-dentist/shared'
+import {
+  areaNeedsTooth,
+  CARD_UI,
+  formatMoney,
+  formatSom,
+  moneyDigits,
+  PLAN_TEXT,
+  PLAN_UI,
+  SERVICE_TEXT,
+  SERVICE_UI,
+} from '@e-dentist/shared'
 import { useEffect, useState } from 'react'
 import type { PlanItemDraft } from '@/entities/plan'
 import { useServices, useServiceTypes } from '@/entities/service'
@@ -62,21 +72,32 @@ export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDia
   /// tahrirlash mumkin, bazaga **snapshot** tushadi
   function pickService(value: string) {
     setServiceId(value)
+    // Soha oʻzgardi — oldingi «tish shart» xatosi eskirdi
+    setError('')
     const picked = services?.find((service) => service.id === value)
     if (!picked) return
     setTreatment(picked.name)
     setPrice(formatMoney(String(picked.price)))
+    // Tish soʻralmaydigan xizmat (19-boʻlim) — oldingi tanlov qolmasin
+    if (!areaNeedsTooth(picked.area)) setTooth(null)
   }
+
+  // Tanlangan xizmatning sohasi: yoʻq — tish ixtiyoriy, `tooth`/`range` —
+  // shart, `mouth`/`arch` — maydon koʻrsatilmaydi
+  const pickedService = services?.find((service) => service.id === serviceId)
+  const needsTooth = pickedService === undefined ? undefined : areaNeedsTooth(pickedService.area)
 
   function save() {
     const name = treatment.trim()
     if (!name) return setError(PLAN_TEXT.treatment_required)
     const count = Number(qty)
     if (!Number.isInteger(count) || count < 1) return setError(PLAN_TEXT.qty_invalid)
+    if (needsTooth && tooth === null) return setError(SERVICE_TEXT.tooth_required)
 
     onSave({
       ...(item?.id ? { id: item.id } : {}),
-      tooth,
+      // Soha tish soʻramasa — boʻsh yoziladi (server ham shunday qiladi)
+      tooth: needsTooth === false ? null : tooth,
       serviceId: serviceId === NO_SERVICE ? null : serviceId,
       treatment: name,
       price: Number(moneyDigits(price) || 0),
@@ -152,10 +173,17 @@ export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDia
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>{PLAN_UI.tooth}</Label>
-            <ToothPicker value={tooth} onChange={setTooth} />
-          </div>
+          {needsTooth !== false && (
+            <div className="space-y-1.5">
+              <Label>
+                {PLAN_UI.tooth}
+                {needsTooth && (
+                  <span className="text-destructive font-normal">· {SERVICE_UI.required_mark}</span>
+                )}
+              </Label>
+              <ToothPicker value={tooth} onChange={setTooth} required={needsTooth === true} />
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor="plan-item-note">{PLAN_UI.note}</Label>

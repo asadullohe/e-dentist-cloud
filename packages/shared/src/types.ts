@@ -81,6 +81,17 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number]
 // --- Davolash rejalari (tz.md 18-boʻlim) ---
 // Reja oʻchirilmaydi — bekor qilinadi, toʻlovdagi qoida bilan bir xil:
 // bemorga koʻrsatilgan narx izsiz yoʻqolmasligi kerak
+// --- Xizmatning qoʻllanish sohasi (tz.md 19-boʻlim) ---
+// Dastur shunga qarab tish soʻraydi: `tooth` da majburiy, `mouth`/`arch` da
+// maydon koʻrsatilmaydi. `range` (koʻprik) — oraliq 15.2 da
+export const SERVICE_AREAS = ['tooth', 'range', 'arch', 'mouth'] as const
+export type ServiceArea = (typeof SERVICE_AREAS)[number]
+
+/// Soha tish soʻraydimi
+export function areaNeedsTooth(area: ServiceArea): boolean {
+  return area === 'tooth' || area === 'range'
+}
+
 export const PLAN_STATUSES = ['draft', 'sent', 'accepted', 'declined', 'done', 'cancelled'] as const
 export type PlanStatus = (typeof PLAN_STATUSES)[number]
 

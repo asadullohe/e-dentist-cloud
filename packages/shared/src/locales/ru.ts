@@ -391,6 +391,21 @@ export const ru: DeepPartial<Strings> = {
     type_name_taken: 'Тип с таким названием уже есть',
     type_has_services: (n: number) => `В этом типе ${n} услуг — сначала перенесите их в другой тип`,
     order_invalid: 'Список порядка неполный',
+    tooth_required: 'Для этой услуги нужно указать зуб',
+  },
+
+  SERVICE_AREA_LABELS: {
+    tooth: 'Один зуб',
+    range: 'Диапазон зубов',
+    arch: 'Челюсть',
+    mouth: 'Вся полость рта',
+  },
+
+  SERVICE_AREA_HINTS: {
+    tooth: 'Пломба, коронка, имплант, канал — в визите указывается зуб',
+    range: 'Мост — ставится на несколько зубов',
+    arch: 'Съёмный полный протез, бюгель — зуб не спрашивается',
+    mouth: 'Чистка, отбеливание, осмотр — зуб не спрашивается',
   },
 
   SERVICE_UI: {
@@ -412,6 +427,8 @@ export const ru: DeepPartial<Strings> = {
     tech_price: 'Цена техника',
     tech_hint: 'Переносится в визит; доля врача считается от (цена − цена техника)',
     tech_short: (price: string) => `Техник: ${price}`,
+    area: 'Область применения',
+    required_mark: 'обязательно',
     type: 'Тип',
     types: 'Типы',
     type_add: 'Новый тип',

@@ -10,6 +10,7 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
+import * as services from '../services/service.js'
 import * as repo from './repo.js'
 import type {
   BridgeCreateInput,
@@ -225,6 +226,15 @@ export async function createTx(
   // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
   const { payPercent } = await auth.payTermsTx(tx, doctorId)
 
+  // Tish xizmatning qoʻllanish sohasiga qarab (19-boʻlim): `mouth`/`arch` da
+  // boʻsh yoziladi, `tooth`/`range` da majburiy. Xizmat tanlanmagan boʻlsa
+  // (qoʻlda yozilgan muolaja) — ixtiyoriy
+  const areas = await services.areasOfTx(tx, input.serviceId ? [input.serviceId] : [])
+  const tooth = services.toothForArea(
+    input.serviceId ? areas.get(input.serviceId) : undefined,
+    input.tooth,
+  )
+
   // Texnik narxi: naryaddan (topshirish), boʻlmasa formadan (xizmatdan
   // koʻchgan yoki qoʻlda) — ikkalasi ham snapshot
   const labCost = lab?.labCost ?? input.labCost ?? 0
@@ -234,7 +244,7 @@ export async function createTx(
     date: toDate(input.date),
     time: input.time ?? nowTime(),
     treatment: input.treatment,
-    tooth: input.tooth ?? null,
+    tooth,
     serviceId: input.serviceId ?? null,
     price: input.price,
     doctorPercent: payPercent,
@@ -312,13 +322,22 @@ export function updateVisit(
         ? shareOf(price, percent, labCost)
         : current.doctorShare
 
+    // Tahrirda ham soha tekshiriladi (19-boʻlim): eski, tishsiz yozuv
+    // ochilganda foydalanuvchidan toʻldirish soʻraladi. Xizmat tashrif
+    // yozilganda qotadi — tahrirda oʻzgarmaydi
+    const areas = await services.areasOfTx(tx, current.serviceId ? [current.serviceId] : [])
+    const tooth = services.toothForArea(
+      current.serviceId ? areas.get(current.serviceId) : undefined,
+      input.tooth === undefined ? current.tooth : input.tooth,
+    )
+
     try {
       const visit = await repo.updateVisit(tx, id, {
         ...(doctorChanged ? { doctorId: input.doctorId, doctorPercent: percent } : {}),
         ...(input.date === undefined ? {} : { date: toDate(input.date) }),
         ...(input.time === undefined ? {} : { time: input.time }),
         ...(input.treatment === undefined ? {} : { treatment: input.treatment }),
-        ...(input.tooth === undefined ? {} : { tooth: input.tooth }),
+        tooth,
         ...(input.price === undefined ? {} : { price: input.price }),
         ...(labCostChanged ? { labCost } : {}),
         doctorShare: share,

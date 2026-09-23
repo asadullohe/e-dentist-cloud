@@ -162,6 +162,93 @@ describe('xizmatlar', () => {
   })
 })
 
+// Xizmatning qoʻllanish sohasi (tz.md 19-boʻlim): tashrif va reja bandi
+// shunga qarab tish soʻraydi
+describe('qoʻllanish sohasi', () => {
+  it('sukut — bitta tish; soha saqlanadi va tahrirlanadi', async () => {
+    const created = await call('POST', '/api/services', { typeId, name: 'Sohasiz', price: 10_000 })
+    expect(created.json().data.area).toBe('tooth')
+
+    const mouth = await call('POST', '/api/services', {
+      typeId,
+      name: 'Professional tozalash',
+      price: 300_000,
+      area: 'mouth',
+    })
+    expect(mouth.json().data.area).toBe('mouth')
+
+    const moved = await call('PATCH', `/api/services/${created.json().data.id}`, { area: 'arch' })
+    expect(moved.json().data.area).toBe('arch')
+
+    const bad = await call('POST', '/api/services', {
+      typeId,
+      name: 'Notoʻgʻri soha',
+      price: 1000,
+      area: 'surface',
+    })
+    expect(bad.statusCode).toBe(400)
+  })
+
+  it('tashrif: tish soʻramaydigan xizmatda tish boʻsh yoziladi', async () => {
+    const patient = await call('POST', '/api/patients', { fio: 'Soha Bemori' })
+    const patientId = patient.json().data.id
+    const service = await call('POST', '/api/services', {
+      typeId,
+      name: 'Oqartirish',
+      price: 1_200_000,
+      area: 'mouth',
+    })
+
+    // Tish yuborilsa ham — soha butun ogʻiz, yozuvda qolmaydi
+    const visit = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-02',
+      treatment: 'Oqartirish',
+      price: 1_200_000,
+      serviceId: service.json().data.id,
+      tooth: 21,
+    })
+    expect(visit.statusCode).toBe(200)
+    expect(visit.json().data.tooth).toBeNull()
+  })
+
+  it('tashrif: bitta tish xizmatida tishsiz yozilmaydi — yozishda ham, tahrirda ham', async () => {
+    const patient = await call('POST', '/api/patients', { fio: 'Tishsiz Bemori' })
+    const patientId = patient.json().data.id
+    const service = await call('POST', '/api/services', {
+      typeId,
+      name: 'Sirkoniy koronka',
+      price: 1_800_000,
+      area: 'tooth',
+    })
+    const serviceId = service.json().data.id
+
+    const bad = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-03',
+      treatment: 'Sirkoniy koronka',
+      price: 1_800_000,
+      serviceId,
+    })
+    expect(bad.statusCode).toBe(400)
+    expect(bad.json().error.fields.tooth).toMatch(/tish/i)
+
+    const ok = await call('POST', '/api/visits', {
+      patientId,
+      date: '2026-09-03',
+      treatment: 'Sirkoniy koronka',
+      price: 1_800_000,
+      serviceId,
+      tooth: 26,
+    })
+    expect(ok.statusCode).toBe(200)
+
+    // Tahrirda tishni olib tashlab boʻlmaydi — xizmat oʻsha-oʻsha
+    const cleared = await call('PATCH', `/api/visits/${ok.json().data.id}`, { tooth: null })
+    expect(cleared.statusCode).toBe(400)
+  })
+})
+
 // Tashrifda muolaja nomi ham, narxi ham matn/son sifatida saqlanadi —
 // xizmat keyin oʻzgarsa yoki oʻchirilsa tarix buzilmasin
 describe('xizmatlar va tashriflar tarixi', () => {
@@ -182,6 +269,8 @@ describe('xizmatlar va tashriflar tarixi', () => {
       treatment: 'Vaqtinchalik',
       price: 111_000,
       serviceId,
+      // Sukut soha `tooth` — tish koʻrsatilishi shart (19-boʻlim)
+      tooth: 16,
     })
 
     expect((await call('DELETE', `/api/services/${serviceId}`)).statusCode).toBe(200)
