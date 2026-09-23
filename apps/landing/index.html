@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>E-Dentist — stomatologiya klinikasi uchun onlayn dastur | Bemorlar, navbat, hisob-kitob</title>
-<meta name="description" content="E-Dentist — stomatologiya klinikasi uchun brauzerda ishlaydigan dastur (CRM): bemorlar kartotekasi, tish xaritasi, qabul jadvali, QR navbat, bemor fikrlari, toʻlovlar, xodimlar va ish haqi. Oʻrnatish shart emas. 14 kun bepul." />
+<meta name="description" content="E-Dentist — stomatologiya klinikasi uchun brauzerda ishlaydigan dastur (CRM): bemorlar kartotekasi, tish xaritasi, qabul jadvali, QR navbat, davolash rejasi, bemor fikrlari, toʻlovlar, xodimlar va ish haqi. Oʻrnatish shart emas. 14 kun bepul." />
 <meta name="robots" content="index, follow, max-image-preview:large" />
 <meta name="theme-color" content="#0e1226" />
 <link rel="canonical" href="https://e-dentist.uz/" />
@@ -81,6 +81,7 @@
         "Tish xaritasi (FDI odontogramma), koʻpriklar, sut tishlari",
         "Qabul jadvali, shifokor boʻyicha",
         "QR orqali navbat va kutish xonasi ekrani",
+        "Davolash rejasi: bosqichlar, narx va bemorning onlayn roziligi",
         "Bemor fikrlari: QR orqali baho, faqat egasiga koʻrinadi",
         "Toʻlovlar, qarzdorlar, xarajatlar va hisobot",
         "Xodimlar, rollar va ish haqi hisobi",
@@ -137,6 +138,11 @@
         },
         {
           "@type": "Question",
+          "name": "Davolash rejasini bemor qanday koʻradi?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Havola yoki QR orqali telefonida ochadi: tish xaritasida qaysi tishlarga ish borligi, bosqichlar, har ishning narxi va jami. Roziligini oʻsha yerda bildiradi — telefon raqamining oxirgi toʻrt raqami bilan tasdiqlanadi. Qogʻoz kerak boʻlsa A4 varaq imzo joyi bilan chop etiladi." }
+        },
+        {
+          "@type": "Question",
           "name": "Bemorlarning fikrini kim koʻradi?",
           "acceptedAnswer": { "@type": "Answer", "text": "Faqat klinika egasi. Fikr saytda yoki internetda chiqmaydi — 5 yulduz bergan bemorga esa Google yoki Yandex xaritada baholash taklif qilinadi." }
         }
@@ -154,6 +160,7 @@
     <nav>
       <a href="#imkoniyatlar">Imkoniyatlar</a>
       <a href="#navbat">QR navbat</a>
+      <a href="#reja">Davolash rejasi</a>
       <a href="#fikrlar">Bemor fikrlari</a>
       <a href="#xavfsizlik">Xavfsizlik</a>
       <a href="#narx">Narx va sinov</a>
@@ -285,6 +292,30 @@
             <li><b>Kabinetdagi taxta</b> — qabulxona tasdiqlaydi, chaqiradi, «keldi / kelmadi» belgilaydi</li>
             <li><b>Soxta yozuvdan himoya</b> — QR sahifadan yozilgan bemor qabulxona tasdiqlaguncha navbatga kirmaydi</li>
             <li><b>QR ni tizim oʻzi yasaydi</b> — Sozlamalarda A4 varaq: chop etib eshikka osasiz</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="reja">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Davolash rejasi — bemor «ha» deyishi osonlashadi</h2>
+        <p>«Sizga implant kerak» deyish bilan bemorni koʻndirib boʻlmaydi. Rejani bosqichlarga boʻlasiz, har ishning narxini yozasiz — bemor telefonida koʻradi: qaysi tishga nima qilinadi, qancha turadi, qachongacha narx amal qiladi. Bir bosishda roziligini bildiradi.</p>
+      </div>
+
+      <div class="queue-grid">
+        <div class="shot phone"><img src="img/plan-phone.webp" width="780" height="1180" alt="Bemor telefonida davolash rejasi: tish xaritasida belgilangan tishlar, bosqichlar va narxlar" loading="lazy" /></div>
+        <div class="queue-side">
+          <div class="shot"><img src="img/plan-cabinet.webp" width="1600" height="1000" alt="Kabinetdagi davolash rejasi: ikki bosqich, bajarilgan ishlar yashil, jami summa" loading="lazy" /></div>
+          <ul class="checks">
+            <li><b>Bosqichlarga boʻlinadi</b> — «avval davolash, keyin implant, 3 oydan keyin protez»: bemor nimaga qachon pul toʻlashini koʻradi</li>
+            <li><b>Narx qotadi</b> — narxnoma keyin oʻzgarsa tuzilgan reja oʻzgarmaydi. Amal qilish muddatini oʻzingiz belgilaysiz</li>
+            <li><b>Bemorning javobi yoziladi</b> — havola yoki QR orqali «Roziman» yoki rad etish sababi. Rad etilgan reja ham tarixda qoladi</li>
+            <li><b>Ish qilinganda tashrif oʻzi yoziladi</b> — bandni «bajarildi» qilsangiz tashrif ochiladi, shifokor ulushi oʻsha yerda hisoblanadi</li>
+            <li><b>Qogʻozga chiqadi</b> — A4 varaq imzo joyi bilan, shartnomaga ilova qilinadi</li>
+            <li><b>Konversiya koʻrinadi</b> — hisobotda «nechta reja tuzildi, qanchasiga rozi boʻlishdi», shifokorlar kesimida</li>
           </ul>
         </div>
       </div>
@@ -440,6 +471,11 @@
         <summary>Rus tilida bormi?</summary>
         <p>Ha. Interfeys oʻzbek va rus tillarida — har xodim oʻziga qulayini tanlaydi. Bemorning navbat sahifasi ham ikki tilda.</p>
       </details>
+      <details>
+        <summary>Davolash rejasini bemor qanday koʻradi?</summary>
+        <p>Havola yoki QR orqali telefonida ochadi: tish xaritasida qaysi tishlarga ish borligi, bosqichlar, har ishning narxi va jami. Roziligini oʻsha yerda bildiradi — telefon raqamining oxirgi toʻrt raqami bilan tasdiqlanadi. Qogʻoz kerak boʻlsa A4 varaq imzo joyi bilan chop etiladi.</p>
+      </details>
+
       <details>
         <summary>Bemorlarning fikrini kim koʻradi?</summary>
         <p>Faqat klinika egasi. Fikr saytda yoki internetda chiqmaydi — 5 yulduz bergan bemorga esa Google yoki Yandex xaritada baholash taklif qilinadi. Shifokor oʻzi haqidagi fikrni koʻrishini egasi Rollar boʻlimida oʻzi hal qiladi.</p>

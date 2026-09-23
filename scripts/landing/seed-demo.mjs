@@ -6,7 +6,9 @@
 //   node scripts/landing/seed-demo.mjs
 //
 // Kirish: ui-sinov@example.com / sinov12345 (lokal sinov egasi)
-const BASE = 'http://localhost:3000/api'
+// `localhost` ataylab qotirilgan — skript serverga qaratilmasin. Port esa
+// sozlanadi: ikkinchi nusxa (alohida ish daraxti) boshqa portda turadi
+const BASE = `http://localhost:${process.env.API_PORT ?? 3000}/api`
 let cookie = ''
 
 async function api(method, path, body) {
@@ -392,6 +394,112 @@ if (feedbackList.total < 5) {
   if (low) await api('PATCH', `/feedback/${low.id}`, { status: 'contacted' })
   const seen = rows.find((row) => row.rating === 4)
   if (seen) await api('PATCH', `/feedback/${seen.id}`, { status: 'seen' })
+}
+
+// Davolash rejalari (13.7): ikkitasi — biri bemorga yuborilgan (telefon
+// skrinshoti), biri qabul qilingan va yarmi bajarilgan (kabinet skrinshoti)
+const byName = (name) => services.find((s) => s.name === name)
+const plansOf = (patient) => api('GET', `/plans?patientId=${patient.id}`)
+
+// Telefon skrinshoti uchun **yuborilgan** reja kerak — holat ham tekshiriladi
+if (!(await plansOf(patients[0])).some((plan) => plan.status === 'sent')) {
+  const sent = await api('POST', '/plans', {
+    patientId: patients[0].id,
+    doctorId: docIds[0],
+    title: 'Implant va protez',
+    validUntil: iso(daysAgo(-30)),
+  })
+  await api('PUT', `/plans/${sent.id}/content`, {
+    stages: [
+      {
+        name: '1-bosqich: tayyorlash',
+        items: [
+          {
+            tooth: 16,
+            serviceId: byName('Kanal davolash (1 kanal)')?.id,
+            treatment: 'Kanal davolash (1 kanal)',
+            price: 450_000,
+            qty: 2,
+          },
+          {
+            serviceId: byName('Professional tozalash')?.id,
+            treatment: 'Professional tozalash',
+            price: 300_000,
+          },
+        ],
+      },
+      {
+        name: '2-bosqich: implant',
+        items: [
+          {
+            tooth: 36,
+            serviceId: byName('Implant (Osstem)')?.id,
+            treatment: 'Implant (Osstem)',
+            price: 4_500_000,
+          },
+          {
+            tooth: 36,
+            serviceId: byName('Metall-keramika koronka')?.id,
+            treatment: 'Metall-keramika koronka',
+            price: 900_000,
+          },
+        ],
+      },
+    ],
+  })
+  await api('POST', `/plans/${sent.id}/status`, { status: 'sent' })
+  console.log('reja: yuborilgan')
+}
+
+if (!(await plansOf(patients[2])).some((plan) => plan.title === 'Kompleks davolash')) {
+  const accepted = await api('POST', '/plans', {
+    patientId: patients[2].id,
+    doctorId: docIds[1] ?? docIds[0],
+    title: 'Kompleks davolash',
+    discount: 300_000,
+  })
+  const saved = await api('PUT', `/plans/${accepted.id}/content`, {
+    stages: [
+      {
+        name: '1-bosqich: davolash',
+        items: [
+          {
+            tooth: 24,
+            serviceId: byName('Fotopolimer plomba')?.id,
+            treatment: 'Fotopolimer plomba',
+            price: 350_000,
+            qty: 2,
+          },
+          {
+            serviceId: byName('Professional tozalash')?.id,
+            treatment: 'Professional tozalash',
+            price: 300_000,
+          },
+        ],
+      },
+      {
+        name: '2-bosqich: estetika',
+        items: [
+          { tooth: 11, serviceId: byName('Vinir')?.id, treatment: 'Vinir', price: 2_500_000 },
+          { tooth: 21, serviceId: byName('Vinir')?.id, treatment: 'Vinir', price: 2_500_000 },
+        ],
+      },
+    ],
+  })
+  await api('POST', `/plans/${accepted.id}/status`, { status: 'sent' })
+  await api('POST', `/plans/${accepted.id}/status`, { status: 'accepted' })
+
+  // Birinchi bosqich bajarilgan — kabinet skrinshotida jonli koʻrinsin
+  for (const item of saved.stages[0].items) {
+    await api('POST', `/plans/${accepted.id}/items/${item.id}/complete`, {
+      date: iso(daysAgo(6)),
+      treatment: item.treatment,
+      tooth: item.tooth,
+      serviceId: item.serviceId,
+      price: item.total,
+    })
+  }
+  console.log('reja: qabul qilingan')
 }
 
 console.log('tayyor')

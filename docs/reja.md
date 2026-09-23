@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.7 — landing: «Davolash rejasi» boʻlimi
+**Hozirgi task:** 13.8 — serverga chiqarish
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1444,8 +1444,13 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       Eksport arxiviga `rejalar.xlsx` (sana · bemor · shifokor · nom ·
       holat · jami · chegirma · toʻlash · ishlar · bajarilgan · muddat).
       Testlar: konversiya sanoqlari va boshqa oyda boʻshligi
-- [ ] **13.7 Landing** — «Davolash rejasi» boʻlimi (uz + ru), skrinshotlar, FAQ,
-      `featureList`; seed-demo da ikkita reja
+- [x] **13.7 Landing** — «Davolash rejasi» boʻlimi (`#reja` / `#plan`) navbatdan
+      keyin, uz + ru: telefon va kabinet skrinshotlari, olti band roʻyxati;
+      navigatsiya, `featureList`, `description`, FAQ (HTML va JSON-LD bir xil),
+      sitemap. Skrinshotlar `img/plan-*.webp` va `img/ru/plan-*.webp`.
+      seed-demo da ikkita reja (biri bemorga yuborilgan — telefon skrinshoti,
+      biri qabul qilingan va yarmi bajarilgan — kabinet). Yoʻlakay: seed-demo
+      da `API_PORT`, shots.mjs da `BASE_URL` — ikkinchi nusxa boshqa portda
 - [ ] **13.8 Serverga chiqarish**
 
 ---

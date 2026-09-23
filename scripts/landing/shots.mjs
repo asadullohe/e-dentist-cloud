@@ -14,7 +14,7 @@ import { chromium } from 'playwright-core'
 
 const OUT = process.argv[2] ?? './shots'
 mkdirSync(OUT, { recursive: true })
-const BASE = 'http://localhost:5175'
+const BASE = process.env.BASE_URL ?? 'http://localhost:5175'
 // Interfeys tili: `node shots.mjs ./shots ru` — ruscha landing (/ru/) uchun
 const LOCALE = process.argv[3] === 'ru' ? 'ru' : 'uz'
 
@@ -135,6 +135,32 @@ console.log('✓ feedback-phone')
 
 // Kabinet: Sozlamalar → Fikrlar
 await shot('/settings/fikrlar', 'feedback-cabinet')
+
+// Kabinet: qabul qilingan reja (bosqichlar, bir qismi bajarilgan)
+const acceptedPlan = await page.evaluate(async () => {
+  const people = await fetch('/api/patients?q=Yusupova&page=1&pageSize=1').then((r) => r.json())
+  const patientId = people.data.items[0]?.id
+  const plans = await fetch(`/api/plans?patientId=${patientId}`).then((r) => r.json())
+  const plan = plans.data.find((row) => row.status === 'accepted') ?? plans.data[0]
+  return { patientId, planId: plan?.id }
+})
+await page.setViewportSize({ width: 1280, height: 980 })
+await shot(`/patients/${acceptedPlan.patientId}/reja/${acceptedPlan.planId}`, 'plan-cabinet')
+await page.setViewportSize({ width: 1280, height: 800 })
+
+// Telefon: bemorga yuborilgan rejaning ochiq sahifasi
+const sentCode = await page.evaluate(async () => {
+  const people = await fetch('/api/patients?q=Karimova&page=1&pageSize=1').then((r) => r.json())
+  const plans = await fetch(`/api/plans?patientId=${people.data.items[0]?.id}`).then((r) =>
+    r.json(),
+  )
+  return (plans.data.find((row) => row.status === 'sent') ?? plans.data[0])?.publicCode
+})
+const planPhone = await phone.newPage()
+await planPhone.goto(`${BASE}/r/${sentCode}`, { waitUntil: 'load' })
+await planPhone.waitForTimeout(1500)
+await planPhone.screenshot({ path: `${OUT}/plan-phone.png` })
+console.log('✓ plan-phone')
 
 // Kutish xonasi ekrani (televizor)
 const tv = await browser.newContext({

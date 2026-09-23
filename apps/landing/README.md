@@ -25,9 +25,10 @@ Oflayn ilova (Windows/macOS/Android) 18/09/2026 dan saytda yoʻq — u alohida m
   `shots.mjs ./shots ru`), keyin `cwebp -q 82`
 - `img/og.png`, `img/og-ru.png` — ijtimoiy tarmoq/Telegram uchun 1200×630. Yangilash: matn
   yoki logo oʻzgarsa, `scripts/landing/README.md`
-- Boʻlimlar: imkoniyatlar → QR navbat → bemor fikrlari (`#fikrlar` / `#otzyvy`) → jamoa →
-  xavfsizlik → narx → savollar. Fikrlar boʻlimi navbat boʻlimining `queue-grid` uslubini
-  qayta ishlatadi (telefon + kabinet skrinshoti + roʻyxat)
+- Boʻlimlar: imkoniyatlar → QR navbat → davolash rejasi (`#reja` / `#plan`) → bemor
+  fikrlari (`#fikrlar` / `#otzyvy`) → jamoa → xavfsizlik → narx → savollar. Reja va
+  fikrlar boʻlimlari navbat boʻlimining `queue-grid` uslubini qayta ishlatadi (telefon +
+  kabinet skrinshoti + roʻyxat)
 - `robots.txt`, `sitemap.xml` — `lastmod` ni sahifa oʻzgarganda yangilang
 - `fonts/` — shriftlar shu yerda, tashqi xizmat yoʻq
 
