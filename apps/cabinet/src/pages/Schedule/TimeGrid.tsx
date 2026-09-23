@@ -1,6 +1,6 @@
 import { SCHEDULE_UI, UI_TEXT } from '@e-dentist/shared'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
-import { type RefObject, useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Appointment, TimeBlock } from '@/entities/appointment'
 import { blockMinutes } from '@/features/appointment-form'
 import {
@@ -76,8 +76,6 @@ export function TimeGrid({
   onDeleteBlock,
   onMove,
   onShift,
-  onScrollLeft,
-  scrollRef,
 }: {
   columns: readonly GridColumn[]
   /// Koʻrinadigan soatlar oraligʻi — ish vaqti, yozuvlar boʻyicha kengayadi
@@ -96,15 +94,46 @@ export function TimeGrid({
   onMove?: (item: Appointment, column: GridColumn, time: string) => void
   /// Sudrashda chetda ushlab turilsa — davr almashadi
   onShift?: (by: -1 | 1) => void
-  /// Toʻr yonga surilganda sarlavha tasmasi ham surilsin
-  onScrollLeft?: (left: number) => void
-  /// Tasmadan surish uchun — toʻrning gorizontal idishi
-  scrollRef?: RefObject<HTMLDivElement | null>
 }) {
   const nowMinutes = useNowMinutes()
+  // Quti ekran oxirigacha choʻziladi: sahifa aylanmaydi, sarlavha va
+  // vaqt oʻqi toʻrning ichida yopishib turadi. Telefonda pastki dok uchun
+  // joy qoldiriladi
+  const box = useRef<HTMLDivElement>(null)
+  const [boxHeight, setBoxHeight] = useState<number>()
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = box.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      // Quti ostidagi doimiy boʻshliq: kartochka hoshiyasi va sahifa pastki
+      // chekkasi (telefonda u pastki dok uchun ajratilgan — `pb-28`)
+      const card = el.parentElement?.getBoundingClientRect()
+      const chrome = card ? card.bottom - rect.bottom : 0
+      const main = el.closest('main')
+      const below = main ? Number.parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0
+      return Math.max(320, window.innerHeight - rect.top - chrome - below)
+    }
+    // Ikki qadam: birinchi oʻlchov quti hali toʻliq balandlikda turganda
+    // olinadi, ikkinchisi — yangi joylashuv boʻyicha aniqlashtiradi
+    const update = () => {
+      const first = measure()
+      if (first === undefined) return
+      setBoxHeight(first)
+      // Yangi balandlik DOM ga tushgandan keyin (setTimeout — boʻyoqdan
+      // keyin) qayta oʻlchanadi: birinchi oʻlchov eski joylashuvniki
+      window.setTimeout(() => {
+        const second = measure()
+        if (second !== undefined) setBoxHeight(second)
+      }, 0)
+    }
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+    // Yuklanayotganda toʻr oʻrnida skelet turadi — quti chizilgach oʻlchanadi
+  }, [loading])
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
   const topOf = (minutes: number) => ((minutes - startHour * 60) / 60) * HOUR
-  const grid = useRef<HTMLDivElement>(null)
   const columnsRef = useRef<HTMLDivElement>(null)
   // Kunlar rejimida ustun — bir kun: blok ichida shifokor nomi ortiqcha
   const byDoctor = columns.some((column) => column.doctorId !== undefined)
@@ -161,13 +190,26 @@ export function TimeGrid({
       {loading ? (
         <Skeleton className="m-3 h-80" />
       ) : (
-        // Telefonda ustunlar sigʻmaydi — yonga aylantiriladi (vaqt oʻqi
-        // yopishib turadi); kompyuterda ustunlar kenglikni boʻlib oladi
+        // Bitta surish qutisi: sarlavha ham, toʻr ham shu yerda — yonga
+        // birga yuradi, chetdan chiqmaydi
         <div
-          ref={scrollRef ?? grid}
-          className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          onScroll={(event) => onScrollLeft?.(event.currentTarget.scrollLeft)}
+          ref={box}
+          data-grid-scroll
+          className="overflow-auto overscroll-contain"
+          style={{ height: boxHeight }}
         >
+          <div
+            className="bg-card sticky top-0 z-30 grid border-b"
+            style={{ gridTemplateColumns: COLUMNS_TEMPLATE(columns.length) }}
+          >
+            {/* Burchak: ikki yoʻnalishda ham yopishadi */}
+            <div className="bg-card sticky left-0 z-40" />
+            {columns.map((column) => (
+              <div key={column.key} className="min-w-0 border-l px-1.5 py-2">
+                {column.head}
+              </div>
+            ))}
+          </div>
           <div
             ref={columnsRef}
             className="grid"
@@ -178,8 +220,8 @@ export function TimeGrid({
           >
             {/* Vaqt oʻqi */}
             <div
-              className="bg-card sticky left-0 z-30 col-start-1"
-              style={{ height: hours.length * HOUR, position: 'sticky' }}
+              className="bg-card sticky left-0 z-20 col-start-1"
+              style={{ height: hours.length * HOUR }}
             >
               <div className="relative h-full">
                 {hours.map((hour) => (

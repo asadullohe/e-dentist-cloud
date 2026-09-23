@@ -98,8 +98,13 @@ export function useBlockDrag({
     const s = state.current
     if (!s?.dragging) return
     const { y, x } = s.pointer
-    if (y < SCROLL_EDGE) window.scrollBy(0, -SCROLL_STEP)
-    else if (y > window.innerHeight - SCROLL_EDGE - 40) window.scrollBy(0, SCROLL_STEP)
+    // Toʻr oʻz qutisida aylanadi — sahifa emas
+    const scroller = gridRef.current?.closest<HTMLElement>('[data-grid-scroll]')
+    const view = scroller?.getBoundingClientRect()
+    const top = view?.top ?? 0
+    const bottom = view?.bottom ?? window.innerHeight
+    if (y < top + SCROLL_EDGE) scroller?.scrollBy(0, -SCROLL_STEP)
+    else if (y > bottom - SCROLL_EDGE) scroller?.scrollBy(0, SCROLL_STEP)
     const rect = gridRef.current?.getBoundingClientRect()
     const side: -1 | 1 | 0 = rect
       ? x > rect.right - EDGE_PX

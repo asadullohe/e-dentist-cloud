@@ -18,7 +18,7 @@ import {
   ChevronRightIcon,
   PlusIcon,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import {
   type Appointment,
   type TimeBlock,
@@ -61,8 +61,7 @@ import {
   SelectValue,
 } from '@/shared/ui'
 import { type AppointmentActions, AppointmentDetails } from './AppointmentDetails'
-import { DayStrip } from './DayStrip'
-import { type DoctorHead, DoctorStrip } from './DoctorStrip'
+import { DayHeadCell, type DoctorHead, DoctorHeadCell } from './ColumnHead'
 import { Segmented } from './Segmented'
 import {
   type GridColumn,
@@ -139,13 +138,6 @@ export function Schedule() {
   // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
   const seesAll = useHasPermission()('schedule.all')
   const { data: doctors } = useDoctors()
-  // Toʻr va sarlavha tasmasi yonga birga suriladi: ikkalasi bir-birini
-  // yetaklaydi (qiymat bir xil boʻlsa tegilmaydi — halqa boʻlmasin)
-  const stripRef = useRef<HTMLDivElement>(null)
-  const gridRef = useRef<HTMLDivElement>(null)
-  const syncScroll = (from: HTMLDivElement | null, left: number) => {
-    if (from && from.scrollLeft !== left) from.scrollLeft = left
-  }
 
   const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
@@ -169,9 +161,28 @@ export function Schedule() {
   // Shifokor faqat oʻz qabullarini koʻradi — unga ustunlar shart emas
   const byDoctor = view === 'doctors' && seesAll && heads.length > 0
   const days = view === 'doctors' ? [selected] : weekOf(selected)
+  // Sarlavha toʻrning ichida — u bilan birga suriladi, chetdan chiqmaydi
   const columns: GridColumn[] = byDoctor
-    ? heads.map((head) => ({ key: head.id ?? 'none', date: selected, doctorId: head.id }))
-    : days.map((day) => ({ key: day, date: day }))
+    ? heads.map((head) => ({
+        key: head.id ?? 'none',
+        date: selected,
+        doctorId: head.id,
+        head: <DoctorHeadCell doctor={head} />,
+      }))
+    : days.map((day) => ({
+        key: day,
+        date: day,
+        head: (
+          <DayHeadCell
+            day={day}
+            today={today}
+            onPick={() => {
+              setSelected(day)
+              changeView('doctors')
+            }}
+          />
+        ),
+      }))
   // Toʻr ish soatlarini koʻrsatadi; tashqarida yozuv boʻlsa kengayadi
   const { startHour, endHour } = hourRange(appointments ?? [], blocks ?? [])
 
@@ -235,39 +246,6 @@ export function Schedule() {
         ))}
       </SelectContent>
     </Select>
-  )
-
-  // Ustun sarlavhalari: shifokorlar — avatar, ism va qabul soni; hafta —
-  // kunlar tasmasi (kun bosilsa oʻsha kunga oʻtadi). Kun koʻrinishida tasma
-  // faqat telefonda — kunni tanlash uchun
-  const columnHeads = byDoctor ? (
-    <DoctorStrip
-      ref={stripRef}
-      doctors={heads}
-      onScroll={(left) => syncScroll(gridRef.current, left)}
-    />
-  ) : view === 'week' ? (
-    <DayStrip
-      ref={stripRef}
-      aligned
-      onScroll={(left) => syncScroll(gridRef.current, left)}
-      days={days}
-      today={today}
-      onPick={(day) => {
-        setSelected(day)
-        changeView('doctors')
-      }}
-      onShift={(by) => shift(by)}
-    />
-  ) : (
-    <DayStrip
-      className="md:hidden"
-      days={weekOf(selected)}
-      today={today}
-      selected={selected}
-      onPick={setSelected}
-      onShift={(by) => setSelected(shiftDays(selected, by * 7))}
-    />
   )
 
   // Sana — tugma: bosilsa kalendar. Shifokorga «Shifokorlar» emas «Kun»
@@ -391,8 +369,6 @@ export function Schedule() {
             </Button>
           </div>
         </div>
-
-        {columnHeads}
       </div>
 
       {/* Telefonda yonga surish ustunlarni aylantiradi (toʻr oʻzi suriladi) —
@@ -423,8 +399,6 @@ export function Schedule() {
               : undefined
           }
           onShift={(by) => shift(by)}
-          scrollRef={gridRef}
-          onScrollLeft={(left) => syncScroll(stripRef.current, left)}
           onEditBlock={(block) => {
             setEditingBlock(block)
             setBlockOpen(true)

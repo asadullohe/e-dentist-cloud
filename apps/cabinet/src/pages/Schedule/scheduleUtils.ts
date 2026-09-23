@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
 
 export const pad = (n: number) => String(n).padStart(2, '0')
@@ -128,6 +129,9 @@ export interface GridColumn {
   key: string
   date: string
   doctorId?: string | null
+  /// Ustun sarlavhasi — toʻrning ichida, tepasiga yopishib turadi: shifokor
+  /// (avatar, ism, qabul soni) yoki kun (hafta kuni va sana)
+  head: ReactNode
 }
 
 const inColumn = (item: Appointment, column: GridColumn) =>
