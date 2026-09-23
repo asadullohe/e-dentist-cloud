@@ -34,6 +34,18 @@ export const deliverLabOrder = (labOrderId: string, payload: CompletePayload) =>
     body: payload,
   })
 
+/// Reja bandini bajarish: tashrif + band «bajarildi», bitta soʻrov (13.4).
+/// Bemor rejadan, sana esa formada — ish kecha qilingan boʻlishi mumkin
+export const completePlanItem = (
+  planId: string,
+  itemId: string,
+  payload: Omit<VisitPayload, 'patientId'>,
+) =>
+  apiRequest<{ plan: { id: string }; visit: { id: string } }>(
+    `/plans/${planId}/items/${itemId}/complete`,
+    { method: 'POST', body: payload },
+  )
+
 export const createVisit = (payload: VisitPayload) =>
   apiRequest<Visit>('/visits', { method: 'POST', body: payload })
 

@@ -33,6 +33,15 @@ export function useSavePlanContent(id: string, options: { silent?: boolean } = {
   })
 }
 
+export function useSkipPlanItem(planId: string) {
+  return usePlanMutation(
+    ({ itemId, skip }: { itemId: string; skip: boolean }) => api.skipPlanItem(planId, itemId, skip),
+    {
+      success: (_data, { skip }) => (skip ? TOAST_TEXT.plan_item_skipped : TOAST_TEXT.plan_updated),
+    },
+  )
+}
+
 export function useSetPlanStatus(id: string) {
   return usePlanMutation(
     ({ status, reason }: { status: PlanStatus; reason?: string | null }) =>

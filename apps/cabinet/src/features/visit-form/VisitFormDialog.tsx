@@ -5,6 +5,7 @@ import {
   formatSom,
   LAB_UI,
   moneyDigits,
+  PLAN_UI,
   parseDisplayDate,
   SCHEDULE_UI,
   SERVICE_UI,
@@ -49,7 +50,12 @@ import {
   Textarea,
   TimePicker,
 } from '@/shared/ui'
-import { useCompleteAppointment, useDeliverLabOrder, useSaveVisit } from './hooks'
+import {
+  useCompleteAppointment,
+  useCompletePlanItem,
+  useDeliverLabOrder,
+  useSaveVisit,
+} from './hooks'
 import { EMPTY_VISIT, type VisitValues, visitSchema } from './model'
 
 /// Qabulni yakunlash rejimi: tashrif shu qabulga yoziladi, sana va shifokor
@@ -72,6 +78,20 @@ export interface DeliveringLabOrder {
   techPrice: number | undefined
 }
 
+/// Reja bandini bajarish rejimi: tashrif shu bandga bogʻlanadi, muolaja,
+/// tish va narx rejadan koʻchadi (13.4). Sana formada qoladi — ish kecha
+/// qilingan boʻlishi mumkin
+export interface CompletingPlanItem {
+  planId: string
+  itemId: string
+  doctorId: string
+  treatment: string
+  tooth: number | null
+  serviceId: string | null
+  /// Bandning jami summasi (narx × miqdor)
+  price: number
+}
+
 interface VisitFormDialogProps {
   open: boolean
   onOpenChange(open: boolean): void
@@ -82,6 +102,8 @@ interface VisitFormDialogProps {
   appointment?: CompletingAppointment | undefined
   /// Berilsa — «Naryadni topshirish»: saqlash naryadni ham topshiradi
   labOrder?: DeliveringLabOrder | undefined
+  /// Berilsa — «Reja bandini bajarish»: saqlash bandni ham yopadi
+  planItem?: CompletingPlanItem | undefined
   /// Naryad rejimida: tashrif avvalroq yozilgan boʻlsa — tashrifsiz topshirish
   onDeliverWithoutVisit?(): void
 }
@@ -101,9 +123,19 @@ function toValues(
   visit: Visit | undefined,
   appointment: CompletingAppointment | undefined,
   labOrder: DeliveringLabOrder | undefined,
+  planItem: CompletingPlanItem | undefined,
 ): VisitValues {
   const fresh = { ...EMPTY_VISIT, time: nowTime() }
   if (labOrder) return { ...fresh, date: formatDate(todayISO()), treatment: labOrder.treatment }
+  if (planItem) {
+    return {
+      ...fresh,
+      date: formatDate(todayISO()),
+      treatment: planItem.treatment,
+      tooth: planItem.tooth === null ? '' : String(planItem.tooth),
+      price: formatMoney(String(planItem.price)),
+    }
+  }
   if (appointment) return { ...fresh, date: formatDate(visitDateOf(appointment)) }
   if (!visit) return { ...fresh, date: formatDate(todayISO()) }
   return {
@@ -132,12 +164,15 @@ export function VisitFormDialog({
   visit,
   appointment,
   labOrder,
+  planItem,
   onDeliverWithoutVisit,
 }: VisitFormDialogProps) {
   const save = useSaveVisit(visit?.id ?? null)
   const complete = useCompleteAppointment()
   const deliver = useDeliverLabOrder()
-  const isPending = save.isPending || complete.isPending || deliver.isPending
+  const completePlanItem = useCompletePlanItem()
+  const isPending =
+    save.isPending || complete.isPending || deliver.isPending || completePlanItem.isPending
   const { data: services } = useServices()
   const { data: doctors } = useDoctors()
   const { data: session } = useSession()
@@ -158,23 +193,27 @@ export function VisitFormDialog({
   const seesAll = useHasPermission()('patients.all')
   // Yakunlashda — qabulning shifokori birinchi navbatda
   const defaultDoctorId =
-    labOrder?.doctorId ?? appointment?.doctorId ?? patientCard?.doctorId ?? selfId
+    labOrder?.doctorId ??
+    planItem?.doctorId ??
+    appointment?.doctorId ??
+    patientCard?.doctorId ??
+    selfId
 
   const form = useForm<VisitValues>({
     resolver: zodResolver(visitSchema),
-    defaultValues: toValues(visit, appointment, labOrder),
+    defaultValues: toValues(visit, appointment, labOrder, planItem),
   })
 
   // Oyna qayta ochilganda maydonlar tanlangan tashrifga moslanadi
   useEffect(() => {
     if (open) {
-      form.reset(toValues(visit, appointment, labOrder))
+      form.reset(toValues(visit, appointment, labOrder, planItem))
       setFormError('')
-      setServiceId(visit?.serviceId ?? null)
+      setServiceId(visit?.serviceId ?? planItem?.serviceId ?? null)
       setDoctorId(visit?.doctorId ?? defaultDoctorId)
       setDoctorError('')
     }
-  }, [open, visit, appointment, labOrder, form, defaultDoctorId])
+  }, [open, visit, appointment, labOrder, planItem, form, defaultDoctorId])
 
   // Texnik narxi maydoni: qiymat bor yoki tanlangan xizmatda texnik ishi bor
   const labCostValue = form.watch('labCost')
@@ -198,6 +237,14 @@ export function VisitFormDialog({
       if (labOrder) {
         // Sana bugun, bemor naryaddan — server oʻzi qoʻyadi
         await deliver.mutateAsync({ labOrderId: labOrder.id, ...payload })
+      } else if (planItem) {
+        // Bemor rejadan; sana formada qoladi — ish kecha qilingan boʻlishi mumkin
+        await completePlanItem.mutateAsync({
+          planId: planItem.planId,
+          itemId: planItem.itemId,
+          date: parseDisplayDate(values.date) as string,
+          ...payload,
+        })
       } else if (appointment) {
         // Sana qabuldan — server oʻzi qoʻyadi
         await complete.mutateAsync({ appointmentId: appointment.id, ...payload })
@@ -222,11 +269,13 @@ export function VisitFormDialog({
           <DialogTitle>
             {labOrder
               ? LAB_UI.deliver_title
-              : appointment
-                ? SCHEDULE_UI.complete
-                : visit
-                  ? CARD_UI.edit_visit
-                  : CARD_UI.add_visit}
+              : planItem
+                ? PLAN_UI.complete_title
+                : appointment
+                  ? SCHEDULE_UI.complete
+                  : visit
+                    ? CARD_UI.edit_visit
+                    : CARD_UI.add_visit}
           </DialogTitle>
           {labOrder && (
             <DialogDescription>
@@ -240,6 +289,7 @@ export function VisitFormDialog({
               {SCHEDULE_UI.complete_hint(formatDate(visitDateOf(appointment)))}
             </DialogDescription>
           )}
+          {planItem && <DialogDescription>{PLAN_UI.complete_hint}</DialogDescription>}
         </DialogHeader>
 
         <Form {...form}>
@@ -447,9 +497,11 @@ export function VisitFormDialog({
                   ? UI_TEXT.loading
                   : labOrder
                     ? LAB_UI.deliver_submit
-                    : appointment
-                      ? SCHEDULE_UI.complete_submit
-                      : CARD_UI.save}
+                    : planItem
+                      ? PLAN_UI.complete_submit
+                      : appointment
+                        ? SCHEDULE_UI.complete_submit
+                        : CARD_UI.save}
               </Button>
             </DialogFooter>
           </form>

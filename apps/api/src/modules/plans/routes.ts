@@ -7,6 +7,8 @@ import { validateInput } from '../../platform/validate.js'
 import {
   planContentSchema,
   planCreateSchema,
+  planItemCompleteSchema,
+  planItemSkipSchema,
   planListSchema,
   planRespondSchema,
   planStatusSchema,
@@ -100,5 +102,23 @@ export const planRoutes: FastifyPluginAsync<PlanRouteOpts> = async (app, opts) =
     const { id } = req.params as { id: string }
     const input = validateInput(planStatusSchema, req.body)
     return ok(await service.setStatus(opts.deps, clinicId, viewer, id, input))
+  })
+
+  // Bandni bajarish — tashrif yozish bilan (11.5 dagi naryad topshirish
+  // kabi). Shuning uchun `visits.write` ham talab qilinadi
+  const complete = { preHandler: app.requirePermission('visits.write') }
+
+  app.post('/plans/:id/items/:itemId/complete', complete, async (req) => {
+    const { clinicId, viewer } = contextOf(req)
+    const { id, itemId } = req.params as { id: string; itemId: string }
+    const input = validateInput(planItemCompleteSchema, req.body)
+    return ok(await service.completeItem(opts.deps, clinicId, viewer, id, itemId, input))
+  })
+
+  app.post('/plans/:id/items/:itemId/skip', write, async (req) => {
+    const { clinicId, viewer } = contextOf(req)
+    const { id, itemId } = req.params as { id: string; itemId: string }
+    const { skip } = validateInput(planItemSkipSchema, req.body)
+    return ok(await service.skipItem(opts.deps, clinicId, viewer, id, itemId, skip))
   })
 }

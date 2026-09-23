@@ -1,6 +1,7 @@
 // Davolash rejalari (tz.md 18-boʻlim): reja → bosqichlar → bandlar,
 // holat oqimi, narx snapshot va shifokorning koʻrinishi.
 
+import { todayISO } from '@e-dentist/shared'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { generatePublicCode } from '../../platform/publicCode.js'
 import {
@@ -28,6 +29,7 @@ interface PlanItem {
   total: number
   tooth: number | null
   status: string
+  visitId: string | null
 }
 
 interface PlanStage {
@@ -393,6 +395,132 @@ describe('ruxsatlar', () => {
   it('kirmagan odam rejani koʻrmaydi', async () => {
     const r = await h.app.inject({ method: 'GET', url: '/api/plans' })
     expect(r.statusCode).toBe(401)
+  })
+})
+
+describe('bandni bajarish — tashrif yoziladi', () => {
+  /// Rejaning birinchi bandi (16-tish, 300 000 × 2)
+  const firstItem = (plan: Plan) => plan.stages[0]?.items[0] as PlanItem
+
+  async function complete(plan: Plan, item: PlanItem, extra: Record<string, unknown> = {}) {
+    return call('POST', `/api/plans/${plan.id}/items/${item.id}/complete`, {
+      date: todayISO(),
+      treatment: item.treatment,
+      tooth: item.tooth,
+      price: item.total,
+      ...extra,
+    })
+  }
+
+  it('tashrif yoziladi, band «bajarildi» boʻladi', async () => {
+    const plan = await newPlan()
+    const item = firstItem(plan)
+
+    const r = await complete(plan, item)
+    expect(r.statusCode).toBe(200)
+    const saved = r.json().data.plan as Plan
+    expect(saved.stages[0]?.items[0]).toMatchObject({ status: 'done' })
+    expect(saved.stages[0]?.items[0]?.visitId).toBe(r.json().data.visit.id)
+    expect(saved.doneCount).toBe(1)
+
+    // Tashrif bemorning kartochkasida — narx va tish banddan
+    const visits = await call('GET', `/api/patients/${patientId}/visits`)
+    const written = (
+      visits.json().data as { id: string; price: number; tooth: number | null }[]
+    ).find((visit) => visit.id === r.json().data.visit.id)
+    expect(written).toMatchObject({ price: 600_000, tooth: 16 })
+  })
+
+  it('bajarilgan bandni qayta bajarib boʻlmaydi', async () => {
+    const plan = await newPlan()
+    const item = firstItem(plan)
+    await complete(plan, item)
+    expect((await complete(plan, item)).statusCode).toBe(400)
+  })
+
+  it('bajarilgan band oʻchirilmaydi va oʻtkazib yuborilmaydi', async () => {
+    const plan = await newPlan()
+    const item = firstItem(plan)
+    await complete(plan, item)
+
+    const withoutItem = await call('PUT', `/api/plans/${plan.id}/content`, {
+      stages: [{ id: plan.stages[0]?.id, name: '1-bosqich', items: [] }],
+    })
+    expect(withoutItem.statusCode).toBe(400)
+
+    const skipped = await call('POST', `/api/plans/${plan.id}/items/${item.id}/skip`, {})
+    expect(skipped.statusCode).toBe(400)
+  })
+
+  it('oxirgi band hal boʻlgach reja «bajarildi» ga oʻtadi', async () => {
+    const plan = await newPlan()
+    const items = plan.stages.flatMap((stage) => stage.items)
+
+    for (const item of items.slice(0, -1)) {
+      await call('POST', `/api/plans/${plan.id}/items/${item.id}/skip`, {})
+    }
+    const beforeLast = await call('GET', `/api/plans/${plan.id}`)
+    expect(beforeLast.json().data.status).toBe('draft')
+
+    const last = items.at(-1) as PlanItem
+    const r = await complete(plan, last)
+    expect(r.json().data.plan.status).toBe('done')
+
+    // Bajarilgan reja qotadi
+    expect((await call('PATCH', `/api/plans/${plan.id}`, { title: 'Yangi' })).statusCode).toBe(400)
+  })
+
+  it('tashrif oʻchirilsa band «kutilmoqda» ga qaytadi', async () => {
+    const plan = await newPlan()
+    const item = firstItem(plan)
+    const r = await complete(plan, item)
+    const visitId = r.json().data.visit.id as string
+
+    await call('DELETE', `/api/visits/${visitId}`)
+
+    const after = await call('GET', `/api/plans/${plan.id}`)
+    expect((after.json().data as Plan).stages[0]?.items[0]).toMatchObject({
+      status: 'pending',
+      visitId: null,
+    })
+  })
+
+  it('begona rejaning bandi 404', async () => {
+    const plan = await newPlan()
+    const other = await newPlan()
+    const alien = firstItem(other)
+    expect((await complete(plan, alien)).statusCode).toBe(404)
+  })
+
+  it('shifokor ulushi oʻsha tashrifda hisoblanadi', async () => {
+    // Shifokor A — 40%. Reja ham, band ham uning nomidan
+    const created = await as(doctorA.cookie)('POST', '/api/plans', { patientId })
+    const planId = created.json().data.id as string
+    const saved = await as(doctorA.cookie)('PUT', `/api/plans/${planId}/content`, {
+      stages: [{ name: 'Bosqich', items: [{ tooth: 16, treatment: 'Ish', price: 600_000 }] }],
+    })
+    const itemId = (saved.json().data as Plan).stages[0]?.items[0]?.id as string
+
+    const r = await as(doctorA.cookie)('POST', `/api/plans/${planId}/items/${itemId}/complete`, {
+      date: todayISO(),
+      treatment: 'Ish',
+      tooth: 16,
+      price: 600_000,
+    })
+    expect(r.statusCode).toBe(200)
+
+    const visit = await h.ownerDb.visit.findUnique({ where: { id: r.json().data.visit.id } })
+    // 600 000 × 40% = 240 000
+    expect(visit).toMatchObject({ doctorId: doctorA.id, doctorPercent: 40, doctorShare: 240_000 })
+  })
+
+  it('oʻtkazib yuborilgan band qaytariladi', async () => {
+    const plan = await newPlan()
+    const item = firstItem(plan)
+
+    await call('POST', `/api/plans/${plan.id}/items/${item.id}/skip`, {})
+    const back = await call('POST', `/api/plans/${plan.id}/items/${item.id}/skip`, { skip: false })
+    expect(back.json().data.stages[0].items[0]).toMatchObject({ status: 'pending' })
   })
 })
 

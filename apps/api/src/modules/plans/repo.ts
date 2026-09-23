@@ -3,7 +3,7 @@
 //
 // clinicId ni kengaytma oʻzi qoʻyadi — bu yerda hech qayerda yozilmaydi.
 
-import type { PlanStatus, Prisma } from '../../../generated/prisma/client.js'
+import type { PlanItemStatus, PlanStatus, Prisma } from '../../../generated/prisma/client.js'
 import type { Db } from '../../platform/db.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
@@ -161,4 +161,21 @@ export function updateItem(tx: ClinicTx, id: string, data: ItemFields) {
 
 export function removeItems(tx: ClinicTx, ids: string[]) {
   return tx.treatmentPlanItem.deleteMany({ where: { id: { in: ids } } })
+}
+
+export function findItem(tx: ClinicTx, id: string) {
+  return tx.treatmentPlanItem.findUnique({ where: { id }, select: ITEM_SELECT })
+}
+
+export function setItemStatus(
+  tx: ClinicTx,
+  id: string,
+  data: { status: PlanItemStatus; visitId?: string | null },
+) {
+  return tx.treatmentPlanItem.update({ where: { id }, data, select: ITEM_SELECT })
+}
+
+/// Band qaysi rejaga tegishli — bosqich orqali
+export function planIdOfStage(tx: ClinicTx, stageId: string) {
+  return tx.treatmentPlanStage.findUnique({ where: { id: stageId }, select: { planId: true } })
 }

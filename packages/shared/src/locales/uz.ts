@@ -630,6 +630,8 @@ export const TOAST_TEXT = {
   plan_accepted: 'Bemor rozi boʻldi',
   plan_declined: 'Bemor rad etdi',
   plan_cancelled: 'Reja bekor qilindi',
+  plan_item_done: 'Ish bajarildi — tashrif yozildi',
+  plan_item_skipped: 'Ish oʻtkazib yuborildi',
   expense_created: 'Xarajat qoʻshildi',
   expense_updated: 'Xarajat tahrirlandi',
   expense_deleted: 'Xarajat oʻchirildi',
@@ -812,6 +814,8 @@ export const PLAN_TEXT = {
   locked: 'Bajarilgan yoki bekor qilingan reja oʻzgartirilmaydi',
   reason_required: 'Sababini yozing',
   item_done_remove: 'Bajarilgan bandni oʻchirib boʻlmaydi',
+  item_not_pending: 'Bu ish allaqachon hal qilingan',
+  item_done_skip: 'Bajarilgan ishni oʻtkazib yuborib boʻlmaydi — avval tashrifini oʻchiring',
   /// Sukut nomlar — yangi reja tuzilganda
   default_title: 'Davolash rejasi',
   default_stage: '1-bosqich',
@@ -877,6 +881,13 @@ export const PLAN_UI = {
   treatment: 'Muolaja nomi',
   price: 'Narxi',
   qty: 'Miqdori',
+  /// Bandni bajarish (13.4)
+  complete_title: 'Ishni bajarish — tashrif',
+  complete_hint: 'Bu ish tashrif sifatida yoziladi, shifokor ulushi oʻsha tashrifda hisoblanadi',
+  complete_submit: 'Tashrif yozish',
+  mark_done: 'Bajarildi',
+  mark_skip: 'Oʻtkazib yuborish',
+  mark_unskip: 'Qaytarish',
   drag_stage: 'Bosqichni koʻchirish',
   drag_item: 'Ishni koʻchirish',
   /// Jamlanma

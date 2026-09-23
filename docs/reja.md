@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.4 — band bajarildi → tashrif
+**Hozirgi task:** 13.5 — chop etish (A4)
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1415,12 +1415,16 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       oladi; `ToothChart` ga `highlight` va `bare`; vite proxy manzili
       `API_PROXY` bilan sozlanadi (ikkinchi nusxa uchun).
       Testlar: `plans.test.ts` da 9 ta ochiq sahifa holati
-- [ ] **13.4 Band bajarildi → tashrif** — `POST /plans/:id/items/:itemId/complete`
-      tashrif formasini rejadan toʻldirib ochadi (11.5 dagi naryad topshirish
-      kabi: muolaja, tish, narx rejadan, shifokor rejaniki),
-      `treatment_plan_items.visit_id` (13.1 da tayyor);
-      tashrif yozilgach band «bajarildi», barcha bandlar bajarilgach reja
-      «bajarildi». Ish haqi ulushi oʻz-oʻzidan hisoblanadi
+- [x] **13.4 Band bajarildi → tashrif** — `POST /plans/:id/items/:itemId/complete`
+      bandda «✓» tugmasi orqali tashrif formasini rejadan toʻldirib ochadi
+      (11.5 dagi naryad topshirish kabi: muolaja, tish, narx, xizmat banddan,
+      shifokor rejaniki; sana formada — ish kecha qilingan boʻlishi mumkin).
+      Shifokor ulushi oʻsha tashrifda hisoblanadi — reja oʻzi pul yozmaydi.
+      Bandning bajarilgani `visit_id` bilan isbotlanadi: tashrif oʻchirilsa
+      band **oʻzi** «kutilmoqda» ga qaytadi. `.../skip` — «oʻtkazib
+      yuborildi» va qaytarish; barcha bandlar hal boʻlgach reja «bajarildi»
+      ga oʻtadi va qotadi. Band qatori `PlanItemRow` ga ajratildi.
+      Testlar: 8 ta (shu jumladan ulush 240 000 va tashrif oʻchirilishi)
 - [ ] **13.5 Chop etish** — A4 (print CSS): klinika sarlavhasi, bemor, bosqichlar
       jadvali, jami, amal muddati, imzo joyi. Shartnomaga ilova qilish uchun
 - [ ] **13.6 Hisobot: konversiya** — davr uchun tuzildi / qabul qilindi / summa /

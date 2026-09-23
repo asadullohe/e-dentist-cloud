@@ -19,10 +19,12 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
+import * as visits from '../visits/service.js'
 import * as repo from './repo.js'
 import type {
   PlanContentInput,
   PlanCreateInput,
+  PlanItemCompleteInput,
   PlanListInput,
   PlanRespondInput,
   PlanStatusInput,
@@ -116,6 +118,19 @@ function itemTotal(item: repo.ItemRow): number {
   return item.price * item.qty
 }
 
+/// Bandning bajarilgani tashrif bilan isbotlanadi (13.4). Tashrif
+/// oʻchirilsa bogʻlanish uziladi (`ON DELETE SET NULL`) — band esa
+/// «bajarildi» boʻlib qolmasin, u yana kutilayotgan ishga aylanadi
+function itemStatus(item: repo.ItemRow): PlanItemStatus {
+  return item.status === 'done' && item.visitId === null ? 'pending' : item.status
+}
+
+/// Barcha bandlar bajarilgan yoki oʻtkazib yuborilgan boʻlsa reja yopiladi
+function allItemsSettled(stages: repo.StageRow[]): boolean {
+  const items = stages.flatMap((stage) => stage.items)
+  return items.length > 0 && items.every((item) => itemStatus(item) !== 'pending')
+}
+
 function planTotal(stages: repo.StageRow[]): number {
   return stages.reduce(
     (sum, stage) => sum + stage.items.reduce((inner, item) => inner + itemTotal(item), 0),
@@ -147,7 +162,7 @@ async function toView(tx: ClinicTx, rows: repo.PlanFullRow[]): Promise<PlanView[
       discount: row.discount,
       payable: Math.max(0, total - row.discount),
       itemCount: items.length,
-      doneCount: items.filter((item) => item.status === 'done').length,
+      doneCount: items.filter((item) => itemStatus(item) === 'done').length,
       validUntil,
       // Qabul qilingan rejada muddat ahamiyatsiz — narx allaqachon kelishilgan
       expired:
@@ -173,7 +188,7 @@ async function toView(tx: ClinicTx, rows: repo.PlanFullRow[]): Promise<PlanView[
           price: item.price,
           qty: item.qty,
           total: itemTotal(item),
-          status: item.status,
+          status: itemStatus(item),
           visitId: item.visitId,
           note: item.note,
         })),
@@ -465,6 +480,104 @@ export function setStatus(
   })
 }
 
+// ───────────────────  Bandni bajarish: tashrif yoziladi  ───────────────────
+//
+// Naryad topshirishdagi qoida bilan bir xil (11.5): ish qilingani tashrif
+// bilan isbotlanadi, shifokor ulushi oʻsha tashrifda hisoblanadi. Reja
+// oʻzi pul yozmaydi — u faqat taklif.
+
+/// Bandni rejaning ichidan topadi. Boshqa rejaning bandi berilsa 404 —
+/// id tasodifan chalkashib ketmasin
+function loadItem(plan: repo.PlanFullRow, itemId: string): repo.ItemRow {
+  const item = plan.stages.flatMap((stage) => stage.items).find((row) => row.id === itemId)
+  if (!item) throw errors.notFound(PLAN_TEXT.item_not_found)
+  return item
+}
+
+/// Oxirgi band hal boʻlgach reja «bajarildi» ga oʻtadi — qoʻlda belgilash
+/// kerak emas
+async function closeIfSettled(tx: ClinicTx, planId: string): Promise<void> {
+  const fresh = await repo.findById(tx, planId)
+  if (fresh && fresh.status !== 'done' && allItemsSettled(fresh.stages)) {
+    await repo.update(tx, planId, { status: 'done' })
+  }
+}
+
+export function completeItem(
+  deps: PlanDeps,
+  clinicId: string,
+  viewer: ScopedViewer,
+  planId: string,
+  itemId: string,
+  input: PlanItemCompleteInput,
+): Promise<{ plan: PlanView; visit: { id: string } }> {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const plan = await load(tx, viewer, planId)
+    assertEditable(plan)
+
+    const item = loadItem(plan, itemId)
+    if (itemStatus(item) !== 'pending') throw errors.badRequest(PLAN_TEXT.item_not_pending)
+
+    // Shifokor — formadan, boʻlmasa rejani tuzgan shifokor. Cheklangan
+    // koʻruvchi (shifokor) uchun `visits` oʻzi majburlaydi: u faqat oʻz
+    // nomidan yozadi
+    const visit = await visits.createTx(tx, viewer, {
+      ...input,
+      doctorId: input.doctorId ?? plan.doctorId,
+      patientId: plan.patientId,
+    })
+
+    await repo.setItemStatus(tx, itemId, { status: 'done', visitId: visit.id })
+    await closeIfSettled(tx, planId)
+
+    await writeAudit(tx, {
+      userId: viewer.userId,
+      action: AUDIT_ACTION.plan_updated,
+      entity: 'treatment_plan',
+      entityId: planId,
+      meta: { itemId, visitId: visit.id },
+    })
+
+    const [view] = await toView(tx, [await load(tx, viewer, planId)])
+    return { plan: view as PlanView, visit: { id: visit.id } }
+  })
+}
+
+/// «Oʻtkazib yuborildi» — bemor bu ishdan voz kechdi. Tashrif yozilmaydi,
+/// lekin band rejada koʻrinib turadi: nima taklif qilingani tarixda qoladi
+export function skipItem(
+  deps: PlanDeps,
+  clinicId: string,
+  viewer: ScopedViewer,
+  planId: string,
+  itemId: string,
+  skip: boolean,
+): Promise<PlanView> {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const plan = await load(tx, viewer, planId)
+    assertEditable(plan)
+
+    const item = loadItem(plan, itemId)
+    // Bajarilgan bandni oʻtkazib yuborib boʻlmaydi — avval tashrifi
+    // oʻchiriladi
+    if (itemStatus(item) === 'done') throw errors.badRequest(PLAN_TEXT.item_done_skip)
+
+    await repo.setItemStatus(tx, itemId, { status: skip ? 'skipped' : 'pending' })
+    if (skip) await closeIfSettled(tx, planId)
+
+    await writeAudit(tx, {
+      userId: viewer.userId,
+      action: AUDIT_ACTION.plan_updated,
+      entity: 'treatment_plan',
+      entityId: planId,
+      meta: { itemId, skipped: skip },
+    })
+
+    const [view] = await toView(tx, [await load(tx, viewer, planId)])
+    return view as PlanView
+  })
+}
+
 // ──────────────────────  Ochiq sahifa: /r/<kod>  ──────────────────────
 //
 // Sessiya yoʻq: kod rejani ham, klinikani ham topadi. Bemor rejani koʻradi
@@ -580,7 +693,7 @@ export async function publicPage(deps: PlanDeps, code: string): Promise<PlanPubl
           price: item.price,
           qty: item.qty,
           total: itemTotal(item),
-          done: item.status === 'done',
+          done: itemStatus(item) === 'done',
         })),
       })),
       canRespond: row.status === 'sent' && !expired,

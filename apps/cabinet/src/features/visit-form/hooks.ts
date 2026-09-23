@@ -50,6 +50,27 @@ export function useDeliverLabOrder() {
   })
 }
 
+/// Reja bandini bajarish — tashrif yoziladi, reja va ish haqi roʻyxatlari
+/// eskiradi (13.4)
+export function useCompletePlanItem() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      planId,
+      itemId,
+      ...payload
+    }: { planId: string; itemId: string } & Omit<api.VisitPayload, 'patientId'>) =>
+      api.completePlanItem(planId, itemId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: VISIT_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: ['plans'] })
+      queryClient.invalidateQueries({ queryKey: ['payroll'] })
+      queryClient.invalidateQueries({ queryKey: ['balance'] })
+    },
+    meta: { success: () => TOAST_TEXT.plan_item_done, inlineErrors: true },
+  })
+}
+
 export function useDeleteVisit() {
   const queryClient = useQueryClient()
   return useMutation({

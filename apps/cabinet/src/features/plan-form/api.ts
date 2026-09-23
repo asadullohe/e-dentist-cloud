@@ -22,3 +22,8 @@ export const savePlanContent = (id: string, stages: PlanStageDraft[]) =>
 
 export const setPlanStatus = (id: string, status: PlanStatus, reason?: string | null) =>
   apiRequest<Plan>(`/plans/${id}/status`, { method: 'POST', body: { status, reason } })
+
+/// Bandni «oʻtkazib yuborildi» ga oʻtkazish yoki qaytarish (13.4).
+/// Bajarish esa tashrif formasi orqali — `features/visit-form` da
+export const skipPlanItem = (planId: string, itemId: string, skip: boolean) =>
+  apiRequest<Plan>(`/plans/${planId}/items/${itemId}/skip`, { method: 'POST', body: { skip } })

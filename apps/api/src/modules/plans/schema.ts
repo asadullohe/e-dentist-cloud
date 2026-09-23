@@ -1,6 +1,7 @@
 import { PLAN_TEXT, VALIDATION_TEXT } from '@e-dentist/shared'
 import { isToothNo } from '@e-dentist/teeth'
 import { z } from 'zod'
+import { visitCreateSchema } from '../visits/service.js'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -101,6 +102,15 @@ export const planListSchema = z.object({
   status: z.enum(['draft', 'sent', 'accepted', 'declined', 'done', 'cancelled']).optional(),
 })
 
+/// Band bajarilganda tashrif yoziladi (13.4). Maydonlar `visits` sxemasidan
+/// — xato matnlari bir xil boʻlsin; bemor rejadan olinadi
+export const planItemCompleteSchema = visitCreateSchema.omit({ patientId: true })
+
+/// Bandni «oʻtkazib yuborildi» ga oʻtkazish va qaytarish
+export const planItemSkipSchema = z.object({
+  skip: z.boolean().default(true),
+})
+
 /// Ochiq sahifadagi javob (/r/<kod>). Bemorda telefon boʻlsa uning oxirgi
 /// toʻrt raqami soʻraladi — kod tasodifan boshqa odamga tushsa, u rejani
 /// koʻrsa ham javob bera olmaydi
@@ -120,5 +130,7 @@ export type PlanContentInput = z.infer<typeof planContentSchema>
 export type PlanStatusInput = z.infer<typeof planStatusSchema>
 export type PlanListInput = z.infer<typeof planListSchema>
 export type PlanRespondInput = z.infer<typeof planRespondSchema>
+export type PlanItemCompleteInput = z.infer<typeof planItemCompleteSchema>
+export type PlanItemSkipInput = z.infer<typeof planItemSkipSchema>
 export type PlanStageInput = z.infer<typeof stageSchema>
 export type PlanItemInput = z.infer<typeof itemSchema>
