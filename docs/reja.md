@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 14-bosqich tayyor, egasi brauzerda tekshiradi _(23/09/2026)_
+**Hozirgi task:** 14.6 — shifokor kartasi _(23/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1400,6 +1400,25 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       Keldi · Kelmadi · «Bekor qilish» (tanlangach «Bekor qilindi»); amallar
       Yakunlash · Kartochka · Tahrirlash. **Qabul oʻchirilmaydi** — bekor
       qilinadi (toʻlovdagi qoidaning oʻzi), `AppointmentMenu` oʻchadi
+- [x] **14.5 `schedule.read` ruxsati** _(qaror 23/09/2026)_ — jadvalni
+      koʻrish yozish ruxsatiga yopishib qolgan edi: `GET /appointments`
+      `patients.read` bilan ochilardi, menyu va yoʻl esa `schedule.write`
+      talab qilardi — kuzatuvchi jadvalni umuman koʻra olmasdi. Endi uchta
+      ruxsat: `schedule.read` (koʻrish) · `schedule.write` (yozish) ·
+      `schedule.all` (hamma shifokor). Shablonlar: kuzatuvchiga `read`+`all`,
+      shifokor va qabulxonaga `read` qoʻshildi. Migratsiya: `schedule.write`
+      bori har rolga `read`, kuzatuvchiga `read`+`all`. Faqat koʻradigan rol
+      uchun «Qabul qoʻshish», «Band vaqt», suzuvchi «+» va boʻsh katakni
+      bosish yopiq. Testlar: koʻradi (qabul, band vaqt) / yoza olmaydi (403)
+- [ ] **14.6 Shifokor kartasi** — jadval sarlavhasidagi shifokor bosilsa
+      karta (telefonda tortma): ism, rol, kun jamlanmasi (qabul soni, keldi,
+      yakunlandi, kelmadi), band vaqt, birinchi boʻsh vaqt; amallar «Faqat
+      shu shifokor», «Qabul yozish», «Band vaqt» (`schedule.write`), «Ish
+      haqi» (`payroll.manage`). Raqamlar ekrandagi maʼlumotdan hisoblanadi —
+      yangi soʻrov yoʻq; rol nomi `/staff/doctors` javobiga qoʻshiladi
+- [ ] **14.7 Shifokorga «Oy» qaytadi** — `schedule.all` yoʻq rolga
+      Kun · Hafta · Oy (`MonthView` tiklanadi), `schedule.all` borga —
+      Shifokorlar · Hafta
 
 ---
 

@@ -40,7 +40,7 @@ export const navSections = (): readonly NavSection[] => [
     path: '/schedule',
     label: SECTION_LABELS.schedule,
     icon: CalendarIcon,
-    permission: 'schedule.write',
+    permission: 'schedule.read',
   },
   { path: '/queue', label: SECTION_LABELS.queue, icon: BellIcon, permission: 'queue.manage' },
   { path: '/lab', label: SECTION_LABELS.lab, icon: FlaskConicalIcon, permission: 'lab.own' },

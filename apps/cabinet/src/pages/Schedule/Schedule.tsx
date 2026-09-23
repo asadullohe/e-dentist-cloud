@@ -353,20 +353,25 @@ export function Schedule() {
           </Button>
           <div className="ml-auto flex items-center gap-2">
             {viewSwitch}
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-8 shrink-0"
-              aria-label={SCHEDULE_UI.block_add}
-              title={SCHEDULE_UI.block_add}
-              onClick={openBlock}
-            >
-              <CalendarOffIcon />
-            </Button>
-            <Button size="sm" onClick={() => openNew()}>
-              <PlusIcon />
-              {SCHEDULE_UI.add}
-            </Button>
+            {/* Faqat koʻradigan rol (kuzatuvchi) uchun yozish yoʻli yopiq */}
+            {canWrite && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 shrink-0"
+                  aria-label={SCHEDULE_UI.block_add}
+                  title={SCHEDULE_UI.block_add}
+                  onClick={openBlock}
+                >
+                  <CalendarOffIcon />
+                </Button>
+                <Button size="sm" onClick={() => openNew()}>
+                  <PlusIcon />
+                  {SCHEDULE_UI.add}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -384,7 +389,11 @@ export function Schedule() {
           blocks={blocks ?? []}
           loading={isPending && !appointments}
           onOpen={setDetails}
-          onPickSlot={(column, time) => openNew(column.date, time, column.doctorId ?? undefined)}
+          onPickSlot={
+            canWrite
+              ? (column, time) => openNew(column.date, time, column.doctorId ?? undefined)
+              : undefined
+          }
           onMove={
             canWrite
               ? (item, column, time) =>
@@ -408,27 +417,29 @@ export function Schedule() {
       </div>
 
       {/* Telefon: suzuvchi «+» — dok tepasida, oʻngda; qabul yoki band vaqt */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="icon"
-            aria-label={SCHEDULE_UI.add}
-            className="fixed right-4 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+5rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
-          >
-            <PlusIcon />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-52">
-          <DropdownMenuItem onSelect={() => openNew()}>
-            <CalendarPlusIcon />
-            {SCHEDULE_UI.add}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={openBlock}>
-            <CalendarOffIcon />
-            {SCHEDULE_UI.block_add}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {canWrite && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon"
+              aria-label={SCHEDULE_UI.add}
+              className="fixed right-4 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+5rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
+            >
+              <PlusIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-52">
+            <DropdownMenuItem onSelect={() => openNew()}>
+              <CalendarPlusIcon />
+              {SCHEDULE_UI.add}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={openBlock}>
+              <CalendarOffIcon />
+              {SCHEDULE_UI.block_add}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       <AppointmentDetails item={details} onClose={() => setDetails(null)} actions={actions} />
 

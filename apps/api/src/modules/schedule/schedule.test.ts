@@ -672,6 +672,62 @@ describe('shifokor faqat oʻz qabullarini koʻradi', () => {
   })
 })
 
+// Kuzatuvchi (14.5): jadvalni koʻradi, lekin hech narsa yoza olmaydi
+describe('faqat koʻradigan rol', () => {
+  let cookie = ''
+  const asViewer = (method: 'GET' | 'POST', url: string, payload?: object) =>
+    h.app.inject({ method, url, payload, headers: { cookie } })
+
+  beforeAll(async () => {
+    const roles = await h.ownerDb.role.findMany({ where: { clinicId: h.clinicId } })
+    const viewerRole = roles.find((role) => role.template === 'kuzatuvchi')
+    const email = `kuzatuvchi-jadval-${h.clinicId.slice(0, 8)}@sinov.uz`
+    await call('POST', '/api/staff', {
+      email,
+      fullName: 'Kuzatuvchi Jadval',
+      roleId: viewerRole?.id,
+      password: 'juda-yaxshi-parol',
+    })
+    const login = await h.app.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress: h.clientIp,
+      payload: { email, password: 'juda-yaxshi-parol' },
+    })
+    cookie = `ed_session=${login.cookies.find((c) => c.name === 'ed_session')?.value}`
+  })
+
+  it('jadvalni koʻradi', async () => {
+    const r = await asViewer('GET', '/api/appointments?from=2026-09-01&to=2026-09-30')
+    expect(r.statusCode).toBe(200)
+    expect(Array.isArray(r.json().data)).toBe(true)
+  })
+
+  it('band vaqtlarni ham koʻradi', async () => {
+    const r = await asViewer('GET', '/api/time-blocks?from=2026-09-01&to=2026-09-30')
+    expect(r.statusCode).toBe(200)
+  })
+
+  it('qabul yoza olmaydi', async () => {
+    const r = await asViewer('POST', '/api/appointments', {
+      patientId,
+      date: '2026-09-16',
+      time: '09:00',
+    })
+    expect(r.statusCode).toBe(403)
+  })
+
+  it('band vaqt qoʻsha olmaydi', async () => {
+    const r = await asViewer('POST', '/api/time-blocks', {
+      fromDate: '2026-09-16',
+      fromTime: '09:00',
+      toDate: '2026-09-16',
+      toTime: '10:00',
+    })
+    expect(r.statusCode).toBe(403)
+  })
+})
+
 describe('oraliq boʻyicha roʻyxat', () => {
   it('faqat soʻralgan oraliqdagilar', async () => {
     const r = await call('GET', '/api/appointments?from=2026-09-01&to=2026-09-30')

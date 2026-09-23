@@ -1,4 +1,5 @@
 import { SCHEDULE_UI, UI_TEXT } from '@e-dentist/shared'
+import { cn } from 'cn'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Appointment, TimeBlock } from '@/entities/appointment'
@@ -87,7 +88,8 @@ export function TimeGrid({
   loading: boolean
   /// Kartochka bosilganda tafsilot oynasi
   onOpen: (item: Appointment) => void
-  onPickSlot: (column: GridColumn, time: string) => void
+  /// Boʻsh joy bosilsa yangi qabul (`schedule.write` boʻlmasa berilmaydi)
+  onPickSlot?: (column: GridColumn, time: string) => void
   onEditBlock: (block: TimeBlock) => void
   onDeleteBlock: (block: TimeBlock) => void
   /// Blok sudrab qoʻyildi — yangi ustun va vaqt (`schedule.write` boʻlmasa berilmaydi)
@@ -104,7 +106,8 @@ export function TimeGrid({
   useLayoutEffect(() => {
     const measure = () => {
       const el = box.current
-      if (!el) return
+      // Yuklanayotganda toʻr oʻrnida skelet — quti hali yoʻq
+      if (loading || !el) return
       const rect = el.getBoundingClientRect()
       // Quti ostidagi doimiy boʻshliq: kartochka hoshiyasi va sahifa pastki
       // chekkasi (telefonda u pastki dok uchun ajratilgan — `pb-28`)
@@ -130,7 +133,6 @@ export function TimeGrid({
     update()
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
-    // Yuklanayotganda toʻr oʻrnida skelet turadi — quti chizilgach oʻlchanadi
   }, [loading])
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
   const topOf = (minutes: number) => ((minutes - startHour * 60) / 60) * HOUR
@@ -180,7 +182,7 @@ export function TimeGrid({
       endHour * 60 - 15,
       Math.max(startHour * 60, Math.floor(minutes / 15) * 15),
     )
-    onPickSlot(column, `${pad(Math.floor(rounded / 60))}:${pad(rounded % 60)}`)
+    onPickSlot?.(column, `${pad(Math.floor(rounded / 60))}:${pad(rounded % 60)}`)
   }
 
   const byColumn = splitByColumn(columns, appointments)
@@ -254,7 +256,7 @@ export function TimeGrid({
                 key={column.key}
                 // Ustun — oʻlcham manbai: tor boʻlsa (haftada, telefonda) blok
                 // ichidagi belgilar va vaqt oraligʻi yashiriladi
-                className="@container relative cursor-pointer border-l"
+                className={cn('@container relative border-l', onPickSlot && 'cursor-pointer')}
                 style={{ height: hours.length * HOUR }}
                 onClick={(event) => pickAt(column, event)}
               >
