@@ -1524,6 +1524,11 @@ export const SCHEDULE_UI = {
   // APPOINTMENT_STATUS_LABELS dagi «Bekor qilindi» koʻrinadi
   from_queue: 'Navbatdan',
   cancel: 'Bekor qilish',
+  // Sarlavhadagi shifokor kartasi (14.6)
+  only_doctor: 'Faqat shu shifokor',
+  appointments_count: (n: number) => `${n} ta qabul`,
+  first_free: 'Birinchi boʻsh vaqt',
+  no_free: 'Boʻsh vaqt yoʻq',
   duration: 'Davomiylik',
   minutes: (n: number) => `${n} daq`,
   // Vaqt tanlash — soat × chorak toʻri

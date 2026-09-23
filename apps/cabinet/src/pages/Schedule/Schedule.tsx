@@ -61,7 +61,8 @@ import {
   SelectValue,
 } from '@/shared/ui'
 import { type AppointmentActions, AppointmentDetails } from './AppointmentDetails'
-import { DayHeadCell, type DoctorHead, DoctorHeadCell } from './ColumnHead'
+import { DayHeadCell, type DoctorHead } from './ColumnHead'
+import { DoctorCard } from './DoctorCard'
 import { MonthView } from './MonthView'
 import { Segmented } from './Segmented'
 import {
@@ -126,7 +127,7 @@ function rangeOf(view: View, selected: string): { from: string; to: string; titl
 
 export function Schedule() {
   const today = todayISO()
-  const [view, setView] = useState<View>(() =>
+  const [savedView, setSavedView] = useState<View>(() =>
     stored(VIEW_KEY, ['doctors', 'week', 'month'], 'doctors'),
   )
   const [selected, setSelected] = useState(today)
@@ -143,6 +144,8 @@ export function Schedule() {
   const [completing, setCompleting] = useState<Appointment | null>(null)
   // Shifokorning band vaqti
   const [blockOpen, setBlockOpen] = useState(false)
+  /// Band vaqt kim uchun ochilgani — sarlavhadagi karta orqali
+  const [blockDoctor, setBlockDoctor] = useState<string | undefined>(undefined)
   const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>(undefined)
   const [deletingBlock, setDeletingBlock] = useState<TimeBlock | null>(null)
   const { mutateAsync: removeBlock } = useDeleteTimeBlock()
@@ -154,6 +157,10 @@ export function Schedule() {
   // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
   const seesAll = useHasPermission()('schedule.all')
   const { data: doctors } = useDoctors()
+
+  // «Oy» faqat `schedule.all` yoʻq rolda: boshqa hisob bilan kirilganda
+  // saqlangan tanlov shu rolda yoʻq boʻlishi mumkin — kunga qaytariladi
+  const view: View = seesAll && savedView === 'month' ? 'doctors' : savedView
 
   const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
@@ -169,12 +176,16 @@ export function Schedule() {
     .map((doctor) => ({
       id: doctor.id,
       name: doctor.fullName ?? SCHEDULE_UI.doctor_none,
+      role: doctor.roleName,
       count: countOf(doctor.id),
     }))
   if (!doctorFilter && (appointments ?? []).some((item) => item.doctorId === null))
-    heads.push({ id: null, name: SCHEDULE_UI.doctor_none, count: countOf(null) })
+    heads.push({ id: null, name: SCHEDULE_UI.doctor_none, role: null, count: countOf(null) })
 
   // Shifokor faqat oʻz qabullarini koʻradi — unga ustunlar shart emas
+  // Toʻr ish soatlarini koʻrsatadi; tashqarida yozuv boʻlsa kengayadi
+  const { startHour, endHour } = hourRange(appointments ?? [], blocks ?? [])
+
   const byDoctor = view === 'doctors' && seesAll && heads.length > 0
   const days = view === 'doctors' ? [selected] : weekOf(selected)
   // Sarlavha toʻrning ichida — u bilan birga suriladi, chetdan chiqmaydi
@@ -183,7 +194,24 @@ export function Schedule() {
         key: head.id ?? 'none',
         date: selected,
         doctorId: head.id,
-        head: <DoctorHeadCell doctor={head} />,
+        // Sarlavha bosilsa shifokor kartasi ochiladi (14.6)
+        head: (
+          <DoctorCard
+            doctor={head}
+            appointments={(appointments ?? []).filter((item) => item.doctorId === head.id)}
+            blocks={(blocks ?? []).filter((block) => block.doctorId === head.id)}
+            date={selected}
+            startHour={startHour}
+            endHour={endHour}
+            filtered={doctorFilter === head.id}
+            onFilter={() => setDoctorFilter(doctorFilter === head.id ? '' : (head.id ?? ''))}
+            onNew={() => openNew(selected, undefined, head.id ?? undefined)}
+            onBlock={() => {
+              setBlockDoctor(head.id ?? undefined)
+              openBlock()
+            }}
+          />
+        ),
       }))
     : days.map((day) => ({
         key: day,
@@ -199,11 +227,9 @@ export function Schedule() {
           />
         ),
       }))
-  // Toʻr ish soatlarini koʻrsatadi; tashqarida yozuv boʻlsa kengayadi
-  const { startHour, endHour } = hourRange(appointments ?? [], blocks ?? [])
 
   function changeView(next: View) {
-    setView(next)
+    setSavedView(next)
     remember(VIEW_KEY, next)
   }
 
@@ -507,7 +533,7 @@ export function Schedule() {
         open={blockOpen}
         onOpenChange={setBlockOpen}
         defaultDate={selected}
-        defaultDoctorId={doctorFilter || undefined}
+        defaultDoctorId={blockDoctor ?? doctorFilter ?? undefined}
         block={editingBlock}
         ownOnly={!seesAll}
       />

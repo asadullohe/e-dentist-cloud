@@ -20,6 +20,11 @@ export interface StaffName {
   fullName: string | null
 }
 
+/// Jadval ustuni va «Shifokor» tanlovi uchun: rol nomi bilan (14.6)
+export interface DoctorName extends StaffName {
+  roleName: string | null
+}
+
 export interface Role {
   id: string
   name: string

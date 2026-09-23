@@ -1,5 +1,5 @@
 import { apiRequest } from '@/shared/api'
-import type { Role, StaffMember, StaffName } from './model'
+import type { DoctorName, Role, StaffMember, StaffName } from './model'
 
 export const fetchStaff = () => apiRequest<StaffMember[]>('/staff')
 
@@ -9,4 +9,4 @@ export const fetchRoles = () => apiRequest<Role[]>('/roles')
 export const fetchStaffNames = () => apiRequest<StaffName[]>('/staff/names')
 
 /// Tashrif formasidagi «Shifokor» tanlovi: faol va `visits.write` li xodimlar
-export const fetchDoctors = () => apiRequest<StaffName[]>('/staff/doctors')
+export const fetchDoctors = () => apiRequest<DoctorName[]>('/staff/doctors')

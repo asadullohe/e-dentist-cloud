@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 14.6 — shifokor kartasi _(23/09/2026)_
+**Hozirgi task:** 14-bosqich tayyor, egasi brauzerda tekshiradi _(23/09/2026)_
 
 0 dan 8 gacha barcha tasklar yopiq _(14/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 9-bosqich 15/09/2026 da boshlandi
@@ -1410,7 +1410,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       bori har rolga `read`, kuzatuvchiga `read`+`all`. Faqat koʻradigan rol
       uchun «Qabul qoʻshish», «Band vaqt», suzuvchi «+» va boʻsh katakni
       bosish yopiq. Testlar: koʻradi (qabul, band vaqt) / yoza olmaydi (403)
-- [ ] **14.6 Shifokor kartasi** — jadval sarlavhasidagi shifokor bosilsa
+- [x] **14.6 Shifokor kartasi** — jadval sarlavhasidagi shifokor bosilsa
       karta (telefonda tortma): ism, rol, kun jamlanmasi (qabul soni, keldi,
       yakunlandi, kelmadi), band vaqt, birinchi boʻsh vaqt; amallar «Faqat
       shu shifokor», «Qabul yozish», «Band vaqt» (`schedule.write`), «Ish
