@@ -1416,7 +1416,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       shu shifokor», «Qabul yozish», «Band vaqt» (`schedule.write`), «Ish
       haqi» (`payroll.manage`). Raqamlar ekrandagi maʼlumotdan hisoblanadi —
       yangi soʻrov yoʻq; rol nomi `/staff/doctors` javobiga qoʻshiladi
-- [ ] **14.7 Shifokorga «Oy» qaytadi** — `schedule.all` yoʻq rolga
+- [x] **14.7 Shifokorga «Oy» qaytadi** — `schedule.all` yoʻq rolga
       Kun · Hafta · Oy (`MonthView` tiklanadi), `schedule.all` borga —
       Shifokorlar · Hafta
 

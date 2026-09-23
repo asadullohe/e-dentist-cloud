@@ -322,6 +322,7 @@ export const IMAGE_UI = {
   empty: 'Hozircha rasm yuklanmagan',
   delete_title: 'Rasm oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
   caption_placeholder: 'Izoh (ixtiyoriy)',
 } as const
 
@@ -422,6 +423,7 @@ export const SERVICE_UI = {
   pick_placeholder: 'Xizmatni tanlang',
   delete_title: 'Xizmat oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
   // Turlar
   tech_switch: 'Texnik ishi bor',
   tech_price: 'Texnik narxi',
@@ -483,6 +485,7 @@ export const EXPENSE_UI = {
   next_month: 'Keyingi oy',
   delete_title: 'Xarajat oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
 } as const
 
 // Hisobotlar sahifasi
@@ -852,6 +855,7 @@ export const LAB_UI = {
   filter_all: 'Hammasi',
   delete_title: 'Naryad oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
 } as const
 
 // Toʻliq eksport: fayl nomlari va ustun sarlavhalari
@@ -1496,6 +1500,7 @@ export const SCHEDULE_UI = {
   no_matches: 'Bemor topilmadi',
   delete_title: 'Qabul oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
   set_status: 'Holatni oʻzgartirish',
   open_card: 'Kartochka',
   date_unreadable: 'Sanani oʻqib boʻlmadi',
@@ -1510,6 +1515,8 @@ export const SCHEDULE_UI = {
   // Vaqt toʻri (kun/hafta) va davomiylik (12-bosqich)
   view_day: 'Kun',
   view_week: 'Hafta',
+  // Oy — faqat shifokorda: hamma shifokorni birga koʻradiganlarga keraksiz
+  view_month: 'Oy',
   // Ustunlar nima boʻyicha boʻlinadi (14.1, 14.3)
   group_doctors: 'Shifokorlar',
   empty_column: 'Qabul yoʻq',

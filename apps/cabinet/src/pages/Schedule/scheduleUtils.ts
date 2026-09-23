@@ -1,3 +1,4 @@
+import { MONTHS } from '@e-dentist/shared'
 import type { ReactNode } from 'react'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
 
@@ -78,6 +79,22 @@ export function statusTone(status: AppointmentStatus): StatusTone {
     tone: 'text-primary',
     badge: 'bg-primary/10 text-primary',
   }
+}
+
+/// «Sentabr 2026» — oy koʻrinishining sarlavhasi
+export function monthTitle(year: number, month: number): string {
+  const name = MONTHS[month] ?? ''
+  return `${name.charAt(0).toUpperCase()}${name.slice(1)} ${year}`
+}
+
+/// Oy koʻrinishi uchun: kun → oʻsha kunning qabullari
+export function groupByDay(appointments: readonly Appointment[]): Map<string, Appointment[]> {
+  const byDay = new Map<string, Appointment[]>()
+  for (const item of appointments) {
+    const key = isoOfDate(new Date(item.at))
+    byDay.set(key, [...(byDay.get(key) ?? []), item])
+  }
+  return byDay
 }
 
 export const timeOf = (iso: string) => {

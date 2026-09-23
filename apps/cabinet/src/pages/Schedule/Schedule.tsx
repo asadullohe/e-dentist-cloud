@@ -62,21 +62,25 @@ import {
 } from '@/shared/ui'
 import { type AppointmentActions, AppointmentDetails } from './AppointmentDetails'
 import { DayHeadCell, type DoctorHead, DoctorHeadCell } from './ColumnHead'
+import { MonthView } from './MonthView'
 import { Segmented } from './Segmented'
 import {
   type GridColumn,
+  groupByDay,
   hourRange,
   isoOf,
   isoOfDate,
+  monthTitle,
   parseIso,
   shiftDays,
   weekOf,
 } from './scheduleUtils'
 import { TimeGrid } from './TimeGrid'
 
-/// Ikki koʻrinish: bugungi kun shifokorlar ustuni bilan yoki bir hafta
-/// kunlar ustuni bilan. `schedule.all` yoʻq shifokorda «doctors» — oʻz kuni
-type View = 'doctors' | 'week'
+/// Koʻrinishlar: kun (`schedule.all` borga — shifokorlar ustuni, shifokorga
+/// oʻz kuni), hafta va oy. Oy faqat `schedule.all` yoʻq rolda — hamma
+/// shifokorni birga koʻradiganlar uchun undan foyda yoʻq (qaror 23/09/2026)
+type View = 'doctors' | 'week' | 'month'
 const VIEW_KEY = 'edentist-schedule-view'
 /// Radix Select boʻsh satrni qabul qilmaydi — «hammasi» uchun belgi
 const ALL_DOCTORS = '__all__'
@@ -104,15 +108,27 @@ function remember(key: string, value: string) {
 /// Koʻrinishga qarab soʻrov oraligʻi va sarlavha
 function rangeOf(view: View, selected: string): { from: string; to: string; title: string } {
   if (view === 'doctors') return { from: selected, to: selected, title: formatDate(selected) }
-  const days = weekOf(selected)
-  const from = days[0] as string
-  const to = days[6] as string
-  return { from, to, title: `${formatDate(from)} – ${formatDate(to)}` }
+  if (view === 'week') {
+    const days = weekOf(selected)
+    const from = days[0] as string
+    const to = days[6] as string
+    return { from, to, title: `${formatDate(from)} – ${formatDate(to)}` }
+  }
+  const date = parseIso(selected)
+  const year = date.getFullYear()
+  const month = date.getMonth()
+  return {
+    from: isoOf(year, month, 1),
+    to: isoOf(year, month, new Date(year, month + 1, 0).getDate()),
+    title: monthTitle(year, month),
+  }
 }
 
 export function Schedule() {
   const today = todayISO()
-  const [view, setView] = useState<View>(() => stored(VIEW_KEY, ['doctors', 'week'], 'doctors'))
+  const [view, setView] = useState<View>(() =>
+    stored(VIEW_KEY, ['doctors', 'week', 'month'], 'doctors'),
+  )
   const [selected, setSelected] = useState(today)
   const [pickerOpen, setPickerOpen] = useState(false)
   const [doctorFilter, setDoctorFilter] = useState('')
@@ -192,6 +208,11 @@ export function Schedule() {
   }
 
   function shift(by: number) {
+    if (view === 'month') {
+      const date = parseIso(selected)
+      const next = new Date(date.getFullYear(), date.getMonth() + by, 1)
+      return setSelected(isoOf(next.getFullYear(), next.getMonth(), 1))
+    }
     setSelected(shiftDays(selected, view === 'doctors' ? by : by * 7))
   }
 
@@ -278,14 +299,23 @@ export function Schedule() {
     </Popover>
   )
 
+  // `schedule.all` borga: Shifokorlar · Hafta. Shifokorga eski uchlik qoladi
   const viewSwitch = (
     <Segmented
       value={view}
       onChange={changeView}
-      options={[
-        ['doctors', seesAll ? SCHEDULE_UI.group_doctors : SCHEDULE_UI.view_day],
-        ['week', SCHEDULE_UI.view_week],
-      ]}
+      options={
+        seesAll
+          ? [
+              ['doctors', SCHEDULE_UI.group_doctors],
+              ['week', SCHEDULE_UI.view_week],
+            ]
+          : [
+              ['doctors', SCHEDULE_UI.view_day],
+              ['week', SCHEDULE_UI.view_week],
+              ['month', SCHEDULE_UI.view_month],
+            ]
+      }
     />
   )
 
@@ -379,41 +409,54 @@ export function Schedule() {
       {/* Telefonda yonga surish ustunlarni aylantiradi (toʻr oʻzi suriladi) —
           kun sana tugmasi, ‹ › va hafta tasmasidan almashadi */}
       <div className="select-none">
-        <TimeGrid
-          key={view}
-          columns={columns}
-          startHour={startHour}
-          endHour={endHour}
-          today={today}
-          appointments={appointments ?? []}
-          blocks={blocks ?? []}
-          loading={isPending && !appointments}
-          onOpen={setDetails}
-          onPickSlot={
-            canWrite
-              ? (column, time) => openNew(column.date, time, column.doctorId ?? undefined)
-              : undefined
-          }
-          onMove={
-            canWrite
-              ? (item, column, time) =>
-                  move({
-                    id: item.id,
-                    date: column.date,
-                    time,
-                    // Kunlar rejimida ustun shifokorni bildirmaydi — oʻzgarmaydi
-                    doctorId: column.doctorId,
-                    doctorName: heads.find((head) => head.id === column.doctorId)?.name ?? null,
-                  })
-              : undefined
-          }
-          onShift={(by) => shift(by)}
-          onEditBlock={(block) => {
-            setEditingBlock(block)
-            setBlockOpen(true)
-          }}
-          onDeleteBlock={setDeletingBlock}
-        />
+        {view === 'month' ? (
+          <MonthView
+            year={parseIso(selected).getFullYear()}
+            month={parseIso(selected).getMonth()}
+            today={today}
+            selected={selected}
+            onSelect={setSelected}
+            byDay={groupByDay(appointments ?? [])}
+            loading={isPending && !appointments}
+            onOpen={setDetails}
+          />
+        ) : (
+          <TimeGrid
+            key={view}
+            columns={columns}
+            startHour={startHour}
+            endHour={endHour}
+            today={today}
+            appointments={appointments ?? []}
+            blocks={blocks ?? []}
+            loading={isPending && !appointments}
+            onOpen={setDetails}
+            onPickSlot={
+              canWrite
+                ? (column, time) => openNew(column.date, time, column.doctorId ?? undefined)
+                : undefined
+            }
+            onMove={
+              canWrite
+                ? (item, column, time) =>
+                    move({
+                      id: item.id,
+                      date: column.date,
+                      time,
+                      // Kunlar rejimida ustun shifokorni bildirmaydi — oʻzgarmaydi
+                      doctorId: column.doctorId,
+                      doctorName: heads.find((head) => head.id === column.doctorId)?.name ?? null,
+                    })
+                : undefined
+            }
+            onShift={(by) => shift(by)}
+            onEditBlock={(block) => {
+              setEditingBlock(block)
+              setBlockOpen(true)
+            }}
+            onDeleteBlock={setDeletingBlock}
+          />
+        )}
       </div>
 
       {/* Telefon: suzuvchi «+» — dok tepasida, oʻngda; qabul yoki band vaqt */}

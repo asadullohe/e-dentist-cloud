@@ -316,6 +316,7 @@ export const ru: DeepPartial<Strings> = {
     empty: 'Снимков пока нет',
     delete_title: 'Удалить снимок?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
     caption_placeholder: 'Подпись (необязательно)',
   },
 
@@ -407,6 +408,7 @@ export const ru: DeepPartial<Strings> = {
     pick_placeholder: 'Выберите услугу',
     delete_title: 'Удалить услугу?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
     tech_switch: 'Есть работа техника',
     tech_price: 'Цена техника',
     tech_hint: 'Переносится в визит; доля врача считается от (цена − цена техника)',
@@ -464,6 +466,7 @@ export const ru: DeepPartial<Strings> = {
     next_month: 'Следующий месяц',
     delete_title: 'Удалить расход?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
   },
 
   REPORT_UI: {
@@ -794,6 +797,7 @@ export const ru: DeepPartial<Strings> = {
     filter_all: 'Все',
     delete_title: 'Удалить наряд?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
   },
 
   EXPORT_FILES: {
@@ -1412,6 +1416,7 @@ export const ru: DeepPartial<Strings> = {
     no_matches: 'Пациент не найден',
     delete_title: 'Удалить приём?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
     set_status: 'Изменить статус',
     open_card: 'Карточка',
     date_unreadable: 'Не удалось прочитать дату',
@@ -1424,6 +1429,7 @@ export const ru: DeepPartial<Strings> = {
     complete_submit: 'Завершить',
     view_day: 'День',
     view_week: 'Неделя',
+    view_month: 'Месяц',
     group_doctors: 'По врачам',
     empty_column: 'Приёмов нет',
     from_queue: 'Из очереди',
