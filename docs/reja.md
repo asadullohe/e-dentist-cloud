@@ -8,11 +8,12 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.8 — serverga chiqarish
+**Hozirgi task:** 15.1 — xizmatga qoʻllanish sohasi
 
-0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
+0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
-chiqqan birinchi ish _(22/09/2026)_
+chiqqan birinchi ish. 14-bosqich (qabul jadvali) parallel sessiyada, 15-bosqich
+koʻprik va xizmat sohasi — navbatda
 
 ---
 
@@ -1451,7 +1452,8 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       seed-demo da ikkita reja (biri bemorga yuborilgan — telefon skrinshoti,
       biri qabul qilingan va yarmi bajarilgan — kabinet). Yoʻlakay: seed-demo
       da `API_PORT`, shots.mjs da `BASE_URL` — ikkinchi nusxa boshqa portda
-- [~] **13.8 Serverga chiqarish**
+- [x] **13.8 Serverga chiqarish** — push 23/09/2026 (11 ta commit,
+      `master` ga fast-forward; `f5ae4a2` ham shu bilan ketdi)
 
 ---
 
