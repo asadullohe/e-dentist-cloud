@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 13.5 — chop etish (A4)
+**Hozirgi task:** 13.6 — hisobot: rejalar konversiyasi
 
 0 dan 12 gacha barcha bosqichlar yopiq _(21/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1425,8 +1425,15 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       yuborildi» va qaytarish; barcha bandlar hal boʻlgach reja «bajarildi»
       ga oʻtadi va qotadi. Band qatori `PlanItemRow` ga ajratildi.
       Testlar: 8 ta (shu jumladan ulush 240 000 va tashrif oʻchirilishi)
-- [ ] **13.5 Chop etish** — A4 (print CSS): klinika sarlavhasi, bemor, bosqichlar
-      jadvali, jami, amal muddati, imzo joyi. Shartnomaga ilova qilish uchun
+- [x] **13.5 Chop etish** — `/patients/:id/reja/:planId/varaq`: yon menyusiz
+      alohida sahifa (navbat varagʻidagi kabi, 10.8), ranglar qotirilgan —
+      qorongʻi rejimda ham oq. Klinika sarlavhasi (logotip, telefon, manzil),
+      bemorning **toʻliq** ismi va shifokor, bosqichlar jadvali (№ · tish ·
+      ish · soni · narxi · summa, bandlar varaq boʻyicha ketma-ket
+      raqamlanadi), jami · chegirma · toʻlash kerak, amal muddati, izoh va
+      ikki imzo joyi. Bosqich qatorida fon **va** chiziq — brauzer fonni
+      chop etmasligi mumkin. Rejadagi «⋯» menyusidan ochiladi; menyu
+      bajarilgan rejada ham koʻrinadi (chop etish oʻshanda ham kerak)
 - [ ] **13.6 Hisobot: konversiya** — davr uchun tuzildi / qabul qilindi / summa /
       foiz, shifokorlar boʻyicha; Hisobotlar sahifasiga karta. Eksport arxiviga
       `rejalar.xlsx`

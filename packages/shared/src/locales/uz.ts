@@ -937,6 +937,27 @@ export const PLAN_PUBLIC_UI = {
   not_found: 'Reja topilmadi yoki endi amal qilmaydi',
 } as const
 
+/// Chop etiladigan A4 varaq — shartnomaga ilova qilinadi
+export const PLAN_PRINT_UI = {
+  title: 'Davolash rejasi',
+  patient: 'Bemor',
+  doctor: 'Shifokor',
+  date: 'Sana',
+  col_no: '№',
+  col_tooth: 'Tish',
+  col_work: 'Ish',
+  col_qty: 'Soni',
+  col_price: 'Narxi',
+  col_total: 'Summa',
+  sign_doctor: 'Shifokor imzosi',
+  sign_patient: 'Bemor imzosi',
+  /// Varaq ostidagi izoh: bemor nimaga imzo chekayotganini bilsin
+  footnote:
+    'Reja taxminiy: davolash jarayonida ish hajmi va narx oʻzgarishi mumkin — bu holda yangi reja tuziladi.',
+  print: 'Chop etish',
+  back: 'Rejaga qaytish',
+} as const
+
 export const LAB_RETURN_REASON_LABELS = {
   fit: 'Oʻlchov mos emas',
   shade: 'Rang mos emas',

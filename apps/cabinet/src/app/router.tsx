@@ -21,6 +21,7 @@ import {
 } from '@/pages/PatientCard'
 import { Patients } from '@/pages/Patients'
 import { Payroll } from '@/pages/Payroll'
+import { PlanPrint } from '@/pages/PlanPrint'
 import { PlanPublic } from '@/pages/PlanPublic'
 import { Queue } from '@/pages/Queue'
 import { QueueBoard } from '@/pages/QueueBoard'
@@ -104,6 +105,10 @@ export function Router() {
         <Route element={<RequirePermission anyOf={['staff.manage']} />}>
           <Route path="/navbat-varaq" element={<QueuePoster />} />
           <Route path="/fikr-varaq" element={<FeedbackPoster />} />
+        </Route>
+        {/* Shartnomaga ilova qilinadigan reja varagʻi — u ham yon menyusiz */}
+        <Route element={<RequirePermission anyOf={['plans.read', 'plans.write']} />}>
+          <Route path="/patients/:id/reja/:planId/varaq" element={<PlanPrint />} />
         </Route>
         <Route path="/" element={<CabinetLayout />}>
           <Route index element={<Home />} />

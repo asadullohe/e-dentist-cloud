@@ -890,6 +890,25 @@ export const ru: DeepPartial<Strings> = {
     not_found: 'План не найден или больше не действует',
   },
 
+  PLAN_PRINT_UI: {
+    title: 'План лечения',
+    patient: 'Пациент',
+    doctor: 'Врач',
+    date: 'Дата',
+    col_no: '№',
+    col_tooth: 'Зуб',
+    col_work: 'Работа',
+    col_qty: 'Кол-во',
+    col_price: 'Цена',
+    col_total: 'Сумма',
+    sign_doctor: 'Подпись врача',
+    sign_patient: 'Подпись пациента',
+    footnote:
+      'План предварительный: в ходе лечения объём работ и цена могут измениться — тогда составляется новый план.',
+    print: 'Печать',
+    back: 'Вернуться к плану',
+  },
+
   LAB_RETURN_REASON_LABELS: {
     fit: 'Не подходит по размеру',
     shade: 'Не подходит оттенок',

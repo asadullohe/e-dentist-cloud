@@ -2,6 +2,7 @@ import {
   CARD_UI,
   formatDate,
   formatSom,
+  PLAN_PRINT_UI,
   PLAN_STATUS_LABELS,
   PLAN_UI,
   TABLE_UI,
@@ -11,6 +12,7 @@ import {
   ChevronLeftIcon,
   MoreHorizontalIcon,
   PencilIcon,
+  PrinterIcon,
   SendIcon,
   XIcon,
 } from 'lucide-react'
@@ -77,46 +79,58 @@ export function PlanPage() {
           {plan.note && <p className="mt-1 text-sm">{plan.note}</p>}
         </div>
 
-        {canWrite && (
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => setFormOpen(true)}>
-              <PencilIcon />
-              {CARD_UI.edit}
-            </Button>
-
-            {(plan.status === 'draft' || plan.status === 'declined') && (
-              <Button size="sm" onClick={() => setStatus({ status: 'sent' })}>
-                <SendIcon />
-                {plan.status === 'declined' ? PLAN_UI.resend : PLAN_UI.send}
+        {/* Chop etish qotgan rejada ham kerak — shuning uchun menyu
+            `canWrite` dan tashqarida */}
+        <div className="flex flex-wrap gap-2">
+          {canWrite && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setFormOpen(true)}>
+                <PencilIcon />
+                {CARD_UI.edit}
               </Button>
-            )}
-            {plan.status === 'sent' && (
-              <>
-                <Button size="sm" onClick={() => setStatus({ status: 'accepted' })}>
-                  <CheckIcon />
-                  {PLAN_UI.accept}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => setAsking('declined')}>
-                  <XIcon />
-                  {PLAN_UI.decline}
-                </Button>
-              </>
-            )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={TABLE_UI.actions}>
-                  <MoreHorizontalIcon />
+              {(plan.status === 'draft' || plan.status === 'declined') && (
+                <Button size="sm" onClick={() => setStatus({ status: 'sent' })}>
+                  <SendIcon />
+                  {plan.status === 'declined' ? PLAN_UI.resend : PLAN_UI.send}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              )}
+              {plan.status === 'sent' && (
+                <>
+                  <Button size="sm" onClick={() => setStatus({ status: 'accepted' })}>
+                    <CheckIcon />
+                    {PLAN_UI.accept}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setAsking('declined')}>
+                    <XIcon />
+                    {PLAN_UI.decline}
+                  </Button>
+                </>
+              )}
+            </>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label={TABLE_UI.actions}>
+                <MoreHorizontalIcon />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link to={`/patients/${id}/reja/${planId}/varaq`} target="_blank">
+                  <PrinterIcon />
+                  {PLAN_PRINT_UI.print}
+                </Link>
+              </DropdownMenuItem>
+              {canWrite && (
                 <DropdownMenuItem variant="destructive" onSelect={() => setAsking('cancelled')}>
                   {PLAN_UI.cancel_plan}
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {plan.declineReason && (
