@@ -17,6 +17,7 @@ export function DayStrip({
   className,
   aligned,
   ref,
+  onScroll,
 }: {
   days: readonly string[]
   today: string
@@ -29,6 +30,8 @@ export function DayStrip({
   /// kengliklar bilan va toʻr yonga surilganda u bilan birga (ref)
   aligned?: boolean
   ref?: Ref<HTMLDivElement>
+  /// Tasma surilganda toʻr ham u bilan birga suriladi
+  onScroll?: (left: number) => void
 }) {
   const swipe = useSwipe(
     () => onShift(1),
@@ -39,7 +42,15 @@ export function DayStrip({
   const middle = parseIso(days[3] ?? days[0] ?? today)
 
   return (
-    <div ref={ref} className={cn(aligned && 'overflow-hidden', className)}>
+    <div
+      ref={ref}
+      onScroll={(event) => onScroll?.(event.currentTarget.scrollLeft)}
+      className={cn(
+        aligned &&
+          '[&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-1.5 overflow-x-auto pb-1.5 [scrollbar-width:thin]',
+        className,
+      )}
+    >
       <div
         {...swipe}
         className="grid items-end"

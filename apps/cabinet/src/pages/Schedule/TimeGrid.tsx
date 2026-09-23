@@ -1,6 +1,6 @@
 import { SCHEDULE_UI, UI_TEXT } from '@e-dentist/shared'
 import { PencilIcon, Trash2Icon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { type RefObject, useEffect, useRef, useState } from 'react'
 import type { Appointment, TimeBlock } from '@/entities/appointment'
 import { blockMinutes } from '@/features/appointment-form'
 import {
@@ -77,6 +77,7 @@ export function TimeGrid({
   onMove,
   onShift,
   onScrollLeft,
+  scrollRef,
 }: {
   columns: readonly GridColumn[]
   /// Koʻrinadigan soatlar oraligʻi — ish vaqti, yozuvlar boʻyicha kengayadi
@@ -97,6 +98,8 @@ export function TimeGrid({
   onShift?: (by: -1 | 1) => void
   /// Toʻr yonga surilganda sarlavha tasmasi ham surilsin
   onScrollLeft?: (left: number) => void
+  /// Tasmadan surish uchun — toʻrning gorizontal idishi
+  scrollRef?: RefObject<HTMLDivElement | null>
 }) {
   const nowMinutes = useNowMinutes()
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
@@ -161,8 +164,8 @@ export function TimeGrid({
         // Telefonda ustunlar sigʻmaydi — yonga aylantiriladi (vaqt oʻqi
         // yopishib turadi); kompyuterda ustunlar kenglikni boʻlib oladi
         <div
-          ref={grid}
-          className="overflow-x-auto"
+          ref={scrollRef ?? grid}
+          className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           onScroll={(event) => onScrollLeft?.(event.currentTarget.scrollLeft)}
         >
           <div

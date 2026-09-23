@@ -139,8 +139,13 @@ export function Schedule() {
   // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
   const seesAll = useHasPermission()('schedule.all')
   const { data: doctors } = useDoctors()
-  // Toʻr yonga surilganda sarlavha tasmasi ham u bilan birga suriladi
+  // Toʻr va sarlavha tasmasi yonga birga suriladi: ikkalasi bir-birini
+  // yetaklaydi (qiymat bir xil boʻlsa tegilmaydi — halqa boʻlmasin)
   const stripRef = useRef<HTMLDivElement>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
+  const syncScroll = (from: HTMLDivElement | null, left: number) => {
+    if (from && from.scrollLeft !== left) from.scrollLeft = left
+  }
 
   const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
@@ -236,11 +241,16 @@ export function Schedule() {
   // kunlar tasmasi (kun bosilsa oʻsha kunga oʻtadi). Kun koʻrinishida tasma
   // faqat telefonda — kunni tanlash uchun
   const columnHeads = byDoctor ? (
-    <DoctorStrip ref={stripRef} doctors={heads} />
+    <DoctorStrip
+      ref={stripRef}
+      doctors={heads}
+      onScroll={(left) => syncScroll(gridRef.current, left)}
+    />
   ) : view === 'week' ? (
     <DayStrip
       ref={stripRef}
       aligned
+      onScroll={(left) => syncScroll(gridRef.current, left)}
       days={days}
       today={today}
       onPick={(day) => {
@@ -264,7 +274,12 @@ export function Schedule() {
   const dateButton = (
     <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5 font-semibold tabular-nums">
+        {/* Telefonda qator tor — yozuv va ichki boʻshliq kichrayadi */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-w-0 gap-1 px-2 text-xs font-semibold tabular-nums md:gap-1.5 md:px-3 md:text-sm"
+        >
           <CalendarIcon />
           <span className="truncate">{title}</span>
           <ChevronDownIcon className="text-muted-foreground" />
@@ -311,11 +326,30 @@ export function Schedule() {
         data-sticky="schedule"
         className="bg-background sticky top-14 z-20 -mx-4 mb-3 border-b px-4 md:-mx-6 md:px-6"
       >
-        {/* Telefon: shifokor · sana · koʻrinish. Qabul qoʻshish — suzuvchi «+» */}
-        <div className="flex items-center gap-2 py-2 md:hidden">
-          {doctorSelect}
+        {/* Telefon: ‹ sana › · koʻrinish. Surish endi ustunlarni aylantiradi,
+            shuning uchun kun oʻqlar va kalendardan almashadi. Shifokor filtri
+            bu yerda yoʻq — ustunlarning oʻzi shifokorni koʻrsatadi */}
+        <div className="flex items-center gap-1 py-2 md:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label={PERIOD_UI.prev}
+            onClick={() => shift(-1)}
+          >
+            <ChevronLeftIcon />
+          </Button>
           {dateButton}
-          {viewSwitch}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label={PERIOD_UI.next}
+            onClick={() => shift(1)}
+          >
+            <ChevronRightIcon />
+          </Button>
+          <div className="ml-auto">{viewSwitch}</div>
         </div>
 
         {/* Keng ekran: ‹ sana › · bugun · koʻrinish · band vaqt · qabul qoʻshish */}
@@ -389,9 +423,8 @@ export function Schedule() {
               : undefined
           }
           onShift={(by) => shift(by)}
-          onScrollLeft={(left) => {
-            if (stripRef.current) stripRef.current.scrollLeft = left
-          }}
+          scrollRef={gridRef}
+          onScrollLeft={(left) => syncScroll(stripRef.current, left)}
           onEditBlock={(block) => {
             setEditingBlock(block)
             setBlockOpen(true)

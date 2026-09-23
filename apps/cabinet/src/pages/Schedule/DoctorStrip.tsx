@@ -16,12 +16,22 @@ export interface DoctorHead {
 export function DoctorStrip({
   doctors,
   ref,
+  onScroll,
 }: {
   doctors: readonly DoctorHead[]
   ref?: Ref<HTMLDivElement>
+  /// Tasma surilganda toʻr ham u bilan birga suriladi
+  onScroll?: (left: number) => void
 }) {
   return (
-    <div ref={ref} className="overflow-hidden pb-2">
+    // Toʻrning gorizontal paneli uning eng pastida — ekranda koʻrinmaydi.
+    // Shuning uchun surish shu yerda ham: yopishqoq qatorda, koʻrinadigan
+    // ingichka panel bilan
+    <div
+      ref={ref}
+      onScroll={(event) => onScroll?.(event.currentTarget.scrollLeft)}
+      className="[&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-1.5 overflow-x-auto pb-1.5 [scrollbar-width:thin]"
+    >
       <div
         className="grid items-center gap-1"
         style={{ gridTemplateColumns: COLUMNS_TEMPLATE(doctors.length) }}

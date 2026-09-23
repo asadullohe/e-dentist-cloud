@@ -20,7 +20,7 @@ export function Segmented<T extends string>({
           aria-pressed={value === key}
           onClick={() => onChange(key)}
           className={cn(
-            'rounded px-2 py-1.5 text-[13px] transition-colors sm:px-3 sm:text-sm',
+            'rounded px-2 py-1.5 text-xs transition-colors md:px-3 md:text-sm',
             value === key ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground',
           )}
         >
