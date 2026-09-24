@@ -21,6 +21,7 @@ import { paymentRoutes } from '../modules/payments/routes.js'
 import * as payments from '../modules/payments/service.js'
 import { payrollRoutes } from '../modules/payroll/routes.js'
 import { planRoutes } from '../modules/plans/routes.js'
+import * as plans from '../modules/plans/service.js'
 import { reportRoutes } from '../modules/reports/routes.js'
 import { queueRoutes } from '../modules/schedule/queueRoutes.js'
 import { scheduleRoutes } from '../modules/schedule/routes.js'
@@ -168,14 +169,16 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
     prefix: '/api',
     deps: { db: deps.db, storage: deps.storage, imports: deps.imports },
   })
-  // Tashrifga olingan summa payments dan — aylanma import oʻrniga shu yerda
-  // ulanadi (visits modulini payments import qiladi, teskarisi emas)
+  // Tashrifga olingan summa payments dan, koʻprikni olib tashlash esa
+  // plans dan — aylanma import oʻrniga shu yerda ulanadi (visits modulini
+  // ular import qiladi, teskarisi emas)
   app.register(visitRoutes, {
     prefix: '/api',
     deps: {
       db: deps.db,
       paidOfVisit: payments.paidOfVisitTx,
       paidByVisits: payments.paidByVisitsTx,
+      onVisitRemoved: plans.onVisitRemovedTx,
     },
   })
   app.register(paymentRoutes, { prefix: '/api', deps: { db: deps.db } })

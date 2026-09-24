@@ -1,4 +1,4 @@
-import { SERVICE_TEXT } from '@e-dentist/shared'
+import { SERVICE_AREAS, SERVICE_TEXT } from '@e-dentist/shared'
 import { z } from 'zod'
 
 const name = (required: () => string) => z.string().trim().min(2, { error: required }).max(200)
@@ -25,6 +25,8 @@ export const serviceCreateSchema = z.object({
     .min(0, { error: () => SERVICE_TEXT.price_negative })
     .nullable()
     .optional(),
+  /// Nimaga qoʻllaniladi (19-boʻlim). Sukut — bitta tish
+  area: z.enum(SERVICE_AREAS).default('tooth'),
 })
 
 export const serviceUpdateSchema = serviceCreateSchema.partial()

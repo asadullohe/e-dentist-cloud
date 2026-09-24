@@ -7,6 +7,7 @@ import {
   PLAN_UI,
   todayISO,
 } from '@e-dentist/shared'
+import { cn } from 'cn'
 import { ArrowLeftIcon, PrinterIcon } from 'lucide-react'
 import { Fragment } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -100,17 +101,39 @@ export function PlanPrint() {
                     {formatSom(stage.total)}
                   </td>
                 </tr>
-                {stage.items.map((item) => {
+                {stage.items.map((item, index) => {
                   no += 1
+                  const group = stage.groups.find((row) => row.id === item.groupId)
+                  // Guruh sarlavhasi — faqat birinchi bandidan oldin (15.2)
+                  const first = group !== undefined && stage.items[index - 1]?.groupId !== group.id
+                  const role =
+                    group && item.tooth !== null
+                      ? group.pontics.includes(item.tooth)
+                        ? PLAN_UI.role_pontic
+                        : PLAN_UI.role_abutment
+                      : null
                   return (
-                    <tr key={item.id} className="border-b border-neutral-200 align-top">
-                      <td className="py-1.5 tabular-nums">{no}</td>
-                      <td className="py-1.5 tabular-nums">{item.tooth ?? '—'}</td>
-                      <td className="py-1.5">{item.treatment}</td>
-                      <td className="py-1.5 text-right tabular-nums">{item.qty}</td>
-                      <td className="py-1.5 text-right tabular-nums">{formatSom(item.price)}</td>
-                      <td className="py-1.5 text-right tabular-nums">{formatSom(item.total)}</td>
-                    </tr>
+                    <Fragment key={item.id}>
+                      {first && group && (
+                        <tr className="border-t border-neutral-300">
+                          <td />
+                          <td colSpan={5} className="py-1 pl-1 font-semibold">
+                            {group.name}
+                          </td>
+                        </tr>
+                      )}
+                      <tr className="border-b border-neutral-200 align-top">
+                        <td className="py-1.5 tabular-nums">{no}</td>
+                        <td className="py-1.5 tabular-nums">{item.tooth ?? '—'}</td>
+                        <td className={cn('py-1.5', group && 'pl-3')}>
+                          {item.treatment}
+                          {role && <span className="text-neutral-500"> · {role}</span>}
+                        </td>
+                        <td className="py-1.5 text-right tabular-nums">{item.qty}</td>
+                        <td className="py-1.5 text-right tabular-nums">{formatSom(item.price)}</td>
+                        <td className="py-1.5 text-right tabular-nums">{formatSom(item.total)}</td>
+                      </tr>
+                    </Fragment>
                   )
                 })}
               </Fragment>

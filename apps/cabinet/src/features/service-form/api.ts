@@ -1,3 +1,4 @@
+import type { ServiceArea } from '@e-dentist/shared'
 import type { Service, ServiceType } from '@/entities/service'
 import { apiRequest } from '@/shared/api'
 
@@ -7,6 +8,7 @@ export interface ServicePayload {
   price: number
   /// null — texnik ishi yoʻq
   techPrice: number | null
+  area: ServiceArea
 }
 
 export const createService = (payload: ServicePayload) =>

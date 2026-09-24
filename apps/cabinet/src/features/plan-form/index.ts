@@ -1,3 +1,4 @@
+export { BridgeFormDialog } from './BridgeFormDialog'
 export { useSavePlan, useSavePlanContent, useSetPlanStatus, useSkipPlanItem } from './hooks'
 export { ItemFormDialog } from './ItemFormDialog'
 export { PlanFormDialog } from './PlanFormDialog'

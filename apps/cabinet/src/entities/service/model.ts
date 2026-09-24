@@ -1,3 +1,5 @@
+import type { ServiceArea } from '@e-dentist/shared'
+
 /// Xizmat turi — katalogning birinchi darajasi (Jarrohlik, Terapiya…)
 export interface ServiceType {
   id: string
@@ -16,6 +18,8 @@ export interface Service {
   price: number
   /// Texnik narxi; null — texnik ishi yoʻq. Tashrifga snapshot boʻlib koʻchadi
   techPrice: number | null
+  /// Nimaga qoʻllaniladi: tashrif va reja bandi shunga qarab tish soʻraydi
+  area: ServiceArea
   /// Tur ichidagi tartib
   position: number
 }

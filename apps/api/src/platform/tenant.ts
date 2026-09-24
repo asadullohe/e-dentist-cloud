@@ -39,6 +39,7 @@ export const TENANT_MODELS = new Set([
   'TimeBlock',
   'TreatmentPlan',
   'TreatmentPlanStage',
+  'TreatmentPlanGroup',
   'TreatmentPlanItem',
 ])
 

@@ -8,12 +8,12 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 14-bosqich tayyor, egasi brauzerda tekshiradi _(23/09/2026)_
+**Hozirgi task:** yoʻq — 14 va 15-bosqichlar tugadi, masterga qoʻshildi _(24/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
-chiqqan birinchi ish. 14-bosqich (qabul jadvali) parallel sessiyada, 15-bosqich
-koʻprik va xizmat sohasi — navbatda
+chiqqan birinchi ish. 14-bosqich (qabul jadvali) va 15-bosqich (koʻprik va
+xizmat sohasi) tayyor, serverga chiqarilmagan
 
 ---
 
@@ -1532,24 +1532,42 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 >
 > Raqam 15: 14-bosqichni parallel sessiya qabul jadvaliga olgan _(23/09/2026)_.
 
-- [ ] **15.1 Xizmatga qoʻllanish sohasi** — `services.area`: `tooth` ·
-      `range` · `arch` · `mouth`. Xizmat formasida tanlov; migratsiyada
-      mavjudlariga nom boʻyicha taxmin (tozalash/oqartirish → ogʻiz, protez →
-      jagʻ, qolgani → tish) va Xizmatlar sahifasida egasi koʻrib chiqadi.
-      Reja bandi, tashrif va naryad formalari shunga qarab tish soʻraydi —
-      `mouth` da maydon koʻrsatilmaydi, `tooth` da majburiy. Testlar: soha
-      boʻyicha tekshiruv, migratsiya taxmini
-- [ ] **15.2 Bandlar guruhi va koʻprik** — `treatment_plan_items.group_id` +
-      `treatment_plan_groups` (nom, oraliq). Xaritada oraliq tanlanadi →
-      soha si `range` boʻlgan xizmat → tizim bandlarni yozadi: tishi
-      «olingan» boʻlsa quyma, boʻlmasa tayanch (rollar qoʻlda oʻzgartiriladi).
+- [x] **15.1 Xizmatga qoʻllanish sohasi** — `services.area`: `tooth` ·
+      `range` · `arch` · `mouth` (sukut `tooth`). Dentrix dagi yettitadan
+      toʻrttasi olindi: `surface` bizda yoʻq (xaritada yuzalar chizilmaydi),
+      `quadrant`/`sextant` esa sugʻurta kodlari uchun — ishlatilmaydi.
+      Xizmat formasida tanlov; migratsiyada mavjudlariga **nom boʻyicha
+      taxmin** ikkala tilda (tozalash · gigiyena · oqartirish · koʻrik ·
+      konsultatsiya → ogʻiz; protez · bugel → jagʻ; koʻprik → oraliq;
+      qolgani → tish), Xizmatlar sahifasida soha rozetkasi koʻrinadi va
+      egasi koʻzdan kechiradi.
+      Tashrif formasi va reja bandi sohaga qarab: `mouth`/`arch` da tish
+      maydoni **yashiriladi** va boʻsh yoziladi, `tooth` da **majburiy**
+      (eski yozuvni tahrirlaganda ham toʻldirish soʻraladi), `range` hozircha
+      bitta tish — oraliq 15.2 da. Naryadga tegilmaydi: u xizmatga emas,
+      ish turiga bogʻlangan. Xizmatsiz (qoʻlda yozilgan) muolajada tish
+      ixtiyoriy qoladi. Testlar: migratsiya taxmini, majburiylik, `mouth`
+      xizmatida tishning tozalanishi
+- [x] **15.2 Bandlar guruhi va koʻprik** — `treatment_plan_items.group_id` +
+      `treatment_plan_groups` (nom, oraliq, quymalar, material). «Koʻprik»
+      oynasida oraliq tanlanadi (xaritadan tanlash 15.3 da) → har birlik
+      uchun xizmat → tizim bandlarni yozadi: tishi «olingan» boʻlsa quyma,
+      boʻlmasa tayanch (rollar qoʻlda oʻzgartiriladi, sukut xaritadan).
       Rejada, bemor sahifasida va A4 varaqda guruh bitta blok; bemor
       sahifasidagi xaritada koʻprik chizigʻi. Guruh oʻchsa bandlar qoladi.
-      Testlar: rollarning xaritadan aniqlanishi, guruh oʻchirilishi, jami
-- [ ] **15.3 Xaritadan ishlash** — reja sahifasi tepasida tish xaritasi;
-      tish (yoki oraliq) bosilsa «bu tishga ish qoʻshish» — xizmat tanlanadi,
-      band oʻsha bosqichga tushadi. Band oynasidagi raqamlar qoladi (telefon
-      uchun). Dentrix va Open Dental ning asosiy oqimi
+      Hamma bandi bajarilgach koʻprik **xaritaga oʻzi tushadi**, tashrifi
+      oʻchirilsa **oʻzi olinadi** (`VisitDeps.onVisitRemoved` → `plans`).
+      `range` sohali xizmat oddiy «Yangi ish» roʻyxatida koʻrinmaydi.
+      Testlar: rollarning xaritadan aniqlanishi, koʻprikning tushishi va
+      olinishi, guruh oʻchirilishi, jami
+- [x] **15.3 Xaritadan ishlash** — reja sahifasi tepasida tish xaritasi
+      (bemorning haqiqiy holati, rejadagi tishlar ustiga belgilanadi).
+      Ikki rejim: «Bitta tish» — bosilsa oyna oʻsha tish bilan ochiladi;
+      «Koʻprik» — ikki tish bosiladi, oraliq oʻzi yopiladi va 15.2 dagi oyna
+      oldindan toʻldirilib ochiladi. Bosqich xarita tepasida tanlanadi
+      (sukut — oxirgisi) va oynada ham koʻrinadi. Xarita telefonda yigʻilgan,
+      kompyuterda ochiq; tanlov brauzerda eslab qolinadi. Band oynasidagi
+      raqamlar qoladi. Dentrix va Open Dental ning asosiy oqimi
 
 ---
 

@@ -43,16 +43,38 @@ export const planUpdateSchema = z.object({
   note: z.string().trim().max(2000).nullish(),
 })
 
+const toothNo = z.coerce
+  .number()
+  .int()
+  .refine(isToothNo, { error: () => PLAN_TEXT.tooth_invalid })
+
+/// Bandlar guruhi — koʻprik (15.2). Oraliq va rollar shu yerda: `pontics`
+/// ichidagi tish quyma, qolgani tayanch koronka
+const groupSchema = z.object({
+  /// Boʻsh — yangi guruh
+  id: z.string().uuid().optional(),
+  name: z
+    .string()
+    .trim()
+    .min(1, { error: () => PLAN_TEXT.group_name_required })
+    .max(200),
+  teeth: z
+    .array(toothNo)
+    .min(2, { error: () => PLAN_TEXT.group_span_short })
+    .max(16),
+  pontics: z.array(toothNo).max(16).default([]),
+  material: z.string().trim().max(100).nullish(),
+})
+
 /// Bandning nomi va narxi — snapshot. `serviceId` faqat «qaysi xizmatdan
 /// olingan» degan izoh: xizmat keyin oʻchsa ham band joyida qoladi
 const itemSchema = z.object({
   /// Boʻsh — yangi band. Bor — mavjudini yangilash
   id: z.string().uuid().optional(),
-  tooth: z.coerce
-    .number()
-    .int()
-    .refine(isToothNo, { error: () => PLAN_TEXT.tooth_invalid })
-    .nullish(),
+  /// Shu bosqichning `groups` massividagi oʻrin; boʻsh — oddiy band.
+  /// Indeks, id emas: yangi guruhning id si hali serverda berilmagan
+  groupIndex: z.coerce.number().int().min(0).max(19).nullish(),
+  tooth: toothNo.nullish(),
   serviceId: z.string().uuid().nullish(),
   treatment: z
     .string()
@@ -80,6 +102,7 @@ const stageSchema = z.object({
     .min(1, { error: () => PLAN_TEXT.stage_name_required })
     .max(200),
   note: z.string().trim().max(1000).nullish(),
+  groups: z.array(groupSchema).max(20).default([]),
   items: z.array(itemSchema).max(200),
 })
 
@@ -134,3 +157,4 @@ export type PlanItemCompleteInput = z.infer<typeof planItemCompleteSchema>
 export type PlanItemSkipInput = z.infer<typeof planItemSkipSchema>
 export type PlanStageInput = z.infer<typeof stageSchema>
 export type PlanItemInput = z.infer<typeof itemSchema>
+export type PlanGroupInput = z.infer<typeof groupSchema>

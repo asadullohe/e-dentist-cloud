@@ -154,8 +154,19 @@ export function createBridge(
   patientId: string,
   teeth: number[],
   material: string,
+  planGroupId?: string,
 ) {
-  return tx.bridge.create({ data: tenantScoped({ id, patientId, teeth, material }) })
+  return tx.bridge.create({
+    data: tenantScoped({ id, patientId, teeth, material, planGroupId: planGroupId ?? null }),
+  })
+}
+
+/// Reja guruhidan tushgan koʻprik (15.2) — guruh idsi boʻyicha
+export function findBridgeByGroup(tx: ClinicTx, planGroupId: string) {
+  return tx.bridge.findUnique({
+    where: { planGroupId },
+    select: { ...BRIDGE_SELECT, patientId: true },
+  })
 }
 
 export function removeBridge(tx: ClinicTx, id: string) {

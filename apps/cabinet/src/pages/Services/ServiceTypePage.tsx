@@ -1,10 +1,11 @@
-import { formatSom, SERVICE_UI } from '@e-dentist/shared'
+import { formatSom, SERVICE_AREA_LABELS, SERVICE_UI } from '@e-dentist/shared'
 import { ChevronLeftIcon, PlusIcon, TagIcon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { type Service, useServices, useServiceTypes } from '@/entities/service'
 import { ServiceFormDialog, useDeleteService, useReorderServices } from '@/features/service-form'
 import {
+  Badge,
   Button,
   DeleteDialog,
   DragHandle,
@@ -88,7 +89,16 @@ export function ServiceTypePage() {
             <div className="bg-card flex items-center gap-2 rounded-xl border py-2 pr-2 pl-1 shadow-xs">
               <DragHandle handle={handle} label={SERVICE_UI.drag} />
               <div className="min-w-0 flex-1">
-                <div className="font-medium">{item.name}</div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="font-medium">{item.name}</span>
+                  {/* Sukut soha (bitta tish) belgilanmaydi — roʻyxat shovqinli
+                      boʻlmasin; koʻzga tashlanadigani qolgan uchtasi */}
+                  {item.area !== 'tooth' && (
+                    <Badge variant="secondary" className="font-normal">
+                      {SERVICE_AREA_LABELS[item.area]}
+                    </Badge>
+                  )}
+                </div>
                 {item.techPrice !== null && (
                   <div className="text-muted-foreground text-xs tabular-nums">
                     {SERVICE_UI.tech_short(formatSom(item.techPrice))}

@@ -406,6 +406,23 @@ export const SERVICE_TEXT = {
   type_has_services: (n: number) =>
     `Bu turda ${n} ta xizmat bor — avval ularni boshqa turga koʻchiring`,
   order_invalid: 'Tartib roʻyxati toʻliq emas',
+  /// Qoʻllanish sohasi (19-boʻlim): `tooth` xizmatida tish koʻrsatilishi shart
+  tooth_required: 'Bu xizmat uchun tish koʻrsatilishi shart',
+} as const
+
+/// Xizmat nimaga qoʻllaniladi (tz.md 19-boʻlim)
+export const SERVICE_AREA_LABELS = {
+  tooth: 'Bitta tish',
+  range: 'Tishlar oraligʻi',
+  arch: 'Jagʻ',
+  mouth: 'Butun ogʻiz',
+} as const
+
+export const SERVICE_AREA_HINTS = {
+  tooth: 'Plomba, koronka, implant, kanal — tashrifda tish koʻrsatiladi',
+  range: 'Koʻprik — bir nechta tishga qoʻyiladi',
+  arch: 'Olinadigan toʻliq protez, bugel — tish soʻralmaydi',
+  mouth: 'Tozalash, oqartirish, koʻrik — tish soʻralmaydi',
 } as const
 
 export const SERVICE_UI = {
@@ -429,6 +446,9 @@ export const SERVICE_UI = {
   tech_price: 'Texnik narxi',
   tech_hint: 'Tashrifga koʻchadi; shifokor ulushi (narx − texnik narxi) dan hisoblanadi',
   tech_short: (price: string) => `Texnik: ${price}`,
+  area: 'Qoʻllanish sohasi',
+  /// Tish maydoni yonida — soha `tooth`/`range` boʻlganda
+  required_mark: 'shart',
   type: 'Turi',
   types: 'Turlar',
   type_add: 'Yangi tur',
@@ -819,6 +839,10 @@ export const PLAN_TEXT = {
   tooth_invalid: 'Bunday tish raqami yoʻq',
   price_negative: 'Narx manfiy boʻlishi mumkin emas',
   qty_invalid: 'Miqdor kamida 1 boʻlsin',
+  /// Bandlar guruhi — koʻprik (15.2)
+  group_name_required: 'Guruh nomini yozing',
+  group_span_short: 'Koʻprikda kamida ikkita tish boʻlishi kerak',
+  group_not_found: 'Guruh topilmadi',
   discount_negative: 'Chegirma manfiy boʻlishi mumkin emas',
   discount_too_big: 'Chegirma jami summadan katta',
   doctor_not_found: 'Shifokor topilmadi',
@@ -889,6 +913,29 @@ export const PLAN_UI = {
   item_delete_title: 'Ish oʻchirilsinmi?',
   tooth: 'Tish',
   tooth_none: 'Tishsiz (umumiy ish)',
+  /// Koʻprik guruhi (15.2)
+  bridge_add: 'Koʻprik',
+  bridge_new: 'Rejaga koʻprik',
+  bridge_hint:
+    'Oraliqdagi har tish uchun alohida ish yoziladi. Hammasi bajarilgach koʻprik tish xaritasiga tushadi.',
+  bridge_service: 'Har birlik uchun xizmat',
+  bridge_name: (from: number, to: number) => `Koʻprik ${from}–${to}`,
+  bridge_total: (count: number) => `${count} ta birlik`,
+  bridge_delete_title: 'Koʻprik oʻchirilsinmi?',
+  bridge_delete_text: 'Guruh ham, ichidagi ishlar ham oʻchadi.',
+  role_abutment: 'tayanch',
+  role_pontic: 'quyma',
+  /// Xaritadan ishlash (15.3)
+  chart_title: 'Tish xaritasi',
+  chart_planned: (n: number) => `${n} ta tishda ish bor`,
+  chart_stage: 'Bosqich',
+  chart_mode_tooth: 'Bitta tish',
+  chart_mode_span: 'Koʻprik',
+  chart_hint_tooth: 'Ish qoʻshish uchun tishni bosing',
+  chart_hint_span_first: 'Koʻprikning birinchi tishini bosing',
+  chart_hint_span_second: (tooth: number) => `${tooth} tanlandi — endi oxirgi tishni bosing`,
+  chart_hint_no_stage: 'Avval bosqich qoʻshing',
+  chart_hint_read: 'Koʻk bilan belgilangan tishlarda reja boʻyicha ish bor',
   service: 'Xizmat',
   service_none: 'Narxnomadan tanlanmagan',
   treatment: 'Muolaja nomi',

@@ -10,6 +10,7 @@ import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
 import * as patients from '../patients/service.js'
+import * as services from '../services/service.js'
 import * as repo from './repo.js'
 import type {
   BridgeCreateInput,
@@ -26,6 +27,11 @@ export interface VisitDeps {
   paidOfVisit?: (tx: ClinicTx, visitId: string) => Promise<number>
   /// Roʻyxatda har tashrifga «olingan» — payments dan; berilmasa 0
   paidByVisits?: (tx: ClinicTx, visitIds: readonly string[]) => Promise<Map<string, number>>
+  /// Tashrif oʻchirilishidan **oldin** chaqiriladi (plans beradi, 15.2):
+  /// bogʻlangan reja bandi koʻprik guruhida boʻlsa, koʻprik xaritadan
+  /// olinadi. Oldin — chunki oʻchirilgach banddagi `visit_id` boʻshab
+  /// qoladi va guruhni topib boʻlmaydi
+  onVisitRemoved?: (tx: ClinicTx, userId: string, visitId: string) => Promise<void>
 }
 
 /// Boshqa modullar uchun (payments): bemorning tashriflari — toʻlovni ishga
@@ -225,6 +231,15 @@ export async function createTx(
   // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
   const { payPercent } = await auth.payTermsTx(tx, doctorId)
 
+  // Tish xizmatning qoʻllanish sohasiga qarab (19-boʻlim): `mouth`/`arch` da
+  // boʻsh yoziladi, `tooth`/`range` da majburiy. Xizmat tanlanmagan boʻlsa
+  // (qoʻlda yozilgan muolaja) — ixtiyoriy
+  const areas = await services.areasOfTx(tx, input.serviceId ? [input.serviceId] : [])
+  const tooth = services.toothForArea(
+    input.serviceId ? areas.get(input.serviceId) : undefined,
+    input.tooth,
+  )
+
   // Texnik narxi: naryaddan (topshirish), boʻlmasa formadan (xizmatdan
   // koʻchgan yoki qoʻlda) — ikkalasi ham snapshot
   const labCost = lab?.labCost ?? input.labCost ?? 0
@@ -234,7 +249,7 @@ export async function createTx(
     date: toDate(input.date),
     time: input.time ?? nowTime(),
     treatment: input.treatment,
-    tooth: input.tooth ?? null,
+    tooth,
     serviceId: input.serviceId ?? null,
     price: input.price,
     doctorPercent: payPercent,
@@ -312,13 +327,22 @@ export function updateVisit(
         ? shareOf(price, percent, labCost)
         : current.doctorShare
 
+    // Tahrirda ham soha tekshiriladi (19-boʻlim): eski, tishsiz yozuv
+    // ochilganda foydalanuvchidan toʻldirish soʻraladi. Xizmat tashrif
+    // yozilganda qotadi — tahrirda oʻzgarmaydi
+    const areas = await services.areasOfTx(tx, current.serviceId ? [current.serviceId] : [])
+    const tooth = services.toothForArea(
+      current.serviceId ? areas.get(current.serviceId) : undefined,
+      input.tooth === undefined ? current.tooth : input.tooth,
+    )
+
     try {
       const visit = await repo.updateVisit(tx, id, {
         ...(doctorChanged ? { doctorId: input.doctorId, doctorPercent: percent } : {}),
         ...(input.date === undefined ? {} : { date: toDate(input.date) }),
         ...(input.time === undefined ? {} : { time: input.time }),
         ...(input.treatment === undefined ? {} : { treatment: input.treatment }),
-        ...(input.tooth === undefined ? {} : { tooth: input.tooth }),
+        tooth,
         ...(input.price === undefined ? {} : { price: input.price }),
         ...(labCostChanged ? { labCost } : {}),
         doctorShare: share,
@@ -347,6 +371,7 @@ export function removeVisit(deps: VisitDeps, clinicId: string, viewer: ScopedVie
       if (!current) throw errors.notFound(VISIT_TEXT.not_found)
       assertOwnVisit(viewer, current)
     }
+    await deps.onVisitRemoved?.(tx, userId, id)
     try {
       await repo.removeVisit(tx, id)
     } catch (error) {
@@ -424,6 +449,47 @@ function defaultRole(status: string | undefined): 'koronka' | 'koprik' {
   return status === 'olingan' || status === 'koprik' ? 'koprik' : 'koronka'
 }
 
+/// Koʻprikni yozish — ochiq tranzaksiya ichida. Reja guruhi toʻliq
+/// bajarilganda `plans` ham shuni chaqiradi (15.2), shuning uchun bemorni
+/// tekshirish chaqiruvchida qoladi
+export async function createBridgeTx(
+  tx: ClinicTx,
+  userId: string,
+  patientId: string,
+  span: readonly number[],
+  material: string,
+  roles: Record<string, string>,
+  planGroupId?: string,
+): Promise<string | null> {
+  // Bitta guruhga bitta koʻprik: band qayta bajarilsa ikkinchisi yozilmasin
+  if (planGroupId && (await repo.findBridgeByGroup(tx, planGroupId))) return null
+  const id = uuidV7()
+  const { teeth } = await repo.chart(tx, patientId)
+  const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))
+
+  await repo.createBridge(tx, id, patientId, [...span], material, planGroupId)
+
+  // Koʻprikdagi har tish oʻz roliga mos holatga oʻtadi va koʻprik
+  // materialini oladi — xarita shuni chizadi
+  for (const tooth of span) {
+    const role = roles[String(tooth)] ?? defaultRole(statusOf.get(tooth))
+    await repo.setTooth(tx, uuidV7(), patientId, tooth, {
+      status: role,
+      material,
+      note: null,
+    })
+  }
+
+  await writeAudit(tx, {
+    userId,
+    action: AUDIT_ACTION.bridge_created,
+    entity: 'bridge',
+    entityId: id,
+    meta: { patientId, teeth: [...span], ...(planGroupId ? { planGroupId } : {}) },
+  })
+  return id
+}
+
 export function createBridge(
   deps: VisitDeps,
   clinicId: string,
@@ -432,7 +498,6 @@ export function createBridge(
   input: BridgeCreateInput,
 ) {
   const { userId } = viewer
-  const id = uuidV7()
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, viewer, patientId)
 
@@ -440,35 +505,45 @@ export function createBridge(
     const span = bridgeSpan(input.from, input.to)
     if (span.length < 2) throw errors.badRequest(VISIT_TEXT.bridge_same_arch)
 
-    const { teeth } = await repo.chart(tx, patientId)
-    const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))
-
-    await repo.createBridge(tx, id, patientId, span, input.material)
-
-    // Koʻprikdagi har tish oʻz roliga mos holatga oʻtadi va koʻprik
-    // materialini oladi — xarita shuni chizadi
-    for (const tooth of span) {
-      const role = input.roles[String(tooth)] ?? defaultRole(statusOf.get(tooth))
-      await repo.setTooth(tx, uuidV7(), patientId, tooth, {
-        status: role,
-        material: input.material,
-        note: null,
-      })
-    }
-
-    await writeAudit(tx, {
-      userId,
-      action: AUDIT_ACTION.bridge_created,
-      entity: 'bridge',
-      entityId: id,
-      meta: { patientId, teeth: span },
-    })
+    await createBridgeTx(tx, userId, patientId, span, input.material, input.roles)
     return repo.chart(tx, patientId)
   })
 }
 
 /// Oʻchirilganda tishlar holati qaytariladi: quyma tish oʻrnida tish yoʻq
 /// edi — «olib tashlangan» boʻladi; tayanch tish esa «sogʻlom» ga qaytadi
+async function removeBridgeTx(
+  tx: ClinicTx,
+  userId: string,
+  bridge: { id: string; patientId: string; teeth: number[] },
+) {
+  const { teeth } = await repo.chart(tx, bridge.patientId)
+  const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))
+
+  for (const tooth of bridge.teeth) {
+    const status = statusOf.get(tooth)
+    if (status === 'koprik') {
+      await repo.setTooth(tx, uuidV7(), bridge.patientId, tooth, {
+        status: 'olingan',
+        material: '',
+        note: null,
+      })
+    } else if (status === 'koronka') {
+      // «Sogʻlom» sukut holat — qator saqlanmaydi
+      await repo.clearTooth(tx, bridge.patientId, tooth)
+    }
+  }
+
+  await repo.removeBridge(tx, bridge.id)
+  await writeAudit(tx, {
+    userId,
+    action: AUDIT_ACTION.bridge_deleted,
+    entity: 'bridge',
+    entityId: bridge.id,
+    meta: { patientId: bridge.patientId },
+  })
+}
+
 export function removeBridge(deps: VisitDeps, clinicId: string, viewer: ScopedViewer, id: string) {
   const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
@@ -476,33 +551,17 @@ export function removeBridge(deps: VisitDeps, clinicId: string, viewer: ScopedVi
     if (!bridge) throw errors.notFound(VISIT_TEXT.bridge_not_found)
     await assertPatient(tx, viewer, bridge.patientId)
 
-    const { teeth } = await repo.chart(tx, bridge.patientId)
-    const statusOf = new Map(teeth.map((t) => [t.tooth, t.status]))
-
-    for (const tooth of bridge.teeth) {
-      const status = statusOf.get(tooth)
-      if (status === 'koprik') {
-        await repo.setTooth(tx, uuidV7(), bridge.patientId, tooth, {
-          status: 'olingan',
-          material: '',
-          note: null,
-        })
-      } else if (status === 'koronka') {
-        // «Sogʻlom» sukut holat — qator saqlanmaydi
-        await repo.clearTooth(tx, bridge.patientId, tooth)
-      }
-    }
-
-    await repo.removeBridge(tx, id)
-    await writeAudit(tx, {
-      userId,
-      action: AUDIT_ACTION.bridge_deleted,
-      entity: 'bridge',
-      entityId: id,
-      meta: { patientId: bridge.patientId },
-    })
+    await removeBridgeTx(tx, userId, bridge)
     return repo.chart(tx, bridge.patientId)
   })
+}
+
+/// Reja guruhining koʻprigini olib tashlash (15.2): guruhning bandi
+/// bajarilmagan boʻlib qolganda `plans` shuni chaqiradi. Koʻprik boʻlmasa
+/// jim qaytadi — guruh hali toʻliq bajarilmagan boʻlishi mumkin
+export async function removeBridgeOfGroupTx(tx: ClinicTx, userId: string, planGroupId: string) {
+  const bridge = await repo.findBridgeByGroup(tx, planGroupId)
+  if (bridge) await removeBridgeTx(tx, userId, bridge)
 }
 
 /// Toʻliq eksport uchun (export moduli). Ochiq tranzaksiya ichida

@@ -9,8 +9,9 @@ import {
 } from './dropdown-menu'
 
 /// «⋯» — tahrirlash va oʻchirish. Tur plitkasi, xizmat kartasi va
-/// reja bandi uchun bitta menyu
-export function ItemMenu({ onEdit, onRemove }: { onEdit: () => void; onRemove: () => void }) {
+/// reja bandi uchun bitta menyu. `onEdit` berilmasa faqat oʻchirish
+/// koʻrinadi — koʻprik guruhi shunday: u tahrirlanmaydi, qayta qoʻyiladi
+export function ItemMenu({ onEdit, onRemove }: { onEdit?: () => void; onRemove: () => void }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -25,10 +26,12 @@ export function ItemMenu({ onEdit, onRemove }: { onEdit: () => void; onRemove: (
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
-        <DropdownMenuItem onSelect={onEdit}>
-          <PencilIcon />
-          {UI_TEXT.edit}
-        </DropdownMenuItem>
+        {onEdit && (
+          <DropdownMenuItem onSelect={onEdit}>
+            <PencilIcon />
+            {UI_TEXT.edit}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem variant="destructive" onSelect={onRemove}>
           <Trash2Icon />
           {UI_TEXT.remove}
