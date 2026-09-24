@@ -52,10 +52,10 @@ describe('boshqa rollar chegarasi', () => {
   })
 
   it('kuzatuvchi hech narsa oʻzgartirmaydi', () => {
-    // `.read` — oʻqish; `patients.all` — koʻrish doirasi (hamma bemor),
-    // u ham yozish emas
+    // `.read` — oʻqish; `.all` — koʻrish doirasi (hamma bemor, hamma
+    // shifokorning jadvali), u ham yozish emas
     for (const r of ROLE_TEMPLATE_SPECS.kuzatuvchi.permissions) {
-      expect(r.endsWith('.read') || r === 'patients.all').toBe(true)
+      expect(r.endsWith('.read') || r.endsWith('.all')).toBe(true)
     }
   })
 
