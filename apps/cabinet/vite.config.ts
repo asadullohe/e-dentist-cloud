@@ -16,7 +16,9 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
   },
   server: {
-    port: 5173,
+    // Preview paneli boʻsh portni `PORT` orqali beradi — boshqa sessiyaning
+    // kabineti ham ishlab turishi mumkin
+    port: Number(process.env.PORT ?? 5173),
     // API ni oʻsha manzilga uzatamiz. Shunda brauzer uchun kabinet ham,
     // API ham bitta manzil boʻladi — xuddi serverdagidek (Caddy ham shunday
     // qiladi). CORS sozlash kerak emas va cookie muammosiz ishlaydi.
