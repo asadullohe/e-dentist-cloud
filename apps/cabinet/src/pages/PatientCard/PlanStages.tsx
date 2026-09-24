@@ -1,15 +1,7 @@
 import { formatSom, PLAN_UI } from '@e-dentist/shared'
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
-import type {
-  Plan,
-  PlanGroup,
-  PlanGroupDraft,
-  PlanItem,
-  PlanItemDraft,
-  PlanStage,
-  PlanStageDraft,
-} from '@/entities/plan'
+import type { Plan, PlanGroupDraft, PlanItem, PlanItemDraft, PlanStageDraft } from '@/entities/plan'
 import {
   BridgeFormDialog,
   ItemFormDialog,
@@ -19,68 +11,17 @@ import {
 } from '@/features/plan-form'
 import { VisitFormDialog } from '@/features/visit-form'
 import { Button, Card, DeleteDialog, DragHandle, ItemMenu, SortableList } from '@/shared/ui'
+import { PlanChart } from './PlanChart'
 import { PlanGroupBlock } from './PlanGroupBlock'
 import { PlanItemRow } from './PlanItemRow'
+import * as drafts from './planDrafts'
 
-/// Serverga mazmun **butunligicha** yuboriladi, shuning uchun har amal
-/// avval joriy holatdan nusxa oladi (PUT /plans/:id/content)
-function toDrafts(plan: Plan): PlanStageDraft[] {
-  return plan.stages.map((stage) => ({
-    id: stage.id,
-    name: stage.name,
-    note: stage.note,
-    groups: stage.groups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      teeth: group.teeth,
-      pontics: group.pontics,
-      material: group.material,
-    })),
-    items: stage.items.map((item) => ({
-      id: item.id,
-      // Serverga indeks ketadi: yangi guruhning idsi hali berilmagan
-      groupIndex:
-        item.groupId === null ? null : stage.groups.findIndex((row) => row.id === item.groupId),
-      tooth: item.tooth,
-      serviceId: item.serviceId,
-      treatment: item.treatment,
-      price: item.price,
-      qty: item.qty,
-      note: item.note,
-    })),
-  }))
-}
+/// Ochilgan «ish» oynasi: bosqich, tahrirlanayotgan band yoki xaritadan
+/// kelgan tish
+type Editing = { stageId: string; item?: PlanItemDraft; tooth?: number } | null
 
-/// Bosqich ichidagi koʻrinadigan birlik: koʻprik guruhi yoki yakka band.
-/// Tortish ham shu birliklar boʻyicha — guruh bandlari birga koʻchadi
-type Block =
-  | { kind: 'group'; id: string; group: PlanGroup; items: PlanItem[] }
-  | { kind: 'item'; id: string; item: PlanItem }
-
-function toBlocks(stage: PlanStage): Block[] {
-  const blocks: Block[] = []
-  const seen = new Set<string>()
-  for (const item of stage.items) {
-    const group =
-      item.groupId === null ? undefined : stage.groups.find((row) => row.id === item.groupId)
-    // Guruhi oʻchirilgan band yakka qoladi
-    if (!group) {
-      blocks.push({ kind: 'item', id: item.id, item })
-      continue
-    }
-    if (seen.has(group.id)) continue
-    seen.add(group.id)
-    blocks.push({
-      kind: 'group',
-      id: group.id,
-      group,
-      items: stage.items.filter((row) => row.groupId === group.id),
-    })
-  }
-  return blocks
-}
-
-type Editing = { stageId: string; item?: PlanItemDraft } | null
+/// Koʻprik oynasi: bosqich va xaritadan kelgan oraliq
+type Bridging = { stageId: string; span?: { from: number; to: number } } | null
 
 export function PlanStages({ plan, editable }: { plan: Plan; editable: boolean }) {
   // Tartib va tahrir natijasi darhol koʻrinadi — toast ortiqcha
@@ -94,127 +35,57 @@ export function PlanStages({ plan, editable }: { plan: Plan; editable: boolean }
     itemId?: string
     groupId?: string
   } | null>(null)
-  /// Koʻprik qaysi bosqichga qoʻshilyapti
-  const [bridgeStageId, setBridgeStageId] = useState<string | null>(null)
+  const [bridgeForm, setBridgeForm] = useState<Bridging>(null)
   /// Bajarilayotgan band — tashrif formasi shu band bilan toʻldiriladi
   const [completing, setCompleting] = useState<PlanItem | null>(null)
 
-  function apply(change: (drafts: PlanStageDraft[]) => PlanStageDraft[]) {
-    save(change(toDrafts(plan)))
-  }
-
-  function saveStage(stage: Pick<PlanStageDraft, 'id' | 'name' | 'note'>) {
-    apply((drafts) =>
-      stage.id
-        ? drafts.map((item) =>
-            item.id === stage.id ? { ...item, name: stage.name, note: stage.note } : item,
-          )
-        : [...drafts, { ...stage, groups: [], items: [] }],
-    )
+  function apply(change: (rows: PlanStageDraft[]) => PlanStageDraft[]) {
+    save(change(drafts.toDrafts(plan)))
   }
 
   function saveItem(stageId: string, item: PlanItemDraft) {
-    apply((drafts) =>
-      drafts.map((stage) => {
-        if (stage.id !== stageId) return stage
-        const items = item.id
-          ? stage.items.map((old) => (old.id === item.id ? item : old))
-          : [...stage.items, item]
-        return { ...stage, items }
-      }),
-    )
+    apply(drafts.putItem(stageId, item))
+  }
+
+  function saveBridge(stageId: string, group: PlanGroupDraft, items: PlanItemDraft[]) {
+    apply(drafts.putBridge(stageId, group, items))
   }
 
   function remove({ stageId, itemId }: { stageId: string; itemId?: string }) {
-    apply((drafts) =>
-      itemId
-        ? drafts.map((stage) =>
-            stage.id === stageId
-              ? { ...stage, items: stage.items.filter((item) => item.id !== itemId) }
-              : stage,
-          )
-        : drafts.filter((stage) => stage.id !== stageId),
-    )
+    apply(itemId ? drafts.dropItem(stageId, itemId) : drafts.dropStage(stageId))
   }
 
-  function reorderStages(ids: string[]) {
-    apply((drafts) => {
-      const byId = new Map(drafts.map((stage) => [stage.id as string, stage]))
-      return ids.flatMap((id) => byId.get(id) ?? [])
-    })
-  }
-
-  /// Koʻprik: guruh va oraliqdagi har tish uchun bitta band birga qoʻshiladi
-  function saveBridge(stageId: string, group: PlanGroupDraft, items: PlanItemDraft[]) {
-    apply((drafts) =>
-      drafts.map((stage) => {
-        if (stage.id !== stageId) return stage
-        const groupIndex = stage.groups.length
-        return {
-          ...stage,
-          groups: [...stage.groups, group],
-          items: [...stage.items, ...items.map((item) => ({ ...item, groupIndex }))],
-        }
-      }),
-    )
-  }
-
-  /// Koʻprikni oʻchirish — guruh ham, ichidagi bandlar ham. Bajarilgan band
-  /// boʻlsa server rad etadi
   function removeGroup(stageId: string, groupId: string) {
-    const stage = plan.stages.find((row) => row.id === stageId)
-    const index = stage?.groups.findIndex((row) => row.id === groupId) ?? -1
-    if (index < 0) return
-    apply((drafts) =>
-      drafts.map((draft) => {
-        if (draft.id !== stageId) return draft
-        return {
-          ...draft,
-          groups: draft.groups.filter((_, at) => at !== index),
-          items: draft.items
-            .filter((item) => item.groupIndex !== index)
-            // Qolgan guruhlarning indekslari surildi
-            .map((item) => ({
-              ...item,
-              groupIndex:
-                item.groupIndex == null || item.groupIndex < index
-                  ? item.groupIndex
-                  : item.groupIndex - 1,
-            })),
-        }
-      }),
-    )
+    const index = plan.stages
+      .find((row) => row.id === stageId)
+      ?.groups.findIndex((row) => row.id === groupId)
+    if (index === undefined || index < 0) return
+    apply(drafts.dropGroup(stageId, index))
   }
 
-  /// Tortilgani — blok (guruh yoki yakka band). Guruh bandlari ketma-ket
-  /// turadi, shuning uchun tartib bloklar boʻyicha qayta yigʻiladi
   function reorderBlocks(stageId: string, ids: string[]) {
-    const stage = plan.stages.find((row) => row.id === stageId)
-    if (!stage) return
-    apply((drafts) =>
-      drafts.map((draft) => {
-        if (draft.id !== stageId) return draft
-        const byBlock = new Map<string, PlanItemDraft[]>()
-        for (const item of draft.items) {
-          const key =
-            item.groupIndex == null
-              ? (item.id as string)
-              : (stage.groups[item.groupIndex]?.id ?? (item.id as string))
-          byBlock.set(key, [...(byBlock.get(key) ?? []), item])
-        }
-        return { ...draft, items: ids.flatMap((id) => byBlock.get(id) ?? []) }
-      }),
-    )
+    const groupIds = plan.stages.find((row) => row.id === stageId)?.groups.map((row) => row.id)
+    if (!groupIds) return
+    apply(drafts.orderBlocks(stageId, ids, groupIds))
   }
 
   const editingStage = plan.stages.find((stage) => stage.id === stageForm.stageId)
 
   return (
     <>
+      {/* Xaritadan ishlash (15.3): tish bosilsa oʻsha tish bilan oyna
+          ochiladi, koʻprik rejimida ikki tish oraliqni yopadi */}
+      <PlanChart
+        plan={plan}
+        editable={editable}
+        onPickTooth={(stageId, tooth) => setItemForm({ stageId, tooth })}
+        onPickSpan={(stageId, from, to) => setBridgeForm({ stageId, span: { from, to } })}
+      />
+
       <SortableList
         items={plan.stages}
         getId={(stage) => stage.id}
-        onReorder={reorderStages}
+        onReorder={(ids) => apply(drafts.orderStages(ids))}
         className="space-y-3"
         renderItem={(stage, handle) => (
           <Card className="gap-2 p-3">
@@ -239,7 +110,7 @@ export function PlanStages({ plan, editable }: { plan: Plan; editable: boolean }
               <p className="text-muted-foreground px-1 text-sm">{PLAN_UI.stage_empty}</p>
             ) : (
               <SortableList
-                items={toBlocks(stage)}
+                items={drafts.toBlocks(stage)}
                 getId={(block) => block.id}
                 onReorder={(ids) => reorderBlocks(stage.id, ids)}
                 className="space-y-1"
@@ -283,7 +154,7 @@ export function PlanStages({ plan, editable }: { plan: Plan; editable: boolean }
                     tanlanadi, bandlar oʻzi yoziladi (15.2) */}
                 <button
                   type="button"
-                  onClick={() => setBridgeStageId(stage.id)}
+                  onClick={() => setBridgeForm({ stageId: stage.id })}
                   className="text-primary hover:bg-accent flex h-9 items-center justify-center gap-1.5 rounded-lg border border-dashed px-3 text-sm font-medium transition-colors"
                 >
                   <PlusIcon className="size-4" />
@@ -310,19 +181,25 @@ export function PlanStages({ plan, editable }: { plan: Plan; editable: boolean }
         open={stageForm.open}
         onOpenChange={(open) => setStageForm({ open })}
         stage={editingStage}
-        onSave={saveStage}
+        onSave={(stage) => apply(drafts.putStage(stage))}
       />
       <ItemFormDialog
         open={itemForm !== null}
         onOpenChange={(open) => !open && setItemForm(null)}
         item={itemForm?.item}
-        onSave={(item) => itemForm && saveItem(itemForm.stageId, item)}
+        defaultTooth={itemForm?.tooth}
+        // Bosqich tanlovi faqat xaritadan qoʻshilayotganda: bosqich ichidagi
+        // «Ish qoʻshish» dan kelganda u allaqachon maʼlum
+        stages={itemForm?.tooth === undefined ? undefined : plan.stages}
+        stageId={itemForm?.stageId}
+        onSave={(item, stageId) => itemForm && saveItem(stageId ?? itemForm.stageId, item)}
       />
       <BridgeFormDialog
-        open={bridgeStageId !== null}
-        onOpenChange={(open) => !open && setBridgeStageId(null)}
+        open={bridgeForm !== null}
+        onOpenChange={(open) => !open && setBridgeForm(null)}
         patientId={plan.patientId}
-        onSave={(group, items) => bridgeStageId && saveBridge(bridgeStageId, group, items)}
+        defaultSpan={bridgeForm?.span}
+        onSave={(group, items) => bridgeForm && saveBridge(bridgeForm.stageId, group, items)}
       />
       {/* Ish qilingani tashrif bilan isbotlanadi (13.4): forma rejadan
           toʻldiriladi, saqlansa band ham yopiladi */}

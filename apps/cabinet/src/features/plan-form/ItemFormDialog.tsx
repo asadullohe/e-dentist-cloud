@@ -39,13 +39,27 @@ interface ItemFormDialogProps {
   open: boolean
   onOpenChange(open: boolean): void
   item?: PlanItemDraft | undefined
-  onSave(item: PlanItemDraft): void
+  /// Xaritadan kelganda tish oldindan toʻldiriladi (15.3)
+  defaultTooth?: number | undefined
+  /// Berilsa oynada bosqich tanlovi koʻrinadi — xaritadan qoʻshilayotganda
+  /// qaysi bosqichga tushishi shu yerda ham koʻrinib tursin
+  stages?: readonly { id: string; name: string }[] | undefined
+  stageId?: string | undefined
+  onSave(item: PlanItemDraft, stageId?: string): void
 }
 
 /// Rejaning bitta bandi. Server bilan bu yerda gaplashilmaydi — mazmun
 /// butunligicha saqlanadi (PUT content), shuning uchun natija chaqiruvchiga
 /// qaytariladi
-export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDialogProps) {
+export function ItemFormDialog({
+  open,
+  onOpenChange,
+  item,
+  defaultTooth,
+  stages,
+  stageId,
+  onSave,
+}: ItemFormDialogProps) {
   const { data: services } = useServices()
   const { data: types } = useServiceTypes()
 
@@ -56,17 +70,19 @@ export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDia
   const [qty, setQty] = useState('1')
   const [note, setNote] = useState('')
   const [error, setError] = useState('')
+  const [stage, setStage] = useState('')
 
   useEffect(() => {
     if (!open) return
     setError('')
-    setTooth(item?.tooth ?? null)
+    setStage(stageId ?? '')
+    setTooth(item?.tooth ?? defaultTooth ?? null)
     setServiceId(item?.serviceId ?? NO_SERVICE)
     setTreatment(item?.treatment ?? '')
     setPrice(item ? formatMoney(String(item.price)) : '')
     setQty(String(item?.qty ?? 1))
     setNote(item?.note ?? '')
-  }, [open, item])
+  }, [open, item, defaultTooth, stageId])
 
   /// Xizmat tanlansa nom va narx undan koʻchadi — keyin qoʻlda
   /// tahrirlash mumkin, bazaga **snapshot** tushadi
@@ -94,16 +110,19 @@ export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDia
     if (!Number.isInteger(count) || count < 1) return setError(PLAN_TEXT.qty_invalid)
     if (needsTooth && tooth === null) return setError(SERVICE_TEXT.tooth_required)
 
-    onSave({
-      ...(item?.id ? { id: item.id } : {}),
-      // Soha tish soʻramasa — boʻsh yoziladi (server ham shunday qiladi)
-      tooth: needsTooth === false ? null : tooth,
-      serviceId: serviceId === NO_SERVICE ? null : serviceId,
-      treatment: name,
-      price: Number(moneyDigits(price) || 0),
-      qty: count,
-      note: note.trim() || null,
-    })
+    onSave(
+      {
+        ...(item?.id ? { id: item.id } : {}),
+        // Soha tish soʻramasa — boʻsh yoziladi (server ham shunday qiladi)
+        tooth: needsTooth === false ? null : tooth,
+        serviceId: serviceId === NO_SERVICE ? null : serviceId,
+        treatment: name,
+        price: Number(moneyDigits(price) || 0),
+        qty: count,
+        note: note.trim() || null,
+      },
+      stage || undefined,
+    )
     onOpenChange(false)
   }
 
@@ -125,6 +144,24 @@ export function ItemFormDialog({ open, onOpenChange, item, onSave }: ItemFormDia
         </DialogHeader>
 
         <div className="space-y-4">
+          {stages && stages.length > 1 && (
+            <div className="space-y-1.5">
+              <Label>{PLAN_UI.chart_stage}</Label>
+              <Select value={stage} onValueChange={setStage}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {stages.map((row) => (
+                    <SelectItem key={row.id} value={row.id}>
+                      {row.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label>{PLAN_UI.service}</Label>
             <Select value={serviceId} onValueChange={pickService}>

@@ -927,7 +927,11 @@ tayanchga koronka, oraligʻiga quyma.
 bemor sahifasi va A4 varaq guruhni bitta blok qilib koʻrsatadi, xaritada
 koʻprik chizigʻi chiziladi. Guruh oʻchsa bandlar joyida qoladi.
 
-**Kiritish — xaritadan**: shifokor oraliqni tanlaydi (45–47), soha si `range`
-boʻlgan xizmatni bosadi, tizim bandlarni oʻzi yozadi. Qaysi tish oraliq
-ekani **xaritadan** bilinadi: holati «olingan» boʻlsa quyma, boʻlmasa
+**Kiritish — xaritadan**: reja sahifasi tepasidagi tish xaritasida «Koʻprik»
+rejimi yoqiladi, ikki tish bosiladi (47 va 45) va oraliq oʻzi yopiladi; oynada
+har birlik uchun xizmat tanlanadi, tizim bandlarni oʻzi yozadi. Qaysi tish
+oraliq ekani **xaritadan** bilinadi: holati «olingan» boʻlsa quyma, boʻlmasa
 tayanch. Rollarni qoʻlda oʻzgartirish mumkin — 3 tayanchli koʻprik ham boʻladi.
+Bitta tishga ish ham shu xaritadan qoʻshiladi: tish bosiladi, oyna oʻsha tish
+bilan ochiladi. Xarita telefonda yigʻilgan turadi, kompyuterda ochiq —
+tanlov brauzerda eslab qolinadi.

@@ -39,6 +39,8 @@ interface BridgeFormDialogProps {
   onOpenChange(open: boolean): void
   /// Rollarni sukut boʻyicha shu bemorning tish xaritasidan aniqlash uchun
   patientId: string
+  /// Xaritadan ikki tish bosilgan boʻlsa oraliq oldindan toʻldiriladi (15.3)
+  defaultSpan?: { from: number; to: number } | undefined
   onSave(group: PlanGroupDraft, items: PlanItemDraft[]): void
 }
 
@@ -69,7 +71,13 @@ function ToothOptions() {
 /// yoziladi, guruh esa ularni birlashtirib turadi. Oraliq va rol tanlash
 /// tish xaritasidagi oyna bilan bir xil — shifokor ikkinchi qoidani
 /// oʻrganmasin
-export function BridgeFormDialog({ open, onOpenChange, patientId, onSave }: BridgeFormDialogProps) {
+export function BridgeFormDialog({
+  open,
+  onOpenChange,
+  patientId,
+  defaultSpan,
+  onSave,
+}: BridgeFormDialogProps) {
   const { data: services } = useServices()
   const { data: types } = useServiceTypes()
   const { data: chart } = useToothChart(patientId)
@@ -86,15 +94,15 @@ export function BridgeFormDialog({ open, onOpenChange, patientId, onSave }: Brid
 
   useEffect(() => {
     if (!open) return
-    setFrom('45')
-    setTo('47')
+    setFrom(String(defaultSpan?.from ?? 45))
+    setTo(String(defaultSpan?.to ?? 47))
     setMaterial('')
     setServiceId(NO_SERVICE)
     setTreatment('')
     setPrice('')
     setPontics({})
     setError('')
-  }, [open])
+  }, [open, defaultSpan])
 
   const span = bridgeSpan(Number(from), Number(to))
   const statusOf = new Map((chart?.teeth ?? []).map((row) => [row.tooth, row.status]))

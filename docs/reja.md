@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 15.3 — xaritadan ishlash _(23/09/2026)_
+**Hozirgi task:** yoʻq — 15-bosqich tugadi _(24/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1498,10 +1498,14 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `range` sohali xizmat oddiy «Yangi ish» roʻyxatida koʻrinmaydi.
       Testlar: rollarning xaritadan aniqlanishi, koʻprikning tushishi va
       olinishi, guruh oʻchirilishi, jami
-- [ ] **15.3 Xaritadan ishlash** — reja sahifasi tepasida tish xaritasi;
-      tish (yoki oraliq) bosilsa «bu tishga ish qoʻshish» — xizmat tanlanadi,
-      band oʻsha bosqichga tushadi. Band oynasidagi raqamlar qoladi (telefon
-      uchun). Dentrix va Open Dental ning asosiy oqimi
+- [x] **15.3 Xaritadan ishlash** — reja sahifasi tepasida tish xaritasi
+      (bemorning haqiqiy holati, rejadagi tishlar ustiga belgilanadi).
+      Ikki rejim: «Bitta tish» — bosilsa oyna oʻsha tish bilan ochiladi;
+      «Koʻprik» — ikki tish bosiladi, oraliq oʻzi yopiladi va 15.2 dagi oyna
+      oldindan toʻldirilib ochiladi. Bosqich xarita tepasida tanlanadi
+      (sukut — oxirgisi) va oynada ham koʻrinadi. Xarita telefonda yigʻilgan,
+      kompyuterda ochiq; tanlov brauzerda eslab qolinadi. Band oynasidagi
+      raqamlar qoladi. Dentrix va Open Dental ning asosiy oqimi
 
 ---
 
