@@ -11,6 +11,7 @@
     "db:migrate": "prisma migrate dev && prisma generate",
     "db:reset": "prisma migrate reset --force",
     "db:seed": "prisma db seed",
+    "db:demo": "tsx --env-file=../../.env prisma/demo/index.ts",
     "db:studio": "prisma studio",
     "db:migrate:create": "prisma migrate dev --create-only",
     "admin:create": "tsx --env-file-if-exists=../../.env src/scripts/create-admin.ts",
