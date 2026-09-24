@@ -139,7 +139,7 @@ export function Router() {
             <Route path="services" element={<Services />} />
             <Route path="services/:typeId" element={<ServiceTypePage />} />
           </Route>
-          <Route element={<RequirePermission anyOf={['schedule.write']} />}>
+          <Route element={<RequirePermission anyOf={['schedule.read']} />}>
             <Route path="schedule" element={<Schedule />} />
           </Route>
           <Route element={<RequirePermission anyOf={['expenses.read']} />}>

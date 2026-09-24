@@ -1,6 +1,5 @@
 export { AppointmentFormDialog } from './AppointmentFormDialog'
 export {
-  useDeleteAppointment,
   useDeleteTimeBlock,
   useMoveAppointment,
   useSaveAppointment,

@@ -1,16 +1,19 @@
 import {
   CARD_UI,
   formatDate,
+  getLocale,
   localISODate,
   PERIOD_UI,
   SCHEDULE_UI,
   todayISO,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
+import { ru, uz } from 'date-fns/locale'
 import {
-  CalendarCheckIcon,
+  CalendarIcon,
   CalendarOffIcon,
   CalendarPlusIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   PlusIcon,
@@ -27,13 +30,12 @@ import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
   TimeBlockDialog,
-  useDeleteAppointment,
   useDeleteTimeBlock,
   useMoveAppointment,
   useSetAppointmentStatus,
 } from '@/features/appointment-form'
 import { VisitFormDialog } from '@/features/visit-form'
-import { useSwipe } from '@/shared/lib'
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,41 +46,69 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
+  Calendar,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/shared/ui'
-import type { AppointmentActions } from './AppointmentMenu'
-import { DayStrip } from './DayStrip'
+import { type AppointmentActions, AppointmentDetails } from './AppointmentDetails'
+import { DayHeadCell, type DoctorHead } from './ColumnHead'
+import { DoctorCard } from './DoctorCard'
 import { MonthView } from './MonthView'
-import { groupByDay, isoOf, monthTitle, parseIso, shiftDays, weekOf } from './scheduleUtils'
+import { Segmented } from './Segmented'
+import {
+  type GridColumn,
+  groupByDay,
+  hourRange,
+  isoOf,
+  isoOfDate,
+  monthTitle,
+  parseIso,
+  shiftDays,
+  weekOf,
+} from './scheduleUtils'
 import { TimeGrid } from './TimeGrid'
 
-type View = 'day' | 'week' | 'month'
+/// Koʻrinishlar: kun (`schedule.all` borga — shifokorlar ustuni, shifokorga
+/// oʻz kuni), hafta va oy. Oy faqat `schedule.all` yoʻq rolda — hamma
+/// shifokorni birga koʻradiganlar uchun undan foyda yoʻq (qaror 23/09/2026)
+type View = 'doctors' | 'week' | 'month'
 const VIEW_KEY = 'edentist-schedule-view'
 /// Radix Select boʻsh satrni qabul qilmaydi — «hammasi» uchun belgi
 const ALL_DOCTORS = '__all__'
+/// Kalendar oy va hafta kunlarini ilova tilida koʻrsatadi
+const CALENDAR_LOCALES = { uz, ru } as const
 
-/// Sukut: telefonda kun (hafta toʻri tor), keng ekranda hafta; tanlov saqlanadi
-function initialView(): View {
+function stored<T extends string>(key: string, values: readonly T[], fallback: T): T {
   try {
-    const saved = localStorage.getItem(VIEW_KEY)
-    if (saved === 'day' || saved === 'week' || saved === 'month') return saved
+    const value = localStorage.getItem(key)
+    return values.find((item) => item === value) ?? fallback
   } catch {
     // saqlanmagan boʻlsa sukut
+    return fallback
   }
-  return window.innerWidth < 768 ? 'day' : 'week'
+}
+
+function remember(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // saqlanmasa ham joriy sessiyada ishlaydi
+  }
 }
 
 /// Koʻrinishga qarab soʻrov oraligʻi va sarlavha
 function rangeOf(view: View, selected: string): { from: string; to: string; title: string } {
-  if (view === 'day') return { from: selected, to: selected, title: formatDate(selected) }
+  if (view === 'doctors') return { from: selected, to: selected, title: formatDate(selected) }
   if (view === 'week') {
     const days = weekOf(selected)
     const from = days[0] as string
@@ -86,33 +116,40 @@ function rangeOf(view: View, selected: string): { from: string; to: string; titl
     return { from, to, title: `${formatDate(from)} – ${formatDate(to)}` }
   }
   const date = parseIso(selected)
-  const y = date.getFullYear()
-  const m = date.getMonth()
+  const year = date.getFullYear()
+  const month = date.getMonth()
   return {
-    from: isoOf(y, m, 1),
-    to: isoOf(y, m, new Date(y, m + 1, 0).getDate()),
-    title: monthTitle(y, m),
+    from: isoOf(year, month, 1),
+    to: isoOf(year, month, new Date(year, month + 1, 0).getDate()),
+    title: monthTitle(year, month),
   }
 }
 
 export function Schedule() {
   const today = todayISO()
-  const [view, setView] = useState<View>(initialView)
+  const [savedView, setSavedView] = useState<View>(() =>
+    stored(VIEW_KEY, ['doctors', 'week', 'month'], 'doctors'),
+  )
   const [selected, setSelected] = useState(today)
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [doctorFilter, setDoctorFilter] = useState('')
   const [formOpen, setFormOpen] = useState(false)
-  const [draft, setDraft] = useState<{ date: string; time?: string }>({ date: today })
+  const [draft, setDraft] = useState<{ date: string; time?: string; doctorId?: string }>({
+    date: today,
+  })
   const [editing, setEditing] = useState<Appointment | undefined>(undefined)
-  const [deleting, setDeleting] = useState<Appointment | null>(null)
+  // Kartochka bosilganda ochiladigan tafsilot oynasi (telefonda tortma)
+  const [details, setDetails] = useState<Appointment | null>(null)
   // «Yakunlandi» — qilingan ish yoziladi, tashrif boʻladi (10.6)
   const [completing, setCompleting] = useState<Appointment | null>(null)
   // Shifokorning band vaqti
   const [blockOpen, setBlockOpen] = useState(false)
+  /// Band vaqt kim uchun ochilgani — sarlavhadagi karta orqali
+  const [blockDoctor, setBlockDoctor] = useState<string | undefined>(undefined)
   const [editingBlock, setEditingBlock] = useState<TimeBlock | undefined>(undefined)
   const [deletingBlock, setDeletingBlock] = useState<TimeBlock | null>(null)
   const { mutateAsync: removeBlock } = useDeleteTimeBlock()
 
-  const { mutateAsync: remove } = useDeleteAppointment()
   const { mutate: setStatus } = useSetAppointmentStatus()
   const { mutate: move } = useMoveAppointment()
   const canWrite = useHasPermission()('schedule.write')
@@ -121,52 +158,114 @@ export function Schedule() {
   const seesAll = useHasPermission()('schedule.all')
   const { data: doctors } = useDoctors()
 
+  // «Oy» faqat `schedule.all` yoʻq rolda: boshqa hisob bilan kirilganda
+  // saqlangan tanlov shu rolda yoʻq boʻlishi mumkin — kunga qaytariladi
+  const view: View = seesAll && savedView === 'month' ? 'doctors' : savedView
+
   const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
   const { data: blocks } = useTimeBlocks(from, to, doctorFilter || undefined)
-  const byDay = groupByDay(appointments ?? [])
+
+  const countOf = (doctorId: string | null) =>
+    (appointments ?? []).filter((item) => item.doctorId === doctorId).length
+
+  // Ustunlar: tanlangan shifokor boʻlsa — bitta. Shifokorsiz qabullar boʻlsa,
+  // ular uchun oxirida alohida ustun
+  const heads: DoctorHead[] = (doctors ?? [])
+    .filter((doctor) => !doctorFilter || doctor.id === doctorFilter)
+    .map((doctor) => ({
+      id: doctor.id,
+      name: doctor.fullName ?? SCHEDULE_UI.doctor_none,
+      role: doctor.roleName,
+      count: countOf(doctor.id),
+    }))
+  if (!doctorFilter && (appointments ?? []).some((item) => item.doctorId === null))
+    heads.push({ id: null, name: SCHEDULE_UI.doctor_none, role: null, count: countOf(null) })
+
+  // Shifokor faqat oʻz qabullarini koʻradi — unga ustunlar shart emas
+  // Toʻr ish soatlarini koʻrsatadi; tashqarida yozuv boʻlsa kengayadi
+  const { startHour, endHour } = hourRange(appointments ?? [], blocks ?? [])
+
+  const byDoctor = view === 'doctors' && seesAll && heads.length > 0
+  const days = view === 'doctors' ? [selected] : weekOf(selected)
+  // Sarlavha toʻrning ichida — u bilan birga suriladi, chetdan chiqmaydi
+  const columns: GridColumn[] = byDoctor
+    ? heads.map((head) => ({
+        key: head.id ?? 'none',
+        date: selected,
+        doctorId: head.id,
+        // Sarlavha bosilsa shifokor kartasi ochiladi (14.6)
+        head: (
+          <DoctorCard
+            doctor={head}
+            appointments={(appointments ?? []).filter((item) => item.doctorId === head.id)}
+            blocks={(blocks ?? []).filter((block) => block.doctorId === head.id)}
+            date={selected}
+            startHour={startHour}
+            endHour={endHour}
+            filtered={doctorFilter === head.id}
+            onFilter={() => setDoctorFilter(doctorFilter === head.id ? '' : (head.id ?? ''))}
+            onNew={() => openNew(selected, undefined, head.id ?? undefined)}
+            onBlock={() => {
+              setBlockDoctor(head.id ?? undefined)
+              openBlock()
+            }}
+          />
+        ),
+      }))
+    : days.map((day) => ({
+        key: day,
+        date: day,
+        head: (
+          <DayHeadCell
+            day={day}
+            today={today}
+            onPick={() => {
+              setSelected(day)
+              changeView('doctors')
+            }}
+          />
+        ),
+      }))
 
   function changeView(next: View) {
-    setView(next)
-    // Toʻrdan oyga oʻtganda sahifa aylantirilgan qoladi — kalendar tepada boʻlsin
-    if (next === 'month') window.scrollTo({ top: 0 })
-    try {
-      localStorage.setItem(VIEW_KEY, next)
-    } catch {
-      // saqlanmasa ham joriy sessiyada ishlaydi
-    }
+    setSavedView(next)
+    remember(VIEW_KEY, next)
   }
 
   function shift(by: number) {
-    if (view === 'day') return setSelected(shiftDays(selected, by))
-    if (view === 'week') return setSelected(shiftDays(selected, by * 7))
-    const date = parseIso(selected)
-    const next = new Date(date.getFullYear(), date.getMonth() + by, 1)
-    setSelected(isoOf(next.getFullYear(), next.getMonth(), 1))
+    if (view === 'month') {
+      const date = parseIso(selected)
+      const next = new Date(date.getFullYear(), date.getMonth() + by, 1)
+      return setSelected(isoOf(next.getFullYear(), next.getMonth(), 1))
+    }
+    setSelected(shiftDays(selected, view === 'doctors' ? by : by * 7))
   }
 
-  function openNew(date = selected, time?: string) {
+  function openNew(date = selected, time?: string, doctorId?: string) {
     setEditing(undefined)
-    setDraft({ date, time })
+    setDraft({ date, time, doctorId })
     setFormOpen(true)
   }
 
   const actions: AppointmentActions = {
-    onStatus: (item, status) => setStatus({ id: item.id, status }),
-    onComplete: setCompleting,
+    onStatus: (item, status) => {
+      setStatus({ id: item.id, status })
+      // Oyna ochiq qolsin, lekin holat darhol yangilansin
+      setDetails({ ...item, status })
+    },
+    onComplete: (item) => {
+      setDetails(null)
+      setCompleting(item)
+    },
     onEdit: (item) => {
+      setDetails(null)
       setEditing(item)
       setFormOpen(true)
     },
-    onDelete: setDeleting,
   }
 
-  const showToday = !(today >= from && today <= to) || (view === 'month' && selected !== today)
-  // T3: chapga surish — keyingi davr, oʻngga — oldingi
-  const swipe = useSwipe(
-    () => shift(1),
-    () => shift(-1),
-  )
+  const showToday = !(today >= from && today <= to)
 
   const openBlock = () => {
     setEditingBlock(undefined)
@@ -196,170 +295,146 @@ export function Schedule() {
     </Select>
   )
 
-  const viewSwitch = (
-    <div className="bg-muted flex shrink-0 rounded-md p-0.5">
-      {(
-        [
-          ['day', SCHEDULE_UI.view_day],
-          ['week', SCHEDULE_UI.view_week],
-          ['month', SCHEDULE_UI.view_month],
-        ] as const
-      ).map(([key, label]) => (
-        <button
-          key={key}
-          type="button"
-          aria-pressed={view === key}
-          onClick={() => changeView(key)}
-          className={cn(
-            'rounded px-2 py-1.5 text-[13px] transition-colors sm:px-3 sm:text-sm',
-            view === key ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground',
-          )}
+  // Sana — tugma: bosilsa kalendar. Shifokorga «Shifokorlar» emas «Kun»
+  const dateButton = (
+    <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+      <PopoverTrigger asChild>
+        {/* Telefonda qator tor — yozuv va ichki boʻshliq kichrayadi */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="min-w-0 gap-1 px-2 text-xs font-semibold tabular-nums md:gap-1.5 md:px-3 md:text-sm"
         >
-          {label}
-        </button>
-      ))}
-    </div>
+          <CalendarIcon />
+          <span className="truncate">{title}</span>
+          <ChevronDownIcon className="text-muted-foreground" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-auto p-0">
+        <Calendar
+          mode="single"
+          locale={CALENDAR_LOCALES[getLocale()]}
+          selected={parseIso(selected)}
+          defaultMonth={parseIso(selected)}
+          onSelect={(date) => {
+            if (date) setSelected(isoOfDate(date))
+            setPickerOpen(false)
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+
+  // `schedule.all` borga: Shifokorlar · Hafta. Shifokorga eski uchlik qoladi
+  const viewSwitch = (
+    <Segmented
+      value={view}
+      onChange={changeView}
+      options={
+        seesAll
+          ? [
+              ['doctors', SCHEDULE_UI.group_doctors],
+              ['week', SCHEDULE_UI.view_week],
+            ]
+          : [
+              ['doctors', SCHEDULE_UI.view_day],
+              ['week', SCHEDULE_UI.view_week],
+              ['month', SCHEDULE_UI.view_month],
+            ]
+      }
+    />
   )
 
   return (
     <>
-      {/* Keng ekran: sarlavha va amallar. Telefonda joy tejaladi — sarlavha
-          yoʻq, amallar pastki oʻngdagi «+» tugmasida */}
+      {/* Keng ekran: sahifa nomi va shifokor filtri. Amallar yopishqoq
+          qatorda — aylantirilganda ham qoʻl ostida boʻlsin */}
       <div className="mb-3 hidden items-center justify-between gap-2 md:flex">
         <h1 className="text-2xl font-semibold tracking-tight">{SCHEDULE_UI.title}</h1>
-        <div className="flex items-center gap-2">
-          {doctorSelect}
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8 shrink-0"
-            aria-label={SCHEDULE_UI.block_add}
-            title={SCHEDULE_UI.block_add}
-            onClick={openBlock}
-          >
-            <CalendarOffIcon />
-          </Button>
-          <Button size="sm" onClick={() => openNew()}>
-            <PlusIcon />
-            {SCHEDULE_UI.add}
-          </Button>
-        </div>
+        {doctorSelect}
       </div>
 
-      {/* Yopishqoq blok: davr/koʻrinish qatori va hafta tasmasi — toʻr uzun,
-          kunni almashtirish uchun tepaga qaytish shart boʻlmasin */}
+      {/* Yopishqoq blok: boshqaruv qatori va ustun sarlavhalari — toʻr uzun,
+          kunni almashtirish yoki qabul qoʻshish uchun tepaga qaytish shart emas */}
       <div
         data-sticky="schedule"
         className="bg-background sticky top-14 z-20 -mx-4 mb-3 border-b px-4 md:-mx-6 md:px-6"
       >
-        {/* Telefon: bitta ixcham qator — shifokor · koʻrinish · bugun.
-            Sana hafta tasmasida; oy koʻrinishida — alohida qator */}
-        <div className="flex items-center gap-2 py-2 md:hidden">
-          {doctorSelect || (
-            <span className="flex-1 truncate text-sm font-semibold">{SCHEDULE_UI.title}</span>
-          )}
-          {viewSwitch}
-          {/* Doim joyida: paydo boʻlib qatorni surib yubormasin */}
+        {/* Telefon: ‹ sana › · koʻrinish. Surish endi ustunlarni aylantiradi,
+            shuning uchun kun oʻqlar va kalendardan almashadi. Shifokor filtri
+            bu yerda yoʻq — ustunlarning oʻzi shifokorni koʻrsatadi */}
+        <div className="flex items-center gap-1 py-2 md:hidden">
           <Button
             variant="ghost"
             size="icon"
-            className={cn('size-8 shrink-0', !showToday && 'invisible')}
+            className="size-8 shrink-0"
+            aria-label={PERIOD_UI.prev}
+            onClick={() => shift(-1)}
+          >
+            <ChevronLeftIcon />
+          </Button>
+          {dateButton}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label={PERIOD_UI.next}
+            onClick={() => shift(1)}
+          >
+            <ChevronRightIcon />
+          </Button>
+          <div className="ml-auto">{viewSwitch}</div>
+        </div>
+
+        {/* Keng ekran: ‹ sana › · bugun · koʻrinish · band vaqt · qabul qoʻshish */}
+        <div className="hidden items-center gap-2 py-2 md:flex">
+          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.prev} onClick={() => shift(-1)}>
+            <ChevronLeftIcon />
+          </Button>
+          {dateButton}
+          <Button variant="ghost" size="icon" aria-label={PERIOD_UI.next} onClick={() => shift(1)}>
+            <ChevronRightIcon />
+          </Button>
+          {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
+              «Bugun» ga tushib qaytib qolardi */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn(!showToday && 'invisible')}
             tabIndex={showToday ? 0 : -1}
             aria-hidden={!showToday}
-            aria-label={SCHEDULE_UI.today}
-            title={SCHEDULE_UI.today}
             onClick={() => setSelected(today)}
           >
-            <CalendarCheckIcon />
+            {SCHEDULE_UI.today}
           </Button>
-        </div>
-        {view === 'month' && (
-          <div className="flex items-center justify-center gap-1 pb-2 md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              aria-label={PERIOD_UI.prev}
-              onClick={() => shift(-1)}
-            >
-              <ChevronLeftIcon />
-            </Button>
-            <span className="min-w-40 text-center text-sm font-semibold tabular-nums">{title}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              aria-label={PERIOD_UI.next}
-              onClick={() => shift(1)}
-            >
-              <ChevronRightIcon />
-            </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {viewSwitch}
+            {/* Faqat koʻradigan rol (kuzatuvchi) uchun yozish yoʻli yopiq */}
+            {canWrite && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8 shrink-0"
+                  aria-label={SCHEDULE_UI.block_add}
+                  title={SCHEDULE_UI.block_add}
+                  onClick={openBlock}
+                >
+                  <CalendarOffIcon />
+                </Button>
+                <Button size="sm" onClick={() => openNew()}>
+                  <PlusIcon />
+                  {SCHEDULE_UI.add}
+                </Button>
+              </>
+            )}
           </div>
-        )}
-
-        {/* Keng ekran: davr almashtirgich + koʻrinish */}
-        <div className="hidden items-center justify-between gap-2 py-2 md:flex">
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={PERIOD_UI.prev}
-              onClick={() => shift(-1)}
-            >
-              <ChevronLeftIcon />
-            </Button>
-            <span className="min-w-56 text-center font-semibold tabular-nums">{title}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={PERIOD_UI.next}
-              onClick={() => shift(1)}
-            >
-              <ChevronRightIcon />
-            </Button>
-            {/* Doim joyida: paydo boʻlib «›» ni surib yubormasin — tez bosganda
-                «Bugun» ga tushib qaytib qolardi */}
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(!showToday && 'invisible')}
-              tabIndex={showToday ? 0 : -1}
-              aria-hidden={!showToday}
-              onClick={() => setSelected(today)}
-            >
-              {SCHEDULE_UI.today}
-            </Button>
-          </div>
-          {viewSwitch}
         </div>
-
-        {/* Hafta tasmasi: haftada — toʻr ustunlari tepasida (kun bosilsa kun
-            koʻrinishi); kun koʻrinishida faqat telefonda — kunni tanlash */}
-        {view === 'week' && (
-          <DayStrip
-            days={weekOf(selected)}
-            today={today}
-            onPick={(day) => {
-              setSelected(day)
-              changeView('day')
-            }}
-            onShift={(by) => shift(by)}
-          />
-        )}
-        {view === 'day' && (
-          <DayStrip
-            className="md:hidden"
-            days={weekOf(selected)}
-            today={today}
-            selected={selected}
-            onPick={setSelected}
-            onShift={(by) => setSelected(shiftDays(selected, by * 7))}
-          />
-        )}
       </div>
 
-      {/* Surish bilan davr almashadi; sichqoncha bilan surganda matn belgilanmasin */}
-      <div {...swipe} className="select-none">
+      {/* Telefonda yonga surish ustunlarni aylantiradi (toʻr oʻzi suriladi) —
+          kun sana tugmasi, ‹ › va hafta tasmasidan almashadi */}
+      <div className="select-none">
         {view === 'month' ? (
           <MonthView
             year={parseIso(selected).getFullYear()}
@@ -367,21 +442,39 @@ export function Schedule() {
             today={today}
             selected={selected}
             onSelect={setSelected}
-            byDay={byDay}
+            byDay={groupByDay(appointments ?? [])}
             loading={isPending && !appointments}
-            actions={actions}
+            onOpen={setDetails}
           />
         ) : (
           <TimeGrid
             key={view}
-            days={view === 'day' ? [selected] : weekOf(selected)}
+            columns={columns}
+            startHour={startHour}
+            endHour={endHour}
             today={today}
-            byDay={byDay}
+            appointments={appointments ?? []}
             blocks={blocks ?? []}
             loading={isPending && !appointments}
-            actions={actions}
-            onPickSlot={(date, time) => openNew(date, time)}
-            onMove={canWrite ? (item, date, time) => move({ id: item.id, date, time }) : undefined}
+            onOpen={setDetails}
+            onPickSlot={
+              canWrite
+                ? (column, time) => openNew(column.date, time, column.doctorId ?? undefined)
+                : undefined
+            }
+            onMove={
+              canWrite
+                ? (item, column, time) =>
+                    move({
+                      id: item.id,
+                      date: column.date,
+                      time,
+                      // Kunlar rejimida ustun shifokorni bildirmaydi — oʻzgarmaydi
+                      doctorId: column.doctorId,
+                      doctorName: heads.find((head) => head.id === column.doctorId)?.name ?? null,
+                    })
+                : undefined
+            }
             onShift={(by) => shift(by)}
             onEditBlock={(block) => {
               setEditingBlock(block)
@@ -393,34 +486,38 @@ export function Schedule() {
       </div>
 
       {/* Telefon: suzuvchi «+» — dok tepasida, oʻngda; qabul yoki band vaqt */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            size="icon"
-            aria-label={SCHEDULE_UI.add}
-            className="fixed right-4 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+5rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
-          >
-            <PlusIcon />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-52">
-          <DropdownMenuItem onSelect={() => openNew()}>
-            <CalendarPlusIcon />
-            {SCHEDULE_UI.add}
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={openBlock}>
-            <CalendarOffIcon />
-            {SCHEDULE_UI.block_add}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {canWrite && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="icon"
+              aria-label={SCHEDULE_UI.add}
+              className="fixed right-4 bottom-[calc(max(0.75rem,env(safe-area-inset-bottom))+5rem)] z-30 size-14 rounded-full shadow-lg md:hidden [&_svg]:size-6"
+            >
+              <PlusIcon />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-52">
+            <DropdownMenuItem onSelect={() => openNew()}>
+              <CalendarPlusIcon />
+              {SCHEDULE_UI.add}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={openBlock}>
+              <CalendarOffIcon />
+              {SCHEDULE_UI.block_add}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      <AppointmentDetails item={details} onClose={() => setDetails(null)} actions={actions} />
 
       <AppointmentFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
         defaultDate={draft.date}
         defaultTime={draft.time}
-        defaultDoctorId={doctorFilter || undefined}
+        defaultDoctorId={draft.doctorId || doctorFilter || undefined}
         appointment={editing}
         ownOnly={!seesAll}
         onSaved={(saved) => {
@@ -436,7 +533,7 @@ export function Schedule() {
         open={blockOpen}
         onOpenChange={setBlockOpen}
         defaultDate={selected}
-        defaultDoctorId={doctorFilter || undefined}
+        defaultDoctorId={blockDoctor ?? doctorFilter ?? undefined}
         block={editingBlock}
         ownOnly={!seesAll}
       />
@@ -476,26 +573,6 @@ export function Schedule() {
           }}
         />
       )}
-
-      <AlertDialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{SCHEDULE_UI.delete_title}</AlertDialogTitle>
-            <AlertDialogDescription>{SCHEDULE_UI.delete_text}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{CARD_UI.cancel}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (deleting) await remove(deleting.id)
-                setDeleting(null)
-              }}
-            >
-              {CARD_UI.delete}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }

@@ -23,7 +23,6 @@ function plural(n: number, forms: readonly [string, string, string]): string {
 
 const PATIENTS = ['пациент', 'пациента', 'пациентов'] as const
 const DAYS = ['день', 'дня', 'дней'] as const
-const RECORDS = ['запись', 'записи', 'записей'] as const
 const ROWS = ['строка', 'строки', 'строк'] as const
 const PEOPLE = ['человек', 'человека', 'человек'] as const
 const YEARS = ['год', 'года', 'лет'] as const
@@ -317,6 +316,7 @@ export const ru: DeepPartial<Strings> = {
     empty: 'Снимков пока нет',
     delete_title: 'Удалить снимок?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
     caption_placeholder: 'Подпись (необязательно)',
   },
 
@@ -408,6 +408,7 @@ export const ru: DeepPartial<Strings> = {
     pick_placeholder: 'Выберите услугу',
     delete_title: 'Удалить услугу?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
     tech_switch: 'Есть работа техника',
     tech_price: 'Цена техника',
     tech_hint: 'Переносится в визит; доля врача считается от (цена − цена техника)',
@@ -465,6 +466,7 @@ export const ru: DeepPartial<Strings> = {
     next_month: 'Следующий месяц',
     delete_title: 'Удалить расход?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
   },
 
   REPORT_UI: {
@@ -596,7 +598,6 @@ export const ru: DeepPartial<Strings> = {
     appointment_created: 'Приём записан',
     appointment_updated: 'Приём изменён',
     appointment_moved: (when: string) => `Приём перенесён: ${when}`,
-    appointment_deleted: 'Приём удалён',
     block_saved: 'Занятое время сохранено',
     block_deleted: 'Занятое время удалено',
     appointment_arrived: 'Отмечено: пациент пришёл',
@@ -708,7 +709,8 @@ export const ru: DeepPartial<Strings> = {
     'payments.read': 'Платежи и задолженность',
     'payments.write': 'Приём оплаты',
     'schedule.all': 'Расписание: приёмы всех врачей',
-    'schedule.write': 'Расписание',
+    'schedule.read': 'Просмотр расписания',
+    'schedule.write': 'Расписание: запись и изменения',
     'services.manage': 'Услуги',
     'expenses.read': 'Расходы',
     'reports.read': 'Отчёты',
@@ -964,6 +966,7 @@ export const ru: DeepPartial<Strings> = {
     filter_all: 'Все',
     delete_title: 'Удалить наряд?',
     delete_text: 'Это действие нельзя отменить.',
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
   },
 
   EXPORT_FILES: {
@@ -1592,8 +1595,7 @@ export const ru: DeepPartial<Strings> = {
     no_matches: 'Пациент не найден',
     delete_title: 'Удалить приём?',
     delete_text: 'Это действие нельзя отменить.',
-    month_total: (n: number) => `${n} ${plural(n, ['приём', 'приёма', 'приёмов'])}`,
-    day_total: (n: number) => `${n} ${plural(n, RECORDS)}`,
+    day_total: (n: number) => `${n} ${plural(n, ['запись', 'записи', 'записей'])}`,
     set_status: 'Изменить статус',
     open_card: 'Карточка',
     date_unreadable: 'Не удалось прочитать дату',
@@ -1607,6 +1609,14 @@ export const ru: DeepPartial<Strings> = {
     view_day: 'День',
     view_week: 'Неделя',
     view_month: 'Месяц',
+    group_doctors: 'По врачам',
+    empty_column: 'Приёмов нет',
+    from_queue: 'Из очереди',
+    cancel: 'Отменить',
+    only_doctor: 'Только этот врач',
+    appointments_count: (n: number) => `${n} ${plural(n, ['приём', 'приёма', 'приёмов'])}`,
+    first_free: 'Первое свободное время',
+    no_free: 'Свободного времени нет',
     duration: 'Длительность',
     minutes: (n: number) => `${n} мин`,
     time_unset: 'Время не выбрано',

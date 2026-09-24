@@ -8,7 +8,7 @@ import type { Appointment } from '@/entities/appointment'
 export interface DragState {
   item: Appointment
   /// Nishon ustuni va boshlanish daqiqasi (15 ga yaxlitlangan)
-  dayIndex: number
+  columnIndex: number
   minutes: number
 }
 
@@ -36,15 +36,15 @@ const minutesOfIso = (iso: string) => {
 
 export function useBlockDrag({
   gridRef,
-  daysCount,
+  columnCount,
   geometry,
   onDrop,
   onEdgeShift,
 }: {
   gridRef: RefObject<HTMLDivElement | null>
-  daysCount: number
+  columnCount: number
   geometry: DragGeometry
-  onDrop: (item: Appointment, dayIndex: number, minutes: number) => void
+  onDrop: (item: Appointment, columnIndex: number, minutes: number) => void
   /// Chetda ushlab turilganda davr almashadi (hafta/kun)
   onEdgeShift?: (by: -1 | 1) => void
 }) {
@@ -65,25 +65,25 @@ export function useBlockDrag({
   } | null>(null)
   const geo = useRef(geometry)
   geo.current = geometry
-  const callbacks = useRef({ onDrop, onEdgeShift, daysCount })
-  callbacks.current = { onDrop, onEdgeShift, daysCount }
+  const callbacks = useRef({ onDrop, onEdgeShift, columnCount })
+  callbacks.current = { onDrop, onEdgeShift, columnCount }
 
   /// Barmoq/sichqoncha joyidan nishon (ustun, daqiqa)
-  function targetAt(x: number, y: number): { dayIndex: number; minutes: number } | null {
+  function targetAt(x: number, y: number): { columnIndex: number; minutes: number } | null {
     const grid = gridRef.current
     const s = state.current
     if (!grid || !s) return null
     const { gutter, hour, topPad, startHour, endHour } = geo.current
     const rect = grid.getBoundingClientRect()
-    const colWidth = (rect.width - gutter) / callbacks.current.daysCount
-    const dayIndex = Math.min(
-      callbacks.current.daysCount - 1,
+    const colWidth = (rect.width - gutter) / callbacks.current.columnCount
+    const columnIndex = Math.min(
+      callbacks.current.columnCount - 1,
       Math.max(0, Math.floor((x - rect.left - gutter) / colWidth)),
     )
     const raw = ((y - rect.top - topPad) / hour) * 60 + startHour * 60 - s.grabOffset
     const snapped = Math.round(raw / 15) * 15
     const minutes = Math.min(endHour * 60 - s.item.duration, Math.max(startHour * 60, snapped))
-    return { dayIndex, minutes }
+    return { columnIndex, minutes }
   }
 
   function update() {
@@ -98,8 +98,13 @@ export function useBlockDrag({
     const s = state.current
     if (!s?.dragging) return
     const { y, x } = s.pointer
-    if (y < SCROLL_EDGE) window.scrollBy(0, -SCROLL_STEP)
-    else if (y > window.innerHeight - SCROLL_EDGE - 40) window.scrollBy(0, SCROLL_STEP)
+    // Toʻr oʻz qutisida aylanadi — sahifa emas
+    const scroller = gridRef.current?.closest<HTMLElement>('[data-grid-scroll]')
+    const view = scroller?.getBoundingClientRect()
+    const top = view?.top ?? 0
+    const bottom = view?.bottom ?? window.innerHeight
+    if (y < top + SCROLL_EDGE) scroller?.scrollBy(0, -SCROLL_STEP)
+    else if (y > bottom - SCROLL_EDGE) scroller?.scrollBy(0, SCROLL_STEP)
     const rect = gridRef.current?.getBoundingClientRect()
     const side: -1 | 1 | 0 = rect
       ? x > rect.right - EDGE_PX
@@ -145,7 +150,7 @@ export function useBlockDrag({
     state.current = null
     setDrag(null)
     if (commit && wasDragging && target)
-      callbacks.current.onDrop(item, target.dayIndex, target.minutes)
+      callbacks.current.onDrop(item, target.columnIndex, target.minutes)
   }
 
   /// Blokka ulanadigan boshlanish: sichqoncha — pointerdown, barmoq — touchstart

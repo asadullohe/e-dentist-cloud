@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 15.1 — xizmatga qoʻllanish sohasi
+**Hozirgi task:** 14-bosqich tayyor, egasi brauzerda tekshiradi _(23/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1454,6 +1454,68 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       da `API_PORT`, shots.mjs da `BASE_URL` — ikkinchi nusxa boshqa portda
 - [x] **13.8 Serverga chiqarish** — push 23/09/2026 (11 ta commit,
       `master` ga fast-forward; `f5ae4a2` ham shu bilan ketdi)
+
+---
+
+## Bosqich 14 — Jadval: shifokor ustunlari · ~1 kun
+
+> **Nega** _(qaror 23/09/2026)_
+>
+> Egasi, qabulxona va kuzatuvchi jadvalni ochganda hafta kunlarini koʻrardi —
+> bir katakda besh shifokorning qabullari aralash turardi, kim band, kim boʻsh
+> bilinmasdi. Klinika kuni shifokorlar boʻyicha oʻtadi, kunlar boʻyicha emas:
+> ustun — shifokor, sarlavhada uning avatari va ismi. Hafta qoladi (kelasi
+> haftaga yozish kerak), **oy olib tashlanadi** — undan foydalanilmasdi.
+
+- [x] **14.1 Guruhlash: kun × shifokorlar** — `Kun · Hafta` va
+      `Shifokorlar · Kunlar` — ikki alohida almashtirgich (`localStorage`);
+      `MonthView` oʻchadi. `TimeGrid` ustunlari umumlashadi (`days` →
+      `columns`): shifokor ustunida sarlavha — bosh harflar doirasi + F.I.O.,
+      qabullar `doctorId` boʻyicha, shifokorsizlar uchun alohida ustun. Band
+      vaqt faqat oʻz shifokorining ustunida (avval hamma ustunda koʻrinardi).
+      Blok ustundan ustunga sudralsa — shifokor almashadi (`PATCH` ga
+      `doctorId`, kesishsa server 409). `schedule.all` yoʻq shifokorda va
+      telefonda — guruhlash tanlovi yoʻq, kunlar boʻyicha
+- [x] **14.2 Qabul kartochkasi** — rangli yumshoq fon (chap hoshiya oʻrniga),
+      8px burchak, holat ikonkasi va yorligʻi; balandlikka qarab uch koʻrinish
+      (≥45 daq — ikonka + oraliq + yorliq, ism, izoh; 25–44 daq — ikonka +
+      vaqt + ism; <25 daq — bitta qator). Ranglar mavjud tokenlardan. Ustun
+      `@container`: tor boʻlsa (haftada, telefonda) ikonka va oraliq yashirinadi
+- [x] **14.3 Tepa qatori va ish soatlari** _(dizayn kelishildi 23/09/2026)_ —
+      sana bosilsa kalendar (Popover + Calendar); bitta almashtirgich
+      `Shifokorlar · Hafta` («Kun» va «Kunlar» olib tashlanadi); toʻr
+      08:00–20:00, oʻsha kunda tashqarida qabul yoki band vaqt boʻlsa
+      kengayadi; soat balandligi 96px; avtomatik surish yoʻq — sarlavha va
+      «Qabul qoʻshish» doim koʻrinadi; ustun sarlavhasida qabul soni, boʻsh
+      ustunda «Qabul yoʻq». Telefonda ham shifokor ustunlari: ustun eng kami
+      120px, yonga aylantiriladi (vaqt oʻqi yopishib turadi), kunni surish
+      bilan almashtirish olib tashlanadi — sana, ‹ › va hafta tasmasi qoladi
+- [x] **14.4 Qabul oynasi** — kartochka bosilsa menyu emas, oyna (telefonda
+      pastdan tortma): yosh, holat, «Navbatdan», qarz (`payments.read` va
+      qarz boʻlsa; oldindan toʻlagan boʻlsa yashil), vaqt · shifokor ·
+      telefon (bosilsa qoʻngʻiroq) · izoh; holat chiplari Rejalashtirilgan ·
+      Keldi · Kelmadi · «Bekor qilish» (tanlangach «Bekor qilindi»); amallar
+      Yakunlash · Kartochka · Tahrirlash. **Qabul oʻchirilmaydi** — bekor
+      qilinadi (toʻlovdagi qoidaning oʻzi), `AppointmentMenu` oʻchadi
+- [x] **14.5 `schedule.read` ruxsati** _(qaror 23/09/2026)_ — jadvalni
+      koʻrish yozish ruxsatiga yopishib qolgan edi: `GET /appointments`
+      `patients.read` bilan ochilardi, menyu va yoʻl esa `schedule.write`
+      talab qilardi — kuzatuvchi jadvalni umuman koʻra olmasdi. Endi uchta
+      ruxsat: `schedule.read` (koʻrish) · `schedule.write` (yozish) ·
+      `schedule.all` (hamma shifokor). Shablonlar: kuzatuvchiga `read`+`all`,
+      shifokor va qabulxonaga `read` qoʻshildi. Migratsiya: `schedule.write`
+      bori har rolga `read`, kuzatuvchiga `read`+`all`. Faqat koʻradigan rol
+      uchun «Qabul qoʻshish», «Band vaqt», suzuvchi «+» va boʻsh katakni
+      bosish yopiq. Testlar: koʻradi (qabul, band vaqt) / yoza olmaydi (403)
+- [x] **14.6 Shifokor kartasi** — jadval sarlavhasidagi shifokor bosilsa
+      karta (telefonda tortma): ism, rol, kun jamlanmasi (qabul soni, keldi,
+      yakunlandi, kelmadi), band vaqt, birinchi boʻsh vaqt; amallar «Faqat
+      shu shifokor», «Qabul yozish», «Band vaqt» (`schedule.write`), «Ish
+      haqi» (`payroll.manage`). Raqamlar ekrandagi maʼlumotdan hisoblanadi —
+      yangi soʻrov yoʻq; rol nomi `/staff/doctors` javobiga qoʻshiladi
+- [x] **14.7 Shifokorga «Oy» qaytadi** — `schedule.all` yoʻq rolga
+      Kun · Hafta · Oy (`MonthView` tiklanadi), `schedule.all` borga —
+      Shifokorlar · Hafta
 
 ---
 

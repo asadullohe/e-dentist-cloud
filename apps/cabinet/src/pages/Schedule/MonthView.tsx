@@ -6,20 +6,9 @@ import {
   WEEKDAYS,
 } from '@e-dentist/shared'
 import { cn } from 'cn'
-import { CalendarIcon, MoreHorizontalIcon } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { CalendarIcon } from 'lucide-react'
 import type { Appointment } from '@/entities/appointment'
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  EmptyState,
-  Skeleton,
-} from '@/shared/ui'
-import { type AppointmentActions, AppointmentMenu } from './AppointmentMenu'
+import { Badge, Card, CardContent, CardHeader, CardTitle, EmptyState, Skeleton } from '@/shared/ui'
 import { isoOf, mondayFirst, statusBadge, timeOf } from './scheduleUtils'
 
 /// Oylik koʻrinish: kalendar (kunda qabullar soni) + tanlangan kun roʻyxati
@@ -31,7 +20,7 @@ export function MonthView({
   onSelect,
   byDay,
   loading,
-  actions,
+  onOpen,
 }: {
   year: number
   month: number
@@ -40,7 +29,8 @@ export function MonthView({
   onSelect: (iso: string) => void
   byDay: Map<string, Appointment[]>
   loading: boolean
-  actions: AppointmentActions
+  /// Qator bosilsa qabul tafsiloti ochiladi (14.4)
+  onOpen: (item: Appointment) => void
 }) {
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   // Oy 1-kunidan oldingi boʻsh katakchalar — kaliti oldingi oy sanasidan olinadi
@@ -130,43 +120,34 @@ export function MonthView({
           ) : (
             <ul className="space-y-2">
               {dayList.map((item) => (
-                <li key={item.id} className="flex items-start gap-3 rounded-md border p-2.5">
-                  <span className="w-11 shrink-0 pt-0.5 font-semibold tabular-nums">
-                    {timeOf(item.at)}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <Link
-                      to={`/patients/${item.patientId}`}
-                      className="block font-medium hover:underline"
-                    >
-                      {item.fio}
-                    </Link>
-                    <div className="text-muted-foreground text-xs">
-                      {[item.phone && formatUzPhone(item.phone), item.doctorName]
-                        .filter(Boolean)
-                        .join(' · ')}
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => onOpen(item)}
+                    className="hover:bg-accent/60 flex w-full items-start gap-3 rounded-md border p-2.5 text-left transition-colors"
+                  >
+                    <span className="w-11 shrink-0 pt-0.5 font-semibold tabular-nums">
+                      {timeOf(item.at)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <span className="block font-medium">{item.fio}</span>
+                      <div className="text-muted-foreground text-xs">
+                        {[item.phone && formatUzPhone(item.phone), item.doctorName]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+                      {item.note && (
+                        <div className="text-muted-foreground mt-0.5 text-xs">{item.note}</div>
+                      )}
+                      <Badge
+                        variant="outline"
+                        className={cn('mt-1.5 text-[11px]', statusBadge(item.status))}
+                      >
+                        {APPOINTMENT_STATUS_LABELS[item.status]} ·{' '}
+                        {SCHEDULE_UI.minutes(item.duration)}
+                      </Badge>
                     </div>
-                    {item.note && (
-                      <div className="text-muted-foreground mt-0.5 text-xs">{item.note}</div>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className={cn('mt-1.5 text-[11px]', statusBadge(item.status))}
-                    >
-                      {APPOINTMENT_STATUS_LABELS[item.status]} ·{' '}
-                      {SCHEDULE_UI.minutes(item.duration)}
-                    </Badge>
-                  </div>
-                  <AppointmentMenu item={item} actions={actions}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="-mr-1 size-8 shrink-0 data-[state=open]:bg-muted"
-                      aria-label={SCHEDULE_UI.set_status}
-                    >
-                      <MoreHorizontalIcon />
-                    </Button>
-                  </AppointmentMenu>
+                  </button>
                 </li>
               ))}
             </ul>

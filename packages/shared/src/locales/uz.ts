@@ -322,6 +322,7 @@ export const IMAGE_UI = {
   empty: 'Hozircha rasm yuklanmagan',
   delete_title: 'Rasm oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
   caption_placeholder: 'Izoh (ixtiyoriy)',
 } as const
 
@@ -422,6 +423,7 @@ export const SERVICE_UI = {
   pick_placeholder: 'Xizmatni tanlang',
   delete_title: 'Xizmat oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
   // Turlar
   tech_switch: 'Texnik ishi bor',
   tech_price: 'Texnik narxi',
@@ -483,6 +485,7 @@ export const EXPENSE_UI = {
   next_month: 'Keyingi oy',
   delete_title: 'Xarajat oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
 } as const
 
 // Hisobotlar sahifasi
@@ -624,7 +627,6 @@ export const TOAST_TEXT = {
   appointment_created: 'Qabul yozildi',
   appointment_updated: 'Qabul tahrirlandi',
   appointment_moved: (when: string) => `Qabul koʻchirildi: ${when}`,
-  appointment_deleted: 'Qabul oʻchirildi',
   block_saved: 'Band vaqt saqlandi',
   block_deleted: 'Band vaqt oʻchirildi',
   // Holat oʻzgarishi — qaysi holatga oʻtgani aytiladi
@@ -742,7 +744,8 @@ export const PERMISSION_LABELS = {
   'teeth.write': 'Tish xaritasi',
   'payments.read': 'Toʻlovlar va qarzdorlik',
   'payments.write': 'Toʻlov qabul qilish',
-  'schedule.write': 'Qabul jadvali',
+  'schedule.read': 'Jadvalni koʻrish',
+  'schedule.write': 'Qabul jadvali: yozish va oʻzgartirish',
   'schedule.all': 'Jadval: hamma shifokorning qabullari',
   'services.manage': 'Xizmatlar',
   'expenses.read': 'Xarajatlar',
@@ -1036,6 +1039,7 @@ export const LAB_UI = {
   filter_all: 'Hammasi',
   delete_title: 'Naryad oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
+  day_total: (n: number) => `${n} ta`,
 } as const
 
 // Toʻliq eksport: fayl nomlari va ustun sarlavhalari
@@ -1691,7 +1695,6 @@ export const SCHEDULE_UI = {
   no_matches: 'Bemor topilmadi',
   delete_title: 'Qabul oʻchirilsinmi?',
   delete_text: 'Bu amalni qaytarib boʻlmaydi.',
-  month_total: (n: number) => `${n} ta qabul`,
   day_total: (n: number) => `${n} ta`,
   set_status: 'Holatni oʻzgartirish',
   open_card: 'Kartochka',
@@ -1707,7 +1710,20 @@ export const SCHEDULE_UI = {
   // Vaqt toʻri (kun/hafta) va davomiylik (12-bosqich)
   view_day: 'Kun',
   view_week: 'Hafta',
+  // Oy — faqat shifokorda: hamma shifokorni birga koʻradiganlarga keraksiz
   view_month: 'Oy',
+  // Ustunlar nima boʻyicha boʻlinadi (14.1, 14.3)
+  group_doctors: 'Shifokorlar',
+  empty_column: 'Qabul yoʻq',
+  // Qabul oynasi (14.4). «Bekor qilish» — holat tugmasi; tanlangach
+  // APPOINTMENT_STATUS_LABELS dagi «Bekor qilindi» koʻrinadi
+  from_queue: 'Navbatdan',
+  cancel: 'Bekor qilish',
+  // Sarlavhadagi shifokor kartasi (14.6)
+  only_doctor: 'Faqat shu shifokor',
+  appointments_count: (n: number) => `${n} ta qabul`,
+  first_free: 'Birinchi boʻsh vaqt',
+  no_free: 'Boʻsh vaqt yoʻq',
   duration: 'Davomiylik',
   minutes: (n: number) => `${n} daq`,
   // Vaqt tanlash — soat × chorak toʻri

@@ -9,6 +9,7 @@ import {
   INVITE_TEXT,
   isDisposableEmail,
   type Permission,
+  roleLabel,
   STAFF_TEXT,
 } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
@@ -489,17 +490,30 @@ export async function existsInClinic(tx: ClinicTx, userId: string): Promise<bool
 /// Qabul qiluvchi shifokorlar: roli `visits.write` ni beradigan faol
 /// xodimlar. Rol nomiga qaramaymiz — klinika shablonni oʻzgartirgan
 /// boʻlishi mumkin. Ochiq navbat sahifasi shu roʻyxatni koʻrsatadi
-export async function listDoctorsTx(tx: ClinicTx): Promise<{ id: string; fullName: string }[]> {
+/// Rol nomi ham qaytadi (14.6): jadval sarlavhasidagi shifokor kartasi uni
+/// koʻrsatadi. Ism kabi sir emas — pochta va ish haqi `staff.manage` da qoladi
+export async function listDoctorsTx(
+  tx: ClinicTx,
+): Promise<{ id: string; fullName: string; roleName: string | null }[]> {
   const roles = await clinics.listRolesTx(tx)
-  const treating = new Set(
-    roles.filter((role) => role.permissions.includes('visits.write')).map((role) => role.id),
+  const treating = new Map(
+    roles
+      .filter((role) => role.permissions.includes('visits.write'))
+      .map((role) => [role.id, role] as const),
   )
   if (treating.size === 0) return []
 
   const people = await repo.listStaff(tx)
   return people
     .filter((person) => person.status === 'active' && person.roleId && treating.has(person.roleId))
-    .map((person) => ({ id: person.id, fullName: person.fullName ?? '' }))
+    .map((person) => {
+      const role = person.roleId ? treating.get(person.roleId) : undefined
+      return {
+        id: person.id,
+        fullName: person.fullName ?? '',
+        roleName: role ? roleLabel(role) : null,
+      }
+    })
 }
 
 /// Tashrif formasidagi «Shifokor» tanlovi uchun

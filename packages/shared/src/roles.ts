@@ -40,6 +40,7 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'patients.write',
       'visits.write',
       'teeth.write',
+      'schedule.read',
       'schedule.write',
       // Toʻlov qabul qilish (qaror 19/09/2026): kichik klinikada pulni
       // shifokorning oʻzi oladi
@@ -68,6 +69,7 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       // Hamma bemor: qabulxona pulni oladi, navbatni yuritadi — kimniki
       // ekanidan qatʼi nazar. Shifokor esa faqat oʻz bemorlarini koʻradi
       'patients.all',
+      'schedule.read',
       'schedule.write',
       'schedule.all',
       'payments.read',
@@ -91,7 +93,8 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
     permissions: ['lab.own'],
   },
 
-  // Buxgalter, stajyor. Faqat oʻqiydi
+  // Buxgalter, stajyor. Faqat oʻqiydi — jadvalni ham: koʻradi, lekin
+  // qabul yoza olmaydi (`schedule.read` bor, `schedule.write` yoʻq)
   kuzatuvchi: {
     template: 'kuzatuvchi',
     get label() {
@@ -101,6 +104,8 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
     permissions: [
       'patients.read',
       'patients.all',
+      'schedule.read',
+      'schedule.all',
       'payments.read',
       'expenses.read',
       'reports.read',

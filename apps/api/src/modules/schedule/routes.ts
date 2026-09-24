@@ -32,9 +32,10 @@ function clinicOf(req: FastifyRequest): { clinicId: string; viewer: service.Sche
 }
 
 export const scheduleRoutes: FastifyPluginAsync<ScheduleRouteOpts> = async (app, opts) => {
-  // Jadvalda bemor ismlari koʻrinadi, shuning uchun oʻqish ham
-  // `patients.read` talab qiladi — texnik uni koʻrmaydi (tz.md 7-boʻlim)
-  const read = { preHandler: app.requirePermission('patients.read') }
+  // Koʻrish va yozish alohida (14.5): kuzatuvchi jadvalni koʻradi, lekin
+  // qabul yoza olmaydi. Texnikda ikkalasi ham yoʻq — jadvalda bemor
+  // ismlari koʻrinadi (tz.md 7-boʻlim)
+  const read = { preHandler: app.requirePermission('schedule.read') }
   const write = { preHandler: app.requirePermission('schedule.write') }
 
   app.get('/appointments', read, async (req) => {

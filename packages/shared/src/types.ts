@@ -46,6 +46,7 @@ export const PERMISSIONS = [
   'teeth.write',
   'payments.read',
   'payments.write',
+  'schedule.read',
   'schedule.write',
   'schedule.all',
   'services.manage',

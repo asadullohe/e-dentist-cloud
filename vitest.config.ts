@@ -7,6 +7,9 @@ if (existsSync('.env')) process.loadEnvFile('.env')
 
 export default defineConfig({
   test: {
+    // `.claude/worktrees` da shu reponing nusxasi turishi mumkin — oʻsha
+    // yerdagi testlar ikkinchi marta yigʻilib, bazaga urishib ketadi
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.claude/**'],
     env: {
       DATABASE_URL: process.env.DATABASE_URL ?? '',
       APP_DATABASE_URL: process.env.APP_DATABASE_URL ?? '',
