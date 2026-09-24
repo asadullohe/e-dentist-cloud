@@ -6,6 +6,10 @@ build/
 # Claude sessiyalari yaratadigan ish daraxtlari
 .claude/worktrees/
 
+# Lokal oʻrnatilgan agent skillari — loyiha kodi emas, biome va vitest
+# ularni tekshirmasin
+.agents/
+
 # Muhit va maxfiy narsalar — HECH QACHON repoga tushmasin
 .env
 .env.*
