@@ -5,7 +5,11 @@ export interface LoginPayload {
   password: string
 }
 
+// `app` — klinika xodimi hisobi bilan panelga sessiya ochilmaydi
 export const login = (payload: LoginPayload) =>
-  apiRequest<{ loggedIn: true }>('/auth/login', { method: 'POST', body: payload })
+  apiRequest<{ loggedIn: true }>('/auth/login', {
+    method: 'POST',
+    body: { ...payload, app: 'admin' },
+  })
 
 export const logout = () => apiRequest<{ loggedOut: true }>('/auth/logout', { method: 'POST' })

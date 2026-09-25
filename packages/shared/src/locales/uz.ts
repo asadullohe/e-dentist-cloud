@@ -63,6 +63,9 @@ export const AUTH_TEXT = {
   login_failed_msg: 'Pochta yoki parol notoʻgʻri',
   account_disabled: 'Hisobingiz faolsizlantirilgan. Klinika egasiga murojaat qiling',
   email_not_verified: 'Avval pochtangizni tasdiqlang — havola xatingizga yuborilgan',
+  admin_account:
+    'Bu platforma admini hisobi — u boshqaruv paneli uchun. Kabinetga klinika hisobi bilan kiring',
+  clinic_account: 'Bu klinika xodimi hisobi — boshqaruv paneliga faqat platforma admini kiradi',
   link_invalid: 'Havola yaroqsiz yoki muddati oʻtgan',
   disposable_email: 'Bir martalik pochta xizmatlari qabul qilinmaydi',
   too_many_attempts: 'Juda koʻp urinish boʻldi. Bir necha daqiqadan keyin qayta urinib koʻring',
@@ -76,6 +79,7 @@ export const UI_TEXT = {
   brand: 'E-Dentist',
   offline: 'Server bilan aloqa yoʻq. Internetni tekshirib, qayta urinib koʻring',
   offline_title: 'Server bilan aloqa yoʻq',
+  session_rejected_title: 'Kirib boʻlmadi',
   retry: 'Qayta urinish',
   login: 'Kirish',
   logout: 'Chiqish',

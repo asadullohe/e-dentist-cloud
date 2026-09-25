@@ -362,6 +362,12 @@ export async function login(deps: AuthDeps, input: LoginInput, ip: string): Prom
   if (u.status !== 'active') throw errors.forbidden(AUTH_TEXT.account_disabled)
   if (!u.email_verified_at) throw errors.forbidden(AUTH_TEXT.email_not_verified)
 
+  // Admin sessiyasi kabinetda ochilsa /me doim 403 qaytaradi va foydalanuvchi
+  // berk koʻchada qoladi: kirish sahifasi ham, «Chiqish» ham yoʻq. Parol
+  // toʻgʻri boʻlgandan keyingina aytiladi — hisob turi begonaga oshkor boʻlmaydi
+  if (input.app === 'cabinet' && !u.clinic_id) throw errors.forbidden(AUTH_TEXT.admin_account)
+  if (input.app === 'admin' && u.clinic_id) throw errors.forbidden(AUTH_TEXT.clinic_account)
+
   if (u.clinic_id) {
     await withClinic(deps.db, u.clinic_id, async (tx) => {
       await repo.markLogin(tx, u.id)
@@ -415,7 +421,9 @@ export async function userPermissions(
 }
 
 export async function currentUser(deps: AuthDeps, session: SessionData) {
-  if (!session.clinicId) throw errors.forbidden() // Platforma admini — bosqich 5.2
+  // Platforma admini — uning oʻz /admin/me si bor (bosqich 5.2). Kabinetga
+  // eski yoki `app` siz ochilgan sessiya bilan kelsa, sababi aniq aytilsin
+  if (!session.clinicId) throw errors.forbidden(AUTH_TEXT.admin_account)
 
   const clinicId = session.clinicId
   return withClinic(deps.db, clinicId, async (tx) => {

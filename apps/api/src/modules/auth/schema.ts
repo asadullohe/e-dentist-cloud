@@ -46,6 +46,9 @@ export const loginSchema = z.object({
   // Kirishda uzunlik tekshirilmaydi: eski parol qoidalari boshqacha boʻlishi
   // mumkin, va «parol qisqa» degan xabar kirish oynasida maʼnosiz
   password: z.string().min(1),
+  /// Qaysi ilovadan kirilyapti — kabinet va panel bitta kirishni ishlatadi,
+  /// hisob boshqa ilovaniki boʻlsa sessiya ochilmaydi. Berilmasa tekshirilmaydi
+  app: z.enum(['cabinet', 'admin']).optional(),
 })
 
 /// Ish haqi sharti — ikkalasi ixtiyoriy, sukut 0 (tz.md 15-boʻlim)

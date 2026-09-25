@@ -13,8 +13,12 @@ export interface RegisterInput {
   password: string
 }
 
+// `app` — hisob boshqaruv paneliniki boʻlsa server sessiya ochmaydi
 export const login = (input: LoginInput) =>
-  apiRequest<{ loggedIn: true }>('/auth/login', { method: 'POST', body: input })
+  apiRequest<{ loggedIn: true }>('/auth/login', {
+    method: 'POST',
+    body: { ...input, app: 'cabinet' },
+  })
 
 export const logout = () => apiRequest<{ loggedOut: true }>('/auth/logout', { method: 'POST' })
 

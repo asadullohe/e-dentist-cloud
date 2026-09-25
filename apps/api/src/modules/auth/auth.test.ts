@@ -1,16 +1,18 @@
 // Auth moduli — uchidan uchiga. Haqiqiy baza va Redis bilan ishlaydi,
 // xat esa xotirada ushlanadi: tasdiqlash havolasini oʻsha yerdan olamiz.
 
-import { addDays, PERMISSIONS } from '@e-dentist/shared'
+import { AUTH_TEXT, addDays, PERMISSIONS } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { memoryBus } from '../../platform/bus.js'
 import { createDb, type Db } from '../../platform/db.js'
 import { memoryMailer } from '../../platform/mailer.js'
 import { memoryNotifier } from '../../platform/notify.js'
+import { hashPassword } from '../../platform/password.js'
 import { createRateLimiter } from '../../platform/rateLimit.js'
 import { createServer } from '../../platform/server.js'
 import { createSessionStore } from '../../platform/session.js'
+import { uuidV7 } from '../../platform/uuid.js'
 import { fakeImports, fakeStorage, testConfig } from '../../test-support/config.js'
 
 const ownerUrl = process.env.DATABASE_URL
@@ -27,6 +29,9 @@ const CLINIC = `Sinov klinikasi ${Date.now()}`
 // aralashmasligi uchun shu faylning oʻz manzili
 const CLIENT_IP = '10.255.0.1'
 const LIMIT_EMAIL = `cheklov-${Date.now()}@example.com`
+const ADMIN_EMAIL = `platforma-${Date.now()}@example.com`
+// Ilova tekshiruvi koʻp kiradi — IP chegarasi qolgan testlarniki bilan boʻlishilmasin
+const APP_CHECK_IP = '10.255.0.7'
 
 let app: FastifyInstance
 let ownerDb: Db
@@ -53,8 +58,10 @@ beforeAll(async () => {
   for (const k of [
     `register:ip:${CLIENT_IP}`,
     `login:ip:${CLIENT_IP}`,
+    `login:ip:${APP_CHECK_IP}`,
     `login:account:${EMAIL}`,
     `login:account:${LIMIT_EMAIL}`,
+    `login:account:${ADMIN_EMAIL}`,
     // Mavjud boʻlmagan pochta ham hisobga tushadi — u ham tozalanadi
     `login:account:${MISSING_EMAIL}`,
   ]) {
@@ -385,6 +392,74 @@ describe('kirish va sessiya', () => {
       headers: { cookie },
     })
     expect(after.statusCode).toBe(401)
+  })
+})
+
+describe('ilovaga qarab kirish', () => {
+  const ADMIN_PASSWORD = 'juda-yaxshi-admin-paroli'
+  let adminId = ''
+
+  beforeAll(async () => {
+    // Platforma admini: klinikasi ham, roli ham yoʻq
+    adminId = uuidV7()
+    await ownerDb.user.create({
+      data: {
+        id: adminId,
+        email: ADMIN_EMAIL,
+        passwordHash: await hashPassword(ADMIN_PASSWORD),
+        fullName: 'Platforma Admini',
+        emailVerifiedAt: new Date(),
+      },
+    })
+  })
+
+  afterAll(async () => {
+    await ownerDb.user.delete({ where: { id: adminId } })
+  })
+
+  const login = (payload: object) =>
+    app.inject({ remoteAddress: APP_CHECK_IP, method: 'POST', url: '/api/auth/login', payload })
+  const hasSession = (r: Awaited<ReturnType<typeof login>>) =>
+    r.cookies.some((c) => c.name === 'ed_session' && c.value !== '')
+
+  it('admin kabinetdan kira olmaydi — sessiya ochilmaydi, sababi aytiladi', async () => {
+    const r = await login({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, app: 'cabinet' })
+    expect(r.statusCode).toBe(403)
+    expect(r.json().error.message).toBe(AUTH_TEXT.admin_account)
+    expect(hasSession(r)).toBe(false)
+  })
+
+  it('klinika xodimi paneldan kira olmaydi', async () => {
+    const r = await login({ email: EMAIL, password: 'juda-yaxshi-parol', app: 'admin' })
+    expect(r.statusCode).toBe(403)
+    expect(r.json().error.message).toBe(AUTH_TEXT.clinic_account)
+    expect(hasSession(r)).toBe(false)
+  })
+
+  it('oʻz ilovasidan ikkalasi ham kiradi', async () => {
+    const admin = await login({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, app: 'admin' })
+    const owner = await login({ email: EMAIL, password: 'juda-yaxshi-parol', app: 'cabinet' })
+    expect(admin.statusCode).toBe(200)
+    expect(owner.statusCode).toBe(200)
+  })
+
+  it('notoʻgʻri parolda hisob turi oshkor boʻlmaydi', async () => {
+    const r = await login({ email: ADMIN_EMAIL, password: 'boshqa-parol', app: 'cabinet' })
+    expect(r.statusCode).toBe(401)
+  })
+
+  it('eski admin sessiyasi bilan /api/me sababini aytadi', async () => {
+    // `app` siz — yangilanishdan oldin ochilgan sessiya shunday
+    const r = await login({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD })
+    const cookie = r.cookies.find((c) => c.name === 'ed_session')
+    const me = await app.inject({
+      remoteAddress: APP_CHECK_IP,
+      method: 'GET',
+      url: '/api/me',
+      headers: { cookie: `ed_session=${cookie?.value}` },
+    })
+    expect(me.statusCode).toBe(403)
+    expect(me.json().error.message).toBe(AUTH_TEXT.admin_account)
   })
 })
 
