@@ -1,5 +1,6 @@
 import type { Permission } from '@e-dentist/shared'
 import { useQuery } from '@tanstack/react-query'
+import { isTransientError } from '@/shared/api'
 import { fetchSession } from './api'
 
 export const SESSION_QUERY_KEY = ['session'] as const
@@ -8,10 +9,11 @@ export function useSession() {
   return useQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchSession,
-    // 401 — javob (null), xato emas. Xato — server javob bermadi (qayta
-    // ishga tushyapti, tarmoq): ikki marta kutib qayta soʻraymiz, aks holda
-    // kirgan foydalanuvchi bir lahzalik uzilishda login sahifasiga tushardi
-    retry: 2,
+    // 401 — javob (null), xato emas. Server javob bermasa (qayta ishga
+    // tushyapti, tarmoq) ikki marta kutib qayta soʻraymiz, aks holda kirgan
+    // foydalanuvchi bir lahzalik uzilishda login sahifasiga tushardi.
+    // Aniq rad javobi (403) qayta soʻralganda ham oʻzgarmaydi
+    retry: (count, error) => count < 2 && isTransientError(error),
     retryDelay: (attempt) => 1500 * (attempt + 1),
   })
 }

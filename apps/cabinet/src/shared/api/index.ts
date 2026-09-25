@@ -1,3 +1,10 @@
 import './mutationMeta'
 
-export { ApiError, apiRequest, downloadFile, fieldErrors, formError } from './client'
+export {
+  ApiError,
+  apiRequest,
+  downloadFile,
+  fieldErrors,
+  formError,
+  isTransientError,
+} from './client'

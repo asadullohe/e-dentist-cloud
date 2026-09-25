@@ -21,6 +21,13 @@ export class ApiError extends Error {
   }
 }
 
+/// Server javob bermadi yoki ichida yiqildi — qayta urinish maʼnoli.
+/// Qolganlari (403, 404…) serverning aniq javobi: qayta soʻrash oʻsha javobni
+/// qaytaradi, foydalanuvchiga esa sababini koʻrsatish kerak
+export function isTransientError(error: unknown): boolean {
+  return !(error instanceof ApiError) || error.code === 'network' || error.code === 'internal'
+}
+
 type ApiEnvelope<T> =
   | { ok: true; data: T }
   | { ok: false; error: { code: string; message: string; fields?: Record<string, string> } }

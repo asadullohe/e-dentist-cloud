@@ -42,12 +42,14 @@ import {
   StaffSection,
 } from '@/pages/Settings'
 import { VerifyEmail } from '@/pages/VerifyEmail'
+import { isTransientError } from '@/shared/api'
 import { Splash } from '@/shared/ui'
 import { ConnectionLost } from './ConnectionLost'
 import { CabinetLayout } from './layouts/CabinetLayout'
+import { SessionRejected } from './SessionRejected'
 
 function RequireAuth() {
-  const { data: session, isPending, isFetching, isError, refetch } = useSession()
+  const { data: session, isPending, isFetching, isError, error, refetch } = useSession()
 
   // Sahifa yangilanganda sessiya javobini kutamiz — aks holda kirgan
   // foydalanuvchi bir lahzaga kirish oynasiga otilib ketardi. Keshda
@@ -56,7 +58,9 @@ function RequireAuth() {
   if (isPending || (!session && isFetching)) return <Splash />
   if (!session) {
     // Javob kelmadi (server qayta ishga tushyapti, tarmoq) — bu «kirmagan»
-    // emas: cookie joyida, login ga otish oʻrniga qayta urinish taklif qilinadi
+    // emas: cookie joyida, login ga otish oʻrniga qayta urinish taklif qilinadi.
+    // Server aniq rad etgan boʻlsa (403) — sababi va «Chiqish»
+    if (isError && !isTransientError(error)) return <SessionRejected message={error.message} />
     if (isError) return <ConnectionLost onRetry={() => void refetch()} />
     return <Navigate to="/login" replace />
   }
