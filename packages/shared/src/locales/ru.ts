@@ -234,6 +234,8 @@ export const ru: DeepPartial<Strings> = {
     upper_jaw: 'Верхняя челюсть',
     lower_jaw: 'Нижняя челюсть',
     primary_teeth: 'Молочные зубы',
+    pick_hint: 'Нажмите на зуб на карте',
+    selected_tooth: 'Выбранный зуб',
     bridge_title: (teeth: readonly number[], material: string) =>
       `Мост ${teeth[0]}–${teeth[teeth.length - 1]} · ${material}`,
   },

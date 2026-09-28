@@ -33,7 +33,7 @@ import { type BridgeInfo, ToothChart, useToothChart } from '@/entities/tooth'
 import { AppointmentFormDialog } from '@/features/appointment-form'
 import { BridgeFormDialog, useDeleteBridge } from '@/features/bridge-form'
 import { PatientFormDialog } from '@/features/patient-form'
-import { ToothEditDialog } from '@/features/tooth-edit'
+import { ToothEditPanel } from '@/features/tooth-edit'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,7 +90,19 @@ function ChartTab({ patientId }: { patientId: string }) {
         <ToothChart
           teeth={chart?.teeth ?? []}
           bridges={bridges}
+          selected={picked}
           onPick={canEdit ? setPicked : undefined}
+          aside={
+            canEdit && (
+              // `key`: boshqa tishga oʻtganda saqlanmagan izoh ergashmasin
+              <ToothEditPanel
+                key={picked ?? 'none'}
+                patientId={patientId}
+                tooth={picked}
+                current={chart?.teeth.find((t) => t.tooth === picked)}
+              />
+            )
+          }
         />
       </Card>
 
@@ -119,13 +131,6 @@ function ChartTab({ patientId }: { patientId: string }) {
           </div>
         </div>
       )}
-
-      <ToothEditDialog
-        patientId={patientId}
-        tooth={picked}
-        current={chart?.teeth.find((t) => t.tooth === picked)}
-        onClose={() => setPicked(null)}
-      />
 
       <BridgeFormDialog
         open={bridgeOpen}

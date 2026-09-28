@@ -1,2 +1,2 @@
 export { useSetTooth } from './hooks'
-export { ToothEditDialog } from './ToothEditDialog'
+export { ToothEditPanel } from './ToothEditPanel'

@@ -235,6 +235,8 @@ export const CHART_UI = {
   upper_jaw: 'Yuqori jagʻ',
   lower_jaw: 'Pastki jagʻ',
   primary_teeth: 'Sut tishlari',
+  pick_hint: 'Xaritada tishni bosing',
+  selected_tooth: 'Tanlangan tish',
   bridge_title: (teeth: readonly number[], material: string) =>
     `Koʻprik ${teeth[0]}–${teeth[teeth.length - 1]} · ${material}`,
 } as const
