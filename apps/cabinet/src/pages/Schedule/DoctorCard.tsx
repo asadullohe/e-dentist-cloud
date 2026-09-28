@@ -85,7 +85,7 @@ export function DoctorCard({
   const trigger = (
     <button
       type="button"
-      className="hover:bg-accent/60 -mx-1 flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-left transition-colors"
+      className="hover:bg-accent/60 -mx-1 flex w-[calc(100%+0.5rem)] min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-left transition-colors"
     >
       <span className="bg-primary/10 text-primary flex size-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold">
         {doctor.id === null ? '—' : initialsOf(doctor.name)}
