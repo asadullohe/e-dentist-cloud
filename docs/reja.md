@@ -1571,6 +1571,29 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 
 ---
 
+## Bosqich 16 — Tish xaritasi: ravoq koʻrinishi · ~1 kun
+
+> **Nega** _(qaror 28/09/2026)_
+>
+> Yon koʻrinishdagi (ildizli) xarita telefonda mayda va zamonaviy
+> dasturlardagi odatiy koʻrinishdan farq qiladi. Foydalanuvchi namunalarni
+> koʻrib ustidan koʻrinishni tanladi.
+
+- [x] **16.1 Ravoq shaklidagi xarita** — tishlar ustidan (chaynov
+      yuzasidan) koʻrinishda, ikki ravoqda; har tur oʻz siluetida
+      (kesuvchi · qoziq · kichik oziq · katta oziq, egatlari bilan).
+      Geometriya `packages/teeth` da (`placeArch`, testlari bilan). Sut
+      tishlari doimiy ravoq **ichida**, jagʻ oʻrtasidagi almashtirgich bilan;
+      sukut — bemorda sut tishi yozilgan boʻlsa yoqilgan. Ranglar tekis
+      (gradient emas), koronka materiali — tish ichidagi halqa. Koʻprik —
+      tishlar tashqi chetidagi chiziq, rejadagi tish — hoshiya. Afsona faqat
+      bor holatlar, sanogʻi bilan. Tahrirlash oynasi oʻrniga **oʻng panel**:
+      holat tugmasi bosilishi bilan saqlanadi, tanlangan holat rangi va ✓
+      bilan ajraladi; material va izoh ham panelda. Telefonda panel xarita
+      ostida. Landing dagi xarita nusxasiga tegilmadi
+
+---
+
 ## Ochiq savollar
 
 Kod yozishga halaqit bermaydi, lekin bosqich 5 gacha javob kerak:
