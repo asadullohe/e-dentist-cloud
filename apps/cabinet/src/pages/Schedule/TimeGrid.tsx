@@ -14,6 +14,7 @@ import {
 } from '@/shared/ui'
 import { AppointmentBlock } from './AppointmentBlock'
 import {
+  COLUMNS_MIN_WIDTH,
   COLUMNS_TEMPLATE,
   type GridColumn,
   layoutDay,
@@ -115,24 +116,32 @@ export function TimeGrid({
       const chrome = card ? card.bottom - rect.bottom : 0
       const main = el.closest('main')
       const below = main ? Number.parseFloat(getComputedStyle(main).paddingBottom) || 0 : 0
-      return Math.max(320, window.innerHeight - rect.top - chrome - below)
+      // Hujjat boshidan hisoblanadi: sahifa surilgan boʻlsa ham quti
+      // kattalashib, ikkinchi scroll chiqarmasin. Natija qutining oʻz
+      // balandligiga bogʻliq emas — kuzatuvchi aylanib qolmaydi
+      const top = rect.top + window.scrollY
+      return Math.max(320, window.innerHeight - top - chrome - below)
     }
-    // Ikki qadam: birinchi oʻlchov quti hali toʻliq balandlikda turganda
-    // olinadi, ikkinchisi — yangi joylashuv boʻyicha aniqlashtiradi
     const update = () => {
-      const first = measure()
-      if (first === undefined) return
-      setBoxHeight(first)
-      // Yangi balandlik DOM ga tushgandan keyin (setTimeout — boʻyoqdan
-      // keyin) qayta oʻlchanadi: birinchi oʻlchov eski joylashuvniki
-      window.setTimeout(() => {
-        const second = measure()
-        if (second !== undefined) setBoxHeight(second)
-      }, 0)
+      const height = measure()
+      if (height !== undefined) setBoxHeight(height)
     }
     update()
+    // Tepadagi narsalar (sinov banneri, yuklanish chizigʻi, qatorga
+    // sigʻmagan boshqaruvlar) balandligini oʻzgartirsa ham qayta oʻlchanadi.
+    // `body` emas: uning balandligi ekranga teng. Tepadagi narsa kattalashsa
+    // sahifa ustuni oʻsadi, kichraysa `main` choʻziladi — ikkalasi kuzatiladi
+    const observer = new ResizeObserver(update)
+    const main = box.current?.closest('main')
+    if (main) {
+      observer.observe(main)
+      if (main.parentElement) observer.observe(main.parentElement)
+    }
     window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
   }, [loading])
   const hours = Array.from({ length: endHour - startHour }, (_, i) => startHour + i)
   const topOf = (minutes: number) => ((minutes - startHour * 60) / 60) * HOUR
@@ -202,12 +211,19 @@ export function TimeGrid({
         >
           <div
             className="bg-card sticky top-0 z-30 grid border-b"
-            style={{ gridTemplateColumns: COLUMNS_TEMPLATE(columns.length) }}
+            style={{
+              gridTemplateColumns: COLUMNS_TEMPLATE(columns.length),
+              minWidth: COLUMNS_MIN_WIDTH(columns.length),
+            }}
           >
-            {/* Burchak: ikki yoʻnalishda ham yopishadi */}
-            <div className="bg-card sticky left-0 z-40" />
-            {columns.map((column) => (
-              <div key={column.key} className="min-w-0 border-l px-1.5 py-2">
+            {/* Burchak: ikki yoʻnalishda ham yopishadi. Oʻng chegara vaqt
+                oʻqi bilan birga turadi — ustunlar surilganda ham koʻrinadi */}
+            <div className="bg-card sticky left-0 z-40 border-r" />
+            {columns.map((column, columnIndex) => (
+              <div
+                key={column.key}
+                className={cn('min-w-0 px-1.5 py-2', columnIndex > 0 && 'border-l')}
+              >
                 {column.head}
               </div>
             ))}
@@ -217,12 +233,13 @@ export function TimeGrid({
             className="grid"
             style={{
               gridTemplateColumns: COLUMNS_TEMPLATE(columns.length),
+              minWidth: COLUMNS_MIN_WIDTH(columns.length),
               paddingTop: TOP_PAD,
             }}
           >
             {/* Vaqt oʻqi */}
             <div
-              className="bg-card sticky left-0 z-20 col-start-1"
+              className="bg-card sticky left-0 z-20 col-start-1 border-r"
               style={{ height: hours.length * HOUR }}
             >
               <div className="relative h-full">
@@ -256,7 +273,12 @@ export function TimeGrid({
                 key={column.key}
                 // Ustun — oʻlcham manbai: tor boʻlsa (haftada, telefonda) blok
                 // ichidagi belgilar va vaqt oraligʻi yashiriladi
-                className={cn('@container relative border-l', onPickSlot && 'cursor-pointer')}
+                // Chap chegara birinchi ustunda yoʻq — uni vaqt oʻqi beradi
+                className={cn(
+                  '@container relative',
+                  columnIndex > 0 && 'border-l',
+                  onPickSlot && 'cursor-pointer',
+                )}
                 style={{ height: hours.length * HOUR }}
                 onClick={(event) => pickAt(column, event)}
               >

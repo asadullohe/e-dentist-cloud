@@ -139,6 +139,10 @@ export function layoutDay(items: readonly Appointment[]): Placed[] {
 /// ustunlar. Telefonda ustun 7.5rem dan kichraymaydi — toʻr yonga suriladi
 export const COLUMNS_TEMPLATE = (count: number) => `2.75rem repeat(${count}, minmax(7.5rem, 1fr))`
 
+/// Toʻrning eng kichik kengligi. Usiz toʻr quti kengligida qoladi, ustunlar
+/// esa undan chiqib ketadi — sarlavha ostidagi chiziq yarmida uziladi
+export const COLUMNS_MIN_WIDTH = (count: number) => `calc(2.75rem + ${count} * 7.5rem)`
+
 /// Toʻr ustuni. Kunlar rejimida har ustun — bir kun, hamma shifokor bilan;
 /// shifokorlar rejimida hammasi bitta kun, ustun — bitta shifokor.
 /// `doctorId`: `undefined` — hamma, `null` — shifokorsizlar ustuni
