@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
-  archLayout,
+  type ArchSpec,
   bridgeSpan,
   crownMaterialLabel,
   isCrowned,
   isPrimary,
   isToothNo,
   LOWER,
+  placeArch,
   toothStatusLabel,
   toothType,
   UPPER,
@@ -48,24 +49,65 @@ describe('tish turi', () => {
 })
 
 describe('ravoq geometriyasi', () => {
-  it('pozitsiyalar 0..1 oraligʻida va oʻsib boradi', () => {
-    const positions = archLayout(UPPER)
-    expect(positions).toHaveLength(16)
-    for (const p of positions) {
-      expect(p).toBeGreaterThan(0)
-      expect(p).toBeLessThan(1)
-    }
-    for (let i = 1; i < positions.length; i++) {
-      expect(positions[i]).toBeGreaterThan(positions[i - 1] as number)
+  const upper: ArchSpec = {
+    upper: true,
+    primary: false,
+    cx: 210,
+    center: 285,
+    a: 128,
+    b: 215,
+    maxScale: 9,
+  }
+  const byNo = (spec: ArchSpec) => new Map(placeArch(spec).map((p) => [p.tooth, p]))
+
+  it('doimiy jagʻda 16 ta, sut jagʻida 10 ta tish — FDI raqamlari bilan', () => {
+    expect(
+      placeArch(upper)
+        .map((p) => p.tooth)
+        .sort(),
+    ).toEqual([...UPPER].sort())
+    const lower = placeArch({ ...upper, upper: false, center: 335 })
+    expect(lower.map((p) => p.tooth).sort()).toEqual([...LOWER].sort())
+    const primary = placeArch({ ...upper, primary: true, maxScale: 1 })
+    expect(primary.map((p) => p.tooth).sort()).toEqual([51, 52, 53, 54, 55, 61, 62, 63, 64, 65])
+  })
+
+  it('bemorning oʻng tomoni koʻrinishda chapda, ikki yarmi oʻrta chiziqqa nisbatan simmetrik', () => {
+    const p = byNo(upper)
+    const right = p.get(16)
+    const left = p.get(26)
+    expect(right && left).toBeTruthy()
+    if (!right || !left) return
+    expect(right.x).toBeLessThan(210)
+    expect(right.x - 210).toBeCloseTo(210 - left.x, 5)
+    expect(right.y).toBeCloseTo(left.y, 5)
+  })
+
+  it('tishlar oʻrta chiziqdan chetga qarab ketma-ket turadi va bir-birini yopmaydi', () => {
+    const p = byNo(upper)
+    for (let i = 1; i < 8; i++) {
+      const a = p.get(10 + i)
+      const b = p.get(11 + i)
+      if (!a || !b) throw new Error('tish yoʻq')
+      // Qoʻshni markazlar orasi ikki yarim kenglikdan kam emas (yoy vatardan uzun)
+      expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThan((a.width + b.width) / 2 - 1)
+      expect(b.y).toBeGreaterThan(a.y)
     }
   })
 
-  it('kengroq tish koʻproq joy oladi', () => {
-    // 18 va 17 — katta oziq, 11 va 21 — kesuvchi
-    const p = archLayout([18, 17, 11, 21])
-    const molarGap = (p[1] as number) - (p[0] as number)
-    const incisorGap = (p[3] as number) - (p[2] as number)
-    expect(molarGap).toBeGreaterThan(incisorGap)
+  it('tashqi normal ravoqdan tashqariga qaraydi', () => {
+    const p = byNo(upper)
+    // Markaziy kesuvchi tepada — normal yuqoriga; katta oziq chetda — chapga
+    expect(p.get(11)?.ny).toBeLessThan(-0.9)
+    expect(p.get(18)?.nx).toBeLessThan(-0.9)
+    const lower = byNo({ ...upper, upper: false, center: 335 })
+    expect(lower.get(41)?.ny).toBeGreaterThan(0.9)
+  })
+
+  it('ichki ravoqda tishlar kattalashmaydi', () => {
+    const primary = byNo({ ...upper, primary: true, a: 80, b: 132, maxScale: 1 })
+    // 51 ning asl kengligi 24
+    expect(primary.get(51)?.width).toBeCloseTo(24, 5)
   })
 })
 
