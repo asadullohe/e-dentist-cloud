@@ -299,14 +299,25 @@ export function Schedule() {
   const dateButton = (
     <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
       <PopoverTrigger asChild>
-        {/* Telefonda qator tor — yozuv va ichki boʻshliq kichrayadi */}
+        {/* Telefonda qator tor — yozuv va ichki boʻshliq kichrayadi. `shrink`:
+            shadcn tugmasi `shrink-0` — usiz qator ekrandan toshib, butun
+            sahifani yonga surdirardi */}
         <Button
           variant="outline"
           size="sm"
-          className="min-w-0 gap-1 px-2 text-xs font-semibold tabular-nums md:gap-1.5 md:px-3 md:text-sm"
+          className="min-w-0 shrink gap-1 px-2 text-xs font-semibold tabular-nums md:gap-1.5 md:px-3 md:text-sm"
         >
           <CalendarIcon />
-          <span className="truncate">{title}</span>
+          {view === 'week' ? (
+            // Hafta oraligʻi telefonda ikki qatorda: bir qatorga sigʻmaydi,
+            // qisqartirilsa sana formati (DD/MM/YYYY) buziladi
+            <span className="flex min-w-0 flex-col text-left text-[11px] leading-tight md:flex-row md:gap-1 md:text-sm">
+              <span>{formatDate(from)} –</span>
+              <span>{formatDate(to)}</span>
+            </span>
+          ) : (
+            <span className="truncate">{title}</span>
+          )}
           <ChevronDownIcon className="text-muted-foreground" />
         </Button>
       </PopoverTrigger>
