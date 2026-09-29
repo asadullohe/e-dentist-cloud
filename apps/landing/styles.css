@@ -127,8 +127,8 @@ h1, h2, h3 {
 .top nav {
   margin-left: auto;
   display: flex;
-  gap: 26px;
-  font-size: 15px;
+  gap: 18px;
+  font-size: 14px;
 }
 .top nav a {
   color: var(--ink-soft);
@@ -164,7 +164,13 @@ h1, h2, h3 {
   color: #0d1020;
 }
 .top nav + .top-actions { margin-left: 0; }
-@media (max-width: 960px) { .top nav { display: none; } }
+/* Menyu 7 band + tugmalar ~1095px oladi (sahifa kengligi 1120) — undan tor
+   ekranda menyu sigʻmaydi, yashiriladi. Shunda tugmalar yana oʻngga,
+   aks holda logotip yonida qoladi */
+@media (max-width: 1140px) {
+  .top nav { display: none; }
+  .top nav + .top-actions { margin-left: auto; }
+}
 @media (max-width: 480px) { .top-actions .ghost { display: none; } }
 
 /* ---------- Hero ---------- */
