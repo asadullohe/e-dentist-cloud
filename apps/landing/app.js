@@ -1,19 +1,7 @@
 // Sayt uchun kichik skript: sarlavhadagi odontogramma va tepa panel.
-// Tish shakllari kabinetdagi ToothChart bilan bir xil — bir xil koʻrinsin.
-
-const UPPER = [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28]
-const LOWER = [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38]
-
-const SHAPES = {
-  incisor:
-    'M -12 -36 L 12 -36 C 14 -22 14 -10 11 -1 C 9 5 7 9 5 11 C 4 21 2 34 0 34 C -2 34 -4 21 -5 11 C -7 9 -9 5 -11 -1 C -14 -10 -14 -22 -12 -36 Z',
-  canine:
-    'M 0 -40 C 6 -34 11 -26 12 -16 C 13 -6 12 2 9 8 C 7 11 5 12 4 14 C 3 24 1 35 0 35 C -1 35 -3 24 -4 14 C -5 12 -7 11 -9 8 C -12 2 -13 -6 -12 -16 C -11 -26 -6 -34 0 -40 Z',
-  premolar:
-    'M -14 -30 C -10 -37 -4 -37 0 -32 C 4 -37 10 -37 14 -30 C 16 -22 16 -10 13 -2 C 11 4 8 8 5 10 C 4 20 2 33 0 33 C -2 33 -4 20 -5 10 C -8 8 -11 4 -13 -2 C -16 -10 -16 -22 -14 -30 Z',
-  molar:
-    'M -20 -28 C -17 -35 -12 -36 -9 -31 C -6 -36 -2 -36 0 -31 C 2 -36 6 -36 9 -31 C 12 -36 17 -35 20 -28 C 22 -20 22 -10 20 -2 C 18 4 15 7 12 9 C 12 18 11 30 8 30 C 5 30 5 20 3 14 C 2 12 -2 12 -3 14 C -5 20 -5 30 -8 30 C -11 30 -12 18 -12 9 C -15 7 -18 4 -20 -2 C -22 -10 -22 -20 -20 -28 Z'
-}
+// Xarita kabinetdagi ToothChart bilan bir xil: tishlar ustidan koʻrinishda,
+// ravoq shaklida. Geometriya packages/teeth dagi placeArch ning nusxasi —
+// sayt statik, qurish bosqichi yoʻq, shuning uchun import qilinmaydi
 
 // Sahifa tili: <html lang="uz"> yoki "ru" (/ru/) — nomlar shunga qarab
 const RU = document.documentElement.lang === 'ru'
@@ -21,18 +9,27 @@ const LABELS = RU
   ? { soglom: 'Здоровый', karies: 'Кариес', plomba: 'Пломба', koronka: 'Коронка', implant: 'Имплант', olingan: 'Удалён', chart: 'Пример зубной карты' }
   : { soglom: 'Sogʻlom', karies: 'Karies', plomba: 'Plomba', koronka: 'Koronka', implant: 'Implant', olingan: 'Olib tashlangan', chart: 'Tish xaritasi namunasi' }
 
+// Ranglar packages/teeth dagi STATUS_STYLE bilan bir xil
 const STATUSES = [
-  { key: 'soglom', label: LABELS.soglom, grad: ['#fffdf6', '#eae0c6'], stroke: '#c3b89e' },
-  { key: 'karies', label: LABELS.karies, grad: ['#f7e7bd', '#dcae4f'], stroke: '#b97f10' },
-  { key: 'plomba', label: LABELS.plomba, grad: ['#dcebf8', '#8fb8d9'], stroke: '#2b6ca3' },
-  { key: 'koronka', label: LABELS.koronka, grad: ['#fdfbf2', '#d6c79c'], stroke: '#9a8340' },
-  { key: 'implant', label: LABELS.implant, grad: ['#d8efe9', '#7dbfae'], stroke: '#0e5e54' },
-  { key: 'olingan', label: LABELS.olingan, grad: ['#f2eee5', '#e0d9c8'], stroke: '#b6ad99' }
+  { key: 'soglom', label: LABELS.soglom, fill: '#fdfcf8', stroke: '#a8a79f' },
+  { key: 'karies', label: LABELS.karies, fill: '#fac775', stroke: '#ba7517' },
+  { key: 'plomba', label: LABELS.plomba, fill: '#b5d4f4', stroke: '#185fa5' },
+  { key: 'koronka', label: LABELS.koronka, fill: '#cecbf6', stroke: '#534ab7' },
+  { key: 'implant', label: LABELS.implant, fill: '#9fe1cb', stroke: '#0f6e56' },
+  { key: 'olingan', label: LABELS.olingan, fill: 'none', stroke: '#b4b2a9' }
 ]
 const STYLE = Object.fromEntries(STATUSES.map((s) => [s.key, s]))
 
-const TYPE_SCALE = { incisor: 0.94, canine: 0.98, premolar: 1.02, molar: 1.06 }
-const TYPE_WIDTH = { incisor: 28, canine: 26, premolar: 32, molar: 44 }
+// Tishning ustidan koʻrinishdagi oʻlchami [ravoq boʻylab, ravoqqa tik],
+// FDI ikkinchi raqami tartibida (1 — markaziy kesuvchi)
+const SIZES = {
+  upper: [[34, 30], [27, 27], [30, 32], [27, 36], [27, 36], [40, 42], [37, 40], [34, 38]],
+  lower: [[22, 26], [24, 27], [28, 31], [27, 34], [28, 35], [42, 40], [39, 39], [35, 37]]
+}
+const ARCHES = [
+  { upper: true, cx: 210, center: 285, a: 128, b: 215, quadrants: [1, 2] },
+  { upper: false, cx: 210, center: 335, a: 118, b: 205, quadrants: [4, 3] }
+]
 
 function toothType(no) {
   const d = no % 10
@@ -42,26 +39,85 @@ function toothType(no) {
   return 'molar'
 }
 
-function archLayout(list) {
-  const GAP = 3
-  const widths = list.map((no) => {
-    const t = toothType(no)
-    return TYPE_WIDTH[t] * TYPE_SCALE[t] * 0.95
+// Ravoq — yarim ellips; tishlar teng burchak emas, oʻz kengligicha teng yoy oladi
+function placeArch(arch) {
+  const sign = arch.upper ? -1 : 1
+  const table = []
+  let length = 0
+  let prev = null
+  for (let i = 0; i <= 600; i++) {
+    const t = (i / 600) * (Math.PI / 2)
+    const p = [arch.a * Math.sin(t), sign * arch.b * Math.cos(t)]
+    if (prev) length += Math.hypot(p[0] - prev[0], p[1] - prev[1])
+    table.push([t, length])
+    prev = p
+  }
+  const paramAt = (arc) => (table.find(([, l]) => l >= arc) || table[600])[0]
+  const sizes = arch.upper ? SIZES.upper : SIZES.lower
+  const GAP = 2
+  const k = length / sizes.reduce((sum, [w]) => sum + w + GAP, 0)
+  const kDepth = Math.max(0.8, Math.min(k, 1.6))
+
+  const placed = []
+  ;[-1, 1].forEach((side, sideIndex) => {
+    let arc = 0
+    sizes.forEach(([w0, d0], index) => {
+      const width = w0 * k
+      arc += (GAP * k) / 2 + width / 2
+      const t = paramAt(arc)
+      arc += width / 2 + (GAP * k) / 2
+      let nx = (side * Math.sin(t)) / arch.a
+      let ny = (sign * Math.cos(t)) / arch.b
+      const norm = Math.hypot(nx, ny)
+      nx /= norm
+      ny /= norm
+      placed.push({
+        no: arch.quadrants[sideIndex] * 10 + index + 1,
+        x: arch.cx + side * arch.a * Math.sin(t),
+        y: arch.center + sign * arch.b * Math.cos(t),
+        angle: (Math.atan2(-nx, ny) * 180) / Math.PI,
+        nx,
+        ny,
+        width,
+        depth: d0 * kDepth,
+        index
+      })
+    })
   })
-  const total = widths.reduce((a, b) => a + b, 0) + GAP * (list.length - 1)
-  let acc = 0
-  return list.map((_, i) => {
-    const center = acc + widths[i] / 2
-    acc += widths[i] + GAP
-    return center / total
-  })
+  return placed
 }
 
-function archPos(t, upper) {
-  const x = 64 + 632 * t
-  const lift = 100 * Math.sin(Math.PI * t)
-  return { x, y: upper ? 162 - lift : 344 + lift, rot: (upper ? 0.5 - t : t - 0.5) * 52 }
+function rounded(w, d, r) {
+  const x = w / 2
+  const y = d / 2
+  return `M${-x + r},${-y}H${x - r}Q${x},${-y} ${x},${-y + r}V${y - r}Q${x},${y} ${x - r},${y}H${-x + r}Q${-x},${y} ${-x},${y - r}V${-y + r}Q${-x},${-y} ${-x + r},${-y}Z`
 }
+
+// Siluet va chaynov yuzasidagi egatlar. Lokal koordinatada +y — ravoqdan tashqariga
+function outline(type, w, d) {
+  if (type === 'incisor') {
+    return {
+      body: `M${-w / 2},${d * 0.2}Q${-w / 2},${d / 2} 0,${d / 2}Q${w / 2},${d / 2} ${w / 2},${d * 0.2}Q${w * 0.38},${-d / 2} 0,${-d / 2}Q${-w * 0.38},${-d / 2} ${-w / 2},${d * 0.2}Z`,
+      groove: `M${-w * 0.3},${d * 0.18}Q0,${d * 0.34} ${w * 0.3},${d * 0.18}`
+    }
+  }
+  if (type === 'canine') {
+    return {
+      body: `M0,${d / 2}Q${w / 2},${d / 2} ${w / 2},0Q${w / 2},${-d / 2} 0,${-d / 2}Q${-w / 2},${-d / 2} ${-w / 2},0Q${-w / 2},${d / 2} 0,${d / 2}Z`,
+      groove: `M${-w * 0.28},${d * 0.02}L0,${d * 0.2}L${w * 0.28},${d * 0.02}`
+    }
+  }
+  if (type === 'premolar') {
+    return { body: rounded(w, d, Math.min(w, d) * 0.45), groove: `M0,${-d * 0.26}Q${w * 0.1},0 0,${d * 0.26}` }
+  }
+  return {
+    body: rounded(w, d, Math.min(w, d) * 0.36),
+    groove: `M${w * 0.02},${-d * 0.32}L${-w * 0.06},${-d * 0.04}L${w * 0.04},${d * 0.32}M${-w * 0.06},${-d * 0.04}L${-w * 0.3},${-d * 0.1}M${w * 0.01},${d * 0.08}L${w * 0.3},${d * 0.14}`
+  }
+}
+
+// Geometriya oʻzgarmas — bir marta hisoblanadi
+const PLACED = ARCHES.flatMap((arch) => placeArch(arch).map((p) => ({ ...p, upper: arch.upper })))
 
 // Namuna karta — dasturdagi demo bemor kabi
 const teeth = { 16: 'plomba', 26: 'karies', 38: 'olingan', 36: 'koronka', 45: 'implant' }
@@ -74,74 +130,70 @@ const el = (name, attrs = {}) => {
   return node
 }
 
-function drawTooth(g, no, upper, x, y, rot, index) {
-  const status = teeth[no] || 'soglom'
+function drawTooth(svg, p) {
+  const status = teeth[p.no] || 'soglom'
   const st = STYLE[status]
-  const type = toothType(no)
   const removed = status === 'olingan'
+  const shape = outline(toothType(p.no), p.width, p.depth)
 
   const group = el('g', { class: 'tooth', tabindex: '0', role: 'button' })
-  group.style.setProperty('--from', upper ? '-14px' : '14px')
-  group.style.animationDelay = `${120 + index * 26}ms`
+  group.style.setProperty('--from', p.upper ? '-14px' : '14px')
+  // Oʻrtadan chetga qarab chiqadi
+  group.style.animationDelay = `${120 + p.index * 45}ms`
 
   const title = el('title')
-  title.textContent = `${no} — ${st.label}`
+  title.textContent = `${p.no} — ${st.label}`
   group.appendChild(title)
 
-  const body = el('g', { transform: `translate(${x} ${y}) rotate(${rot})` })
+  const body = el('g', { transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${p.angle.toFixed(1)})` })
   // Koʻtarilish animatsiyasi alohida guruhda: CSS transform SVG atributini
   // bekor qilib yubormasligi uchun bu guruhda transform atributi boʻlmasligi shart
   const lift = el('g', { class: 'tooth-lift' })
-  const scaled = el('g', {
-    transform: `scale(${TYPE_SCALE[type] * 0.95} ${upper ? -0.95 : 0.95})`
-  })
+  // Olib tashlangan tishda ichi boʻsh — bosish maydoni koʻrinmas toʻrtburchak
+  lift.appendChild(
+    el('rect', { x: -p.width / 2, y: -p.depth / 2, width: p.width, height: p.depth, fill: 'transparent' })
+  )
   const path = el('path', {
     class: 'crown-shape',
-    d: SHAPES[type],
-    fill: `url(#g-${status})`,
+    d: shape.body,
+    fill: st.fill,
     stroke: st.stroke,
-    'stroke-width': removed ? 1.4 : 1.1,
-    'vector-effect': 'non-scaling-stroke'
+    'stroke-width': '1.3'
   })
-  if (removed) path.setAttribute('stroke-dasharray', '4 3')
-  scaled.appendChild(path)
-  if (removed) {
-    scaled.appendChild(
+  if (removed) path.setAttribute('stroke-dasharray', '3 3')
+  lift.appendChild(path)
+  if (!removed) {
+    lift.appendChild(
       el('path', {
-        d: 'M -9 -30 L 9 -12 M 9 -30 L -9 -12',
+        d: shape.groove,
+        fill: 'none',
         stroke: st.stroke,
-        'stroke-width': '2',
-        'stroke-linecap': 'round'
-      })
-    )
-  } else {
-    scaled.appendChild(
-      el('ellipse', {
-        cx: '-5', cy: '-24', rx: '4.5', ry: '7',
-        fill: '#fff', opacity: '0.5', transform: 'rotate(-18 -5 -24)'
+        'stroke-width': '1',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round',
+        opacity: '0.6'
       })
     )
   }
-  lift.appendChild(scaled)
   body.appendChild(lift)
   group.appendChild(body)
 
-  const rad = (rot * Math.PI) / 180
-  const off = upper ? -58 : 60
+  const off = p.depth / 2 + 13
   const label = el('text', {
-    x: x - off * Math.sin(rad),
-    y: y + off * Math.cos(rad) + 4,
+    x: (p.x + p.nx * off).toFixed(1),
+    y: (p.y + p.ny * off).toFixed(1),
     'text-anchor': 'middle',
-    'font-size': '11.5',
-    'font-weight': '700',
-    fill: status === 'soglom' ? '#8f98bd' : st.stroke,
+    'dominant-baseline': 'central',
+    'font-size': '12',
+    'font-weight': status === 'soglom' ? '500' : '700',
+    fill: status === 'soglom' ? '#8f98bd' : '#f4efe2',
     style: 'font-variant-numeric: tabular-nums; pointer-events:none'
   })
-  label.textContent = no
+  label.textContent = p.no
   group.appendChild(label)
 
   const apply = () => {
-    teeth[no] = teeth[no] === picked ? 'soglom' : picked
+    teeth[p.no] = teeth[p.no] === picked ? 'soglom' : picked
     render()
   }
   group.addEventListener('click', apply)
@@ -151,40 +203,15 @@ function drawTooth(g, no, upper, x, y, rot, index) {
       apply()
     }
   })
-  g.appendChild(group)
+  svg.appendChild(group)
 }
 
 function render() {
   const host = document.getElementById('chart')
-  const svg = el('svg', { viewBox: '0 0 760 424', 'aria-label': LABELS.chart })
-
-  const defs = el('defs')
-  for (const s of STATUSES) {
-    const grad = el('linearGradient', { id: `g-${s.key}`, x1: '0', y1: '0', x2: '0.25', y2: '1' })
-    grad.appendChild(el('stop', { offset: '0', 'stop-color': s.grad[0] }))
-    grad.appendChild(el('stop', { offset: '1', 'stop-color': s.grad[1] }))
-    defs.appendChild(grad)
-  }
-  svg.appendChild(defs)
-
-  svg.appendChild(
-    el('line', {
-      x1: '150', y1: '240', x2: '610', y2: '240',
-      stroke: '#2b3357', 'stroke-dasharray': '3 5'
-    })
-  )
-
-  const layoutU = archLayout(UPPER)
-  UPPER.forEach((no, i) => {
-    const p = archPos(layoutU[i], true)
-    drawTooth(svg, no, true, p.x, p.y, p.rot, i)
-  })
-  const layoutL = archLayout(LOWER)
-  LOWER.forEach((no, i) => {
-    const p = archPos(layoutL[i], false)
-    drawTooth(svg, no, false, p.x, p.y - 46, p.rot, i)
-  })
-
+  const svg = el('svg', { viewBox: '0 0 420 610', 'aria-label': LABELS.chart })
+  svg.appendChild(el('line', { x1: '210', y1: '200', x2: '210', y2: '420', stroke: '#2b3357' }))
+  svg.appendChild(el('line', { x1: '95', y1: '310', x2: '325', y2: '310', stroke: '#2b3357' }))
+  for (const p of PLACED) drawTooth(svg, p)
   host.replaceChildren(svg)
 }
 
@@ -197,7 +224,8 @@ function renderLegend() {
       b.type = 'button'
       b.setAttribute('aria-pressed', String(s.key === picked))
       const sw = document.createElement('i')
-      sw.style.background = `linear-gradient(160deg, ${s.grad[0]}, ${s.grad[1]})`
+      sw.style.background = s.fill === 'none' ? 'transparent' : s.fill
+      if (s.key === 'olingan') sw.style.borderStyle = 'dashed'
       sw.style.borderColor = s.stroke
       b.append(sw, document.createTextNode(s.label))
       b.addEventListener('click', () => {
