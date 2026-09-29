@@ -2,24 +2,28 @@
 
 `apps/landing/img/*.webp` — kabinetning haqiqiy ekranlari. Yangilash tartibi (lokal):
 
-1. Docker (`npm run up`) va dev serverlar: API 3000, kabinet 5175. Lokal sinov egasi
-   `ui-sinov@example.com / sinov12345` boʻlishi kerak. Ikkinchi nusxada (alohida ish
-   daraxti) portlar boshqa: `API_PORT=3001 node … seed-demo.mjs` va
-   `BASE_URL=http://localhost:5176 node … shots.mjs`.
-2. Demo maʼlumot: `node scripts/landing/seed-demo.mjs` — 16 bemor, tashriflar, tish
-   xaritasi, toʻlovlar, xarajatlar, qabullar, navbat, naryadlar, ikkita davolash rejasi
-   (biri bemorga yuborilgan, biri qabul qilingan va yarmi bajarilgan). Ikkinchi marta ishga
-   tushsa mavjudini qayta yozmaydi. Faqat `localhost` — serverga qaratib boʻlmaydi.
+1. Docker (`npm run up`) va dev serverlar: API, kabinet 5175. Port 3000 band boʻlsa API ni
+   `API_PORT=3001` bilan, kabinetni `API_PROXY=http://localhost:3001` bilan koʻtaring.
+2. Maʼlumot — namuna klinika «Tabassum Dental»: `npm run db:demo -- --reset` (API
+   ishlab turgan boʻlsin; port boshqa boʻlsa oldiga `API_PORT=3001`). Har safar `--reset`
+   bilan: sanalar bugundan hisoblanadi, bugungi navbat faqat shunda boʻladi. Kirish
+   `egasi@tabassum.uz / tabassum123` — skriptda sukut; boshqa hisob uchun
+   `SHOT_EMAIL`, `SHOT_PASSWORD`. Bemorlar tasodifiy ssenariy bilan yaratiladi, shuning
+   uchun skript ism emas, maʼlumot boʻyicha tanlaydi (koʻprigi bor bemor, qabul qilingan
+   va yuborilgan reja).
 3. Rasmlar: `npm i --no-save playwright-core` (ildizda), brauzer yoʻq boʻlsa
-   `npx playwright-core install chromium-headless-shell`, keyin
-   `node scripts/landing/shots.mjs ./shots` — `patients, teeth, visits, calendar, queue,
-   reports, dashboard, queue-phone, queue-screen, feedback-phone, feedback-cabinet,
-   plan-cabinet, plan-phone`.
-   Fikrlar ochiq sahifa orqali yoziladi — IP soatiga 10 ta: seed ikkinchi marta
-   toʻsiqqa urilsa `docker exec ed-redis redis-cli DEL ratelimit:feedback:ip:127.0.0.1`. Ruscha interfeys uchun (`img/ru/`):
+   `npx playwright-core install chromium-headless-shell` (yoki keshdagisi:
+   `PLAYWRIGHT_CHROMIUM=~/Library/Caches/ms-playwright/chromium_headless_shell-<v>/chrome-mac/headless_shell`),
+   keyin `node scripts/landing/shots.mjs ./shots` — `patients, teeth, visits, calendar,
+   queue, reports, dashboard, queue-phone, queue-screen, feedback-phone, feedback-cabinet,
+   plan-cabinet, plan-phone`. Ruscha interfeys uchun (`img/ru/`):
    `node scripts/landing/shots.mjs ./shots-ru ru`.
-4. WebP: `cwebp -q 82 -resize 1600 0 shots/patients.png -o apps/landing/img/patients.webp`
-   (telefon: `-resize 780 0`, keyin `-crop 0 0 780 1180`).
+4. WebP: `cwebp -q 82 -resize 1600 0 shots/patients.png -o apps/landing/img/patients.webp`.
+   Telefon: `cwebp -q 82 -crop 0 0 780 1180 …` (`plan-phone` qirqilmaydi — 780×1560,
+   xarita ostidagi bosqich ham koʻrinsin). `plan-cabinet`: `-crop 0 0 2560 1600 -resize 1600 0`.
+   **`cwebp` avval qirqadi, keyin kichraytiradi** — `-crop` asl (2×) oʻlchamda yoziladi.
+   Oʻlcham oʻzgarsa HTML dagi `width`/`height` ni ham, raqam yoki ism koʻringan `alt` ni
+   ham tuzating (ikkala tilda).
 
 `img/og.png` / `img/og-ru.png` (1200×630, ijtimoiy tarmoq uchun) — `og.html` / `og-ru.html`
 shabloni shu papkada:

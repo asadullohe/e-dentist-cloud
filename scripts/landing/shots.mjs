@@ -1,5 +1,7 @@
 // Landing (e-dentist.uz) uchun kabinet skrinshotlari — lokal dev server,
-// egasi sifatida, yorugʻ rejim, 1280×800 @2x. Oldin seed-demo.mjs.
+// egasi sifatida, yorugʻ rejim, 1280×800 @2x. Maʼlumot — namuna klinika
+// «Tabassum Dental» (`npm run db:demo -- --reset`, bugungi navbat bilan).
+// Boshqa hisob: SHOT_EMAIL / SHOT_PASSWORD.
 //
 //   npm i --no-save playwright-core            # repo ildizida, bir marta
 //   npx playwright-core install chromium-headless-shell   # brauzer yoʻq boʻlsa
@@ -13,6 +15,10 @@ import { mkdirSync } from 'node:fs'
 import { chromium } from 'playwright-core'
 
 const OUT = process.argv[2] ?? './shots'
+const CREDENTIALS = {
+  email: process.env.SHOT_EMAIL ?? 'egasi@tabassum.uz',
+  password: process.env.SHOT_PASSWORD ?? 'tabassum123',
+}
 mkdirSync(OUT, { recursive: true })
 const BASE = process.env.BASE_URL ?? 'http://localhost:5175'
 // Interfeys tili: `node shots.mjs ./shots ru` — ruscha landing (/ru/) uchun
@@ -39,13 +45,13 @@ const page = await context.newPage()
 
 // Kirish — API orqali, cookie kontekstga tushadi
 await page.goto(`${BASE}/login`)
-await page.evaluate(async () => {
+await page.evaluate(async (credentials) => {
   await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email: 'ui-sinov@example.com', password: 'sinov12345' }),
+    body: JSON.stringify(credentials),
   })
-})
+}, CREDENTIALS)
 
 async function shot(path, name, { wait = 1800, before } = {}) {
   await page.goto(`${BASE}${path}`, { waitUntil: 'load' })
@@ -59,10 +65,24 @@ async function shot(path, name, { wait = 1800, before } = {}) {
 // Bemorlar roʻyxati
 await shot('/patients', 'patients')
 
-// Bemor kartochkasi — tish xaritasi (Karimova Madina: koʻprik + holatlar)
+// Bemor kartochkasi — tish xaritasi. Namunada bemorlar tasodifiy ssenariy
+// bilan yaratiladi, shuning uchun ism emas: koʻprigi bor va xaritasida eng
+// koʻp yozuv bor bemor tanlanadi
 const patientId = await page.evaluate(async () => {
-  const r = await fetch('/api/patients?q=Karimova&page=1&pageSize=1').then((r) => r.json())
-  return r.data.items[0]?.id
+  const ids = []
+  for (let p = 1; ; p++) {
+    const r = await fetch(`/api/patients?page=${p}&pageSize=100`).then((r) => r.json())
+    ids.push(...r.data.items.map((item) => item.id))
+    if (r.data.items.length < 100) break
+  }
+  let best = { id: ids[0], score: -1 }
+  for (const id of ids) {
+    const chart = (await fetch(`/api/patients/${id}/teeth`).then((r) => r.json())).data
+    const statuses = new Set(chart.teeth.map((t) => t.status)).size
+    const score = chart.bridges.length * 100 + statuses * 10 + chart.teeth.length
+    if (score > best.score) best = { id, score }
+  }
+  return best.id
 })
 await page.setViewportSize({ width: 1280, height: 1040 })
 await shot(`/patients/${patientId}/tishlar`, 'teeth')
@@ -138,23 +158,28 @@ await shot('/settings/fikrlar', 'feedback-cabinet')
 
 // Kabinet: qabul qilingan reja (bosqichlar, bir qismi bajarilgan)
 const acceptedPlan = await page.evaluate(async () => {
-  const people = await fetch('/api/patients?q=Yusupova&page=1&pageSize=1').then((r) => r.json())
-  const patientId = people.data.items[0]?.id
-  const plans = await fetch(`/api/plans?patientId=${patientId}`).then((r) => r.json())
-  const plan = plans.data.find((row) => row.status === 'accepted') ?? plans.data[0]
-  return { patientId, planId: plan?.id }
+  const plans = (await fetch('/api/plans').then((r) => r.json())).data
+  const plan = plans.find((row) => row.status === 'accepted') ?? plans[0]
+  return { patientId: plan?.patientId, planId: plan?.id }
 })
 await page.setViewportSize({ width: 1280, height: 980 })
-await shot(`/patients/${acceptedPlan.patientId}/reja/${acceptedPlan.planId}`, 'plan-cabinet')
+await shot(`/patients/${acceptedPlan.patientId}/reja/${acceptedPlan.planId}`, 'plan-cabinet', {
+  // Xarita tik va baland — ochiq boʻlsa bosqichlar va jami kadrga sigʻmaydi.
+  // Rejadagi tishlar xaritasi telefon rasmida (plan-phone) koʻrinadi
+  before: async () => {
+    const toggle = page.locator('main button[aria-expanded], main button').filter({
+      hasText: LOCALE === 'ru' ? 'Зубная карта' : 'Tish xaritasi',
+    })
+    await toggle.first().click()
+    await page.waitForTimeout(400)
+  },
+})
 await page.setViewportSize({ width: 1280, height: 800 })
 
 // Telefon: bemorga yuborilgan rejaning ochiq sahifasi
 const sentCode = await page.evaluate(async () => {
-  const people = await fetch('/api/patients?q=Karimova&page=1&pageSize=1').then((r) => r.json())
-  const plans = await fetch(`/api/plans?patientId=${people.data.items[0]?.id}`).then((r) =>
-    r.json(),
-  )
-  return (plans.data.find((row) => row.status === 'sent') ?? plans.data[0])?.publicCode
+  const plans = (await fetch('/api/plans').then((r) => r.json())).data
+  return (plans.find((row) => row.status === 'sent') ?? plans[0])?.publicCode
 })
 const planPhone = await phone.newPage()
 await planPhone.goto(`${BASE}/r/${sentCode}`, { waitUntil: 'load' })
