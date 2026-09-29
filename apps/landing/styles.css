@@ -722,24 +722,4 @@ main { overflow-x: clip; }
     }
     details[open]::details-content { height: auto; }
   }
-
-  /* Tepa panel ostida — sahifa qancha oʻqilgani */
-  @supports (animation-timeline: scroll()) {
-    .top::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: -1px;
-      height: 2px;
-      background: linear-gradient(90deg, var(--indigo), var(--gold));
-      transform-origin: left;
-      animation: progress linear both;
-      animation-timeline: scroll(root);
-    }
-    @keyframes progress {
-      from { transform: scaleX(0); }
-      to { transform: scaleX(1); }
-    }
-  }
 }
