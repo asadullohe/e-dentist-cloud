@@ -130,10 +130,9 @@ const el = (name, attrs = {}) => {
   return node
 }
 
+// Tish bir marta chiziladi; holat oʻzgarganda faqat ranglari yangilanadi.
+// Butun xarita qayta qurilsa «chiqish» animatsiyasi hamma tishda qaytadan oʻynaydi
 function drawTooth(svg, p) {
-  const status = teeth[p.no] || 'soglom'
-  const st = STYLE[status]
-  const removed = status === 'olingan'
   const shape = outline(toothType(p.no), p.width, p.depth)
 
   const group = el('g', { class: 'tooth', tabindex: '0', role: 'button' })
@@ -142,7 +141,6 @@ function drawTooth(svg, p) {
   group.style.animationDelay = `${120 + p.index * 45}ms`
 
   const title = el('title')
-  title.textContent = `${p.no} — ${st.label}`
   group.appendChild(title)
 
   const body = el('g', { transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${p.angle.toFixed(1)})` })
@@ -153,28 +151,16 @@ function drawTooth(svg, p) {
   lift.appendChild(
     el('rect', { x: -p.width / 2, y: -p.depth / 2, width: p.width, height: p.depth, fill: 'transparent' })
   )
-  const path = el('path', {
-    class: 'crown-shape',
-    d: shape.body,
-    fill: st.fill,
-    stroke: st.stroke,
-    'stroke-width': '1.3'
+  const path = el('path', { class: 'crown-shape', d: shape.body, 'stroke-width': '1.3' })
+  const groove = el('path', {
+    d: shape.groove,
+    fill: 'none',
+    'stroke-width': '1',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    opacity: '0.6'
   })
-  if (removed) path.setAttribute('stroke-dasharray', '3 3')
-  lift.appendChild(path)
-  if (!removed) {
-    lift.appendChild(
-      el('path', {
-        d: shape.groove,
-        fill: 'none',
-        stroke: st.stroke,
-        'stroke-width': '1',
-        'stroke-linecap': 'round',
-        'stroke-linejoin': 'round',
-        opacity: '0.6'
-      })
-    )
-  }
+  lift.append(path, groove)
   body.appendChild(lift)
   group.appendChild(body)
 
@@ -185,16 +171,30 @@ function drawTooth(svg, p) {
     'text-anchor': 'middle',
     'dominant-baseline': 'central',
     'font-size': '12',
-    'font-weight': status === 'soglom' ? '500' : '700',
-    fill: status === 'soglom' ? '#8f98bd' : '#f4efe2',
     style: 'font-variant-numeric: tabular-nums; pointer-events:none'
   })
   label.textContent = p.no
   group.appendChild(label)
 
+  const paint = () => {
+    const status = teeth[p.no] || 'soglom'
+    const st = STYLE[status]
+    const removed = status === 'olingan'
+    title.textContent = `${p.no} — ${st.label}`
+    path.setAttribute('fill', st.fill)
+    path.setAttribute('stroke', st.stroke)
+    if (removed) path.setAttribute('stroke-dasharray', '3 3')
+    else path.removeAttribute('stroke-dasharray')
+    groove.setAttribute('stroke', st.stroke)
+    groove.style.display = removed ? 'none' : ''
+    label.setAttribute('font-weight', status === 'soglom' ? '500' : '700')
+    label.setAttribute('fill', status === 'soglom' ? '#8f98bd' : '#f4efe2')
+  }
+  paint()
+
   const apply = () => {
     teeth[p.no] = teeth[p.no] === picked ? 'soglom' : picked
-    render()
+    paint()
   }
   group.addEventListener('click', apply)
   group.addEventListener('keydown', (e) => {
