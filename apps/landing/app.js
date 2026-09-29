@@ -122,6 +122,11 @@ const PLACED = ARCHES.flatMap((arch) => placeArch(arch).map((p) => ({ ...p, uppe
 // Namuna karta — dasturdagi demo bemor kabi
 const teeth = { 16: 'plomba', 26: 'karies', 38: 'olingan', 36: 'koronka', 45: 'implant' }
 let picked = 'karies'
+// Tish raqami → uni qayta boʻyash va joyi (jonli namuna shu orqali bosadi)
+const TEETH = new Map()
+let chartSvg = null
+// Harakatni kamaytirish yoqilgan boʻlsa — namuna ham, scroll animatsiyasi ham yoʻq
+const MOTION = !window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 const NS = 'http://www.w3.org/2000/svg'
 const el = (name, attrs = {}) => {
@@ -137,8 +142,8 @@ function drawTooth(svg, p) {
 
   const group = el('g', { class: 'tooth', tabindex: '0', role: 'button' })
   group.style.setProperty('--from', p.upper ? '-14px' : '14px')
-  // Oʻrtadan chetga qarab chiqadi
-  group.style.animationDelay = `${120 + p.index * 45}ms`
+  // Oʻrtadan chetga qarab chiqadi — karta kirib boʻlgach
+  group.style.animationDelay = `${520 + p.index * 45}ms`
 
   const title = el('title')
   group.appendChild(title)
@@ -191,6 +196,7 @@ function drawTooth(svg, p) {
     label.setAttribute('fill', status === 'soglom' ? '#8f98bd' : '#f4efe2')
   }
   paint()
+  TEETH.set(p.no, { paint, group, p })
 
   const apply = () => {
     teeth[p.no] = teeth[p.no] === picked ? 'soglom' : picked
@@ -213,6 +219,7 @@ function render() {
   svg.appendChild(el('line', { x1: '95', y1: '310', x2: '325', y2: '310', stroke: '#2b3357' }))
   for (const p of PLACED) drawTooth(svg, p)
   host.replaceChildren(svg)
+  chartSvg = svg
 }
 
 function renderLegend() {
@@ -239,6 +246,137 @@ function renderLegend() {
 
 render()
 renderLegend()
+
+// ---------- Jonli namuna: «shifokor» bir necha tishni oʻzi belgilaydi ----------
+// Tashrifchi xaritani oʻzi bosib koʻrmasa ham, u qanday ishlashini koʻradi.
+// Xaritaga yoki holatlarga tegilsa — darhol toʻxtaydi, qolgani tashrifchiniki
+const DEMO = [
+  ['karies', 24],
+  ['plomba', 24],
+  ['koronka', 11],
+  ['koronka', 21],
+  ['olingan', 47],
+  ['implant', 47]
+]
+
+function tap(no) {
+  const tooth = TEETH.get(no)
+  if (!tooth || !chartSvg) return
+  const ring = el('circle', { class: 'tap-ring', cx: tooth.p.x.toFixed(1), cy: tooth.p.y.toFixed(1), r: '22' })
+  chartSvg.appendChild(ring)
+  ring.addEventListener('animationend', () => ring.remove())
+  tooth.group.classList.remove('tapped')
+  // Reflow — ketma-ket bosishda animatsiya qaytadan boshlansin
+  void tooth.group.getBoundingClientRect()
+  tooth.group.classList.add('tapped')
+}
+
+function startDemo() {
+  const card = document.querySelector('.chart-card')
+  let stopped = false
+  const timers = []
+  const stop = () => {
+    stopped = true
+    for (const t of timers) clearTimeout(t)
+  }
+  card.addEventListener('pointerdown', stop, { once: true })
+  card.addEventListener('keydown', stop, { once: true })
+
+  // Tishlar chiqib boʻlgach boshlanadi; har qadam — holat tanlash, keyin bosish
+  let at = 600
+  for (const [status, no] of DEMO) {
+    timers.push(
+      setTimeout(() => {
+        if (stopped) return
+        picked = status
+        renderLegend()
+      }, at),
+      setTimeout(() => {
+        if (stopped) return
+        teeth[no] = status
+        TEETH.get(no)?.paint()
+        tap(no)
+      }, at + 450)
+    )
+    at += 1300
+  }
+  // Oxirida tanlov boshlangʻich holatga qaytadi — tashrifchi karies bilan boshlaydi
+  timers.push(
+    setTimeout(() => {
+      if (stopped) return
+      picked = 'karies'
+      renderLegend()
+    }, at)
+  )
+}
+
+if (MOTION) {
+  // Xarita ekranga chiqqanda (telefonda u sarlavhadan pastda) — bir marta
+  const seen = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((e) => e.isIntersecting)) return
+      seen.disconnect()
+      setTimeout(startDemo, 1100)
+    },
+    { threshold: 0.4 }
+  )
+  seen.observe(document.getElementById('chart'))
+}
+
+// ---------- Scroll bilan ochilish ----------
+// Faqat ekrandan pastdagi elementlar yashiriladi: sahifa ochilganda koʻrinib
+// turgan narsa miltillamaydi. JS ishlamasa — hammasi oddiy koʻrinadi
+const REVEAL = [
+  ['.strip .wrap > div', 90],
+  ['.sec-head', 0],
+  ['.feature-text', 0],
+  ['.feature-text li', 70],
+  ['.feature .shot', 0],
+  ['.queue-grid > .shot', 0],
+  ['.queue-side > *', 110],
+  ['.checks li', 70],
+  ['.privacy-grid .card', 90],
+  ['.cta-row.center', 0],
+  ['details', 40],
+  ['.help', 0]
+]
+
+if (MOTION && 'IntersectionObserver' in window) {
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        entry.target.classList.add('in')
+        io.unobserve(entry.target)
+      }
+    },
+    { rootMargin: '0px 0px -8% 0px', threshold: 0.12 }
+  )
+  const fold = window.innerHeight
+  for (const [selector, step] of REVEAL) {
+    // Bir guruh ichida ketma-ket: roʻyxat bandlari, kartalar
+    const groups = new Map()
+    for (const node of document.querySelectorAll(selector)) {
+      if (node.getBoundingClientRect().top < fold) continue
+      const index = groups.get(node.parentElement) ?? 0
+      groups.set(node.parentElement, index + 1)
+      node.classList.add('reveal')
+      node.style.setProperty('--d', `${Math.min(index * step, 600)}ms`)
+      io.observe(node)
+    }
+  }
+  // Skrinshot oʻz tomonidan kiradi: chapda turgani chapdan, oʻngdagisi oʻngdan.
+  // Joy haqiqiy joylashuvdan olinadi — telefonda rasm matn ostida, u pastdan chiqadi
+  for (const feature of document.querySelectorAll('.feature')) {
+    const shot = feature.querySelector('.shot')
+    const text = feature.querySelector('.feature-text')
+    if (!shot || !text) continue
+    const a = shot.getBoundingClientRect()
+    const b = text.getBoundingClientRect()
+    if (a.top >= b.bottom - 1) continue
+    shot.classList.add(a.left < b.left ? 'from-left' : 'from-right')
+  }
+}
 
 // Tepa panelga chegara — sahifa suringanda
 const topBar = document.getElementById('top')

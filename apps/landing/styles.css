@@ -553,14 +553,193 @@ footer .contact a:hover { border-bottom-color: var(--indigo); }
   border-radius: 6px;
 }
 
-/* Tishlarning ochilish animatsiyasi */
+/* ---------- Animatsiyalar ----------
+   Faqat transform, translate, opacity — telefonda ham silliq. Harakatni
+   kamaytirish yoqilgan qurilmada hech biri ishlamaydi, sahifa oddiy turadi */
+
+.top nav a { position: relative; }
+details summary::after { display: inline-block; }
+/* Yondan kirayotgan skrinshot va xarita orqasidagi nur sahifani yonga
+   surdirmasin. `clip` — scroll konteyner emas, yopishqoq narsalar buzilmaydi */
+main { overflow-x: clip; }
+
 @media (prefers-reduced-motion: no-preference) {
+  :root { --ease: cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+  /* Sarlavha: yozuvlar ketma-ket chiqadi, xarita kartasi yumshoq kiradi */
+  .hero > div:first-child > * {
+    animation: rise 0.9s var(--ease) both;
+  }
+  .hero > div:first-child > :nth-child(2) { animation-delay: 0.08s; }
+  .hero > div:first-child > :nth-child(3) { animation-delay: 0.2s; }
+  .hero > div:first-child > :nth-child(4) { animation-delay: 0.32s; }
+  .hero > div:first-child > :nth-child(5) { animation-delay: 0.44s; }
+  .chart-card { animation: card-in 1s var(--ease) 0.2s both; }
+  @keyframes rise {
+    from { opacity: 0; translate: 0 22px; filter: blur(6px); }
+    to { opacity: 1; translate: none; filter: none; }
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+
+  /* «brauzerda» — oltin yozuv ustidan sekin yaltiroq oʻtadi */
+  .hero h1 em {
+    background: linear-gradient(100deg, var(--gold) 40%, #f6dca0 50%, var(--gold) 60%) 0 0 / 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gleam 7s ease-in-out 1.4s infinite;
+  }
+  @keyframes gleam {
+    0%, 60% { background-position: 100% 0; }
+    100% { background-position: 0 0; }
+  }
+
+  /* Xarita orqasidagi suzuvchi nur */
+  .hero { position: relative; isolation: isolate; }
+  .hero::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    right: -4%;
+    top: 8%;
+    width: 52%;
+    height: 84%;
+    background:
+      radial-gradient(closest-side at 35% 40%, color-mix(in srgb, var(--indigo) 38%, transparent), transparent),
+      radial-gradient(closest-side at 70% 70%, color-mix(in srgb, var(--gold) 22%, transparent), transparent);
+    filter: blur(40px);
+    animation: drift 14s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes drift {
+    from { transform: translate(-3%, -2%) scale(1); }
+    to { transform: translate(4%, 3%) scale(1.08); }
+  }
+  @media (max-width: 900px) {
+    .hero::before { left: 0; right: 0; width: auto; top: auto; bottom: 0; height: 55%; }
+  }
+
+  /* Tishlar kartaga kirgandan keyin chiqadi */
   .tooth {
     opacity: 0;
-    animation: erupt 0.5s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+    animation: erupt 0.5s var(--ease) forwards;
   }
   @keyframes erupt {
     from { opacity: 0; transform: translateY(var(--from, 10px)); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Jonli namuna: bosilgan tish sakraydi, atrofidan toʻlqin tarqaladi */
+  .tooth.tapped .tooth-lift { animation: tap 0.5s var(--ease); }
+  @keyframes tap {
+    40% { transform: scale(1.2); }
+  }
+  .tap-ring {
+    fill: none;
+    stroke: var(--indigo);
+    stroke-width: 2.5;
+    pointer-events: none;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: ring 0.75s ease-out forwards;
+  }
+  @keyframes ring {
+    from { transform: scale(0.4); opacity: 0.9; }
+    to { transform: scale(1.7); opacity: 0; }
+  }
+  .chart-legend button { transition: color 0.2s, background 0.25s; }
+
+  /* Scroll bilan ochilish (app.js `.reveal` qoʻyadi, ekranga kirganda `.in`) */
+  .reveal {
+    opacity: 0;
+    translate: 0 30px;
+    transition:
+      opacity 0.8s var(--ease) var(--d, 0ms),
+      translate 0.9s var(--ease) var(--d, 0ms),
+      transform 0.5s var(--ease);
+  }
+  .reveal.from-left { translate: -56px 0; }
+  .reveal.from-right { translate: 56px 0; }
+  .reveal.in { opacity: 1; translate: none; }
+
+  /* Skrinshot va kartalar ustiga kelganda biroz koʻtariladi */
+  .shot { transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease); }
+  .shot:hover { transform: translateY(-6px); box-shadow: 0 36px 70px -30px #000; }
+  .card { transition: transform 0.4s var(--ease), border-color 0.3s; }
+  .card:hover { transform: translateY(-4px); border-color: var(--indigo-deep); }
+  .privacy-grid .card.reveal { transition-property: opacity, translate, transform, border-color; }
+
+  /* Asosiy tugma: yaltiroq nur — ustiga kelganda va CTA larda vaqti-vaqti bilan */
+  .btn { position: relative; overflow: hidden; isolation: isolate; }
+  .btn:not(.ghost)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.5) 50%, transparent 70%);
+    translate: -120% 0;
+    pointer-events: none;
+  }
+  .btn:not(.ghost):hover::after { translate: 120% 0; transition: translate 0.7s var(--ease); }
+  .cta-row .btn:not(.ghost)::after { animation: shine 6s ease-in-out 2.2s infinite; }
+  @keyframes shine {
+    0%, 78% { translate: -120% 0; }
+    100% { translate: 120% 0; }
+  }
+
+  /* Menyu: ostidan chiziq chiqadi */
+  .top nav a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -6px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--indigo);
+    scale: 0 1;
+    transform-origin: left;
+    transition: scale 0.3s var(--ease);
+  }
+  .top nav a:hover::after { scale: 1 1; }
+
+  /* Savollar: «+» burilib «×» ga aylanadi, javob silliq ochiladi */
+  details summary::after { transition: rotate 0.3s var(--ease); }
+  details[open] summary::after { content: '+'; rotate: 45deg; }
+  details[open] p { animation: faq-in 0.45s var(--ease); }
+  @keyframes faq-in {
+    from { opacity: 0; translate: 0 -6px; }
+    to { opacity: 1; translate: none; }
+  }
+  @supports (interpolate-size: allow-keywords) {
+    details { interpolate-size: allow-keywords; }
+    details::details-content {
+      height: 0;
+      overflow: clip;
+      transition: height 0.4s var(--ease), content-visibility 0.4s allow-discrete;
+    }
+    details[open]::details-content { height: auto; }
+  }
+
+  /* Tepa panel ostida — sahifa qancha oʻqilgani */
+  @supports (animation-timeline: scroll()) {
+    .top::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--indigo), var(--gold));
+      transform-origin: left;
+      animation: progress linear both;
+      animation-timeline: scroll(root);
+    }
+    @keyframes progress {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
   }
 }
