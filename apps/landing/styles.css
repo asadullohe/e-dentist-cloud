@@ -51,6 +51,8 @@
   --body: 'Schibsted Grotesk', system-ui, sans-serif;
 
   --wrap: 1120px;
+  /* Tepa paneldagi boshqaruvlar (til, Kirish, Boshlash) — bitta balandlik */
+  --control-h: 42px;
   --radius: 18px;
 }
 
@@ -141,7 +143,9 @@ h1, h2, h3 {
 /* Til almashtirgich: ikki boʻlakli tugma, joriy til toʻldirilgan */
 .lang-switch {
   display: inline-flex;
-  padding: 3px;
+  box-sizing: border-box;
+  height: var(--control-h);
+  padding: 4px;
   margin-right: 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -152,7 +156,9 @@ h1, h2, h3 {
   line-height: 1;
 }
 .lang-switch a {
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 11px;
   border-radius: 999px;
   color: var(--ink-soft);
   text-decoration: none;
@@ -223,7 +229,7 @@ h1, h2, h3 {
 }
 .btn.ghost:hover { background: var(--panel-2); }
 .btn small { font-weight: 500; opacity: 0.7; }
-.btn.sm { padding: 9px 15px; border-radius: 11px; font-size: 14.5px; white-space: nowrap; }
+.btn.sm { height: var(--control-h); padding: 0 15px; border-radius: 11px; font-size: 14.5px; white-space: nowrap; }
 /* Tor ekranda tugma matni qisqaradi: «Bepul boshlash» → «Boshlash» */
 .s-short { display: none; }
 @media (max-width: 480px) {
