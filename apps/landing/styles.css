@@ -450,6 +450,29 @@ section { padding: 84px 0; }
 .card h3 { font-size: 19px; margin-bottom: 8px; }
 .card p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
 
+/* ---------- Tariflar: individual va klinika (tz.md 20-boʻlim) ---------- */
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.plan { display: flex; flex-direction: column; gap: 14px; }
+.plan h3 { margin-bottom: 0; }
+.plan .checks { flex: 1; }
+.plan .btn { align-self: flex-start; }
+.plan-tag {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--indigo) 18%, transparent);
+  color: var(--indigo);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 /* ---------- Yuklab olish ---------- */
 
 .dl-grid {
