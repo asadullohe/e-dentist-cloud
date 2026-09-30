@@ -86,6 +86,7 @@ model Clinic {
   planGroups       TreatmentPlanGroup[]
   planItems        TreatmentPlanItem[]
   assistantDoctors AssistantDoctor[]
+  labs             Lab[]
 
   @@index([status])
   @@map("clinics")
@@ -671,6 +672,8 @@ model LabOrder {
   doctorId  String  @map("doctor_id") @db.Uuid
   /// Biriktirilgan texnik. Hali tanlanmagan boʻlishi mumkin
   techId    String? @map("tech_id") @db.Uuid
+  /// Yoki tashqi laboratoriya (tz.md 20-boʻlim) — texnik bilan birga emas
+  labId     String? @map("lab_id") @db.Uuid
 
   /// FDI raqamlari
   teeth     Int[]
@@ -697,13 +700,33 @@ model LabOrder {
 
   clinic  Clinic  @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   patient Patient @relation(fields: [patientId], references: [id], onDelete: Restrict)
+  lab     Lab?    @relation(fields: [labId], references: [id], onDelete: Restrict)
   /// Topshirilganda yozilgan tashrif(lar)
   visits  Visit[]
 
   @@index([clinicId, status, dueDate])
   @@index([clinicId, techId, status])
   @@index([clinicId, patientId])
+  @@index([labId])
   @@map("lab_orders")
+}
+
+/// Klinikaning tashqi laboratoriyalari (tz.md 20-boʻlim): texnik xodim
+/// boʻlmasa naryad shu yerga beriladi. Naryadda ishlatilgani oʻchirilmaydi
+model Lab {
+  id       String  @id @default(uuid(7)) @db.Uuid
+  clinicId String  @map("clinic_id") @db.Uuid
+  name     String
+  phone    String?
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  clinic Clinic     @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  orders LabOrder[]
+
+  @@index([clinicId])
+  @@map("labs")
 }
 
 // ───────────────────────────────  Xarajatlar  ───────────────────────────────

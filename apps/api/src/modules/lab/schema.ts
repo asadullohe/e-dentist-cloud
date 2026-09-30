@@ -1,4 +1,4 @@
-import { LAB_TEXT, VALIDATION_TEXT, VITA_SHADES } from '@e-dentist/shared'
+import { LAB_TEXT, phoneDigits, VALIDATION_TEXT, VITA_SHADES } from '@e-dentist/shared'
 import { isToothNo } from '@e-dentist/teeth'
 import { z } from 'zod'
 import { visitCreateSchema } from '../visits/service.js'
@@ -42,9 +42,15 @@ const techPrice = z.coerce
   .int()
   .min(0, { error: () => LAB_TEXT.price_negative })
 
-export const labCreateSchema = z.object({
+/// Naryad texnikka **yoki** laboratoriyaga (tz.md 20-boʻlim). Bazada ham
+/// CHECK bor — bu yerda foydalanuvchiga tushunarli xato uchun
+const oneAssignee = (value: { techId?: string | null; labId?: string | null }) =>
+  !(value.techId && value.labId)
+
+const labOrderFields = z.object({
   patientId: z.string().uuid(),
   techId: z.string().uuid().nullish(),
+  labId: z.string().uuid().nullish(),
   teeth: z
     .array(
       z.coerce
@@ -62,13 +68,36 @@ export const labCreateSchema = z.object({
   note: z.string().trim().max(2000).nullish(),
 })
 
+export const labCreateSchema = labOrderFields.refine(oneAssignee, {
+  path: ['labId'],
+  error: () => LAB_TEXT.tech_or_lab,
+})
+
 /// `.partial()` `.default(0)` ni olib tashlamaydi — narx yuborilmasa ham 0
 /// kelib, `lab.cost` yoʻq shifokor tahrirda 403 olardi. Shuning uchun narx
 /// alohida, sukutsiz
-export const labUpdateSchema = labCreateSchema
+export const labUpdateSchema = labOrderFields
   .omit({ patientId: true, techPrice: true })
   .partial()
   .extend({ techPrice: techPrice.optional() })
+  .refine(oneAssignee, { path: ['labId'], error: () => LAB_TEXT.tech_or_lab })
+
+export const labPlaceSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, { error: () => LAB_TEXT.lab_name_required })
+    .max(120),
+  phone: z
+    .string()
+    .trim()
+    .nullish()
+    .refine((value) => !value || phoneDigits(value).length === 9, {
+      error: () => VALIDATION_TEXT.phone_incomplete,
+    }),
+})
+
+export const labPlaceUpdateSchema = labPlaceSchema.partial()
 
 export const labStatusSchema = z.object({
   status: z.enum(LAB_STATUSES),
@@ -96,3 +125,5 @@ export type LabUpdateInput = z.infer<typeof labUpdateSchema>
 export type LabStatusInput = z.infer<typeof labStatusSchema>
 export type LabReturnInput = z.infer<typeof labReturnSchema>
 export type LabListInput = z.infer<typeof labListSchema>
+export type LabPlaceInput = z.infer<typeof labPlaceSchema>
+export type LabPlaceUpdateInput = z.infer<typeof labPlaceUpdateSchema>

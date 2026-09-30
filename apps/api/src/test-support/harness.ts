@@ -174,6 +174,7 @@ export async function removeClinic(ownerDb: Db, clinicId: string): Promise<void>
   await ownerDb.bridge.deleteMany(where)
   await ownerDb.patientImage.deleteMany(where)
   await ownerDb.labOrder.deleteMany(where)
+  await ownerDb.lab.deleteMany(where)
   await ownerDb.patient.deleteMany(where)
   await ownerDb.service.deleteMany(where)
   await ownerDb.serviceType.deleteMany(where)

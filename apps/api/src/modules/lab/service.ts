@@ -8,6 +8,7 @@ import {
   LAB_WORK_TYPE_LABELS,
   PATIENT_TEXT,
   type Permission,
+  phoneDigits,
   todayISO,
 } from '@e-dentist/shared'
 import type { LabStatus } from '../../../generated/prisma/client.js'
@@ -25,6 +26,8 @@ import type {
   LabCreateInput,
   LabDeliverInput,
   LabListInput,
+  LabPlaceInput,
+  LabPlaceUpdateInput,
   LabReturnInput,
   LabUpdateInput,
 } from './schema.js'
@@ -41,6 +44,9 @@ export interface LabOrderView {
   doctorName: string
   techId: string | null
   techName: string | null
+  /// Tashqi laboratoriya (tz.md 20-boʻlim) — texnik oʻrniga
+  labId: string | null
+  labName: string | null
   teeth: number[]
   workType: string
   material: string
@@ -111,6 +117,9 @@ async function toView(
     if (row.techId) staffIds.add(row.techId)
   }
   const names = await auth.staffNamesTx(tx, [...staffIds])
+  const labs = rows.some((row) => row.labId)
+    ? new Map((await repo.listLabs(tx)).map((lab) => [lab.id, lab.name]))
+    : new Map<string, string>()
 
   return rows.map((row) => {
     const due = toIso(row.dueDate)
@@ -122,6 +131,8 @@ async function toView(
       doctorName: names.get(row.doctorId) ?? '',
       techId: row.techId,
       techName: row.techId ? (names.get(row.techId) ?? '') : null,
+      labId: row.labId,
+      labName: row.labId ? (labs.get(row.labId) ?? '') : null,
       teeth: row.teeth,
       workType: row.workType,
       material: row.material,
@@ -186,6 +197,12 @@ async function assertTech(tx: ClinicTx, techId: string | null | undefined): Prom
   if (!(await auth.existsInClinic(tx, techId))) throw errors.notFound(LAB_TEXT.tech_not_found)
 }
 
+/// Laboratoriya shu klinikaniki — begonasi ijarachi qatlami ostida topilmaydi
+async function assertLab(tx: ClinicTx, labId: string | null | undefined): Promise<void> {
+  if (!labId) return
+  if (!(await repo.findLab(tx, labId))) throw errors.notFound(LAB_TEXT.lab_not_found)
+}
+
 export function list(
   deps: LabDeps,
   clinicId: string,
@@ -220,11 +237,13 @@ export function create(
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, input.patientId)
     await assertTech(tx, input.techId)
+    await assertLab(tx, input.labId)
 
     const created = await repo.create(tx, id, {
       patientId: input.patientId,
       doctorId: userId,
       techId: input.techId ?? null,
+      labId: input.labId ?? null,
       teeth: input.teeth,
       workType: input.workType,
       material: input.material,
@@ -261,9 +280,15 @@ export function update(
   return withClinic(deps.db, clinicId, async (tx) => {
     await loadForDoctor(tx, id, userId, permissions)
     await assertTech(tx, input.techId)
+    await assertLab(tx, input.labId)
 
     const updated = await repo.update(tx, id, {
       ...(input.techId === undefined ? {} : { techId: input.techId }),
+      ...(input.labId === undefined ? {} : { labId: input.labId }),
+      // Bittasi tanlansa ikkinchisi olinadi: texnikdan labga (yoki teskari)
+      // oʻtkazishda eskisini alohida tozalash shart emas
+      ...(input.techId ? { labId: null } : {}),
+      ...(input.labId ? { techId: null } : {}),
       ...(input.teeth === undefined ? {} : { teeth: input.teeth }),
       ...(input.workType === undefined ? {} : { workType: input.workType }),
       ...(input.material === undefined ? {} : { material: input.material }),
@@ -468,4 +493,57 @@ export function remove(
 /// faqat `data.export` boriga ochamiz, u esa egasida
 export function exportOrdersTx(tx: ClinicTx) {
   return repo.allOrders(tx)
+}
+
+/// Eksport uchun: laboratoriya nomlari (naryadda texnik oʻrnida chiqadi)
+export async function labNamesTx(tx: ClinicTx): Promise<Map<string, string>> {
+  return new Map((await repo.listLabs(tx)).map((row) => [row.id, row.name]))
+}
+
+// ─────────────────────  Tashqi laboratoriyalar (tz.md 20-boʻlim)  ─────────────────────
+
+export function listLabs(deps: LabDeps, clinicId: string) {
+  return withClinic(deps.db, clinicId, (tx) => repo.listLabs(tx))
+}
+
+export function createLab(deps: LabDeps, clinicId: string, userId: string, input: LabPlaceInput) {
+  const id = uuidV7()
+  return withClinic(deps.db, clinicId, async (tx) => {
+    const created = await repo.createLab(tx, id, {
+      name: input.name,
+      phone: input.phone ? phoneDigits(input.phone) : null,
+    })
+    await writeAudit(tx, { userId, action: AUDIT_ACTION.lab_updated, entity: 'lab', entityId: id })
+    return created
+  })
+}
+
+export function updateLab(
+  deps: LabDeps,
+  clinicId: string,
+  userId: string,
+  id: string,
+  input: LabPlaceUpdateInput,
+) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    if (!(await repo.findLab(tx, id))) throw errors.notFound(LAB_TEXT.lab_not_found)
+    const updated = await repo.updateLab(tx, id, {
+      ...(input.name === undefined ? {} : { name: input.name }),
+      ...(input.phone === undefined
+        ? {}
+        : { phone: input.phone ? phoneDigits(input.phone) : null }),
+    })
+    await writeAudit(tx, { userId, action: AUDIT_ACTION.lab_updated, entity: 'lab', entityId: id })
+    return updated
+  })
+}
+
+/// Naryadi bor laboratoriya oʻchirilmaydi — naryad tarixida kim bajargani qolsin
+export function removeLab(deps: LabDeps, clinicId: string, userId: string, id: string) {
+  return withClinic(deps.db, clinicId, async (tx) => {
+    if (!(await repo.findLab(tx, id))) throw errors.notFound(LAB_TEXT.lab_not_found)
+    if ((await repo.ordersOfLab(tx, id)) > 0) throw errors.conflict(LAB_TEXT.lab_in_use)
+    await repo.removeLab(tx, id)
+    await writeAudit(tx, { userId, action: AUDIT_ACTION.lab_deleted, entity: 'lab', entityId: id })
+  })
 }

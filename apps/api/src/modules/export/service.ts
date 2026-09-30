@@ -76,6 +76,7 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       feedback.exportRowsTx(tx),
     ])
     const planRows = await plans.exportRowsTx(tx)
+    const labNames = await lab.labNamesTx(tx)
 
     const names = new Map(people.map((person) => [person.id, person.fio]))
     // Bitta soʻrovda: naryaddagi texniklar, tashrifdagi shifokorlar,
@@ -123,7 +124,13 @@ export function buildArchive(deps: ExportDeps, clinicId: string, userId: string)
       sheets.toBuffer('Xarajatlar', sheets.expensesSheet(expenseRows), WIDTH.expenses),
       sheets.toBuffer(
         'Naryadlar',
-        sheets.labSheet(labRows, names, staffNames, (index) => labRows[index]?.techId ?? null),
+        // «Texnik» ustunida tashqi laboratoriya ham chiqadi (tz.md 20-boʻlim)
+        sheets.labSheet(
+          labRows,
+          names,
+          new Map([...staffNames, ...labNames]),
+          (index) => labRows[index]?.techId ?? labRows[index]?.labId ?? null,
+        ),
         WIDTH.lab,
       ),
       sheets.toBuffer('Narxnoma', sheets.servicesSheet(serviceRows), WIDTH.services),

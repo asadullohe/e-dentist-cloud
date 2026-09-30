@@ -1,4 +1,4 @@
-// lab moduli `lab_orders` jadvaliga egalik qiladi.
+// lab moduli `lab_orders` va `labs` jadvallariga egalik qiladi.
 
 import type {
   LabMaterial,
@@ -13,6 +13,7 @@ const SELECT = {
   patientId: true,
   doctorId: true,
   techId: true,
+  labId: true,
   teeth: true,
   workType: true,
   material: true,
@@ -58,6 +59,7 @@ export interface NewLabOrder {
   patientId: string
   doctorId: string
   techId?: string | null
+  labId?: string | null
   teeth: number[]
   workType: LabWorkType
   material: LabMaterial
@@ -71,7 +73,7 @@ export function create(tx: ClinicTx, id: string, data: NewLabOrder) {
   return tx.labOrder.create({ data: tenantScoped({ id, ...data }), select: SELECT })
 }
 
-export function update(tx: ClinicTx, id: string, data: Prisma.LabOrderUpdateInput) {
+export function update(tx: ClinicTx, id: string, data: Prisma.LabOrderUncheckedUpdateInput) {
   return tx.labOrder.update({ where: { id }, data, select: SELECT })
 }
 
@@ -82,4 +84,39 @@ export function remove(tx: ClinicTx, id: string) {
 /// Toʻliq eksport uchun
 export function allOrders(tx: ClinicTx) {
   return tx.labOrder.findMany({ select: SELECT, orderBy: [{ dueDate: 'asc' }, { id: 'asc' }] })
+}
+
+// ─────────────────────  Tashqi laboratoriyalar (tz.md 20-boʻlim)  ─────────────────────
+
+const LAB_SELECT = { id: true, name: true, phone: true } satisfies Prisma.LabSelect
+
+export type LabPlaceRow = Prisma.LabGetPayload<{ select: typeof LAB_SELECT }>
+
+export function listLabs(tx: ClinicTx) {
+  return tx.lab.findMany({ select: LAB_SELECT, orderBy: { name: 'asc' } })
+}
+
+export function findLab(tx: ClinicTx, id: string) {
+  return tx.lab.findUnique({ where: { id }, select: LAB_SELECT })
+}
+
+export function createLab(tx: ClinicTx, id: string, data: { name: string; phone: string | null }) {
+  return tx.lab.create({ data: tenantScoped({ id, ...data }), select: LAB_SELECT })
+}
+
+export function updateLab(
+  tx: ClinicTx,
+  id: string,
+  data: { name?: string; phone?: string | null },
+) {
+  return tx.lab.update({ where: { id }, data, select: LAB_SELECT })
+}
+
+export function removeLab(tx: ClinicTx, id: string) {
+  return tx.lab.delete({ where: { id } })
+}
+
+/// Oʻchirishdan oldin: naryadi bor laboratoriya oʻchirilmaydi — tarix buzilmasin
+export function ordersOfLab(tx: ClinicTx, labId: string) {
+  return tx.labOrder.count({ where: { labId } })
 }

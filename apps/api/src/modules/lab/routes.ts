@@ -7,6 +7,8 @@ import {
   labCreateSchema,
   labDeliverSchema,
   labListSchema,
+  labPlaceSchema,
+  labPlaceUpdateSchema,
   labReturnSchema,
   labStatusSchema,
   labUpdateSchema,
@@ -74,6 +76,34 @@ export const labRoutes: FastifyPluginAsync<LabRouteOpts> = async (app, opts) => 
     const { clinicId, userId, permissions } = actorOf(req)
     const { id } = req.params as { id: string }
     await service.remove(opts.deps, clinicId, userId, permissions, id)
+    return ok({ deleted: true })
+  })
+
+  // ───────────  Tashqi laboratoriyalar (tz.md 20-boʻlim)  ───────────
+  // Naryad yozadigan (egasi, shifokor) oʻz labini oʻzi qoʻshadi
+
+  app.get('/labs', write, async (req) => {
+    const { clinicId } = actorOf(req)
+    return ok(await service.listLabs(opts.deps, clinicId))
+  })
+
+  app.post('/labs', write, async (req) => {
+    const { clinicId, userId } = actorOf(req)
+    const input = validateInput(labPlaceSchema, req.body)
+    return ok(await service.createLab(opts.deps, clinicId, userId, input))
+  })
+
+  app.patch('/labs/:id', write, async (req) => {
+    const { clinicId, userId } = actorOf(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(labPlaceUpdateSchema, req.body)
+    return ok(await service.updateLab(opts.deps, clinicId, userId, id, input))
+  })
+
+  app.delete('/labs/:id', write, async (req) => {
+    const { clinicId, userId } = actorOf(req)
+    const { id } = req.params as { id: string }
+    await service.removeLab(opts.deps, clinicId, userId, id)
     return ok({ deleted: true })
   })
 }

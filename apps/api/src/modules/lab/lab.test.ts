@@ -539,3 +539,75 @@ describe('topshirilgandagi bogʻlanishlar', () => {
     expect(after).toBe(before)
   })
 })
+
+// Tashqi laboratoriya (tz.md 20-boʻlim): naryad texnikka yoki labga
+describe('tashqi laboratoriya', () => {
+  let labId = ''
+
+  it('laboratoriya qoʻshiladi, telefon raqamlarga keltiriladi', async () => {
+    const r = await call('POST', '/api/labs', {
+      name: 'Dental Lab Pro',
+      phone: '+998 90 111 22 33',
+    })
+    expect(r.statusCode).toBe(200)
+    labId = r.json().data.id
+    expect(r.json().data.phone).toBe('901112233')
+
+    const list = await call('GET', '/api/labs')
+    expect(list.json().data.map((lab: { id: string }) => lab.id)).toContain(labId)
+  })
+
+  it('texnik laboratoriyalar roʻyxatini koʻrmaydi — bu naryad yozuvchining ishi', async () => {
+    expect((await asTech('GET', '/api/labs')).statusCode).toBe(403)
+  })
+
+  it('naryad laboratoriyaga beriladi va nomi bilan qaytadi', async () => {
+    const r = await newOrder({ techId: null, labId })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data).toMatchObject({ labId, labName: 'Dental Lab Pro', techId: null })
+  })
+
+  it('texnik va laboratoriya birga — rad', async () => {
+    const r = await newOrder({ labId })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields.labId).toBe(
+      'Naryad texnikka yoki laboratoriyaga beriladi — ikkalasiga birdan emas',
+    )
+  })
+
+  it('texnikdan labga oʻtkazilsa texnik olinadi', async () => {
+    const order = (await newOrder()).json().data
+    const r = await call('PATCH', `/api/lab-orders/${order.id}`, { labId })
+    expect(r.json().data).toMatchObject({ labId, techId: null })
+  })
+
+  it('tashqi naryadni shifokor oʻzi «tayyor» deydi', async () => {
+    const order = (await newOrder({ techId: null, labId })).json().data
+    const r = await call('PATCH', `/api/lab-orders/${order.id}/status`, { status: 'ready' })
+    expect(r.statusCode).toBe(200)
+    expect(r.json().data.status).toBe('ready')
+  })
+
+  it('naryadi bor laboratoriya oʻchirilmaydi, nomi oʻzgaradi', async () => {
+    const del = await call('DELETE', `/api/labs/${labId}`)
+    expect(del.statusCode).toBe(409)
+
+    const renamed = await call('PATCH', `/api/labs/${labId}`, { name: 'Dental Lab Plus' })
+    expect(renamed.json().data.name).toBe('Dental Lab Plus')
+  })
+
+  it('boshqa klinikaning laboratoriyasi — «topilmadi»', async () => {
+    const foreign = await h.ownerDb.lab.create({
+      data: { clinicId: otherClinicId, name: 'Begona lab' },
+    })
+    const r = await newOrder({ techId: null, labId: foreign.id })
+    expect(r.statusCode).toBe(404)
+  })
+
+  it('bazaning oʻzi ham texnik + labni rad etadi', async () => {
+    const order = (await newOrder()).json().data
+    await expect(
+      h.ownerDb.labOrder.update({ where: { id: order.id }, data: { labId } }),
+    ).rejects.toThrow()
+  })
+})
