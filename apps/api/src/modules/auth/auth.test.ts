@@ -623,3 +623,76 @@ describe('audit yozuvlari', () => {
     expect(everything).not.toContain('$argon2id$')
   })
 })
+
+// Individual shifokor (tz.md 20-boʻlim): tur roʻyxatning birinchi qadamida
+// tanlanadi, «Kabinet nomi» ixtiyoriy
+describe('individual shifokor roʻyxati', () => {
+  // Roʻyxat cheklovi IP ga — shu blokning oʻz manzili, har yugurishda yangi
+  const ip = `10.78.${Math.floor(Date.now() / 1000) % 250}.${Date.now() % 250}`
+  const soloEmail = `yakka-${Date.now()}@example.com`
+  let soloId = ''
+
+  function register(payload: Record<string, unknown>) {
+    return app.inject({ remoteAddress: ip, method: 'POST', url: '/api/auth/register', payload })
+  }
+
+  afterAll(async () => {
+    if (!soloId) return
+    await ownerDb.auditLog.deleteMany({ where: { clinicId: soloId } })
+    await ownerDb.user.deleteMany({ where: { clinicId: soloId } })
+    await ownerDb.role.deleteMany({ where: { clinicId: soloId } })
+    await ownerDb.clinic.deleteMany({ where: { id: soloId } })
+  })
+
+  it('nom yozilmasa — shifokorning ismi, rollar esa hammasi', async () => {
+    const r = await register({
+      kind: 'solo',
+      fullName: 'Karimov Aziz',
+      email: soloEmail,
+      password: 'juda-yaxshi-parol',
+    })
+    expect(r.statusCode).toBe(200)
+    soloId = r.json().data.clinicId
+
+    const clinic = await ownerDb.clinic.findUnique({ where: { id: soloId } })
+    expect(clinic?.kind).toBe('solo')
+    expect(clinic?.name).toBe('Dr. Karimov Aziz')
+    // Klinikaga oʻtganda rollar tayyor turishi uchun — oltitasi ham
+    expect(await ownerDb.role.count({ where: { clinicId: soloId } })).toBe(6)
+    expect(notify.sent.at(-1)).toContain('Yangi individual shifokor roʻyxatdan oʻtdi')
+  })
+
+  it('yozilgan nom juda qisqa boʻlsa — kabinet nomi xatosi', async () => {
+    const r = await register({
+      kind: 'solo',
+      clinicName: 'A',
+      fullName: 'Karimov Aziz',
+      email: `yakka-qisqa-${Date.now()}@example.com`,
+      password: 'juda-yaxshi-parol',
+    })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields.clinicName).toBe('Kabinet nomi kamida 2 belgi boʻlsin')
+  })
+
+  it('klinikada nom majburiy', async () => {
+    const r = await register({
+      kind: 'clinic',
+      fullName: 'Karimov Aziz',
+      email: `nomsiz-${Date.now()}@example.com`,
+      password: 'juda-yaxshi-parol',
+    })
+    expect(r.statusCode).toBe(400)
+    expect(r.json().error.fields.clinicName).toBe('Klinika nomi kamida 2 belgi boʻlsin')
+  })
+
+  it('nomaʼlum tur rad etiladi', async () => {
+    const r = await register({
+      kind: 'filial',
+      clinicName: 'Tabassum',
+      fullName: 'Karimov Aziz',
+      email: `tur-${Date.now()}@example.com`,
+      password: 'juda-yaxshi-parol',
+    })
+    expect(r.statusCode).toBe(400)
+  })
+})

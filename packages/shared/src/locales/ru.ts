@@ -65,6 +65,7 @@ export const ru: DeepPartial<Strings> = {
 
   AUTH_TEXT: {
     clinic_name_too_short: 'Название клиники — не менее 2 символов',
+    cabinet_name_too_short: 'Название кабинета — не менее 2 символов',
     full_name_too_short: 'Напишите имя и фамилию полностью',
     email_invalid: 'Почта написана неверно',
     password_too_short: 'Пароль — не менее 8 символов',
@@ -100,6 +101,15 @@ export const ru: DeepPartial<Strings> = {
     email: 'Почта',
     password: 'Пароль',
     clinic_name: 'Название клиники',
+    kind_title: 'Для кого открываем?',
+    kind_clinic: 'Клиника',
+    kind_clinic_hint: 'Несколько врачей, регистратура и другие сотрудники',
+    kind_solo: 'Частный врач',
+    kind_solo_hint: 'Работаю сам, рядом может быть ассистент',
+    kind_change: 'Изменить тип',
+    cabinet_name: 'Название кабинета',
+    optional: 'необязательно',
+    cabinet_name_hint: (name: string) => `Если оставить пустым — «${name}»`,
     phone: 'Телефон',
     full_name: 'Имя и фамилия',
     have_account: 'Уже есть аккаунт?',

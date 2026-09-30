@@ -1,7 +1,7 @@
 // Mijoz tomonidagi tekshiruv — tez javob berish uchun. Yakuniy tekshiruv
 // baribir serverda: bu yerdagisi faqat foydalanuvchiga qulaylik.
 
-import { AUTH_TEXT, INVITE_UI, phoneDigits } from '@e-dentist/shared'
+import { AUTH_TEXT, CLINIC_KINDS, clinicNameError, INVITE_UI, phoneDigits } from '@e-dentist/shared'
 import { z } from 'zod'
 
 const email = z
@@ -18,27 +18,31 @@ export const loginSchema = z.object({
   password: z.string().min(1, { error: () => AUTH_TEXT.password_too_short }),
 })
 
-export const registerSchema = z.object({
-  clinicName: z
-    .string()
-    .trim()
-    .min(2, { error: () => AUTH_TEXT.clinic_name_too_short }),
-  phone: z
-    .string()
-    .trim()
-    .refine((value) => !value || phoneDigits(value).length === 9, {
-      error: () => AUTH_TEXT.phone_invalid,
-    }),
-  fullName: z
-    .string()
-    .trim()
-    .min(3, { error: () => AUTH_TEXT.full_name_too_short }),
-  email,
-  password: z
-    .string()
-    .min(8, { error: () => AUTH_TEXT.password_too_short })
-    .max(200, { error: () => AUTH_TEXT.password_too_long }),
-})
+// Nom qoidasi turga bogʻliq (tz.md 20-boʻlim) — server bilan bitta funksiya
+export const registerSchema = z
+  .object({
+    kind: z.enum(CLINIC_KINDS),
+    clinicName: z.string().trim(),
+    phone: z
+      .string()
+      .trim()
+      .refine((value) => !value || phoneDigits(value).length === 9, {
+        error: () => AUTH_TEXT.phone_invalid,
+      }),
+    fullName: z
+      .string()
+      .trim()
+      .min(3, { error: () => AUTH_TEXT.full_name_too_short }),
+    email,
+    password: z
+      .string()
+      .min(8, { error: () => AUTH_TEXT.password_too_short })
+      .max(200, { error: () => AUTH_TEXT.password_too_long }),
+  })
+  .superRefine((value, ctx) => {
+    const error = clinicNameError(value.kind, value.clinicName)
+    if (error) ctx.addIssue({ code: 'custom', path: ['clinicName'], message: error })
+  })
 
 /// Taklifnoma: pochta havoladan keladi, shuning uchun bu yerda yoʻq.
 /// Parol ikki marta soʻraladi — bir marta yozilib xato qolsa, odam

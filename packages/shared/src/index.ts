@@ -1,3 +1,4 @@
+export * from './clinic.js'
 export * from './email.js'
 export * from './format.js'
 export * from './period.js'

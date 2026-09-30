@@ -9,6 +9,7 @@ import {
   INVITE_TEXT,
   isDisposableEmail,
   type Permission,
+  resolveClinicName,
   roleLabel,
   STAFF_TEXT,
 } from '@e-dentist/shared'
@@ -98,6 +99,7 @@ export async function register(
   // kiritishdan oldin sessiyada oʻsha id turishini talab qiladi
   const clinicId = uuidV7()
   const userId = uuidV7()
+  const clinicName = resolveClinicName(input.kind, input.clinicName, input.fullName)
   const { token, hash } = createToken()
   const expiresAt = addDays(TRIAL_DAYS)
   const passwordHash = await hashPassword(input.password)
@@ -106,8 +108,8 @@ export async function register(
     await withClinic(deps.db, clinicId, async (tx) => {
       const { ownerRoleId } = await clinics.createClinicWithRoles(tx, {
         clinicId,
-        name: input.clinicName,
-        kind: 'clinic',
+        name: clinicName,
+        kind: input.kind,
         phone: input.phone ?? null,
         expiresAt,
       })
@@ -139,7 +141,7 @@ export async function register(
     body: [
       'Assalomu alaykum!',
       '',
-      `«${input.clinicName}» uchun E-Dentist hisobi yaratildi.`,
+      `«${clinicName}» uchun E-Dentist hisobi yaratildi.`,
       `Sinov muddati ${formatDate(expiresAt.toISOString().slice(0, 10))} gacha.`,
       '',
       'Pochtangizni tasdiqlash uchun quyidagi havolani oching:',
@@ -156,8 +158,10 @@ export async function register(
   try {
     await deps.notify.send(
       [
-        'Yangi klinika roʻyxatdan oʻtdi',
-        `Nomi: ${input.clinicName}`,
+        input.kind === 'solo'
+          ? 'Yangi individual shifokor roʻyxatdan oʻtdi'
+          : 'Yangi klinika roʻyxatdan oʻtdi',
+        `Nomi: ${clinicName}`,
         `Egasi: ${input.fullName} (${input.email})`,
         input.phone ? `Telefon: ${input.phone}` : '',
         `Sinov: ${formatDate(expiresAt.toISOString().slice(0, 10))} gacha`,

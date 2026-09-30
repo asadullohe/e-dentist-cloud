@@ -1,39 +1,21 @@
-import { formatUzPhone, UI_TEXT } from '@e-dentist/shared'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { Link } from 'react-router-dom'
+import { CLINIC_KINDS, type ClinicKind, UI_TEXT } from '@e-dentist/shared'
+import { Link, useSearchParams } from 'react-router-dom'
 import { AuthLayout } from '@/app/layouts/AuthLayout'
-import { type RegisterValues, registerSchema, useRegister } from '@/features/auth'
-import { applyServerErrors } from '@/shared/lib'
-import {
-  Button,
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  Input,
-} from '@/shared/ui'
+import { useRegister } from '@/features/auth'
+import { KindStep } from './KindStep'
+import { RegisterForm } from './RegisterForm'
 
+function parseKind(value: string | null): ClinicKind | null {
+  return (CLINIC_KINDS as readonly string[]).includes(value ?? '') ? (value as ClinicKind) : null
+}
+
+/// Ikki qadam: tur → forma (tz.md 20-boʻlim). Tur URL da (`?kind=solo`):
+/// brauzerning «orqaga» tugmasi tanlovga qaytaradi, landing esa toʻgʻri
+/// formaga havola bera oladi
 export function Register() {
   const { mutateAsync, isPending, isSuccess } = useRegister()
-  const [formError, setFormError] = useState('')
-
-  const form = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { clinicName: '', phone: '', fullName: '', email: '', password: '' },
-  })
-
-  async function onSubmit(values: RegisterValues) {
-    setFormError('')
-    try {
-      await mutateAsync({ ...values, phone: values.phone || undefined })
-    } catch (error) {
-      setFormError(applyServerErrors(form, error))
-    }
-  }
+  const [params, setParams] = useSearchParams()
+  const kind = parseKind(params.get('kind'))
 
   if (isSuccess) {
     return (
@@ -63,84 +45,18 @@ export function Register() {
         </>
       }
     >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
-          <FormField
-            control={form.control}
-            name="clinicName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{UI_TEXT.clinic_name}</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{UI_TEXT.phone}</FormLabel>
-                <FormControl>
-                  <Input
-                    inputMode="tel"
-                    placeholder="+998 90 123 45 67"
-                    {...field}
-                    onChange={(event) => field.onChange(formatUzPhone(event.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{UI_TEXT.full_name}</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{UI_TEXT.email}</FormLabel>
-                <FormControl>
-                  <Input type="email" autoComplete="email" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{UI_TEXT.password}</FormLabel>
-                <FormControl>
-                  <Input type="password" autoComplete="new-password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? UI_TEXT.sending : UI_TEXT.register}
-          </Button>
-        </form>
-      </Form>
+      {kind ? (
+        // `key`: tur almashsa forma boshidan — boshqa turning xatolari qolmasin
+        <RegisterForm
+          key={kind}
+          kind={kind}
+          onChangeKind={() => setParams({})}
+          submit={mutateAsync}
+          isPending={isPending}
+        />
+      ) : (
+        <KindStep onSelect={(next) => setParams({ kind: next })} />
+      )}
     </AuthLayout>
   )
 }

@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 17.2 — individual shifokor va assistent: roʻyxatdan oʻtish _(30/09/2026)_
+**Hozirgi task:** 17.3 — individual shifokor va assistent: xodimlar va assistent _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1609,7 +1609,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       `assistant_doctors` + RLS. Migratsiya: eski klinikalar `clinic`,
       har biriga Assistent roli. Roʻyxatdan oʻtishda 6 ta rol. Ijarachilik
       testi: A klinikaning assistenti B ning shifokoriga biriktirilmaydi · ~1 kun
-- [ ] **17.2 Roʻyxatdan oʻtish** — birinchi qadam: «Klinika» / «Individual
+- [x] **17.2 Roʻyxatdan oʻtish** — birinchi qadam: «Klinika» / «Individual
       shifokor» kartalari; individualda «Kabinet nomi» ixtiyoriy, boʻsh
       boʻlsa «Dr. Ism Familiya». `registerSchema` ga `kind`, matnlar uz + ru.
       Landingdagi tugmalar `?kind=` bilan kelishi mumkin · ~1 kun

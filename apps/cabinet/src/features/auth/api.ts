@@ -1,3 +1,4 @@
+import type { ClinicKind } from '@e-dentist/shared'
 import { apiRequest } from '@/shared/api'
 
 export interface LoginInput {
@@ -6,6 +7,8 @@ export interface LoginInput {
 }
 
 export interface RegisterInput {
+  kind: ClinicKind
+  /// Individualda boʻsh boʻlishi mumkin — server shifokorning ismini oladi
   clinicName: string
   phone?: string | undefined
   fullName: string

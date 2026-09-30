@@ -54,6 +54,7 @@ export const ROLE_LABELS = {
 // Kirish va roʻyxatdan oʻtish
 export const AUTH_TEXT = {
   clinic_name_too_short: 'Klinika nomi kamida 2 belgi boʻlsin',
+  cabinet_name_too_short: 'Kabinet nomi kamida 2 belgi boʻlsin',
   full_name_too_short: 'Ism-familiyani toʻliq yozing',
   email_invalid: 'Pochta manzili notoʻgʻri yozilgan',
   password_too_short: 'Parol kamida 8 belgidan iborat boʻlsin',
@@ -90,6 +91,16 @@ export const UI_TEXT = {
   email: 'Pochta',
   password: 'Parol',
   clinic_name: 'Klinika nomi',
+  // Roʻyxatdan oʻtishda tur tanlovi (tz.md 20-boʻlim)
+  kind_title: 'Kim uchun ochamiz?',
+  kind_clinic: 'Klinika',
+  kind_clinic_hint: 'Bir nechta shifokor, qabulxona va boshqa xodimlar',
+  kind_solo: 'Individual shifokor',
+  kind_solo_hint: 'Oʻzim ishlayman, yonimda assistent boʻlishi mumkin',
+  kind_change: 'Turni oʻzgartirish',
+  cabinet_name: 'Kabinet nomi',
+  optional: 'ixtiyoriy',
+  cabinet_name_hint: (name: string) => `Boʻsh qoldirsangiz — «${name}»`,
   phone: 'Telefon',
   full_name: 'Ism-familiya',
   have_account: 'Hisobingiz bormi?',

@@ -1,7 +1,13 @@
 // Kirish maʼlumotlarini tekshirish. Xato matnlari oʻzbekcha va
 // packages/shared/strings.ts dan keladi.
 
-import { AUTH_TEXT, phoneDigits, STAFF_TEXT } from '@e-dentist/shared'
+import {
+  AUTH_TEXT,
+  CLINIC_KINDS,
+  clinicNameError,
+  phoneDigits,
+  STAFF_TEXT,
+} from '@e-dentist/shared'
 import { z } from 'zod'
 
 const email = z
@@ -17,25 +23,30 @@ const password = z
   .min(8, { error: () => AUTH_TEXT.password_too_short })
   .max(200, { error: () => AUTH_TEXT.password_too_long })
 
-export const registerSchema = z.object({
-  clinicName: z
-    .string()
-    .trim()
-    .min(2, { error: () => AUTH_TEXT.clinic_name_too_short })
-    .max(120),
-  phone: z
-    .string()
-    .trim()
-    .optional()
-    .refine((v) => !v || phoneDigits(v).length === 9, { error: () => AUTH_TEXT.phone_invalid }),
-  fullName: z
-    .string()
-    .trim()
-    .min(3, { error: () => AUTH_TEXT.full_name_too_short })
-    .max(120),
-  email,
-  password: password,
-})
+// Tur roʻyxatning birinchi qadamida tanlanadi (tz.md 20-boʻlim). Sukut —
+// klinika: eski mijoz (tursiz soʻrov) oldingidek ishlaydi
+export const registerSchema = z
+  .object({
+    kind: z.enum(CLINIC_KINDS).default('clinic'),
+    // Individualda ixtiyoriy — boʻsh boʻlsa shifokorning ismi olinadi
+    clinicName: z.string().trim().max(120).default(''),
+    phone: z
+      .string()
+      .trim()
+      .optional()
+      .refine((v) => !v || phoneDigits(v).length === 9, { error: () => AUTH_TEXT.phone_invalid }),
+    fullName: z
+      .string()
+      .trim()
+      .min(3, { error: () => AUTH_TEXT.full_name_too_short })
+      .max(120),
+    email,
+    password: password,
+  })
+  .superRefine((v, ctx) => {
+    const error = clinicNameError(v.kind, v.clinicName)
+    if (error) ctx.addIssue({ code: 'custom', path: ['clinicName'], message: error })
+  })
 
 export const verifySchema = z.object({
   token: z.string().min(10),
