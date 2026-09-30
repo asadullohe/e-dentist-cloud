@@ -13,8 +13,8 @@ import {
 import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { type LabOrder, useLabOrders } from '@/entities/lab-order'
-import { useHasPermission } from '@/entities/session'
+import { type LabOrder, useLabOrders, useLabs } from '@/entities/lab-order'
+import { useHasPermission, useSession } from '@/entities/session'
 import { useStaffNames } from '@/entities/staff'
 import {
   LabFormDialog,
@@ -60,6 +60,10 @@ export function Lab() {
   // cheklaydi), shuning uchun filtr, saralash va sahifalash mijozda
   const { data: orders, isPending } = useLabOrders({})
   const { data: staff } = useStaffNames()
+  // Tashqi laboratoriyalar ham filtrda (tz.md 20-boʻlim); roʻyxat `lab.write` ga
+  const { data: labs } = useLabs(canWrite)
+  // Individualda texnik xodim yoʻq — xodimlar filtrda maʼnosiz
+  const solo = useSession().data?.clinic?.kind === 'solo'
   const { mutateAsync: setLabStatus } = useSetLabStatus()
   const { mutateAsync: remove } = useDeleteLabOrder()
 
@@ -89,10 +93,15 @@ export function Lab() {
         setFormOpen(true)
       },
       onRemove: setDeleting,
-      techOptions:
-        canWrite && staff
-          ? staff.map((person) => ({ value: person.id, label: person.fullName ?? person.id }))
-          : [],
+      techOptions: canWrite
+        ? [
+            ...(solo ? [] : (staff ?? [])).map((person) => ({
+              value: person.id,
+              label: person.fullName ?? person.id,
+            })),
+            ...(labs ?? []).map((lab) => ({ value: lab.id, label: lab.name })),
+          ]
+        : [],
     }),
     state: { sorting, columnFilters, columnVisibility, pagination },
     onSortingChange: setSorting,

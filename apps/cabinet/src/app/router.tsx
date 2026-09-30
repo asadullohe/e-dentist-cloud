@@ -36,6 +36,7 @@ import {
   ClinicSection,
   DataSection,
   FeedbackSection,
+  LabsSection,
   QueueSection,
   RolesSection,
   Settings,
@@ -165,6 +166,9 @@ export function Router() {
               <Route path="rollar" element={<RolesSection />} />
               <Route path="klinika" element={<ClinicSection />} />
               <Route path="navbat" element={<QueueSection />} />
+            </Route>
+            <Route element={<RequirePermission anyOf={['lab.write']} />}>
+              <Route path="laboratoriyalar" element={<LabsSection />} />
             </Route>
             <Route element={<RequirePermission anyOf={['feedback.read', 'feedback.own']} />}>
               <Route path="fikrlar" element={<FeedbackSection />} />

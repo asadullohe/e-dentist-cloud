@@ -18,6 +18,9 @@ export interface LabOrder {
   doctorName: string
   techId: string | null
   techName: string | null
+  /// Tashqi laboratoriya — texnik oʻrniga (tz.md 20-boʻlim)
+  labId: string | null
+  labName: string | null
   teeth: number[]
   workType: LabWorkType
   material: LabMaterial
@@ -32,6 +35,13 @@ export interface LabOrder {
   overdue: boolean
   /// `lab.cost` yoki oʻz naryadi boʻlmasa javobda kelmaydi
   techPrice?: number
+}
+
+/// Klinikaning tashqi laboratoriyasi
+export interface LabPlace {
+  id: string
+  name: string
+  phone: string | null
 }
 
 export interface LabFilter {

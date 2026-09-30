@@ -4,6 +4,7 @@ export {
   ClinicSection,
   DataSection,
   FeedbackSection,
+  LabsSection,
   QueueSection,
   RolesSection,
   StaffSection,

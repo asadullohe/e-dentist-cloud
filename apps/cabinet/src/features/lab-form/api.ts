@@ -1,9 +1,10 @@
-import type { LabOrder, LabReturnReason, LabStatus } from '@/entities/lab-order'
+import type { LabOrder, LabPlace, LabReturnReason, LabStatus } from '@/entities/lab-order'
 import { apiRequest } from '@/shared/api'
 
 export interface LabPayload {
   patientId?: string
   techId?: string | null
+  labId?: string | null
   teeth: number[]
   workType: string
   material: string
@@ -27,3 +28,17 @@ export const returnLabOrder = (id: string, reason: LabReturnReason, note: string
 
 export const deleteLabOrder = (id: string) =>
   apiRequest<{ deleted: true }>(`/lab-orders/${id}`, { method: 'DELETE' })
+
+export interface LabPlacePayload {
+  name: string
+  phone?: string | null
+}
+
+export const createLab = (payload: LabPlacePayload) =>
+  apiRequest<LabPlace>('/labs', { method: 'POST', body: payload })
+
+export const updateLab = (id: string, payload: LabPlacePayload) =>
+  apiRequest<LabPlace>(`/labs/${id}`, { method: 'PATCH', body: payload })
+
+export const deleteLab = (id: string) =>
+  apiRequest<{ deleted: true }>(`/labs/${id}`, { method: 'DELETE' })

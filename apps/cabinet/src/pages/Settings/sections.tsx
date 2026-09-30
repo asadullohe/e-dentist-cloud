@@ -1,6 +1,7 @@
 import {
   EXPORT_UI,
   FEEDBACK_CABINET_UI,
+  LAB_UI,
   LOGO_UI,
   QUEUE_CABINET_UI,
   SETTINGS_UI,
@@ -12,6 +13,7 @@ import { ContentSection } from '@/shared/ui'
 import { AccountTab } from './AccountTab'
 import { DataTab } from './DataTab'
 import { FeedbackTab } from './FeedbackTab'
+import { LabsTab } from './LabsTab'
 import { QueueTab } from './QueueTab'
 import { RolesTab } from './RolesTab'
 import { StaffTab } from './StaffTab'
@@ -84,6 +86,14 @@ export function DataSection() {
   return (
     <ContentSection heading="page" title={EXPORT_UI.tab} desc={SETTINGS_UI.data_hint}>
       <DataTab />
+    </ContentSection>
+  )
+}
+
+export function LabsSection() {
+  return (
+    <ContentSection heading="page" title={LAB_UI.labs_tab} desc={LAB_UI.labs_hint}>
+      <LabsTab />
     </ContentSection>
   )
 }

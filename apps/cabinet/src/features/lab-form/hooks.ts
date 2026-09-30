@@ -52,6 +52,34 @@ export function useReturnLabOrder() {
   )
 }
 
+/// Tashqi laboratoriyalar (Sozlamalar). Nomi naryadlar roʻyxatida ham
+/// koʻrinadi — ular ham yangilanadi
+function useLabPlaceMutation<TArgs, TResult>(
+  fn: (args: TArgs) => Promise<TResult>,
+  success: () => string,
+) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: LAB_KEYS.places })
+      queryClient.invalidateQueries({ queryKey: LAB_KEYS.all })
+    },
+    meta: { success, inlineErrors: true },
+  })
+}
+
+export function useSaveLab(id: string | null) {
+  return useLabPlaceMutation(
+    (payload: api.LabPlacePayload) => (id ? api.updateLab(id, payload) : api.createLab(payload)),
+    () => TOAST_TEXT.lab_place_saved,
+  )
+}
+
+export function useDeleteLab() {
+  return useLabPlaceMutation(api.deleteLab, () => TOAST_TEXT.lab_place_deleted)
+}
+
 export function useDeleteLabOrder() {
   return useLabMutation(api.deleteLabOrder, { success: () => TOAST_TEXT.lab_deleted })
 }

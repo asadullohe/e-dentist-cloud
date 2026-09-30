@@ -1,5 +1,5 @@
 import { apiRequest } from '@/shared/api'
-import type { LabFilter, LabOrder } from './model'
+import type { LabFilter, LabOrder, LabPlace } from './model'
 
 export function fetchLabOrders(filter: LabFilter) {
   const query = new URLSearchParams()
@@ -9,3 +9,5 @@ export function fetchLabOrders(filter: LabFilter) {
   const suffix = query.size > 0 ? `?${query}` : ''
   return apiRequest<LabOrder[]>(`/lab-orders${suffix}`)
 }
+
+export const fetchLabs = () => apiRequest<LabPlace[]>('/labs')

@@ -118,17 +118,26 @@ export function labColumns(a: Actions): ColumnDef<LabOrder>[] {
     },
     {
       id: 'tech',
-      accessorFn: (order) => order.techId ?? '',
+      // Texnik yoki tashqi laboratoriya (tz.md 20-boʻlim) — filtr ikkalasiga
+      accessorFn: (order) => order.techId ?? order.labId ?? '',
       meta: {
-        title: LAB_UI.tech,
+        title: LAB_UI.assignee,
         className: 'hidden lg:table-cell',
         filter: a.techOptions.length ? { type: 'select', options: a.techOptions } : undefined,
       } satisfies ColumnMeta,
-      header: LAB_UI.tech,
+      header: LAB_UI.assignee,
       enableSorting: false,
       filterFn: 'equalsString',
       cell: ({ row }) =>
-        row.original.techName ?? <span className="text-muted-foreground">{LAB_UI.tech_none}</span>,
+        row.original.techName ??
+        (row.original.labName ? (
+          <span>
+            {row.original.labName}
+            <span className="text-muted-foreground ml-1 text-xs">({LAB_UI.lab_external})</span>
+          </span>
+        ) : (
+          <span className="text-muted-foreground">{LAB_UI.tech_none}</span>
+        )),
     },
     {
       accessorKey: 'dueDate',

@@ -2,6 +2,7 @@ import {
   type ClinicKind,
   EXPORT_UI,
   FEEDBACK_CABINET_UI,
+  LAB_UI,
   LOGO_UI,
   type Permission,
   QUEUE_CABINET_UI,
@@ -11,6 +12,7 @@ import {
   BellIcon,
   BuildingIcon,
   DatabaseIcon,
+  FlaskConicalIcon,
   type LucideIcon,
   MessageSquareIcon,
   ShieldIcon,
@@ -59,6 +61,13 @@ export const settingsItems = (kind: ClinicKind = 'clinic'): readonly SettingsIte
     label: QUEUE_CABINET_UI.settings_tab,
     icon: BellIcon,
     permission: 'staff.manage',
+  },
+  // Tashqi laboratoriyalar (tz.md 20-boʻlim) — naryad yozadiganga
+  {
+    to: '/settings/laboratoriyalar',
+    label: LAB_UI.labs_tab,
+    icon: FlaskConicalIcon,
+    permission: 'lab.write',
   },
   // Egasi hammasini, shifokor (`feedback.own` berilsa) oʻzi haqidagini koʻradi
   {

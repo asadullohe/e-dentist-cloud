@@ -14,7 +14,6 @@ import {
 import { useEffect, useState } from 'react'
 import type { LabMaterial, LabOrder, LabWorkType } from '@/entities/lab-order'
 import { PatientPicker } from '@/entities/patient'
-import { useStaffNames } from '@/entities/staff'
 import { ApiError } from '@/shared/api'
 import {
   Button,
@@ -33,6 +32,7 @@ import {
   SelectValue,
   Textarea,
 } from '@/shared/ui'
+import { AssigneeSelect, fromAssignee, toAssignee } from './AssigneeSelect'
 import { useSaveLabOrder } from './hooks'
 import { TeethPicker } from './TeethPicker'
 
@@ -59,13 +59,13 @@ export function LabFormDialog({
   canSeePrice,
 }: LabFormDialogProps) {
   const { mutateAsync, isPending } = useSaveLabOrder(order?.id ?? null)
-  const { data: staff } = useStaffNames()
 
   const [patient, setPatient] = useState<{ id: string | null; fio: string }>({
     id: null,
     fio: '',
   })
-  const [techId, setTechId] = useState(NO_TECH)
+  // Texnik yoki laboratoriya: `tech:<id>` / `lab:<id>` (tz.md 20-boʻlim)
+  const [assignee, setAssignee] = useState(fromAssignee(undefined))
   const [teeth, setTeeth] = useState<number[]>([])
   const [workType, setWorkType] = useState<LabWorkType>('crown')
   const [material, setMaterial] = useState<LabMaterial>('metal_ceramic')
@@ -80,7 +80,7 @@ export function LabFormDialog({
     setError('')
     if (order) {
       setPatient({ id: order.patientId, fio: order.fio })
-      setTechId(order.techId ?? NO_TECH)
+      setAssignee(fromAssignee(order))
       setTeeth(order.teeth)
       setWorkType(order.workType)
       setMaterial(order.material)
@@ -90,7 +90,7 @@ export function LabFormDialog({
       setNote(order.note ?? '')
     } else {
       setPatient({ id: patientId ?? null, fio: '' })
-      setTechId(NO_TECH)
+      setAssignee(fromAssignee(undefined))
       setTeeth([])
       setWorkType('crown')
       setMaterial('metal_ceramic')
@@ -111,7 +111,7 @@ export function LabFormDialog({
     try {
       await mutateAsync({
         ...(order ? {} : { patientId: patient.id as string }),
-        techId: techId === NO_TECH ? null : techId,
+        ...toAssignee(assignee),
         teeth,
         workType,
         material,
@@ -208,22 +208,7 @@ export function LabFormDialog({
               <DatePicker id="lab-due" value={due} onChange={setDue} />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="lab-tech">{LAB_UI.tech}</Label>
-              <Select value={techId} onValueChange={setTechId}>
-                <SelectTrigger id="lab-tech" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_TECH}>{LAB_UI.tech_none}</SelectItem>
-                  {staff?.map((person) => (
-                    <SelectItem key={person.id} value={person.id}>
-                      {person.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <AssigneeSelect value={assignee} onChange={setAssignee} />
 
             {canSeePrice && (
               <div className="space-y-1.5">
