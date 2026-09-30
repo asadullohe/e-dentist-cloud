@@ -55,6 +55,13 @@ export function patientColumns({
               {formatUzPhone(row.original.phone)}
             </span>
           )}
+          {/* Tor ekranda «Shifokor» ustuni yashirin — kimning bemori ekani
+              kartochkaga kirmasdan koʻrinsin */}
+          {row.original.doctorName && (
+            <span className="text-muted-foreground block text-xs md:hidden">
+              {row.original.doctorName}
+            </span>
+          )}
         </div>
       ),
     },

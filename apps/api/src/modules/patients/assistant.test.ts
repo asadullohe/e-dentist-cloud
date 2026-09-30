@@ -134,6 +134,20 @@ describe('bemorlar va kartochka', () => {
   })
 })
 
+describe('shifokor boʻyicha filtr', () => {
+  it('«biriktirilmagan» — faqat shifokorsiz bemorlar', async () => {
+    const r = await owner()('GET', '/api/patients?page=1&pageSize=100&doctorId=none')
+    const items = r.json().data.items as { id: string; doctorId: string | null }[]
+    expect(idsOf(items)).toContain(nobodys)
+    expect(items.every((item) => item.doctorId === null)).toBe(true)
+  })
+
+  it('assistent doirasidan tashqari shifokorni filtrlab ham koʻra olmaydi', async () => {
+    const r = await assistant('GET', `/api/patients?page=1&pageSize=100&doctorId=${doctor2}`)
+    expect(idsOf(r.json().data.items)).not.toContain(ofDoctor2)
+  })
+})
+
 describe('qabul jadvali', () => {
   it('faqat oʻz shifokorining qabullari', async () => {
     const r = await assistant('GET', '/api/appointments?from=2027-05-05&to=2027-05-05')

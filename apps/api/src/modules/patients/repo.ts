@@ -1,7 +1,7 @@
 // patients moduli `patients` jadvaliga egalik qiladi.
 // clinicId ni kengaytma oʻzi qoʻyadi — bu yerda hech qayerda yozilmaydi.
 
-import { phoneDigits, searchKey, todayISO } from '@e-dentist/shared'
+import { phoneDigits, searchKey, todayISO, UNASSIGNED_DOCTOR } from '@e-dentist/shared'
 import type { Prisma } from '../../../generated/prisma/client.js'
 import type { ScopedViewer } from '../../platform/guards.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
@@ -78,7 +78,9 @@ function columnWhere(input: {
   ageTo?: number
 }) {
   const and: Prisma.PatientWhereInput[] = []
-  if (input.doctorId) and.push({ doctorId: input.doctorId })
+  if (input.doctorId) {
+    and.push({ doctorId: input.doctorId === UNASSIGNED_DOCTOR ? null : input.doctorId })
+  }
   // Yosh ≥ N: tugʻilgan sana N yil oldingi kundan kech emas.
   // Yosh ≤ M: (M+1) yil oldingi kundan keyin tugʻilgan
   if (input.ageFrom !== undefined) and.push({ birthDate: { lte: yearsAgo(input.ageFrom) } })

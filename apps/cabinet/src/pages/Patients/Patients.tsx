@@ -1,4 +1,12 @@
-import { EXCEL_UI, IMPORT_UI, PATIENT_UI, TABLE_UI, todayISO, UI_TEXT } from '@e-dentist/shared'
+import {
+  EXCEL_UI,
+  IMPORT_UI,
+  PATIENT_UI,
+  TABLE_UI,
+  todayISO,
+  UI_TEXT,
+  UNASSIGNED_DOCTOR,
+} from '@e-dentist/shared'
 import {
   type ColumnFiltersState,
   getCoreRowModel,
@@ -19,7 +27,7 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { type Patient, type PatientSort, usePatients } from '@/entities/patient'
-import { useHasPermission } from '@/entities/session'
+import { useDoctorScope, useHasPermission } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import { AppointmentFormDialog } from '@/features/appointment-form'
 import { PatientFormDialog, useDeletePatient } from '@/features/patient-form'
@@ -114,11 +122,18 @@ export function Patients() {
   // Kuzatuvchi roʻyxatni koʻradi va Excelga chiqaradi, lekin yozmaydi
   const canWrite = hasPermission('patients.write')
   const { data: doctors } = useDoctors()
-  // Shifokor (patients.all yoʻq) roʻyxatda faqat oʻz bemorlarini koʻradi —
-  // shifokor boʻyicha filtr unga maʼnosiz
-  const doctorOptions = hasPermission('patients.all')
-    ? (doctors ?? []).map((item) => ({ value: item.id, label: item.fullName ?? '' }))
-    : []
+  // Filtr bir nechta shifokorni koʻradiganga: egasi, qabulxona, koʻp
+  // shifokorli assistent (faqat oʻz shifokorlari). Shifokorning oʻziga va
+  // bitta shifokorli assistentga maʼnosiz (tz.md 20-boʻlim)
+  const scope = useDoctorScope('patients.all')
+  const visibleDoctors = (doctors ?? []).filter((item) => scope.allows(item.id))
+  const doctorOptions =
+    scope.all || visibleDoctors.length > 1
+      ? [
+          ...visibleDoctors.map((item) => ({ value: item.id, label: item.fullName ?? '' })),
+          { value: UNASSIGNED_DOCTOR, label: PATIENT_UI.doctor_none },
+        ]
+      : []
 
   const table = useReactTable({
     data: data?.items ?? [],

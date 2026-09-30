@@ -105,6 +105,10 @@ export type PlanItemStatus = (typeof PLAN_ITEM_STATUSES)[number]
 
 export type Permission = (typeof PERMISSIONS)[number]
 
+// --- Bemorlar filtri ---
+// «Biriktirilmagan» — shifokor filtridagi maxsus qiymat (uuid emas)
+export const UNASSIGNED_DOCTOR = 'none'
+
 // --- Klinika turi ---
 // Individual shifokor — bir kishilik klinika (tz.md 20-boʻlim)
 

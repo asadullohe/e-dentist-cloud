@@ -1,4 +1,4 @@
-import { phoneDigits, VALIDATION_TEXT } from '@e-dentist/shared'
+import { phoneDigits, UNASSIGNED_DOCTOR, VALIDATION_TEXT } from '@e-dentist/shared'
 import { z } from 'zod'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -52,7 +52,8 @@ export const patientListSchema = z.object({
   fio: z.string().trim().max(100).optional(),
   phone: z.string().trim().max(30).optional(),
   address: z.string().trim().max(100).optional(),
-  doctorId: z.string().uuid().optional(),
+  // `none` — shifokor biriktirilmagan bemorlar (qabulxona topib biriktiradi)
+  doctorId: z.union([z.string().uuid(), z.literal(UNASSIGNED_DOCTOR)]).optional(),
   // Yosh oraligʻi (toʻliq yil) — tugʻilgan sana chegaralariga aylanadi
   ageFrom: z.coerce.number().int().min(0).max(150).optional(),
   ageTo: z.coerce.number().int().min(0).max(150).optional(),
