@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 17.3 — individual shifokor va assistent: xodimlar va assistent _(30/09/2026)_
+**Hozirgi task:** 17.4 — individual shifokor va assistent: assistent koʻrinishi _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1613,7 +1613,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       shifokor» kartalari; individualda «Kabinet nomi» ixtiyoriy, boʻsh
       boʻlsa «Dr. Ism Familiya». `registerSchema` ga `kind`, matnlar uz + ru.
       Landingdagi tugmalar `?kind=` bilan kelishi mumkin · ~1 kun
-- [ ] **17.3 Xodimlar va assistent** — xodim formasida Assistent roli va
+- [x] **17.3 Xodimlar va assistent** — xodim formasida Assistent roli va
       shifokorlar tanlovi (kamida bitta). Individualda faqat Assistent,
       2 ta faolgacha (konstanta); boshqa rol yoki 3-assistent — «Klinikaga
       oʻting» oynasi. Server ham rad etadi. Rollar sahifasida individualda

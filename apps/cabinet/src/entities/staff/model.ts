@@ -8,6 +8,10 @@ export interface StaffMember {
   fullName: string | null
   roleId: string | null
   roleName: string | null
+  /// Shablon: assistentni shu bilan taniymiz (tz.md 20-boʻlim)
+  roleTemplate: string | null
+  /// Assistent kimga yordam beradi; boshqa rollarda boʻsh
+  doctorIds: string[]
   status: StaffStatus
   /// Ish haqi sharti: oylik (soʻm) va ish narxidan foiz
   salaryAmount: number

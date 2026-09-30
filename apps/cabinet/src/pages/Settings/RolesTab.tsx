@@ -8,6 +8,7 @@ import {
   UI_TEXT,
 } from '@e-dentist/shared'
 import { useState } from 'react'
+import { useSession } from '@/entities/session'
 import { type Role, useRoles } from '@/entities/staff'
 import { useUpdateRole } from '@/features/staff-manage'
 import { ApiError } from '@/shared/api'
@@ -82,7 +83,14 @@ function RoleCard({ role }: { role: Role }) {
 }
 
 export function RolesTab() {
+  const { data: session } = useSession()
   const { data: roles, isPending } = useRoles()
+  // Individualda boshqa rollar bazada bor (klinikaga oʻtganda tayyor
+  // turishi uchun), lekin ishlatilmaydi — koʻrsatilmaydi (tz.md 20-boʻlim)
+  const visible =
+    session?.clinic?.kind === 'solo'
+      ? roles?.filter((role) => role.isOwner || role.template === 'assistent')
+      : roles
 
   if (isPending) return <Skeleton className="h-40 w-full" />
 
@@ -90,7 +98,7 @@ export function RolesTab() {
     <div className="grid gap-3 lg:grid-cols-2">
       {/* Kalit faqat id: saqlangandan keyin karta qayta chizilsin, lekin
           holatini yoʻqotmasin — «Rol yangilandi» yozuvi shunda koʻrinadi */}
-      {roles?.map((role) => (
+      {visible?.map((role) => (
         <RoleCard key={role.id} role={role} />
       ))}
     </div>

@@ -10,6 +10,8 @@ export interface StaffPayload {
   password: string
   salaryAmount: number
   payPercent: number
+  /// Faqat assistentda. Individualda server egasini oʻzi qoʻyadi
+  doctorIds?: string[]
 }
 
 export interface StaffUpdatePayload {
@@ -17,6 +19,7 @@ export interface StaffUpdatePayload {
   status?: StaffStatus
   salaryAmount?: number
   payPercent?: number
+  doctorIds?: string[]
 }
 
 export const createStaff = (payload: StaffPayload) =>

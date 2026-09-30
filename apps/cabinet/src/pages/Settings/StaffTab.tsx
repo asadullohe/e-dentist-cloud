@@ -1,44 +1,90 @@
-import { formatDateTime, formatPayTerms, roleLabel, STAFF_UI } from '@e-dentist/shared'
-import { PencilIcon, PlusIcon, UserCheckIcon, UserXIcon } from 'lucide-react'
-import { useState } from 'react'
+import { SOLO_MAX_ASSISTANTS, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
+import { PlusIcon } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useSession } from '@/entities/session'
-import { type StaffMember, useRoles, useStaff } from '@/entities/staff'
-import { PayTermsDialog, StaffDialog, useUpdateStaff } from '@/features/staff-manage'
 import {
-  Badge,
+  type StaffMember,
+  type StaffStatus,
+  useDoctors,
+  useRoles,
+  useStaff,
+} from '@/entities/staff'
+import { UpgradeDialog } from '@/features/clinic-upgrade'
+import {
+  AssistantDoctorsDialog,
+  PayTermsDialog,
+  StaffDialog,
+  useUpdateStaff,
+} from '@/features/staff-manage'
+import { ApiError } from '@/shared/api'
+import {
   Button,
   Card,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Skeleton,
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/shared/ui'
+import { StaffRow } from './StaffRow'
+
+const ASSISTANT = 'assistent'
 
 export function StaffTab() {
   const { data: session } = useSession()
   const { data: staff, isPending } = useStaff()
   const { data: roles } = useRoles()
+  const { data: doctors } = useDoctors()
   const { mutateAsync: update } = useUpdateStaff()
 
   const [addOpen, setAddOpen] = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [payFor, setPayFor] = useState<StaffMember | null>(null)
+  // Assistent shifokorlari; `roleId` — rol assistentga almashtirilayotgan boʻlsa
+  const [doctorsFor, setDoctorsFor] = useState<{ person: StaffMember; roleId?: string } | null>(
+    null,
+  )
   const [error, setError] = useState('')
 
-  async function change(id: string, payload: { roleId?: string; status?: 'active' | 'disabled' }) {
+  const solo = session?.clinic?.kind === 'solo'
+  // Individualda shifokor bitta — egasi; assistent ostida koʻrsatish shart emas
+  const doctorNames = useMemo(
+    () =>
+      solo ? null : new Map((doctors ?? []).map((doctor) => [doctor.id, doctor.fullName ?? ''])),
+    [solo, doctors],
+  )
+  const activeAssistants =
+    staff?.filter((p) => p.roleTemplate === ASSISTANT && p.status === 'active').length ?? 0
+
+  async function change(id: string, payload: { roleId?: string; status?: StaffStatus }) {
     setError('')
     try {
       await update({ id, ...payload })
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : '')
+      if (caught instanceof ApiError && caught.code === 'upgrade_required') setUpgradeOpen(true)
+      else setError(caught instanceof Error ? caught.message : UI_TEXT.offline)
     }
+  }
+
+  function changeRole(person: StaffMember, roleId: string) {
+    const template = roles?.find((role) => role.id === roleId)?.template
+    // Individualda boshqa rol yoʻq — soʻrov yubormasdan tushuntiramiz
+    if (solo && template !== ASSISTANT) {
+      setUpgradeOpen(true)
+      return
+    }
+    // Klinikada assistent shifokorsiz boʻlmaydi — avval kimga yordam berishi
+    if (!solo && template === ASSISTANT && person.roleTemplate !== ASSISTANT) {
+      setDoctorsFor({ person: { ...person, doctorIds: [] }, roleId })
+      return
+    }
+    void change(person.id, { roleId })
+  }
+
+  function openAdd() {
+    if (solo && activeAssistants >= SOLO_MAX_ASSISTANTS) setUpgradeOpen(true)
+    else setAddOpen(true)
   }
 
   if (isPending) return <Skeleton className="h-40 w-full" />
@@ -46,7 +92,7 @@ export function StaffTab() {
   return (
     <>
       <div className="mb-3 flex justify-end">
-        <Button size="sm" onClick={() => setAddOpen(true)}>
+        <Button size="sm" onClick={openAdd}>
           <PlusIcon />
           {STAFF_UI.add}
         </Button>
@@ -66,97 +112,39 @@ export function StaffTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {staff?.map((person) => {
-              const isSelf = person.id === session?.user.id
-              return (
-                <TableRow key={person.id}>
-                  <TableCell className="font-medium whitespace-normal">
-                    {person.fullName ?? '—'}
-                    {isSelf && (
-                      <Badge variant="secondary" className="ml-2">
-                        {STAFF_UI.you}
-                      </Badge>
-                    )}
-                    <span className="text-muted-foreground block text-xs">{person.email}</span>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground hidden xl:table-cell">
-                    {person.lastLoginAt ? formatDateTime(person.lastLoginAt) : STAFF_UI.never}
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={person.roleId ?? ''}
-                      disabled={isSelf}
-                      onValueChange={(roleId) => change(person.id, { roleId })}
-                    >
-                      <SelectTrigger className="w-full" size="sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roles?.map((role) => (
-                          <SelectItem key={role.id} value={role.id}>
-                            {roleLabel(role)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
-                    {/* Ish haqi sharti: oylik va/yoki foiz. Oʻzinikini ham
-                        oʻzgartira oladi — egasi shifokor boʻlishi mumkin */}
-                    <button
-                      type="button"
-                      className="hover:bg-muted -mx-2 flex items-center gap-2 rounded-md px-2 py-1 text-left"
-                      aria-label={STAFF_UI.pay_title(person.fullName ?? '')}
-                      onClick={() => setPayFor(person)}
-                    >
-                      {formatPayTerms(person.salaryAmount, person.payPercent) ? (
-                        <span className="tabular-nums">
-                          {formatPayTerms(person.salaryAmount, person.payPercent)}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">{STAFF_UI.pay_none}</span>
-                      )}
-                      <PencilIcon className="text-muted-foreground size-3.5" aria-hidden="true" />
-                    </button>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {/* Tor ekranda faqat belgi qoladi — jadval siljimasin */}
-                    {person.status === 'active' ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={isSelf}
-                        aria-label={STAFF_UI.disable}
-                        onClick={() => change(person.id, { status: 'disabled' })}
-                      >
-                        <UserXIcon />
-                        <span className="hidden xl:inline">{STAFF_UI.disable}</span>
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        aria-label={STAFF_UI.enable}
-                        onClick={() => change(person.id, { status: 'active' })}
-                      >
-                        <UserCheckIcon />
-                        <span className="hidden xl:inline">{STAFF_UI.enable}</span>
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              )
-            })}
+            {staff?.map((person) => (
+              <StaffRow
+                key={person.id}
+                person={person}
+                isSelf={person.id === session?.user.id}
+                roles={roles ?? []}
+                doctorNames={doctorNames}
+                onRole={(roleId) => changeRole(person, roleId)}
+                onStatus={(status) => void change(person.id, { status })}
+                onPay={() => setPayFor(person)}
+                onDoctors={() => setDoctorsFor({ person })}
+              />
+            ))}
           </TableBody>
         </Table>
       </Card>
 
-      <StaffDialog open={addOpen} onOpenChange={setAddOpen} />
+      <StaffDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onUpgradeRequired={() => setUpgradeOpen(true)}
+      />
       <PayTermsDialog
         open={payFor !== null}
         onOpenChange={(open) => !open && setPayFor(null)}
         person={payFor}
       />
+      <AssistantDoctorsDialog
+        person={doctorsFor?.person ?? null}
+        roleId={doctorsFor?.roleId}
+        onOpenChange={(open) => !open && setDoctorsFor(null)}
+      />
+      <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
     </>
   )
 }

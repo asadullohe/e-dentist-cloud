@@ -1,18 +1,10 @@
-import {
-  AUTH_TEXT,
-  CARD_UI,
-  formatMoney,
-  moneyDigits,
-  roleLabel,
-  STAFF_TEXT,
-  STAFF_UI,
-  UI_TEXT,
-} from '@e-dentist/shared'
+import { CARD_UI, moneyDigits, STAFF_TEXT, STAFF_UI, UI_TEXT } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { useForm, useWatch } from 'react-hook-form'
+import { useSession } from '@/entities/session'
 import { useRoles } from '@/entities/staff'
+import { ApiError } from '@/shared/api'
 import { applyServerErrors } from '@/shared/lib'
 import {
   Button,
@@ -29,76 +21,57 @@ import {
   FormLabel,
   FormMessage,
   Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '@/shared/ui'
 import { useCreateStaff } from './hooks'
-
-const schema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email({ error: () => AUTH_TEXT.email_invalid }),
-  fullName: z
-    .string()
-    .trim()
-    .min(3, { error: () => AUTH_TEXT.full_name_too_short })
-    .max(120),
-  roleId: z.string().uuid(),
-  password: z
-    .string()
-    .min(8, { error: () => AUTH_TEXT.password_too_short })
-    .max(200),
-  // Ish haqi sharti — ixtiyoriy, maskalangan matn (tz.md 15-boʻlim)
-  salaryAmount: z.string().trim(),
-  payPercent: z
-    .string()
-    .trim()
-    .refine((value) => value === '' || (Number(value) >= 0 && Number(value) <= 100), {
-      error: () => STAFF_TEXT.percent_range,
-    }),
-})
-
-type Values = z.infer<typeof schema>
-
-const EMPTY: Values = {
-  email: '',
-  fullName: '',
-  roleId: '',
-  password: '',
-  salaryAmount: '',
-  payPercent: '',
-}
+import { PayFields } from './PayFields'
+import { RoleFields } from './RoleFields'
+import { EMPTY_STAFF, type StaffValues, staffSchema } from './staffSchema'
 
 interface StaffDialogProps {
   open: boolean
   onOpenChange(open: boolean): void
+  /// Individual kabinet chegarasi — server `upgrade_required` qaytardi
+  onUpgradeRequired(): void
 }
 
 /// Xodim hisobini egasi ochadi va parolni oʻzi belgilaydi — pochta
-/// tasdiqlash oqimi bu yerda yoʻq
-export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
+/// tasdiqlash oqimi bu yerda yoʻq.
+/// Individualda rol tanlovi yoʻq: faqat assistent, shifokori — egasi
+export function StaffDialog({ open, onOpenChange, onUpgradeRequired }: StaffDialogProps) {
+  const { data: session } = useSession()
   const { data: roles } = useRoles()
   const { mutateAsync, isPending } = useCreateStaff()
   const [formError, setFormError] = useState('')
 
-  const form = useForm<Values>({
-    resolver: zodResolver(schema),
-    defaultValues: EMPTY,
+  const solo = session?.clinic?.kind === 'solo'
+  const assistantRoleId = roles?.find((role) => role.template === 'assistent')?.id ?? ''
+
+  const form = useForm<StaffValues>({
+    resolver: zodResolver(staffSchema),
+    defaultValues: EMPTY_STAFF,
   })
+  const roleId = useWatch({ control: form.control, name: 'roleId' })
+  const isAssistant = roleId !== '' && roleId === assistantRoleId
 
   useEffect(() => {
     if (open) {
-      form.reset(EMPTY)
+      form.reset(EMPTY_STAFF)
       setFormError('')
     }
   }, [open, form])
 
-  async function onSubmit(values: Values) {
+  // Alohida: rollar oyna ochilgandan keyin kelsa, yozilgan matn oʻchmasin
+  useEffect(() => {
+    if (open && solo && assistantRoleId) form.setValue('roleId', assistantRoleId)
+  }, [open, solo, assistantRoleId, form])
+
+  async function onSubmit(values: StaffValues) {
     setFormError('')
+    const needsDoctors = isAssistant && !solo
+    if (needsDoctors && values.doctorIds.length === 0) {
+      form.setError('doctorIds', { message: STAFF_TEXT.doctors_required })
+      return
+    }
     try {
       await mutateAsync({
         email: values.email,
@@ -107,9 +80,15 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
         password: values.password,
         salaryAmount: Number(moneyDigits(values.salaryAmount) || 0),
         payPercent: Number(values.payPercent || 0),
+        ...(needsDoctors ? { doctorIds: values.doctorIds } : {}),
       })
       onOpenChange(false)
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'upgrade_required') {
+        onOpenChange(false)
+        onUpgradeRequired()
+        return
+      }
       setFormError(applyServerErrors(form, error))
     }
   }
@@ -149,29 +128,11 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
                 </FormItem>
               )}
             />
-            <FormField
+            <RoleFields
               control={form.control}
-              name="roleId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{STAFF_UI.role}</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={STAFF_UI.role} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {roles?.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {roleLabel(role)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+              roles={roles ?? []}
+              solo={solo}
+              isAssistant={isAssistant}
             />
             <FormField
               control={form.control}
@@ -188,46 +149,7 @@ export function StaffDialog({ open, onOpenChange }: StaffDialogProps) {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="salaryAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{STAFF_UI.salary}</FormLabel>
-                    <FormControl>
-                      <Input
-                        inputMode="numeric"
-                        placeholder="0"
-                        {...field}
-                        onChange={(event) => field.onChange(formatMoney(event.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="payPercent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{STAFF_UI.percent}</FormLabel>
-                    <FormControl>
-                      <Input
-                        inputMode="numeric"
-                        placeholder="0"
-                        {...field}
-                        onChange={(event) =>
-                          field.onChange(event.target.value.replace(/\D/g, '').slice(0, 3))
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <PayFields control={form.control} />
             <FormDescription>{STAFF_UI.pay_optional_hint}</FormDescription>
 
             {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
