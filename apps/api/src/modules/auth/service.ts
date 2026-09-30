@@ -412,17 +412,29 @@ export async function logout(deps: AuthDeps, sessionId: string, session: Session
 /// Rol foydalanuvchidan, ruxsatlar roldan — ikkalasi ham har soʻrovda
 /// bazadan. Faolsizlantirilgan xodimning ochiq sessiyasi ham shu yerda
 /// toʻxtaydi: hisob oʻchirilganda kirish darhol tugashi kerak
-export async function userPermissions(
+/// Koʻrish doirasi (tz.md 20-boʻlim): assistent — biriktirilgan
+/// shifokorlari, qolganlar — oʻzi. Bogʻlanish rol assistentdan boshqaga
+/// oʻtganda olinadi, shuning uchun bogʻlanish bor = assistent.
+/// Faolsizlantirilgan shifokor doirada qolmaydi — uning bemorlari
+/// assistentga ochiq qolmasin
+async function scopeOfTx(tx: ClinicTx, userId: string): Promise<string[]> {
+  const linked = await repo.doctorIdsOf(tx, userId)
+  if (linked.length === 0) return [userId]
+  return repo.activeIds(tx, linked)
+}
+
+export async function userAccess(
   db: Db,
   clinicId: string,
   userId: string,
-): Promise<readonly Permission[]> {
+): Promise<{ permissions: readonly Permission[]; doctorIds: readonly string[] }> {
   return withClinic(db, clinicId, async (tx) => {
     const u = await repo.findUser(tx, userId)
     if (!u) throw errors.unauthorized()
     if (u.status !== 'active') throw errors.forbidden(AUTH_TEXT.account_disabled)
-    if (!u.roleId) return []
-    return clinics.getPermissions(tx, u.roleId)
+    const doctorIds = await scopeOfTx(tx, userId)
+    if (!u.roleId) return { permissions: [], doctorIds }
+    return { permissions: await clinics.getPermissions(tx, u.roleId), doctorIds }
   })
 }
 
@@ -447,6 +459,9 @@ export async function currentUser(deps: AuthDeps, session: SessionData) {
       subscription: clinic ? billing.subscriptionOf(clinic) : null,
       role: role ? { name: role.name, template: role.template, isOwner: role.isOwner } : null,
       permissions: role?.permissions ?? [],
+      // Kimning bemorlari va qabullari: shifokor — oʻzi, assistent —
+      // shifokorlari. Interfeys shifokor tanlovini shu bilan toraytiradi
+      scopeDoctorIds: await scopeOfTx(tx, u.id),
     }
   })
 }

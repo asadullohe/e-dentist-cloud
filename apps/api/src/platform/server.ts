@@ -148,7 +148,7 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   // Ruxsatlar clinics modulidan oʻqiladi — platform modullarni import qilmaydi,
   // shuning uchun funksiya shu yerda bogʻlanadi
   const loadPermissions = (clinicId: string, userId: string) =>
-    auth.userPermissions(deps.db, clinicId, userId)
+    auth.userAccess(deps.db, clinicId, userId)
   app.decorate('requirePermission', permissionGuard(loadPermissions))
   app.decorate('requireAnyPermission', anyPermissionGuard(loadPermissions))
 

@@ -8,16 +8,32 @@ import { QUEUE_TEXT } from '@e-dentist/shared'
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { deviceId } from '../../platform/device.js'
 import { errors } from '../../platform/errors.js'
-import { requireAuth } from '../../platform/guards.js'
+import { requireAuth, scopeOf } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import * as queue from './queue.js'
 import { queueEnqueueSchema, queueJoinSchema, queueStatusSchema } from './queueSchema.js'
+import type { ScheduleViewer } from './service.js'
 
 function clinicOf(req: FastifyRequest): { clinicId: string; userId: string } {
   const session = requireAuth(req)
   if (!session.clinicId) throw errors.forbidden()
   return { clinicId: session.clinicId, userId: session.userId }
+}
+
+/// Kabinetdagi navbat: `schedule.all` boʻlmasa (assistent) faqat oʻz
+/// shifokorlariniki (tz.md 20-boʻlim)
+function viewerOfQueue(req: FastifyRequest): { clinicId: string; viewer: ScheduleViewer } {
+  const { clinicId, userId } = clinicOf(req)
+  return {
+    clinicId,
+    viewer: {
+      userId,
+      all: req.permissions.includes('schedule.all'),
+      patientsAll: req.permissions.includes('patients.all'),
+      doctorIds: scopeOf(req, userId),
+    },
+  }
 }
 
 /// Proxy oqimni jim deb uzib yubormasligi uchun
@@ -110,20 +126,20 @@ export const queueRoutes: FastifyPluginAsync<QueueRouteOpts> = async (app, opts)
   const manage = { preHandler: app.requirePermission('queue.manage') }
 
   app.get('/queue', manage, async (req) => {
-    const { clinicId } = clinicOf(req)
-    return ok(await queue.list(opts.deps, clinicId))
+    const { clinicId, viewer } = viewerOfQueue(req)
+    return ok(await queue.list(opts.deps, clinicId, viewer))
   })
 
   app.post('/queue', manage, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId, viewer } = viewerOfQueue(req)
     const input = validateInput(queueEnqueueSchema, req.body)
-    return ok(await queue.enqueue(opts.deps, clinicId, userId, input))
+    return ok(await queue.enqueue(opts.deps, clinicId, viewer, input))
   })
 
   app.patch('/queue/:id', manage, async (req) => {
-    const { clinicId, userId } = clinicOf(req)
+    const { clinicId, viewer } = viewerOfQueue(req)
     const { id } = req.params as { id: string }
     const input = validateInput(queueStatusSchema, req.body)
-    return ok(await queue.act(opts.deps, clinicId, userId, id, input))
+    return ok(await queue.act(opts.deps, clinicId, viewer, id, input))
   })
 }

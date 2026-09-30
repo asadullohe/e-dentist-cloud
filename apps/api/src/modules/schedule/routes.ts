@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify'
 import { errors } from '../../platform/errors.js'
-import { requireAuth } from '../../platform/guards.js'
+import { requireAuth, scopeOf } from '../../platform/guards.js'
 import { ok } from '../../platform/response.js'
 import { validateInput } from '../../platform/validate.js'
 import { blockCreateSchema, blockListSchema, blockUpdateSchema } from './blockSchema.js'
@@ -27,6 +27,7 @@ function clinicOf(req: FastifyRequest): { clinicId: string; viewer: service.Sche
       userId: session.userId,
       all: req.permissions.includes('schedule.all'),
       patientsAll: req.permissions.includes('patients.all'),
+      doctorIds: scopeOf(req, session.userId),
     },
   }
 }

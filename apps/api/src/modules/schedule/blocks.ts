@@ -5,6 +5,7 @@
 import { APPOINTMENT_TEXT } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import { errors } from '../../platform/errors.js'
+import { doctorFilter, pickDoctor, seesDoctor } from '../../platform/guards.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -32,10 +33,9 @@ async function withNames(tx: ClinicTx, rows: repo.TimeBlockRow[]): Promise<TimeB
   return rows.map((row) => ({ ...row, doctorName: names.get(row.doctorId) ?? null }))
 }
 
-/// Shifokor faqat oʻzinikiga: boshqaniki «topilmadi»
+/// Shifokor faqat oʻzinikiga, assistent — shifokorlarinikiga: boshqaniki «topilmadi»
 function assertOwn(viewer: ScheduleViewer, doctorId: string): void {
-  if (!viewer.all && doctorId !== viewer.userId)
-    throw errors.notFound(APPOINTMENT_TEXT.block_not_found)
+  if (!seesDoctor(viewer, doctorId)) throw errors.notFound(APPOINTMENT_TEXT.block_not_found)
 }
 
 /// Oraliqda ochiq qabul boʻlsa band vaqt yozilmaydi — avval qabullar
@@ -67,8 +67,7 @@ export function list(
     const from = new Date(`${input.from}T00:00:00`)
     const to = new Date(`${input.to}T00:00:00`)
     to.setDate(to.getDate() + 1)
-    const doctorId = viewer.all ? input.doctorId : viewer.userId
-    return withNames(tx, await repo.list(tx, from, to, doctorId))
+    return withNames(tx, await repo.list(tx, from, to, doctorFilter(viewer, input.doctorId)))
   })
 }
 
@@ -80,7 +79,7 @@ export async function blockingTx(
   from: Date,
   to: Date,
 ): Promise<repo.TimeBlockRow | undefined> {
-  const rows = await repo.list(tx, from, to, doctorId)
+  const rows = await repo.list(tx, from, to, [doctorId])
   return rows[0]
 }
 
@@ -94,7 +93,7 @@ export function create(
   return withClinic(deps.db, clinicId, async (tx) => {
     // Hammani koʻradigan xodim shifokorni aniq tanlaydi — «berilmasa oʻziga»
     // yashirin xulq edi: egasi oʻziga band vaqt yozib qoʻyganini sezmasdi
-    const doctorId = viewer.all ? input.doctorId : viewer.userId
+    const doctorId = viewer.all ? input.doctorId : pickDoctor(viewer, input.doctorId)
     if (!doctorId) throw errors.validation({ doctorId: APPOINTMENT_TEXT.block_doctor_required })
     if (!(await auth.isDoctorTx(tx, doctorId)))
       throw errors.notFound(APPOINTMENT_TEXT.block_doctor_required)
@@ -130,7 +129,7 @@ export function update(
     const existing = await repo.findById(tx, id)
     if (!existing) throw errors.notFound(APPOINTMENT_TEXT.block_not_found)
     assertOwn(viewer, existing.doctorId)
-    const doctorId = viewer.all ? (input.doctorId ?? existing.doctorId) : viewer.userId
+    const doctorId = pickDoctor(viewer, input.doctorId ?? existing.doctorId)
     if (!(await auth.isDoctorTx(tx, doctorId)))
       throw errors.notFound(APPOINTMENT_TEXT.block_doctor_required)
     const startsAt = instant(input.fromDate, input.fromTime)

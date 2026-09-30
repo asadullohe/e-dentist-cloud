@@ -33,9 +33,10 @@ const BRIDGE_SELECT = {
 
 /// `doctorId` berilsa — faqat shu shifokorning tashriflari (shifokor
 /// boshqaning muolajasini koʻrmaydi)
-export function listVisits(tx: ClinicTx, patientId: string, doctorId?: string) {
+/// `doctorIds` — cheklangan koʻruvchi doirasi (shifokor yoki assistent); `undefined` — hammasi
+export function listVisits(tx: ClinicTx, patientId: string, doctorIds?: readonly string[]) {
   return tx.visit.findMany({
-    where: { patientId, ...(doctorId ? { doctorId } : {}) },
+    where: { patientId, ...(doctorIds ? { doctorId: { in: [...doctorIds] } } : {}) },
     select: VISIT_SELECT,
     // Yangi tashrif tepada. Bir kunda bir nechtasi boʻlsa — qabul vaqti
     // boʻyicha (vaqtsiz eski yozuvlar oxirida), keyin kiritilgan tartibda

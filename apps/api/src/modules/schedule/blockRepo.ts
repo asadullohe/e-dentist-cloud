@@ -14,9 +14,14 @@ const SELECT = {
 export type TimeBlockRow = Prisma.TimeBlockGetPayload<{ select: typeof SELECT }>
 
 /// Oraliq bilan kesishganlar: boshlanishi oraliqdan oldin, tugashi keyin
-export function list(tx: ClinicTx, from: Date, to: Date, doctorId?: string) {
+/// `doctorIds` — cheklangan koʻruvchi doirasi yoki bitta shifokor; `undefined` — hammasi
+export function list(tx: ClinicTx, from: Date, to: Date, doctorIds?: readonly string[]) {
   return tx.timeBlock.findMany({
-    where: { startsAt: { lt: to }, endsAt: { gt: from }, ...(doctorId ? { doctorId } : {}) },
+    where: {
+      startsAt: { lt: to },
+      endsAt: { gt: from },
+      ...(doctorIds ? { doctorId: { in: [...doctorIds] } } : {}),
+    },
     select: SELECT,
     orderBy: { startsAt: 'asc' },
   })

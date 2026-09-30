@@ -11,7 +11,7 @@ import type { PlanItemStatus, PlanStatus } from '../../../generated/prisma/clien
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
-import type { ScopedViewer } from '../../platform/guards.js'
+import { pickDoctor, type ScopedViewer } from '../../platform/guards.js'
 import { generatePublicCode } from '../../platform/publicCode.js'
 import type { RateLimiter } from '../../platform/rateLimit.js'
 import type { Storage } from '../../platform/storage.js'
@@ -291,9 +291,9 @@ export function create(
       throw errors.notFound(PATIENT_TEXT.not_found)
     }
 
-    // Cheklangan koʻruvchi (shifokor) faqat oʻz nomidan tuzadi — aks holda
-    // oʻzi koʻrolmaydigan reja chiqardi. Tashrifdagi qoida bilan bir xil
-    const doctorId = viewer.all ? (input.doctorId ?? viewer.userId) : viewer.userId
+    // Cheklangan koʻruvchi faqat oʻz doirasiga tuzadi (shifokor — oʻz nomidan,
+    // assistent — shifokorlaridan biri nomidan). Tashrifdagi qoida bilan bir xil
+    const doctorId = pickDoctor(viewer, input.doctorId)
     if (!(await auth.existsInClinic(tx, doctorId))) {
       throw errors.notFound(PLAN_TEXT.doctor_not_found)
     }

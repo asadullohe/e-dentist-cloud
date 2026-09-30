@@ -11,6 +11,7 @@ import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import { type Bus, queueChannel } from '../../platform/bus.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import { seesDoctor } from '../../platform/guards.js'
 import type { RateLimiter } from '../../platform/rateLimit.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
@@ -19,6 +20,7 @@ import * as clinics from '../clinics/service.js'
 import * as patients from '../patients/service.js'
 import type { QueueEnqueueInput, QueueJoinInput, QueueStatusInput } from './queueSchema.js'
 import * as repo from './repo.js'
+import type { ScheduleViewer } from './service.js'
 
 export interface QueueDeps {
   db: Db
@@ -351,9 +353,17 @@ export interface QueueEntry {
   at: Date
 }
 
-async function entries(tx: ClinicTx): Promise<QueueEntry[]> {
+/// Navbat yozuvi koʻruvchiga koʻrinadimi. `schedule.all` yoʻq (assistent)
+/// — faqat oʻz shifokorlariniki va hali shifokorsizlari (ochiq sahifadan
+/// yozilgan, tasdiqlanmagan): ularni ham kimdir qabul qilishi kerak
+function visibleEntry(viewer: ScheduleViewer, doctorId: string | null): boolean {
+  return doctorId === null || seesDoctor(viewer, doctorId)
+}
+
+async function entries(tx: ClinicTx, viewer: ScheduleViewer): Promise<QueueEntry[]> {
   const { from, to } = today()
-  const [rows, doctors] = await Promise.all([repo.queueOfDay(tx, from, to), auth.listDoctorsTx(tx)])
+  const [all, doctors] = await Promise.all([repo.queueOfDay(tx, from, to), auth.listDoctorsTx(tx)])
+  const rows = all.filter((row) => visibleEntry(viewer, row.doctorId))
   const doctorName = new Map(doctors.map((doctor) => [doctor.id, doctor.fullName]))
 
   const ids = rows.map((row) => row.patientId).filter((id): id is string => id !== null)
@@ -376,8 +386,12 @@ async function entries(tx: ClinicTx): Promise<QueueEntry[]> {
   })
 }
 
-export function list(deps: QueueDeps, clinicId: string): Promise<QueueEntry[]> {
-  return withClinic(deps.db, clinicId, (tx) => entries(tx))
+export function list(
+  deps: QueueDeps,
+  clinicId: string,
+  viewer: ScheduleViewer,
+): Promise<QueueEntry[]> {
+  return withClinic(deps.db, clinicId, (tx) => entries(tx, viewer))
 }
 
 /// Kabinetdan navbatga qoʻshish (10.3): qabulxona bemorni yaratib yoki
@@ -387,13 +401,19 @@ export function list(deps: QueueDeps, clinicId: string): Promise<QueueEntry[]> {
 export function enqueue(
   deps: QueueDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScheduleViewer,
   input: QueueEnqueueInput,
 ): Promise<QueueEntry[]> {
+  const { userId } = viewer
   return withClinic(deps.db, clinicId, async (tx) => {
+    const patientViewer = { userId, all: viewer.patientsAll, doctorIds: viewer.doctorIds }
     const [person] = await patients.findByIds(tx, [input.patientId])
-    if (!person) throw errors.notFound(PATIENT_TEXT.not_found)
-    if (!(await auth.isDoctorTx(tx, input.doctorId))) {
+    if (!person || !(await patients.isVisibleTx(tx, patientViewer, person.id))) {
+      throw errors.notFound(PATIENT_TEXT.not_found)
+    }
+    // Assistent faqat oʻz shifokorlariga yoʻnaltiradi — aks holda yozuv
+    // uning navbatidan darhol gʻoyib boʻlardi
+    if (!seesDoctor(viewer, input.doctorId) || !(await auth.isDoctorTx(tx, input.doctorId))) {
       throw errors.validation(
         { doctorId: QUEUE_TEXT.doctor_not_found },
         QUEUE_TEXT.doctor_not_found,
@@ -426,7 +446,7 @@ export function enqueue(
     })
     await deps.bus.publish(queueChannel(clinicId))
 
-    return entries(tx)
+    return entries(tx, viewer)
   })
 }
 
@@ -447,15 +467,18 @@ const FLOW: Record<
 export function act(
   deps: QueueDeps,
   clinicId: string,
-  userId: string,
+  viewer: ScheduleViewer,
   id: string,
   input: QueueStatusInput,
 ): Promise<QueueEntry[]> {
   const step = FLOW[input.action]
+  const { userId } = viewer
 
   return withClinic(deps.db, clinicId, async (tx) => {
     const entry = await repo.findQueueEntry(tx, id)
-    if (!entry || entry.queueStatus === null) throw errors.notFound(QUEUE_TEXT.ticket_not_found)
+    if (!entry || entry.queueStatus === null || !visibleEntry(viewer, entry.doctorId)) {
+      throw errors.notFound(QUEUE_TEXT.ticket_not_found)
+    }
     if (!step.from.includes(entry.queueStatus)) throw errors.badRequest(QUEUE_TEXT.status_flow)
 
     // Tasdiqlashda kartoteka bilan bogʻlanadi: telefon boʻyicha topiladi,
@@ -493,6 +516,6 @@ export function act(
     // Ochiq sahifa va kutish xonasi ekrani darhol yangilansin
     await deps.bus.publish(queueChannel(clinicId))
 
-    return entries(tx)
+    return entries(tx, viewer)
   })
 }

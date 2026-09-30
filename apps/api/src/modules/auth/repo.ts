@@ -203,6 +203,15 @@ export function listAssistantLinks(tx: ClinicTx) {
   return tx.assistantDoctor.findMany({ select: { assistantId: true, doctorId: true } })
 }
 
+/// Berilganlardan faollari — assistent doirasidan ishdan ketgan shifokor tushadi
+export async function activeIds(tx: ClinicTx, ids: readonly string[]): Promise<string[]> {
+  const rows = await tx.user.findMany({
+    where: { id: { in: [...ids] }, status: 'active' },
+    select: { id: true },
+  })
+  return rows.map((row) => row.id)
+}
+
 export async function doctorIdsOf(tx: ClinicTx, assistantId: string): Promise<string[]> {
   const rows = await tx.assistantDoctor.findMany({
     where: { assistantId },

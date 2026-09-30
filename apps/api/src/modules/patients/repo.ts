@@ -21,6 +21,8 @@ const SELECT = {
 /// bemorlar: biriktirilgan, oʻzi davolagan (tashrif), unga qabulga
 /// yozilgan, yoki hali hech kimga biriktirilmagan (Excel dan yuklangan,
 /// qabulxona shifokor tanlamagan — aks holda uni hech kim davolay olmasdi).
+/// Assistent — xuddi shunday, lekin biriktirilgan shifokorlari koʻzi bilan
+/// (`doctorIds`, tz.md 20-boʻlim).
 /// Aks holda hammasi (egasi, qabulxona, kuzatuvchi)
 export type PatientViewer = ScopedViewer
 
@@ -28,13 +30,13 @@ export type PatientViewer = ScopedViewer
 /// bitta joydan (tz.md 14-boʻlim)
 export function visibleWhere(viewer: PatientViewer): Prisma.PatientWhereInput {
   if (viewer.all) return {}
-  const me = viewer.userId
+  const mine = { in: [...viewer.doctorIds] }
   return {
     OR: [
       { doctorId: null },
-      { doctorId: me },
-      { visits: { some: { doctorId: me } } },
-      { appointments: { some: { doctorId: me } } },
+      { doctorId: mine },
+      { visits: { some: { doctorId: mine } } },
+      { appointments: { some: { doctorId: mine } } },
     ],
   }
 }
@@ -220,11 +222,15 @@ const IMAGE_SELECT = {
   createdAt: true,
 } satisfies Prisma.PatientImageSelect
 
-/// Shifokor faqat oʻzi yuklagan rasmlarni koʻradi; kim yuklagani nomaʼlum
-/// (eski) rasmlar hammaga koʻrinadi
+/// Shifokor faqat oʻzi yuklagan rasmlarni koʻradi, assistent — oʻzi va
+/// shifokorlari yuklaganini; kim yuklagani nomaʼlum (eski) rasmlar hammaga
 export function imageVisibleWhere(viewer: PatientViewer): Prisma.PatientImageWhereInput {
   if (viewer.all) return {}
-  return { OR: [{ uploadedBy: viewer.userId }, { uploadedBy: null }] }
+  return { OR: [{ uploadedBy: { in: imageAuthors(viewer) } }, { uploadedBy: null }] }
+}
+
+export function imageAuthors(viewer: PatientViewer): string[] {
+  return [...new Set([viewer.userId, ...viewer.doctorIds])]
 }
 
 export function listImages(tx: ClinicTx, viewer: PatientViewer, patientId: string) {

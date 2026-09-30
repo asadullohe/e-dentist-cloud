@@ -5,6 +5,7 @@ import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import { type Bus, queueChannel } from '../../platform/bus.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import { doctorFilter, pickDoctor, seesDoctor } from '../../platform/guards.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -93,17 +94,20 @@ export interface ScheduleViewer {
   /// `patients.all` — bemorlar tekshiruvi uchun (qabul yozish, yakunlash):
   /// shifokor faqat oʻziga koʻrinadigan bemorga qabul yozadi
   patientsAll: boolean
+  /// Kimning qabullari (tz.md 20-boʻlim): shifokorda — oʻzi, assistentda —
+  /// biriktirilgan shifokorlari
+  doctorIds: readonly string[]
 }
 
 const patientViewerOf = (viewer: ScheduleViewer) => ({
   userId: viewer.userId,
   all: viewer.patientsAll,
+  doctorIds: viewer.doctorIds,
 })
 
 /// Boshqa shifokorning qabuli — cheklangan koʻruvchi uchun yoʻq
 function assertVisible(viewer: ScheduleViewer, row: { doctorId: string | null }): void {
-  if (!viewer.all && row.doctorId !== viewer.userId)
-    throw errors.notFound(APPOINTMENT_TEXT.not_found)
+  if (!seesDoctor(viewer, row.doctorId)) throw errors.notFound(APPOINTMENT_TEXT.not_found)
 }
 
 /// Bemor nomlarini qoʻshadi. `patients` boshqa modulning jadvali, shuning
@@ -200,9 +204,7 @@ export function list(
     const to = new Date(`${input.to}T00:00:00`)
     to.setDate(to.getDate() + 1)
 
-    // Cheklangan koʻruvchi filtrni tanlay olmaydi — doim oʻzi
-    const doctorId = viewer.all ? input.doctorId : viewer.userId
-    return withPatients(tx, await repo.list(tx, from, to, doctorId))
+    return withPatients(tx, await repo.list(tx, from, to, doctorFilter(viewer, input.doctorId)))
   })
 }
 
@@ -217,13 +219,13 @@ export function create(
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, viewer, input.patientId)
     // Shifokor berilmasa — bemorning biriktirilgan shifokori (10.2).
-    // Cheklangan koʻruvchi (shifokor) faqat oʻziga yozadi — aks holda qabul
-    // oʻz jadvalidan gʻoyib boʻlardi
-    const doctorId = !viewer.all
-      ? userId
-      : input.doctorId === undefined
+    // Cheklangan koʻruvchi faqat oʻz doirasiga yozadi (shifokor — oʻziga,
+    // assistent — shifokorlaridan biriga): aks holda qabul jadvalidan gʻoyib boʻlardi
+    const requested =
+      input.doctorId === undefined
         ? ((await patients.findByIds(tx, [input.patientId]))[0]?.doctorId ?? null)
         : input.doctorId
+    const doctorId = viewer.all ? requested : pickDoctor(viewer, requested)
     await assertDoctor(tx, doctorId)
     const at = toInstant(input.date, input.time)
     await assertFree(tx, doctorId, at, input.duration)
@@ -259,8 +261,11 @@ export function update(
       const existing = await repo.findById(tx, id)
       if (!existing) throw errors.notFound(APPOINTMENT_TEXT.not_found)
       assertVisible(viewer, existing)
-      // Cheklangan koʻruvchi shifokorni oʻzgartira olmaydi — qabul oʻzida qoladi
-      if (!viewer.all) input = { ...input, doctorId: undefined }
+      // Cheklangan koʻruvchi shifokorni faqat oʻz doirasida almashtiradi —
+      // qabul uning jadvalidan chiqib ketmasin
+      if (!viewer.all && !seesDoctor(viewer, input.doctorId ?? null)) {
+        input = { ...input, doctorId: undefined }
+      }
       // «Yakunlandi» faqat tashrif bilan birga qoʻyiladi — complete() (10.6)
       if (input.status === 'done' && existing.status !== 'done')
         throw errors.badRequest(APPOINTMENT_TEXT.done_needs_visit)

@@ -21,9 +21,13 @@ const SELECT = {
   guestPhone: true,
 } satisfies Prisma.AppointmentSelect
 
-export function list(tx: ClinicTx, from: Date, to: Date, doctorId?: string) {
+/// `doctorIds` — cheklangan koʻruvchi doirasi; `undefined` — hammasi
+export function list(tx: ClinicTx, from: Date, to: Date, doctorIds?: readonly string[]) {
   return tx.appointment.findMany({
-    where: { at: { gte: from, lt: to }, ...(doctorId ? { doctorId } : {}) },
+    where: {
+      at: { gte: from, lt: to },
+      ...(doctorIds ? { doctorId: { in: [...doctorIds] } } : {}),
+    },
     select: SELECT,
     orderBy: { at: 'asc' },
   })

@@ -306,7 +306,7 @@ export async function imageFile(
 
 /// Eski rasmlarda kim yuklagani yoʻq — hammaga koʻrinadi
 function imageVisible(viewer: repo.PatientViewer, uploadedBy: string | null): boolean {
-  return viewer.all || uploadedBy === null || uploadedBy === viewer.userId
+  return viewer.all || uploadedBy === null || repo.imageAuthors(viewer).includes(uploadedBy)
 }
 
 export async function uploadImage(

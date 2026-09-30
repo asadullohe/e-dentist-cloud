@@ -352,7 +352,8 @@ export function deliver(
     // Cheklangan koʻruvchi (patients.all yoʻq) uchun visits oʻzi majburlaydi
     const visit = await visits.createTx(
       tx,
-      { userId, all: permissions.includes('patients.all') },
+      // Naryad muallif boʻyicha (oʻzi yozgan) — koʻrish doirasi ham oʻzi
+      { userId, all: permissions.includes('patients.all'), doctorIds: [userId] },
       {
         ...input,
         doctorId: input.doctorId ?? row.doctorId,

@@ -5,7 +5,7 @@ import { bridgeSpan } from '@e-dentist/teeth'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
-import type { ScopedViewer } from '../../platform/guards.js'
+import { pickDoctor, type ScopedViewer, seesDoctor } from '../../platform/guards.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
 import { uuidV7 } from '../../platform/uuid.js'
 import * as auth from '../auth/service.js'
@@ -191,7 +191,7 @@ export function listVisits(
 ) {
   return withClinic(deps.db, clinicId, async (tx) => {
     await assertPatient(tx, viewer, patientId)
-    const rows = await repo.listVisits(tx, patientId, viewer.all ? undefined : viewer.userId)
+    const rows = await repo.listVisits(tx, patientId, viewer.all ? undefined : viewer.doctorIds)
     // Har tashrifda olingan summa — «olinmagan» kartochkada shundan
     const paid = deps.paidByVisits
       ? await deps.paidByVisits(
@@ -224,9 +224,10 @@ export async function createTx(
   const id = uuidV7()
   await assertPatient(tx, viewer, input.patientId)
   // Sukut — yozayotgan odamning oʻzi: u `visits.write` bilan kirgan,
-  // demak shifokorlar roʻyxatida bor. Cheklangan koʻruvchi (shifokor)
-  // faqat oʻz nomidan yozadi — aks holda oʻzi koʻrolmaydigan tashrif chiqardi
-  const doctorId = viewer.all ? (input.doctorId ?? userId) : userId
+  // demak shifokorlar roʻyxatida bor. Cheklangan koʻruvchi faqat oʻz
+  // doirasiga yozadi (shifokor — oʻz nomidan, assistent — shifokorlaridan
+  // biri nomidan) — aks holda oʻzi koʻrolmaydigan tashrif chiqardi
+  const doctorId = pickDoctor(viewer, input.doctorId)
   await assertDoctor(tx, doctorId)
   // Foiz shu paytda muzlatiladi — keyin oʻzgarsa bu tashrifga tegmaydi
   const { payPercent } = await auth.payTermsTx(tx, doctorId)
@@ -282,7 +283,7 @@ export function createVisit(
 
 /// Boshqa shifokorning tashrifi cheklangan koʻruvchi uchun yoʻq
 function assertOwnVisit(viewer: ScopedViewer, visit: { doctorId: string | null }): void {
-  if (!viewer.all && visit.doctorId !== viewer.userId) throw errors.notFound(VISIT_TEXT.not_found)
+  if (!seesDoctor(viewer, visit.doctorId)) throw errors.notFound(VISIT_TEXT.not_found)
 }
 
 export function updateVisit(
@@ -297,8 +298,10 @@ export function updateVisit(
     const current = await repo.findVisit(tx, id)
     if (!current) throw errors.notFound(VISIT_TEXT.not_found)
     assertOwnVisit(viewer, current)
-    // Cheklangan koʻruvchi shifokorni oʻzgartira olmaydi — tashrif oʻzida qoladi
-    if (!viewer.all) input = { ...input, doctorId: undefined }
+    // Cheklangan koʻruvchi shifokorni faqat oʻz doirasida almashtiradi
+    if (!viewer.all && !seesDoctor(viewer, input.doctorId ?? null)) {
+      input = { ...input, doctorId: undefined }
+    }
 
     // Ulush qachon qayta sanaladi: shifokor almashsa — yangi shifokorning
     // joriy foizi; faqat narx oʻzgarsa — saqlangan foiz (snapshot buzilmaydi)
