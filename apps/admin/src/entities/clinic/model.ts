@@ -1,3 +1,5 @@
+import type { ClinicKind } from '@e-dentist/shared'
+
 export interface ClinicSummary {
   id: string
   name: string
@@ -16,6 +18,8 @@ export interface ClinicSummary {
   /// Logotip havolasi shu koddan yasaladi: clinicLogoUrl(queueCode)
   queueCode: string
   hasLogo: boolean
+  /// Klinika yoki individual shifokor (tz.md 20-boʻlim)
+  kind: ClinicKind
 }
 
 export interface ClinicStaff {

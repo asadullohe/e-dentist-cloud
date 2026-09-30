@@ -7,8 +7,9 @@ import {
   SETTINGS_UI,
   STAFF_UI,
 } from '@e-dentist/shared'
-import { useSession } from '@/entities/session'
+import { useHasPermission, useSession } from '@/entities/session'
 import { ClinicLogoCard } from '@/features/clinic-logo'
+import { UpgradeCard } from '@/features/clinic-upgrade'
 import { ContentSection } from '@/shared/ui'
 import { AccountTab } from './AccountTab'
 import { DataTab } from './DataTab'
@@ -46,13 +47,18 @@ export function RolesSection() {
 
 export function ClinicSection() {
   const solo = useSession().data?.clinic?.kind === 'solo'
+  const canUpgrade = useHasPermission()('billing.manage')
   return (
     <ContentSection
       heading="page"
       title={solo ? LOGO_UI.tab_solo : LOGO_UI.tab}
       desc={solo ? SETTINGS_UI.clinic_hint_solo : SETTINGS_UI.clinic_hint}
     >
-      <ClinicLogoCard />
+      <div className="space-y-4">
+        <ClinicLogoCard />
+        {/* Individualdan klinikaga — faqat egasiga (obuna masalasi) */}
+        {solo && canUpgrade && <UpgradeCard />}
+      </div>
     </ContentSection>
   )
 }

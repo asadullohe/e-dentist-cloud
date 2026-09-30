@@ -6,6 +6,7 @@ import {
   extendClinic,
   removeClinicLogo,
   resendInvite,
+  setClinicKind,
   setClinicLogo,
   setClinicStatus,
 } from '@/entities/clinic'
@@ -47,4 +48,10 @@ export function useSetClinicLogo() {
 
 export function useRemoveClinicLogo() {
   return useClinicMutation((id: string) => removeClinicLogo(id))
+}
+
+export function useSetClinicKind() {
+  return useClinicMutation(({ id, kind }: { id: string; kind: 'clinic' | 'solo' }) =>
+    setClinicKind(id, kind),
+  )
 }

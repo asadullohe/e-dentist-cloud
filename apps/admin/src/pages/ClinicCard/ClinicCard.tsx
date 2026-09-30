@@ -7,8 +7,8 @@ import {
 } from '@e-dentist/shared'
 import { ArrowLeftIcon, MailIcon, SendIcon } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
-import { StatusBadge, useClinic } from '@/entities/clinic'
-import { useExtendClinic, useResendInvite, useSetClinicStatus } from '@/features/clinic-actions'
+import { KindBadge, StatusBadge, useClinic } from '@/entities/clinic'
+import { useResendInvite } from '@/features/clinic-actions'
 import { ClinicLogoCard } from '@/features/clinic-logo'
 import {
   Badge,
@@ -22,10 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/shared/ui'
-
-/// Qoʻlda toʻlov: mijoz Telegram orqali yozadi, admin shu tugmalarni
-/// bosadi (tz.md 8-boʻlim)
-const EXTEND_OPTIONS = [30, 90, 365]
+import { ClinicActions } from './ClinicActions'
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
@@ -39,13 +36,9 @@ function Stat({ label, value }: { label: string; value: string | number }) {
 export function ClinicCard() {
   const { id = '' } = useParams()
   const { data: clinic, isPending } = useClinic(id)
-  const { mutate: extend, isPending: isExtending } = useExtendClinic()
-  const { mutate: setStatus, isPending: isBlocking } = useSetClinicStatus()
   const { mutate: resendInvite, isPending: isResending } = useResendInvite()
 
   if (isPending || !clinic) return <Skeleton className="h-64 w-full" />
-
-  const blocked = clinic.status === 'blocked'
 
   return (
     <div className="space-y-6">
@@ -68,6 +61,7 @@ export function ClinicCard() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge clinic={clinic} />
+            <KindBadge clinic={clinic} />
             <Badge variant="outline">
               {clinic.queueEnabled ? ADMIN_UI.queue_on : ADMIN_UI.queue_off}
             </Badge>
@@ -108,29 +102,7 @@ export function ClinicCard() {
         <Stat label={ADMIN_UI.visits_count} value={clinic.visitCount} />
       </div>
 
-      <Card className="flex-row flex-wrap items-center gap-2 p-4">
-        <span className="text-sm font-medium">{ADMIN_UI.extend}:</span>
-        {EXTEND_OPTIONS.map((days) => (
-          <Button
-            key={days}
-            size="sm"
-            variant="outline"
-            disabled={isExtending}
-            onClick={() => extend({ id: clinic.id, days })}
-          >
-            {ADMIN_UI.extend_days(days)}
-          </Button>
-        ))}
-        <div className="flex-1" />
-        <Button
-          size="sm"
-          variant={blocked ? 'outline' : 'destructive'}
-          disabled={isBlocking}
-          onClick={() => setStatus({ id: clinic.id, status: blocked ? 'active' : 'blocked' })}
-        >
-          {blocked ? ADMIN_UI.unblock : ADMIN_UI.block}
-        </Button>
-      </Card>
+      <ClinicActions clinic={clinic} />
 
       <ClinicLogoCard clinic={clinic} />
 

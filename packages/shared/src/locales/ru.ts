@@ -670,6 +670,7 @@ export const ru: DeepPartial<Strings> = {
     lab_updated: 'Наряд изменён',
     lab_deleted: 'Наряд удалён',
     lab_place_saved: 'Лаборатория сохранена',
+    clinic_upgraded: 'Кабинет переведён в клинику',
     lab_place_deleted: 'Лаборатория удалена',
     lab_ready: 'Наряд отмечен как готовый',
     lab_delivered: 'Наряд сдан',
@@ -703,6 +704,8 @@ export const ru: DeepPartial<Strings> = {
     solo_only_assistant: 'В частном кабинете можно добавить только ассистента',
     solo_assistant_limit: (max: number) =>
       `В частном кабинете — не больше ${max} активных ассистентов`,
+    solo_extra_staff: (names: string) =>
+      `Нельзя перевести в частный кабинет: кроме владельца и ассистентов есть активные сотрудники — ${names}`,
   },
 
   STAFF_UI: {
@@ -753,6 +756,12 @@ export const ru: DeepPartial<Strings> = {
     upgrade_text: (max: number) =>
       `В частном кабинете можно добавить только ассистентов, до ${max}. Если нужен врач, регистратура или техник — переведите кабинет в клинику: данные сохранятся.`,
     upgrade_ok: 'Понятно',
+    upgrade_action: 'Перейти на клинику',
+    upgrade_confirm_title: 'Перевести кабинет в клинику?',
+    upgrade_confirm_text:
+      'Откроется добавление врачей, регистратуры и техников, данные сохранятся. Цена перейдёт на тариф клиники — договоримся при следующей оплате.',
+    upgrade_card_text:
+      'Если нужен другой врач, регистратура или техник — переведите кабинет в клинику',
   },
 
   PERMISSION_LABELS: {
@@ -1392,6 +1401,11 @@ export const ru: DeepPartial<Strings> = {
     extend_days: (n: number) => `+${n} ${plural(n, DAYS)}`,
     block: 'Заблокировать',
     unblock: 'Разблокировать',
+    kind_clinic: 'Клиника',
+    kind_solo: 'Частный врач',
+    kind_all: 'Все',
+    to_solo: 'Перевести в частный кабинет',
+    to_clinic: 'Перевести в клинику',
     history: 'История',
     never: 'никогда',
     back: 'Клиники',
@@ -1471,6 +1485,7 @@ export const ru: DeepPartial<Strings> = {
     subscription_extended: 'Срок продлён',
     clinic_blocked: 'Заблокирована',
     clinic_unblocked: 'Разблокирована',
+    clinic_kind_changed: 'Изменён тип (клиника / частный врач)',
   },
 
   PATIENT_EXCEL_COLUMNS: {

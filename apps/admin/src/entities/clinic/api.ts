@@ -1,3 +1,4 @@
+import type { ClinicKind } from '@e-dentist/shared'
 import { apiRequest } from '@/shared/api'
 import type { ClinicCard, ClinicSummary } from './model'
 
@@ -35,3 +36,8 @@ export function setClinicLogo(id: string, file: File) {
 
 export const removeClinicLogo = (id: string) =>
   apiRequest<ClinicCard>(`/admin/clinics/${id}/logo`, { method: 'DELETE' })
+
+/// Klinika ↔ individual. Individualga — faqat egasi va assistentlar qolgan
+/// boʻlsa, aks holda server sababini aytadi (tz.md 20-boʻlim)
+export const setClinicKind = (id: string, kind: ClinicKind) =>
+  apiRequest<ClinicCard>(`/admin/clinics/${id}/kind`, { method: 'POST', body: { kind } })

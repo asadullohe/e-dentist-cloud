@@ -1,5 +1,6 @@
 import {
   ADMIN_UI,
+  type ClinicKind,
   clinicLogoUrl,
   formatDate,
   formatDateTime,
@@ -8,9 +9,10 @@ import {
 import { BuildingIcon, SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { StatusBadge, useClinics } from '@/entities/clinic'
+import { KindBadge, StatusBadge, useClinics } from '@/entities/clinic'
 import { ClinicCreateDialog } from '@/features/clinic-create'
 import {
+  Button,
   Card,
   Input,
   Skeleton,
@@ -24,7 +26,10 @@ import {
 
 export function Clinics() {
   const [search, setSearch] = useState('')
-  const { data: clinics, isPending } = useClinics(search)
+  const { data: all, isPending } = useClinics(search)
+  // Tur filtri (tz.md 20-boʻlim): roʻyxat toʻliq keladi — mijozda
+  const [kind, setKind] = useState<ClinicKind | 'all'>('all')
+  const clinics = all?.filter((clinic) => kind === 'all' || clinic.kind === kind)
 
   return (
     <div className="space-y-6">
@@ -36,14 +41,32 @@ export function Clinics() {
         <ClinicCreateDialog />
       </div>
 
-      <div className="relative max-w-sm">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder={ADMIN_UI.search}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full max-w-sm">
+          <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder={ADMIN_UI.search}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+        <div className="flex gap-1 rounded-md border p-0.5">
+          {(['all', 'clinic', 'solo'] as const).map((value) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={kind === value ? 'secondary' : 'ghost'}
+              onClick={() => setKind(value)}
+            >
+              {value === 'all'
+                ? ADMIN_UI.kind_all
+                : value === 'solo'
+                  ? ADMIN_UI.kind_solo
+                  : ADMIN_UI.kind_clinic}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {isPending ? (
@@ -91,6 +114,7 @@ export function Clinics() {
                             {clinic.name}
                           </Link>
                           <StatusBadge clinic={clinic} />
+                          <KindBadge clinic={clinic} />
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {clinic.phone ? formatUzPhone(clinic.phone) : '—'}

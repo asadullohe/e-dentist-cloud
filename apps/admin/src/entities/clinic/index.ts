@@ -6,9 +6,10 @@ export {
   fetchClinics,
   removeClinicLogo,
   resendInvite,
+  setClinicKind,
   setClinicLogo,
   setClinicStatus,
 } from './api'
 export { CLINIC_KEYS, useClinic, useClinics } from './hooks'
 export type { ClinicCard, ClinicStaff, ClinicSummary, PendingInvite } from './model'
-export { StatusBadge } from './ui/StatusBadge'
+export { KindBadge, StatusBadge } from './ui/StatusBadge'

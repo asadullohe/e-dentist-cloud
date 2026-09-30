@@ -15,3 +15,8 @@ export function StatusBadge({ clinic }: { clinic: ClinicSummary }) {
     return <Badge className="border-transparent bg-info/15 text-info">{ADMIN_UI.trial}</Badge>
   return <Badge className="border-transparent bg-ok/15 text-ok">{ADMIN_UI.active}</Badge>
 }
+
+/// Klinika turi (tz.md 20-boʻlim): individual ajralib tursin — narx boshqa
+export function KindBadge({ clinic }: { clinic: ClinicSummary }) {
+  return clinic.kind === 'solo' ? <Badge variant="outline">{ADMIN_UI.kind_solo}</Badge> : null
+}

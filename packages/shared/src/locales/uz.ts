@@ -709,6 +709,7 @@ export const TOAST_TEXT = {
   lab_issued: 'Naryad texnikka qaytadan berildi',
   lab_returned: 'Naryad qaytarildi',
   lab_place_saved: 'Laboratoriya saqlandi',
+  clinic_upgraded: 'Kabinet klinikaga oʻtkazildi',
   lab_place_deleted: 'Laboratoriya oʻchirildi',
   payout_saved: 'Ish haqi toʻlovi yozildi',
   payout_deleted: 'Ish haqi toʻlovi oʻchirildi',
@@ -741,6 +742,9 @@ export const STAFF_TEXT = {
   solo_only_assistant: 'Individual kabinetda faqat assistent qoʻshiladi',
   solo_assistant_limit: (max: number) =>
     `Individual kabinetda ${max} tagacha faol assistent boʻladi`,
+  // Panel: individualga oʻtkazish (tz.md 20-boʻlim)
+  solo_extra_staff: (names: string) =>
+    `Individualga oʻtkazib boʻlmaydi: egasi va assistentlardan boshqa faol xodimlar bor — ${names}`,
 } as const
 
 // Sozlamalar → Xodimlar va Rollar
@@ -792,6 +796,12 @@ export const STAFF_UI = {
   upgrade_text: (max: number) =>
     `Individual kabinetda faqat assistent qoʻshiladi, ${max} tagacha. Shifokor, qabulxona yoki texnik kerak boʻlsa — kabinetni klinikaga oʻtkazing: maʼlumotlaringiz joyida qoladi.`,
   upgrade_ok: 'Tushunarli',
+  upgrade_action: 'Klinikaga oʻtish',
+  upgrade_confirm_title: 'Kabinet klinikaga oʻtkazilsinmi?',
+  upgrade_confirm_text:
+    'Shifokor, qabulxona va texnik qoʻshish ochiladi, maʼlumotlar joyida qoladi. Narx klinika tarifiga oʻtadi — keyingi toʻlovda kelishamiz.',
+  upgrade_card_text:
+    'Boshqa shifokor, qabulxona yoki texnik kerak boʻlsa — kabinetni klinikaga oʻtkazing',
   // Oʻz parolini almashtirish
   change_password: 'Parolni almashtirish',
   current_password: 'Joriy parol',
@@ -1495,6 +1505,12 @@ export const ADMIN_UI = {
   extend_days: (n: number) => `+${n} kun`,
   block: 'Bloklash',
   unblock: 'Blokdan chiqarish',
+  // Klinika turi (tz.md 20-boʻlim)
+  kind_clinic: 'Klinika',
+  kind_solo: 'Individual',
+  kind_all: 'Hammasi',
+  to_solo: 'Individualga oʻtkazish',
+  to_clinic: 'Klinikaga oʻtkazish',
   history: 'Tarix',
   never: 'hech qachon',
   back: 'Klinikalar',
@@ -1576,6 +1592,7 @@ export const AUDIT_LABELS = {
   subscription_extended: 'Muddat uzaytirildi',
   clinic_blocked: 'Bloklandi',
   clinic_unblocked: 'Blokdan chiqarildi',
+  clinic_kind_changed: 'Turi oʻzgardi (klinika / individual)',
 } as const
 
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —

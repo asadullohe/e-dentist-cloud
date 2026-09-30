@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 17.8 — individual shifokor va assistent: turni almashtirish _(30/09/2026)_
+**Hozirgi task:** 17.9 — individual shifokor va assistent: landing va hujjatlar _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1642,7 +1642,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
 - [x] **17.7 Tashqi laboratoriya** — `labs` jadvali (nom, telefon),
       Sozlamalarda roʻyxat. Naryad texnikka **yoki** laboratoriyaga; tashqi
       naryad holatini `lab.write` egasi belgilaydi. Ikkala turga · ~1.5 kun
-- [ ] **17.8 Turni almashtirish** — Sozlamalarda «Klinikaga oʻtish»
+- [x] **17.8 Turni almashtirish** — Sozlamalarda «Klinikaga oʻtish»
       (tasdiq oynasi). Panelda «Tur» ustuni va filtr, «Individualga
       oʻtkazish» — faqat Egasi va assistentlardan boshqa faol xodim
       yoʻq boʻlsa · ~1 kun
