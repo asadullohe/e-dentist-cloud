@@ -1009,10 +1009,13 @@ Oʻchirilgan (`disabled`) assistent hisobga kirmaydi.
 
 ### Turni almashtirish
 
-- **Individual → Klinika** — egasining oʻzi, Sozlamalarda tugma (tasdiq
-  oynasi bilan). Narx farqi keyingi toʻlovda Telegramda hal boʻladi
+- **Individual → Klinika** — egasining oʻzi (`billing.manage`), Sozlamalar →
+  Kabinet dagi karta yoki «Bu klinika hisobida bor» oynasi (tasdiq bilan).
+  Narx farqi keyingi toʻlovda Telegramda hal boʻladi — oʻtishda platforma
+  egasiga Telegram xabari ketadi, `clinic_kind_changed` platforma hodisasi
 - **Klinika → Individual** — faqat boshqaruv panelidan va faqat Egasi va
-  assistentlardan boshqa faol xodim qolmagan boʻlsa
+  assistentlardan (2 tagacha) boshqa faol xodim qolmagan boʻlsa; aks holda
+  sabab ismlar bilan. Assistentlar egasiga qayta biriktiriladi
 - Panelda klinikalar roʻyxatiga «Tur» ustuni va filtr
 
 ### Tashqi laboratoriya
@@ -1020,14 +1023,18 @@ Oʻchirilgan (`disabled`) assistent hisobga kirmaydi.
 Yakka shifokorda texnik xodim yoʻq, klinikalar ham koʻpincha tashqi lab bilan
 ishlaydi. `labs` jadvali (nom, telefon) — klinikaning laboratoriyalari.
 Naryad **texnikka** (`tech_id`) **yoki laboratoriyaga** (`lab_id`) beriladi,
-ikkalasi birga emas. Tashqi naryad holatini `lab.write` egasi oʻzi belgilaydi.
+ikkalasi birga emas (bazada ham CHECK). Tashqi naryad holatini `lab.write`
+egasi oʻzi belgilaydi. Laboratoriyalar roʻyxatini ham `lab.write` boshqaradi
+(Sozlamalar → Laboratoriyalar) — kichik klinikada shifokor oʻz labini oʻzi
+qoʻshadi. Naryadi bor laboratoriya oʻchirilmaydi, nomi oʻzgaradi.
 Texnik narxi xarajatga tushishi va ulushdan ayrilishi oʻzgarmaydi.
 
 ### Narx va sinov
 
 Narx ochiq qoladi (17-boʻlim, 2-savol). Sinov ikkala turda 14 kun, hamma
 funksiya ochiq. Landingda ikki tarif kartasi narxsiz, tugma — «Narxni
-soʻrash». Kodda narx va shifokor chegarasi yoʻq.
+soʻrash». Kartalardagi tugmalar roʻyxatning toʻgʻri formasiga olib boradi
+(`/register?kind=solo` / `?kind=clinic`). Kodda narx va shifokor chegarasi yoʻq.
 
 ### Hal qilinmagan — ataylab
 

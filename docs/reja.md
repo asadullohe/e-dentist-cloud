@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 17.9 — individual shifokor va assistent: landing va hujjatlar _(30/09/2026)_
+**Hozirgi task:** 17.10 — individual shifokor va assistent: tekshirish va chiqarish _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1646,7 +1646,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       (tasdiq oynasi). Panelda «Tur» ustuni va filtr, «Individualga
       oʻtkazish» — faqat Egasi va assistentlardan boshqa faol xodim
       yoʻq boʻlsa · ~1 kun
-- [ ] **17.9 Landing va hujjatlar** — ikki tarif kartasi narxsiz (uz + ru),
+- [x] **17.9 Landing va hujjatlar** — ikki tarif kartasi narxsiz (uz + ru),
       «Narxni soʻrash»; CLAUDE.md dagi rollar qarori · ~0.5 kun
 - [ ] **17.10 Tekshirish va chiqarish** — ikkala oqim brauzerda: individual
       roʻyxat → assistent → klinikaga oʻtish; klinikada assistent koʻrinishi · ~0.5 kun
