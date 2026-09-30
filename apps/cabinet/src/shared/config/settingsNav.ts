@@ -1,4 +1,5 @@
 import {
+  type ClinicKind,
   EXPORT_UI,
   FEEDBACK_CABINET_UI,
   LOGO_UI,
@@ -30,7 +31,8 @@ export interface SettingsItem {
 ///
 /// Funksiya, konstanta emas: matnlar joriy tilga qarab oʻqilishi kerak.
 /// Modul darajasidagi massiv ularni import vaqtida muzlatib qoʻyardi
-export const settingsItems = (): readonly SettingsItem[] => [
+/// `kind` — individualda «Klinika» boʻlimi «Kabinet» deb ataladi (tz.md 20-boʻlim)
+export const settingsItems = (kind: ClinicKind = 'clinic'): readonly SettingsItem[] => [
   // «Hisobim» — har xodimga: egasi bergan boshlangʻich parolni shu yerda
   // almashtiradi (tz.md 6-boʻlim). Qolganlari egasining ishi
   { to: '/settings', label: STAFF_UI.account_tab, icon: UserCogIcon },
@@ -46,7 +48,12 @@ export const settingsItems = (): readonly SettingsItem[] => [
     icon: ShieldIcon,
     permission: 'staff.manage',
   },
-  { to: '/settings/klinika', label: LOGO_UI.tab, icon: BuildingIcon, permission: 'staff.manage' },
+  {
+    to: '/settings/klinika',
+    label: kind === 'solo' ? LOGO_UI.tab_solo : LOGO_UI.tab,
+    icon: BuildingIcon,
+    permission: 'staff.manage',
+  },
   {
     to: '/settings/navbat',
     label: QUEUE_CABINET_UI.settings_tab,

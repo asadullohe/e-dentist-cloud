@@ -30,6 +30,8 @@ interface Actions {
   canEdit: boolean
   /// thead filtri uchun shifokorlar roʻyxati
   doctorOptions: readonly FacetOption[]
+  /// Individualda shifokor bitta — ustun ham, ism ostidagi yozuv ham keraksiz
+  showDoctor: boolean
 }
 
 /// Funksiya, konstanta emas: ustun nomlari joriy tilda oʻqilishi uchun
@@ -39,6 +41,7 @@ export function patientColumns({
   onBook,
   canEdit,
   doctorOptions,
+  showDoctor,
 }: Actions): ColumnDef<Patient>[] {
   const columns: ColumnDef<Patient>[] = [
     {
@@ -57,7 +60,7 @@ export function patientColumns({
           )}
           {/* Tor ekranda «Shifokor» ustuni yashirin — kimning bemori ekani
               kartochkaga kirmasdan koʻrinsin */}
-          {row.original.doctorName && (
+          {showDoctor && row.original.doctorName && (
             <span className="text-muted-foreground block text-xs md:hidden">
               {row.original.doctorName}
             </span>
@@ -173,5 +176,9 @@ export function patientColumns({
   ]
   // Amallar ustuni: tahrir/oʻchirish yoki navbatga qoʻshish — bittasi boʻlsa ham
   const hasActions = canEdit || onBook !== undefined
-  return hasActions ? columns : columns.filter((column) => column.id !== 'actions')
+  return columns.filter(
+    (column) =>
+      (hasActions || column.id !== 'actions') &&
+      (showDoctor || !('accessorKey' in column && column.accessorKey === 'doctorId')),
+  )
 }

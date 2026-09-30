@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 17.6 — individual shifokor va assistent: individual koʻrinishi _(30/09/2026)_
+**Hozirgi task:** 17.7 — individual shifokor va assistent: tashqi laboratoriya _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1629,10 +1629,16 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       koʻradigan uchun filtr yashirin; telefonda shifokor ismi bemor ostida.
       Ustun va filtr oldindan bor edi, lekin kabinet `doctorId` ni serverga
       yubormasdi — filtr hech qachon ishlamagan · ~0.5 kun
-- [ ] **17.6 Individual koʻrinishi** — jadvalda shifokor ustunlari va
+- [x] **17.6 Individual koʻrinishi** — jadvalda shifokor ustunlari va
       tanlovi yoʻq, fikr sahifasida shifokor qadami tashlab ketiladi,
       hisobotda shifokorlar boʻlagi yoʻq, «Ish haqi» faqat assistentlar.
-      Atamalar: «Klinika» → «Kabinet» (uz + ru) · ~1 kun
+      Atamalar: «Klinika» → «Kabinet» (uz + ru). Qoʻshimcha: individualda
+      qabul/band vaqt/bemor/tashrif/reja formalarida shifokor tanlovi yoʻq —
+      yagona shifokor (egasi) qoʻyiladi; bemorlar roʻyxatida shifokor ustuni
+      yoʻq; kassa taqsimotida «Shifokorlar» yoʻq, qolgani «Sizga»; ochiq fikr
+      sahifasi «Shifokorga bahoyingiz» (`clinic_by_queue_code` ga `kind`).
+      Shifokor bitta boʻlsa fikr sahifasi «qaysi shifokor?» soʻramaydi —
+      bir shifokorli klinikada ham. Assistentning ish haqi oynasida foiz yoʻq · ~1 kun
 - [ ] **17.7 Tashqi laboratoriya** — `labs` jadvali (nom, telefon),
       Sozlamalarda roʻyxat. Naryad texnikka **yoki** laboratoriyaga; tashqi
       naryad holatini `lab.write` egasi belgilaydi. Ikkala turga · ~1.5 kun

@@ -193,6 +193,8 @@ export function VisitFormDialog({
   // `patients.all` yoʻq (shifokor): tashrif doim oʻz nomidan — server ham
   // shunday qiladi, tanlov koʻrsatilmaydi (11-bosqich)
   const seesAll = useHasPermission()('patients.all')
+  // Individualda shifokor bitta — tanlov koʻrsatilmaydi, sukut (egasi) ketadi
+  const solo = session?.clinic?.kind === 'solo'
   // Yakunlashda — qabulning shifokori birinchi navbatda
   const defaultDoctorId =
     labOrder?.doctorId ??
@@ -341,7 +343,7 @@ export function VisitFormDialog({
               />
             </div>
 
-            {seesAll && (
+            {seesAll && !solo && (
               <div className="space-y-1.5">
                 <Label htmlFor="visit-doctor">{CARD_UI.doctor}</Label>
                 <Select value={doctorId} onValueChange={setDoctorId}>

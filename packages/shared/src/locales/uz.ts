@@ -621,6 +621,8 @@ export const PAYROLL_UI = {
   flow_techs: 'Texniklar',
   flow_salaries: 'Oyliklar',
   flow_clinic: 'Klinikaga',
+  // Individualda qolgan pul — shifokorning oʻziga (tz.md 20-boʻlim)
+  flow_self: 'Sizga',
   section_percent: 'Foizdagilar',
   section_salary: 'Oylikdagilar',
   remaining_short: 'qoldiq',
@@ -770,6 +772,8 @@ export const STAFF_UI = {
   pay_title: (name: string) => `Ish haqi sharti — ${name}`,
   pay_hint:
     'Oylik har oy qoʻshiladi. Foiz — shifokor qilgan ish narxidan ulushi. Ikkalasi birga boʻlishi mumkin.',
+  // Assistentga ulush hisoblanmaydi — faqat oylik (tz.md 20-boʻlim)
+  pay_hint_assistant: 'Oylik har oy qoʻshiladi. Assistentga ishdan ulush hisoblanmaydi.',
   salary: 'Oylik (soʻm)',
   percent: 'Foiz (%)',
   pay_none: 'Belgilanmagan',
@@ -1273,6 +1277,9 @@ export const FEEDBACK_UI = {
   title: 'Fikr bildirish',
   subtitle: 'Bahoyingiz faqat klinika rahbariga koʻrinadi',
   rating: 'Klinikaga bahoyingiz',
+  // Individual kabinet (tz.md 20-boʻlim): klinika yoʻq — shifokorning oʻzi
+  subtitle_solo: 'Bahoyingiz faqat shifokorga koʻrinadi',
+  rating_solo: 'Shifokorga bahoyingiz',
   rating_labels: ['Juda yomon', 'Yomon', 'Oʻrtacha', 'Yaxshi', 'Aʼlo'] as const,
   doctor: 'Qaysi shifokor qabul qildi?',
   doctor_any: 'Aytmayman',
@@ -1282,6 +1289,7 @@ export const FEEDBACK_UI = {
   comment_placeholder: 'Xohlasangiz batafsil yozing…',
   phone: 'Telefon',
   phone_hint: 'Rahbariyat siz bilan bogʻlanishini xohlasangiz qoldiring',
+  phone_hint_solo: 'Shifokor siz bilan bogʻlanishini xohlasangiz qoldiring',
   send: 'Yuborish',
   thanks: 'Rahmat!',
   thanks_hint: 'Fikringiz klinika rahbariga yetkazildi',
@@ -1620,6 +1628,7 @@ export const SETTINGS_UI = {
   staff_hint: 'Xodimlar hisoblari va ularning rollari',
   roles_hint: 'Har rol nimani koʻradi va nimani oʻzgartira oladi',
   clinic_hint: 'Logotip va klinika koʻrinishi',
+  clinic_hint_solo: 'Logotip va kabinet koʻrinishi',
   queue_hint: 'Bemorlar uchun navbat sahifasi va kutish xonasi ekrani',
   feedback_hint: 'Bemorlarning bahosi, fikr QR varagʻi va bemor sahifasi kontaktlari',
   data_hint: 'Barcha maʼlumotni yuklab olish',
@@ -1654,6 +1663,8 @@ export const PERIOD_UI = {
 // Klinika logotipi
 export const LOGO_UI = {
   tab: 'Klinika',
+  // Individual shifokor (tz.md 20-boʻlim)
+  tab_solo: 'Kabinet',
   title: 'Logotip',
   hint: 'Yon menyuda, navbat sahifasida va kutish xonasi ekranida koʻrinadi',
   requirements: 'PNG, JPG yoki WEBP · eng koʻpi 2 MB',

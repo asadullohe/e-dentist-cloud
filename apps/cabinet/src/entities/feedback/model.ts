@@ -1,8 +1,9 @@
-import type { FeedbackSource, FeedbackStatus, FeedbackTag } from '@e-dentist/shared'
+import type { ClinicKind, FeedbackSource, FeedbackStatus, FeedbackTag } from '@e-dentist/shared'
 
 /// Ochiq sahifa (/f/<kod>) koʻradigan narsa
 export interface FeedbackPage {
   clinicName: string
+  kind: ClinicKind
   hasLogo: boolean
   reviewUrl: string | null
   doctors: { id: string; fullName: string }[]

@@ -20,7 +20,7 @@ export function Sidebar({ collapsed, onNavigate }: Props) {
   const hasPermission = useHasPermission()
 
   const clinic = session?.clinic ?? null
-  const sections = navSections().filter(
+  const sections = navSections(clinic?.kind).filter(
     (section) => !section.permission || hasPermission(section.permission),
   )
   const initial = (session?.user.fullName ?? session?.user.email ?? '?').trim().charAt(0)

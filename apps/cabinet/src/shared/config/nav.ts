@@ -1,4 +1,4 @@
-import { type Permission, SECTION_LABELS } from '@e-dentist/shared'
+import { type ClinicKind, type Permission, SECTION_LABELS } from '@e-dentist/shared'
 import {
   BanknoteIcon,
   BellIcon,
@@ -27,7 +27,7 @@ export interface NavSection {
 }
 
 /// Funksiya, konstanta emas — matnlar joriy tilda oʻqilishi uchun
-export const navSections = (): readonly NavSection[] => [
+export const navSections = (kind: ClinicKind = 'clinic'): readonly NavSection[] => [
   // Bosh sahifa — kirgan har kimga; qolgan boʻlimlar ruxsatga qarab
   { path: '/', label: SECTION_LABELS.home, icon: HouseIcon },
   {
@@ -80,6 +80,6 @@ export const navSections = (): readonly NavSection[] => [
     path: '/settings',
     label: SECTION_LABELS.settings,
     icon: SettingsIcon,
-    children: settingsItems(),
+    children: settingsItems(kind),
   },
 ]

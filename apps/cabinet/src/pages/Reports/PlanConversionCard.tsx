@@ -20,7 +20,14 @@ import {
 const rate = (accepted: number, created: number) =>
   created === 0 ? '—' : `${Math.round((accepted / created) * 100)}%`
 
-export function PlanConversionCard({ data }: { data: PlanConversion }) {
+/// `byDoctor` — shifokorlar kesimi; individualda (shifokor bitta) yashiriladi
+export function PlanConversionCard({
+  data,
+  byDoctor = true,
+}: {
+  data: PlanConversion
+  byDoctor?: boolean
+}) {
   if (data.created === 0) {
     return (
       <Card className="gap-3 overflow-hidden pb-0">
@@ -53,38 +60,40 @@ export function PlanConversionCard({ data }: { data: PlanConversion }) {
         ))}
       </CardContent>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{REPORT_UI.plans_doctor}</TableHead>
-            <TableHead className="w-24 text-right">{REPORT_UI.plans_created}</TableHead>
-            <TableHead className="hidden w-24 text-right sm:table-cell">
-              {REPORT_UI.plans_accepted}
-            </TableHead>
-            <TableHead className="w-20 text-right">{REPORT_UI.plans_rate}</TableHead>
-            <TableHead className="text-right sm:w-40">{REPORT_UI.total}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.byDoctor.map((row) => (
-            <TableRow key={row.doctorId}>
-              <TableCell className="font-medium whitespace-normal">{row.doctorName}</TableCell>
-              <TableCell className="text-muted-foreground text-right tabular-nums">
-                {row.created}
-              </TableCell>
-              <TableCell className="text-muted-foreground hidden text-right tabular-nums sm:table-cell">
-                {row.accepted}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {rate(row.accepted, row.created)}
-              </TableCell>
-              <TableCell className="text-right font-semibold tabular-nums">
-                {formatSom(row.acceptedTotal)}
-              </TableCell>
+      {byDoctor && (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{REPORT_UI.plans_doctor}</TableHead>
+              <TableHead className="w-24 text-right">{REPORT_UI.plans_created}</TableHead>
+              <TableHead className="hidden w-24 text-right sm:table-cell">
+                {REPORT_UI.plans_accepted}
+              </TableHead>
+              <TableHead className="w-20 text-right">{REPORT_UI.plans_rate}</TableHead>
+              <TableHead className="text-right sm:w-40">{REPORT_UI.total}</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data.byDoctor.map((row) => (
+              <TableRow key={row.doctorId}>
+                <TableCell className="font-medium whitespace-normal">{row.doctorName}</TableCell>
+                <TableCell className="text-muted-foreground text-right tabular-nums">
+                  {row.created}
+                </TableCell>
+                <TableCell className="text-muted-foreground hidden text-right tabular-nums sm:table-cell">
+                  {row.accepted}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {rate(row.accepted, row.created)}
+                </TableCell>
+                <TableCell className="text-right font-semibold tabular-nums">
+                  {formatSom(row.acceptedTotal)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </Card>
   )
 }

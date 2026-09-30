@@ -3,7 +3,7 @@
 // koʻrinadi. Navbat raqamiga bogʻlangan fikr shifokor va bemorni raqamdan
 // oladi — `appointments` ga schedule modulining xizmati orqali murojaat
 
-import { FEEDBACK_TEXT, QUEUE_TEXT } from '@e-dentist/shared'
+import { type ClinicKind, FEEDBACK_TEXT, QUEUE_TEXT } from '@e-dentist/shared'
 import type { FeedbackSource, FeedbackStatus } from '../../../generated/prisma/client.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
@@ -32,6 +32,8 @@ const DEVICE_WINDOW = 24 * 60 * 60
 /// Ochiq sahifa koʻradigan narsa: klinika, shifokorlar, sharh havolasi
 export interface FeedbackPage {
   clinicName: string
+  /// Individualda «klinikaga» emas, «shifokorga» baho soʻraladi
+  kind: ClinicKind
   hasLogo: boolean
   reviewUrl: string | null
   doctors: { id: string; fullName: string }[]
@@ -70,6 +72,7 @@ export function page(deps: FeedbackDeps, code: string): Promise<FeedbackPage> {
   return findClinic(deps, code).then((clinic) =>
     withClinic(deps.db, clinic.id, async (tx) => ({
       clinicName: clinic.name,
+      kind: clinic.kind,
       hasLogo: clinic.logo_key !== null,
       reviewUrl: clinic.review_url,
       doctors: await auth.listDoctorsTx(tx),

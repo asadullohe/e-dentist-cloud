@@ -3,13 +3,30 @@ import type { Payroll } from '@/entities/payroll'
 import { Card } from '@/shared/ui'
 
 /// Kassa taqsimoti: bemorlardan olingan pul qayerga ketadi — shifokorlar
-/// ulushi, texniklar, oyliklar, klinikaga qolgan. Faqat egasiga
-export function CashFlow({ totals }: { totals: Payroll['totals'] }) {
+/// ulushi, texniklar, oyliklar, klinikaga qolgan. Faqat egasiga.
+/// Individualda shifokor — egasining oʻzi: «shifokorlar» boʻlagi yoʻq,
+/// qolgani «sizga» (tz.md 20-boʻlim)
+export function CashFlow({ totals, solo }: { totals: Payroll['totals']; solo: boolean }) {
   const parts = [
-    { key: 'doctors', label: PAYROLL_UI.flow_doctors, value: totals.share, color: 'bg-primary' },
+    ...(solo
+      ? []
+      : [
+          {
+            key: 'doctors',
+            label: PAYROLL_UI.flow_doctors,
+            value: totals.share,
+            color: 'bg-primary',
+          },
+        ]),
     { key: 'techs', label: PAYROLL_UI.flow_techs, value: totals.labCost, color: 'bg-info' },
     { key: 'salaries', label: PAYROLL_UI.flow_salaries, value: totals.salary, color: 'bg-warn' },
-    { key: 'clinic', label: PAYROLL_UI.flow_clinic, value: totals.clinic, color: 'bg-ok' },
+    {
+      key: 'clinic',
+      label: solo ? PAYROLL_UI.flow_self : PAYROLL_UI.flow_clinic,
+      // Egasining oʻz ulushi (foiz qoʻygan boʻlsa) ham unga qoladi
+      value: solo ? totals.clinic + totals.share : totals.clinic,
+      color: 'bg-ok',
+    },
   ]
   // Chiziq faqat musbat boʻlaklardan (oyliklar olingandan oshsa «klinikaga»
   // manfiy — chiziqda yoʻq, sonda koʻrinadi)

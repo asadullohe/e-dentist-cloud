@@ -35,6 +35,8 @@ export function useHasPermission(): (permission: Permission | readonly Permissio
 export interface DoctorScope {
   /// `*.all` ruxsati — hamma shifokor
   all: boolean
+  /// Individual kabinet: shifokor bitta — tanlov koʻrsatilmaydi (tz.md 20-boʻlim)
+  solo: boolean
   /// Cheklangan koʻruvchi doirasi: shifokorda — oʻzi, assistentda — shifokorlari
   doctorIds: string[]
   /// Oʻzi shifokor emas, boshqalar nomidan ishlaydi (assistent)
@@ -57,6 +59,7 @@ export function useDoctorScope(wide: Permission): DoctorScope {
   const allows = (doctorId: string) => all || doctorIds.includes(doctorId)
   return {
     all,
+    solo: data?.clinic?.kind === 'solo',
     doctorIds,
     proxy,
     allows,

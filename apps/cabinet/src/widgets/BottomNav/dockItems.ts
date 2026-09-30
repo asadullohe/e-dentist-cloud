@@ -1,4 +1,4 @@
-import type { Permission } from '@e-dentist/shared'
+import type { ClinicKind, Permission } from '@e-dentist/shared'
 import type { LucideIcon } from 'lucide-react'
 import { type NavSection, navSections, settingsItems } from '@/shared/config'
 
@@ -28,13 +28,13 @@ export function dockItems(can: Allowed): DockItem[] {
 
 /// «Yana» varagʻidagi plitkalar: dokka sigʻmagan boʻlimlar + sozlamalar
 /// boʻlimlari (Hisobim bundan mustasno — hisob qatori pastda alohida)
-export function moreItems(can: Allowed): DockItem[] {
+export function moreItems(can: Allowed, kind?: ClinicKind): DockItem[] {
   const dock = new Set(dockItems(can).map((item) => item.path))
   const sections = navSections()
     .filter((section) => section.path !== '/settings' && !dock.has(section.path))
     .filter((section) => allowed(section, can))
     .map(({ path, label, icon }: NavSection) => ({ path, label, icon }))
-  const settings = settingsItems()
+  const settings = settingsItems(kind)
     .filter((item) => item.to !== '/settings' && allowed(item, can))
     .map(({ to, label, icon }) => ({ path: to, label, icon }))
   return [...sections, ...settings]

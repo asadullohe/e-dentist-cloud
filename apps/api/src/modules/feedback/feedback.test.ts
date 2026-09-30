@@ -100,6 +100,8 @@ describe('ochiq sahifa', () => {
     expect(r.statusCode).toBe(200)
     const data = r.json().data
     expect(data.clinicName).toContain('Sinov klinikasi')
+    // Individualda sahifa «shifokorga» baho soʻraydi (tz.md 20-boʻlim)
+    expect(data.kind).toBe('clinic')
     expect(data.reviewUrl).toBe('https://maps.example.com/clinic')
     expect(data.doctors.map((d: { id: string }) => d.id)).toContain(doctor.id)
     // Telefon va manzil navbat sahifasida

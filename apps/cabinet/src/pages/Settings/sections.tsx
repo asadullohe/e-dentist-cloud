@@ -6,6 +6,7 @@ import {
   SETTINGS_UI,
   STAFF_UI,
 } from '@e-dentist/shared'
+import { useSession } from '@/entities/session'
 import { ClinicLogoCard } from '@/features/clinic-logo'
 import { ContentSection } from '@/shared/ui'
 import { AccountTab } from './AccountTab'
@@ -42,8 +43,13 @@ export function RolesSection() {
 }
 
 export function ClinicSection() {
+  const solo = useSession().data?.clinic?.kind === 'solo'
   return (
-    <ContentSection heading="page" title={LOGO_UI.tab} desc={SETTINGS_UI.clinic_hint}>
+    <ContentSection
+      heading="page"
+      title={solo ? LOGO_UI.tab_solo : LOGO_UI.tab}
+      desc={solo ? SETTINGS_UI.clinic_hint_solo : SETTINGS_UI.clinic_hint}
+    >
       <ClinicLogoCard />
     </ContentSection>
   )

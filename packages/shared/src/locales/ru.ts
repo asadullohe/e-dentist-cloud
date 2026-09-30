@@ -592,6 +592,7 @@ export const ru: DeepPartial<Strings> = {
     flow_techs: 'Техники',
     flow_salaries: 'Оклады',
     flow_clinic: 'Клинике',
+    flow_self: 'Вам',
     section_percent: 'На проценте',
     section_salary: 'На окладе',
     remaining_short: 'остаток',
@@ -735,6 +736,7 @@ export const ru: DeepPartial<Strings> = {
     pay_title: (name: string) => `Условия оплаты — ${name}`,
     pay_hint:
       'Оклад начисляется каждый месяц. Процент — доля врача от стоимости выполненной работы. Можно указать оба.',
+    pay_hint_assistant: 'Оклад начисляется каждый месяц. Ассистенту доля от работ не начисляется.',
     salary: 'Оклад (сум)',
     percent: 'Процент (%)',
     pay_none: 'Не задано',
@@ -1182,6 +1184,8 @@ export const ru: DeepPartial<Strings> = {
     title: 'Оставить отзыв',
     subtitle: 'Оценку увидит только руководитель клиники',
     rating: 'Ваша оценка клинике',
+    subtitle_solo: 'Оценку увидит только врач',
+    rating_solo: 'Ваша оценка врачу',
     rating_labels: ['Очень плохо', 'Плохо', 'Нормально', 'Хорошо', 'Отлично'] as const,
     doctor: 'Какой врач вас принимал?',
     doctor_any: 'Не скажу',
@@ -1191,6 +1195,7 @@ export const ru: DeepPartial<Strings> = {
     comment_placeholder: 'Если хотите, напишите подробнее…',
     phone: 'Телефон',
     phone_hint: 'Оставьте, если хотите, чтобы руководство с вами связалось',
+    phone_hint_solo: 'Оставьте, если хотите, чтобы врач с вами связался',
     send: 'Отправить',
     thanks: 'Спасибо!',
     thanks_hint: 'Ваш отзыв передан руководителю клиники',
@@ -1543,6 +1548,7 @@ export const ru: DeepPartial<Strings> = {
     staff_hint: 'Аккаунты сотрудников и их роли',
     roles_hint: 'Что видит и что может менять каждая роль',
     clinic_hint: 'Логотип и внешний вид клиники',
+    clinic_hint_solo: 'Логотип и внешний вид кабинета',
     queue_hint: 'Страница очереди для пациентов и экран в зале ожидания',
     feedback_hint: 'Оценки пациентов, QR-лист для отзывов и контакты на странице пациента',
     data_hint: 'Выгрузка всех данных',
@@ -1550,6 +1556,7 @@ export const ru: DeepPartial<Strings> = {
 
   LOGO_UI: {
     tab: 'Клиника',
+    tab_solo: 'Кабинет',
     title: 'Логотип',
     hint: 'Показывается в боковом меню, на странице очереди и на экране в зале ожидания',
     requirements: 'PNG, JPG или WEBP · не более 2 МБ',

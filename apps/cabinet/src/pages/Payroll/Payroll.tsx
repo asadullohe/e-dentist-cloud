@@ -2,7 +2,7 @@ import { formatMoney, formatSom, PAYROLL_UI, todayISO } from '@e-dentist/shared'
 import { BanknoteIcon } from 'lucide-react'
 import { useState } from 'react'
 import { type PayrollRow, usePayroll } from '@/entities/payroll'
-import { useHasPermission } from '@/entities/session'
+import { useHasPermission, useSession } from '@/entities/session'
 import {
   Card,
   Dialog,
@@ -55,14 +55,19 @@ export function Payroll() {
   const [month, setMonth] = useState(thisMonth)
   const { data, isPending } = usePayroll(month)
   const manage = useHasPermission()('payroll.manage')
+  const { data: session } = useSession()
+  // Individualda egasi — shifokorning oʻzi: oʻziga ulush hisoblash maʼnosiz,
+  // roʻyxatda faqat assistentlar qoladi (tz.md 20-boʻlim)
+  const solo = session?.clinic?.kind === 'solo'
+  const rows = (data?.rows ?? []).filter((row) => !(solo && row.userId === session?.user.id))
   // Varaq qatorni id boʻyicha oladi: toʻlovdan keyin roʻyxat yangilanadi va
   // varaq yangi qoldiqni koʻrsatishi kerak
   const [openId, setOpenId] = useState<string | null>(null)
   const opened = data?.rows.find((row) => row.userId === openId) ?? null
   const own = !manage && data?.rows.length === 1 ? data.rows[0] : null
 
-  const byPercent = (data?.rows ?? []).filter((row) => row.percent > 0 || row.visits > 0)
-  const bySalary = (data?.rows ?? []).filter((row) => !byPercent.includes(row))
+  const byPercent = rows.filter((row) => row.percent > 0 || row.visits > 0)
+  const bySalary = rows.filter((row) => !byPercent.includes(row))
 
   return (
     <>
@@ -82,13 +87,13 @@ export function Payroll() {
         <Card className="px-4 py-4">
           <StaffPanel month={month} row={own} manage={false} ownUserId />
         </Card>
-      ) : data.rows.length === 0 ? (
+      ) : rows.length === 0 ? (
         <Card className="overflow-hidden py-0">
           <EmptyState icon={BanknoteIcon} text={PAYROLL_UI.empty} />
         </Card>
       ) : (
         <div className="space-y-4">
-          {manage && <CashFlow totals={data.totals} />}
+          {manage && <CashFlow totals={data.totals} solo={solo} />}
           {data.unassigned && (
             <p className="text-muted-foreground text-xs">
               {PAYROLL_UI.unassigned(data.unassigned.visits, formatSom(data.unassigned.charges))}

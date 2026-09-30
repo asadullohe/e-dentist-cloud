@@ -128,7 +128,7 @@ export function Patients() {
   const scope = useDoctorScope('patients.all')
   const visibleDoctors = (doctors ?? []).filter((item) => scope.allows(item.id))
   const doctorOptions =
-    scope.all || visibleDoctors.length > 1
+    (scope.all && !scope.solo) || visibleDoctors.length > 1
       ? [
           ...visibleDoctors.map((item) => ({ value: item.id, label: item.fullName ?? '' })),
           { value: UNASSIGNED_DOCTOR, label: PATIENT_UI.doctor_none },
@@ -143,6 +143,7 @@ export function Patients() {
       onBook: canBook ? setBooking : undefined,
       canEdit: canWrite,
       doctorOptions,
+      showDoctor: !scope.solo,
     }),
     pageCount: data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : -1,
     state: { pagination, sorting, columnVisibility, columnFilters },

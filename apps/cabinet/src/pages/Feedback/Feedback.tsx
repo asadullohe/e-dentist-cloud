@@ -63,6 +63,10 @@ export function Feedback() {
   }
 
   const data = page.data
+  const solo = data.kind === 'solo'
+  // Shifokor bitta boʻlsa (individual yoki bir shifokorli klinika) «qaysi
+  // shifokor?» soʻralmaydi — fikr oʻshanga yoziladi
+  const soleDoctor = data.doctors.length === 1 ? (data.doctors[0]?.id ?? null) : null
 
   async function send(event: React.FormEvent) {
     event.preventDefault()
@@ -74,7 +78,7 @@ export function Feedback() {
         tags,
         comment: comment.trim() || undefined,
         phone: phone.trim() || undefined,
-        doctorId: ticketId ? null : doctorId,
+        doctorId: ticketId ? null : (doctorId ?? soleDoctor),
         ticketId,
         source: fromQr ? 'qr' : 'page',
       })
@@ -91,7 +95,7 @@ export function Feedback() {
       clinicName={data.clinicName}
       hasLogo={data.hasLogo}
       title={FEEDBACK_UI.title}
-      subtitle={FEEDBACK_UI.subtitle}
+      subtitle={solo ? FEEDBACK_UI.subtitle_solo : FEEDBACK_UI.subtitle}
     >
       {sent ? (
         <Thanks
@@ -103,14 +107,16 @@ export function Feedback() {
       ) : (
         <form onSubmit={send} className="space-y-4">
           <Card className="gap-3 p-4">
-            <div className="text-center text-sm font-medium">{FEEDBACK_UI.rating}</div>
+            <div className="text-center text-sm font-medium">
+              {solo ? FEEDBACK_UI.rating_solo : FEEDBACK_UI.rating}
+            </div>
             <StarRating value={rating} onChange={setRating} />
           </Card>
 
           {rating > 0 && (
             <Card className="gap-5 p-4">
               {/* Navbat raqamidan kelganda shifokor maʼlum — soʻralmaydi */}
-              {!ticketId && data.doctors.length > 0 && (
+              {!ticketId && data.doctors.length > 1 && (
                 <div className="space-y-2">
                   <div className="text-sm font-medium">{FEEDBACK_UI.doctor}</div>
                   <div className="flex flex-wrap gap-2">
@@ -160,7 +166,9 @@ export function Feedback() {
                   value={phone}
                   onChange={(event) => setPhone(formatUzPhone(event.target.value))}
                 />
-                <p className="text-muted-foreground text-xs">{FEEDBACK_UI.phone_hint}</p>
+                <p className="text-muted-foreground text-xs">
+                  {solo ? FEEDBACK_UI.phone_hint_solo : FEEDBACK_UI.phone_hint}
+                </p>
               </div>
 
               {error && <p className="text-destructive text-sm font-medium">{error}</p>}

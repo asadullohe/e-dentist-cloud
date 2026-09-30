@@ -137,7 +137,9 @@ export function AppointmentFormDialog({
   const doctors = (allDoctors ?? []).filter((item) => scope.allows(item.id))
   // Tanlov kerakmi: hammani koʻradigan — ha; cheklanganda faqat doirada
   // bir nechta shifokor boʻlsa (assistent). Shifokorning oʻzida — yoʻq
-  const picksDoctor = !ownOnly || scope.doctorIds.length > 1
+  // Individualda tanlov yoʻq — qabul yagona shifokorga (egasiga) yoziladi
+  const soleDoctor = scope.solo ? doctors[0]?.id : undefined
+  const picksDoctor = !soleDoctor && (!ownOnly || scope.doctorIds.length > 1)
   // Effekt ichida oʻqiladi, bogʻliqlik emas: `scope` har chizishda yangi
   // obyekt — aks holda ochiq oynada forma har safar tozalanardi
   const scopeRef = useRef(scope)
@@ -193,7 +195,7 @@ export function AppointmentFormDialog({
         const created = await createPatient.mutateAsync({
           fio: newPatient.fio.trim(),
           ...(digits ? { phone: digits } : {}),
-          ...(values.doctorId ? { doctorId: values.doctorId } : {}),
+          ...((soleDoctor ?? values.doctorId) ? { doctorId: soleDoctor ?? values.doctorId } : {}),
         })
         patientId = created.id
       }
@@ -204,7 +206,11 @@ export function AppointmentFormDialog({
 
       const saved = await mutateAsync({
         ...(appointment ? { status: values.status } : { patientId }),
-        ...(picksDoctor ? { doctorId: values.doctorId || null } : {}),
+        ...(soleDoctor
+          ? { doctorId: soleDoctor }
+          : picksDoctor
+            ? { doctorId: values.doctorId || null }
+            : {}),
         date: parseDisplayDate(values.date) as string,
         time: values.time,
         duration: values.duration,
@@ -286,7 +292,9 @@ export function AppointmentFormDialog({
 
             <TimeSection
               date={isoDate}
-              doctorId={picksDoctor ? doctorId || null : (appointment?.doctorId ?? null)}
+              doctorId={
+                soleDoctor ?? (picksDoctor ? doctorId || null : (appointment?.doctorId ?? null))
+              }
               time={time}
               duration={duration}
               excludeId={appointment?.id ?? savedId ?? undefined}

@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { useDebtors } from '@/entities/debtor'
 import { useFeedbackSummary } from '@/entities/feedback'
 import { useLabOrders } from '@/entities/lab-order'
-import { useHasPermission } from '@/entities/session'
+import { useHasPermission, useSession } from '@/entities/session'
 import { Sheet, SheetContent, SheetTitle } from '@/shared/ui'
 import { type DockItem, moreItems } from './dockItems'
 
@@ -54,7 +54,8 @@ export function MoreSheet({
   const hasPermission = useHasPermission()
   const [query, setQuery] = useState('')
 
-  const items = moreItems(hasPermission)
+  const { data: session } = useSession()
+  const items = moreItems(hasPermission, session?.clinic?.kind)
   const q = query.trim().toLowerCase()
   const shown = q ? items.filter((item) => item.label.toLowerCase().includes(q)) : items
 

@@ -137,6 +137,8 @@ export interface QueueClinicRow {
   public_phone: string | null
   address: string | null
   review_url: string | null
+  /// Klinika yoki individual shifokor (tz.md 20-boʻlim)
+  kind: ClinicKind
 }
 
 export async function findByQueueCode(db: Db, code: string): Promise<QueueClinicRow | null> {

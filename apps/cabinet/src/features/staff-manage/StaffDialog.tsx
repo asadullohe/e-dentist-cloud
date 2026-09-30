@@ -79,7 +79,7 @@ export function StaffDialog({ open, onOpenChange, onUpgradeRequired }: StaffDial
         roleId: values.roleId,
         password: values.password,
         salaryAmount: Number(moneyDigits(values.salaryAmount) || 0),
-        payPercent: Number(values.payPercent || 0),
+        payPercent: isAssistant ? 0 : Number(values.payPercent || 0),
         ...(needsDoctors ? { doctorIds: values.doctorIds } : {}),
       })
       onOpenChange(false)
@@ -149,7 +149,7 @@ export function StaffDialog({ open, onOpenChange, onUpgradeRequired }: StaffDial
               )}
             />
 
-            <PayFields control={form.control} />
+            <PayFields control={form.control} showPercent={!isAssistant} />
             <FormDescription>{STAFF_UI.pay_optional_hint}</FormDescription>
 
             {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}

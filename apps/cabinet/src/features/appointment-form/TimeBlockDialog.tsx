@@ -117,7 +117,8 @@ export function TimeBlockDialog({
   const scope = useDoctorScope('schedule.all')
   const doctors = (allDoctors ?? []).filter((item) => scope.allows(item.id))
   // Assistent bir nechta shifokorga yordam bersa — tanlov faqat ular bilan
-  const picksDoctor = !ownOnly || scope.doctorIds.length > 1
+  const soleDoctor = scope.solo ? doctors[0]?.id : undefined
+  const picksDoctor = !soleDoctor && (!ownOnly || scope.doctorIds.length > 1)
   // Effekt ichida oʻqiladi — `scope` har chizishda yangi obyekt
   const scopeRef = useRef(scope)
   scopeRef.current = scope
@@ -146,6 +147,12 @@ export function TimeBlockDialog({
     }
   }, [open, block, defaultDate, defaultDoctorId, ownOnly, session?.user.id, form])
 
+  // Individualda maydon yashirin, lekin sxema shifokorni talab qiladi —
+  // yagona shifokor (roʻyxat kechroq yuklansa ham) maydonga yoziladi
+  useEffect(() => {
+    if (open && soleDoctor) form.setValue('doctorId', soleDoctor)
+  }, [open, soleDoctor, form])
+
   function toggleAllDay(next: boolean) {
     setAllDay(next)
     if (next) {
@@ -158,7 +165,11 @@ export function TimeBlockDialog({
     setFormError('')
     try {
       await mutateAsync({
-        ...(picksDoctor ? { doctorId: values.doctorId } : {}),
+        ...(soleDoctor
+          ? { doctorId: soleDoctor }
+          : picksDoctor
+            ? { doctorId: values.doctorId }
+            : {}),
         fromDate: parseDisplayDate(values.fromDate) as string,
         fromTime: values.fromTime,
         toDate: parseDisplayDate(values.toDate) as string,

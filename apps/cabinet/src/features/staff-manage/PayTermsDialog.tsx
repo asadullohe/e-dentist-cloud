@@ -53,6 +53,8 @@ function toValues(person: StaffMember | null): Values {
 /// birga boʻlishi mumkin — «baza + foiz»
 export function PayTermsDialog({ open, onOpenChange, person }: PayTermsDialogProps) {
   const { mutateAsync, isPending } = useUpdateStaff()
+  // Assistentga foiz hisoblanmaydi (tz.md 20-boʻlim) — maydon koʻrsatilmaydi
+  const salaryOnly = person?.roleTemplate === 'assistent'
   const [formError, setFormError] = useState('')
 
   const form = useForm<Values>({
@@ -74,7 +76,7 @@ export function PayTermsDialog({ open, onOpenChange, person }: PayTermsDialogPro
       await mutateAsync({
         id: person.id,
         salaryAmount: Number(moneyDigits(values.salaryAmount) || 0),
-        payPercent: Number(values.payPercent || 0),
+        payPercent: salaryOnly ? 0 : Number(values.payPercent || 0),
       })
       onOpenChange(false)
     } catch (error) {
@@ -87,7 +89,9 @@ export function PayTermsDialog({ open, onOpenChange, person }: PayTermsDialogPro
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{STAFF_UI.pay_title(person?.fullName ?? '')}</DialogTitle>
-          <DialogDescription>{STAFF_UI.pay_hint}</DialogDescription>
+          <DialogDescription>
+            {salaryOnly ? STAFF_UI.pay_hint_assistant : STAFF_UI.pay_hint}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -110,26 +114,28 @@ export function PayTermsDialog({ open, onOpenChange, person }: PayTermsDialogPro
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="payPercent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{STAFF_UI.percent}</FormLabel>
-                  <FormControl>
-                    <Input
-                      inputMode="numeric"
-                      placeholder="0"
-                      {...field}
-                      onChange={(event) =>
-                        field.onChange(event.target.value.replace(/\D/g, '').slice(0, 3))
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!salaryOnly && (
+              <FormField
+                control={form.control}
+                name="payPercent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{STAFF_UI.percent}</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="numeric"
+                        placeholder="0"
+                        {...field}
+                        onChange={(event) =>
+                          field.onChange(event.target.value.replace(/\D/g, '').slice(0, 3))
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {formError && <p className="text-destructive text-sm font-medium">{formError}</p>}
 

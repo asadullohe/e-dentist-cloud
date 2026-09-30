@@ -30,13 +30,9 @@ import {
   FormMessage,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Textarea,
 } from '@/shared/ui'
+import { DoctorField } from './DoctorField'
 import { useSavePatient } from './hooks'
 import { EMPTY_PATIENT, type PatientValues, patientSchema } from './model'
 
@@ -63,9 +59,6 @@ function toValues(patient: Patient | undefined): PatientValues {
   }
 }
 
-/// Radix Select boʻsh satrni qabul qilmaydi — «biriktirilmagan» uchun belgi
-const NO_DOCTOR = '__none__'
-
 export function PatientFormDialog({
   open,
   onOpenChange,
@@ -84,6 +77,9 @@ export function PatientFormDialog({
   )
   const scopeRef = useRef(scope)
   scopeRef.current = scope
+  // Individualda shifokor bitta (egasi) — maydon yashirin, yangi bemor unga
+  // biriktiriladi: navbatga qoʻshish ham shifokorni talab qiladi
+  const soleDoctor = scope.solo ? (allDoctors?.[0]?.id ?? '') : ''
   const [formError, setFormError] = useState('')
   // Yangi bemor odatda oldida turadi — qabulxona uni darhol shifokor
   // navbatiga qoʻyadi. Sukut yoqilgan; tahrirda koʻrinmaydi (10.3)
@@ -106,7 +102,8 @@ export function PatientFormDialog({
     }
   }, [open, patient, form])
 
-  async function onSubmit(values: PatientValues) {
+  async function onSubmit(input: PatientValues) {
+    const values = { ...input, doctorId: input.doctorId || (patient ? '' : soleDoctor) }
     setFormError('')
     if (canEnqueue && enqueueToday && !values.doctorId) {
       form.setError('doctorId', { message: QUEUE_CABINET_UI.enqueue_needs_doctor })
@@ -185,35 +182,7 @@ export function PatientFormDialog({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name="doctorId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{PATIENT_UI.doctor}</FormLabel>
-                  <Select
-                    value={field.value || NO_DOCTOR}
-                    onValueChange={(value) => field.onChange(value === NO_DOCTOR ? '' : value)}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value={NO_DOCTOR}>{PATIENT_UI.doctor_none}</SelectItem>
-                      {doctors.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>
-                          {item.fullName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>{PATIENT_UI.doctor_hint}</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!scope.solo && <DoctorField control={form.control} doctors={doctors} />}
 
             {canEnqueue && (
               <div className="flex items-center gap-2">

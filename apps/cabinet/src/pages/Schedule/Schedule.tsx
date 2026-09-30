@@ -159,7 +159,8 @@ export function Schedule() {
   // Assistent bir nechta shifokorga yordam bersa — ular ustunlarda, xuddi
   // qabulxonadagidek, lekin faqat oʻz shifokorlari (tz.md 20-boʻlim)
   const scope = useDoctorScope('schedule.all')
-  const manyDoctors = seesAll || scope.doctorIds.length > 1
+  // Individualda shifokor bitta — ustunlar va filtr keraksiz
+  const manyDoctors = (seesAll && !scope.solo) || scope.doctorIds.length > 1
   const { data: allDoctors } = useDoctors()
   const doctors = (allDoctors ?? []).filter((doctor) => scope.allows(doctor.id))
 

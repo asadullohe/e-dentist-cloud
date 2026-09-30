@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { type ReactNode, useState } from 'react'
 import { useReport } from '@/entities/report'
+import { useSession } from '@/entities/session'
 import {
   Card,
   CardContent,
@@ -78,6 +79,8 @@ export function Reports() {
   const [period, setPeriod] = useState<Period>(() => ({ kind: 'month', anchor: todayISO() }))
   const range = periodRange(period)
   const { data, isPending } = useReport(range)
+  // Individualda shifokor bitta — «shifokorlar boʻyicha» kesimi keraksiz
+  const solo = useSession().data?.clinic?.kind === 'solo'
   // Grafikda davr oyi (oy koʻrinishida) belgilanadi; ustun bosilsa oʻsha oy
   const selectedMonth = period.kind === 'month' ? range.from.slice(0, 7) : ''
 
@@ -155,7 +158,7 @@ export function Reports() {
         </CardContent>
       </Card>
 
-      {data && <PlanConversionCard data={data.plans} />}
+      {data && <PlanConversionCard data={data.plans} byDoctor={!solo} />}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card className="gap-3 overflow-hidden pb-0">

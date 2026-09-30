@@ -12,7 +12,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Plan } from '@/entities/plan'
-import { useHasPermission } from '@/entities/session'
+import { useHasPermission, useSession } from '@/entities/session'
 import { useStaffNames } from '@/entities/staff'
 import { ApiError } from '@/shared/api'
 import {
@@ -58,8 +58,9 @@ export function PlanFormDialog({
   const hasPermission = useHasPermission()
   const navigate = useNavigate()
   // Shifokorni faqat hamma bemorni koʻradigan (egasi) almashtira oladi —
-  // server ham shuni talab qiladi
-  const canPickDoctor = hasPermission('patients.all')
+  // server ham shuni talab qiladi. Individualda shifokor bitta — tanlov yoʻq
+  const { data: session } = useSession()
+  const canPickDoctor = hasPermission('patients.all') && session?.clinic?.kind !== 'solo'
 
   const [title, setTitle] = useState('')
   const [doctorId, setDoctorId] = useState('')
