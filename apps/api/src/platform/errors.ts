@@ -14,6 +14,7 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   conflict: 409,
   rate_limited: 429,
   internal: 500,
+  upgrade_required: 403,
 }
 
 interface ErrorOptions {
@@ -51,4 +52,5 @@ export const errors = {
   rateLimited: (message?: string) => new AppError('rate_limited', { message }),
   subscriptionExpired: (message?: string) => new AppError('subscription_expired', { message }),
   internal: (cause?: unknown) => new AppError('internal', { cause }),
+  upgradeRequired: (message?: string) => new AppError('upgrade_required', { message }),
 }

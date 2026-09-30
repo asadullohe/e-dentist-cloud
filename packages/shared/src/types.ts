@@ -13,6 +13,8 @@ export const ERROR_CODES = [
   'rate_limited',
   'subscription_expired',
   'internal',
+  // Individual kabinet chegarasi: amal faqat klinikada (tz.md 20-boʻlim)
+  'upgrade_required',
 ] as const
 
 export type ErrorCode = (typeof ERROR_CODES)[number]

@@ -196,6 +196,35 @@ export function createStaff(tx: ClinicTx, m: NewStaff) {
   })
 }
 
+// ────────────────────  Assistent ↔ shifokor (tz.md 20-boʻlim)  ────────────────────
+
+/// Hamma bogʻlanishlar — xodimlar roʻyxatida assistent ostida koʻrsatiladi
+export function listAssistantLinks(tx: ClinicTx) {
+  return tx.assistantDoctor.findMany({ select: { assistantId: true, doctorId: true } })
+}
+
+export async function doctorIdsOf(tx: ClinicTx, assistantId: string): Promise<string[]> {
+  const rows = await tx.assistantDoctor.findMany({
+    where: { assistantId },
+    select: { doctorId: true },
+  })
+  return rows.map((row) => row.doctorId)
+}
+
+/// Roʻyxatni butunlay almashtiradi. Boʻsh roʻyxat — bogʻlanishlar olinadi
+/// (assistent boshqa rolga oʻtganda)
+export async function setAssistantDoctors(
+  tx: ClinicTx,
+  assistantId: string,
+  doctorIds: readonly string[],
+): Promise<void> {
+  await tx.assistantDoctor.deleteMany({ where: { assistantId } })
+  if (doctorIds.length === 0) return
+  await tx.assistantDoctor.createMany({
+    data: doctorIds.map((doctorId) => tenantScoped({ assistantId, doctorId })),
+  })
+}
+
 /// Parolni almashtirish uchun: joriy xeshni oʻqish va yangisini yozish
 export async function passwordOf(tx: ClinicTx, userId: string): Promise<string | null> {
   const row = await tx.user.findUnique({ where: { id: userId }, select: { passwordHash: true } })

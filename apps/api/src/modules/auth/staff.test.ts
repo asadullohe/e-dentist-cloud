@@ -92,9 +92,16 @@ describe('xodim qoʻshish', () => {
     expect(staff.statusCode).toBe(403)
   })
 
+  // Bitta pochta = bitta joy (tz.md 20-boʻlim): hisob boshqa kabinetda
+  // boʻlishi mumkin, xato pochta maydoni ostida chiqadi
   it('band pochta bilan hisob ochilmaydi', async () => {
-    expect((await addStaff('shifokor@example.com')).statusCode).toBe(409)
-    expect((await addStaff(h.email)).statusCode).toBe(409)
+    for (const email of ['shifokor@example.com', h.email]) {
+      const r = await addStaff(email)
+      expect(r.statusCode).toBe(400)
+      expect(r.json().error.fields.email).toBe(
+        'Bu pochta bilan hisob allaqachon bor — boshqa pochta kiriting',
+      )
+    }
   })
 
   it('qisqa parol rad etiladi', async () => {

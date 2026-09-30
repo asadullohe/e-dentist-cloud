@@ -7,6 +7,10 @@ import type { ClinicKind } from './types.js'
 
 const MIN_NAME = 2
 
+/// Individual kabinetda faol assistentlar chegarasi (tz.md 20-boʻlim).
+/// Chegara tarif farqini himoya qiladi: busiz «individual» kichik klinikaga aylanadi
+export const SOLO_MAX_ASSISTANTS = 2
+
 /// Individual shifokor nom yozmasa — oʻz ismi bilan. Yakka stomatologlarning
 /// koʻpi shunday ishlaydi, nom soʻrash esa roʻyxatni toʻxtatadi
 export function defaultCabinetName(fullName: string): string {

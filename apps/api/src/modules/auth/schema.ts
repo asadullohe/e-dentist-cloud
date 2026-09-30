@@ -73,6 +73,8 @@ const payPercent = z.coerce
   .min(0, { error: () => STAFF_TEXT.percent_range })
   .max(100, { error: () => STAFF_TEXT.percent_range })
 
+const doctorIds = z.array(z.string().uuid({ error: () => STAFF_TEXT.doctor_not_found })).max(50)
+
 export const staffCreateSchema = z.object({
   email,
   fullName: z
@@ -85,6 +87,8 @@ export const staffCreateSchema = z.object({
   password,
   salaryAmount: salaryAmount.default(0),
   payPercent: payPercent.default(0),
+  // Assistent kimga yordam beradi (tz.md 20-boʻlim). Boshqa rollarda eʼtiborsiz
+  doctorIds: doctorIds.optional(),
 })
 
 export const staffUpdateSchema = z.object({
@@ -95,6 +99,7 @@ export const staffUpdateSchema = z.object({
   status: z.enum(['active', 'disabled']).optional(),
   salaryAmount: salaryAmount.optional(),
   payPercent: payPercent.optional(),
+  doctorIds: doctorIds.optional(),
 })
 
 /// Taklifnomani qabul qilish: kalit havoladan, ism va parol odamdan

@@ -4,6 +4,7 @@
 // Haqiqiy baza va Redis bilan ishlaydi — RLS ni soxta obyekt bilan tekshirib
 // boʻlmaydi.
 
+import type { ClinicKind } from '@e-dentist/shared'
 import type { FastifyInstance } from 'fastify'
 import { memoryBus } from '../platform/bus.js'
 import { createDb, type Db } from '../platform/db.js'
@@ -45,7 +46,8 @@ export interface Harness {
   stop(): Promise<void>
 }
 
-export async function startHarness(): Promise<Harness> {
+/// `kind` — individual kabinet sinovlari uchun (tz.md 20-boʻlim)
+export async function startHarness(opts: { kind?: ClinicKind } = {}): Promise<Harness> {
   if (!OWNER_URL || !APP_URL) {
     throw new Error('DATABASE_URL va APP_DATABASE_URL kerak — «npm run up» bilan bazani koʻtaring')
   }
@@ -102,6 +104,7 @@ export async function startHarness(): Promise<Harness> {
     url: '/api/auth/register',
     remoteAddress: clientIp,
     payload: {
+      kind: opts.kind ?? 'clinic',
       clinicName: `Sinov klinikasi ${suffix}`,
       fullName: 'Sinov Egasi',
       email,
@@ -177,6 +180,7 @@ export async function removeClinic(ownerDb: Db, clinicId: string): Promise<void>
   await ownerDb.staffPayout.deleteMany(where)
   await ownerDb.expense.deleteMany(where)
   await ownerDb.invite.deleteMany(where)
+  await ownerDb.assistantDoctor.deleteMany(where)
   await ownerDb.user.deleteMany(where)
   await ownerDb.role.deleteMany(where)
   await ownerDb.clinic.deleteMany({ where: { id: clinicId } })

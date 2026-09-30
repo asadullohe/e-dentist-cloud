@@ -11,6 +11,7 @@ import {
   type Permission,
   resolveClinicName,
   roleLabel,
+  SOLO_MAX_ASSISTANTS,
   STAFF_TEXT,
 } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
@@ -461,6 +462,10 @@ export interface StaffMember {
   fullName: string | null
   roleId: string | null
   roleName: string | null
+  /// Shablon: interfeys assistentni shu bilan taniydi (tz.md 20-boʻlim)
+  roleTemplate: string | null
+  /// Assistent kimga yordam beradi; boshqa rollarda boʻsh
+  doctorIds: string[]
   status: 'active' | 'disabled'
   /// Ish haqi sharti: oylik (soʻm) va ish narxidan foiz (tz.md 15-boʻlim)
   salaryAmount: number
@@ -557,21 +562,105 @@ export function listStaffNames(deps: AuthDeps, clinicId: string) {
 /// Boshqa modullar uchun (payroll): xodimlar roʻyxati ish haqi sharti bilan.
 /// Ochiq tranzaksiya ichida
 export async function listStaffTx(tx: ClinicTx): Promise<StaffMember[]> {
-  const [people, roles] = await Promise.all([repo.listStaff(tx), clinics.listRolesTx(tx)])
-  const roleName = new Map(roles.map((role) => [role.id, role.name]))
+  const [people, roles, links] = await Promise.all([
+    repo.listStaff(tx),
+    clinics.listRolesTx(tx),
+    repo.listAssistantLinks(tx),
+  ])
+  const roleById = new Map(roles.map((role) => [role.id, role]))
+  const doctorsOf = new Map<string, string[]>()
+  for (const link of links) {
+    doctorsOf.set(link.assistantId, [...(doctorsOf.get(link.assistantId) ?? []), link.doctorId])
+  }
 
-  return people.map((person) => ({
+  return people.map((person) =>
+    toMember(
+      person,
+      person.roleId ? roleById.get(person.roleId) : undefined,
+      doctorsOf.get(person.id) ?? [],
+    ),
+  )
+}
+
+type StaffRow = Awaited<ReturnType<typeof repo.listStaff>>[number]
+
+function toMember(
+  person: StaffRow,
+  role: { name: string; template: string } | undefined,
+  doctorIds: string[],
+): StaffMember {
+  return {
     id: person.id,
     email: person.email,
     fullName: person.fullName,
     roleId: person.roleId,
-    roleName: person.roleId ? (roleName.get(person.roleId) ?? null) : null,
+    roleName: role?.name ?? null,
+    roleTemplate: role?.template ?? null,
+    doctorIds,
     status: person.status,
     salaryAmount: person.salaryAmount,
     payPercent: person.payPercent,
     lastLoginAt: person.lastLoginAt,
     createdAt: person.createdAt,
-  }))
+  }
+}
+
+const ASSISTANT = 'assistent'
+
+/// Xodim qoidalari (tz.md 20-boʻlim) — yaratish ham, oʻzgartirish ham shu
+/// yerdan oʻtadi, shunda ikkala yoʻlda bitta chegara turadi:
+///   1. individual kabinetda faqat assistent va faol assistentlar chegarasi
+///   2. assistent kamida bitta shifokorga biriktiriladi, shifokor shu
+///      klinikaniki va faol (`listDoctorsTx` — ijarachi qatlami ostida)
+/// Qaytadi: assistentning yangi shifokorlari; `null` — bogʻlanishga tegilmaydi
+async function checkStaffRules(
+  tx: ClinicTx,
+  clinicId: string,
+  next: {
+    targetId: string | null
+    template: string
+    /// Oldin ham assistent edi — shifokor tanlovi qayta soʻralmaydi
+    wasAssistant: boolean
+    wasActiveAssistant: boolean
+    willBeActive: boolean
+    doctorIds: string[] | undefined
+  },
+): Promise<string[] | null> {
+  const clinic = await clinics.findClinic(tx, clinicId)
+  const solo = clinic?.kind === 'solo'
+  const isAssistant = next.template === ASSISTANT
+
+  if (solo && !isAssistant && next.targetId === null) {
+    throw errors.upgradeRequired(STAFF_TEXT.solo_only_assistant)
+  }
+  if (solo && isAssistant && next.willBeActive && !next.wasActiveAssistant) {
+    if ((await countActiveAssistants(tx)) >= SOLO_MAX_ASSISTANTS) {
+      throw errors.upgradeRequired(STAFF_TEXT.solo_assistant_limit(SOLO_MAX_ASSISTANTS))
+    }
+  }
+
+  if (!isAssistant) return []
+
+  const doctors = (await listDoctorsTx(tx)).map((doctor) => doctor.id)
+  // Individualda shifokor bitta — egasi. Tanlov soʻralmaydi
+  if (solo) return doctors
+  if (next.doctorIds === undefined) {
+    // Assistent boʻlib qolyapti (oylik yoki holat oʻzgardi) — bogʻlanishlar joyida
+    if (next.wasAssistant) return null
+    throw errors.validation({ doctorIds: STAFF_TEXT.doctors_required })
+  }
+  const unique = [...new Set(next.doctorIds)]
+  if (unique.length === 0) throw errors.validation({ doctorIds: STAFF_TEXT.doctors_required })
+  if (unique.some((id) => !doctors.includes(id))) {
+    throw errors.validation({ doctorIds: STAFF_TEXT.doctor_not_found })
+  }
+  return unique
+}
+
+async function countActiveAssistants(tx: ClinicTx): Promise<number> {
+  const roles = await clinics.listRolesTx(tx)
+  const ids = roles.filter((role) => role.template === ASSISTANT).map((role) => role.id)
+  return ids.length === 0 ? 0 : repo.countActiveByRoles(tx, ids)
 }
 
 export function listStaff(deps: AuthDeps, clinicId: string): Promise<StaffMember[]> {
@@ -594,6 +683,15 @@ export function createStaff(
     const role = await clinics.findRoleByIdTx(tx, input.roleId)
     if (!role) throw errors.notFound(STAFF_TEXT.role_not_found)
 
+    const doctorIds = await checkStaffRules(tx, clinicId, {
+      targetId: null,
+      template: role.template,
+      wasAssistant: false,
+      wasActiveAssistant: false,
+      willBeActive: true,
+      doctorIds: input.doctorIds,
+    })
+
     const passwordHash = await hashPassword(input.password)
 
     let created: Awaited<ReturnType<typeof repo.createStaff>>
@@ -608,10 +706,12 @@ export function createStaff(
         payPercent: input.payPercent,
       })
     } catch (error) {
-      // users.email butun bazada yagona
-      if (isDuplicateEmail(error)) throw errors.conflict(STAFF_TEXT.email_taken)
+      // users.email butun bazada yagona: hisob boshqa kabinetda boʻlishi
+      // mumkin — xato pochta maydoni ostida chiqadi
+      if (isDuplicateEmail(error)) throw errors.validation({ email: STAFF_TEXT.email_taken })
       throw error
     }
+    if (doctorIds?.length) await repo.setAssistantDoctors(tx, id, doctorIds)
 
     await writeAudit(tx, {
       userId,
@@ -621,18 +721,7 @@ export function createStaff(
       meta: { created: true },
     })
 
-    return {
-      id: created.id,
-      email: created.email,
-      fullName: created.fullName,
-      roleId: created.roleId,
-      roleName: role.name,
-      status: created.status,
-      salaryAmount: created.salaryAmount,
-      payPercent: created.payPercent,
-      lastLoginAt: created.lastLoginAt,
-      createdAt: created.createdAt,
-    }
+    return toMember(created, role, doctorIds ?? [])
   })
 }
 
@@ -678,7 +767,8 @@ export function updateStaff(
   targetId: string,
   input: StaffUpdateInput,
 ) {
-  const touchesAccess = input.roleId !== undefined || input.status !== undefined
+  const touchesAccess =
+    input.roleId !== undefined || input.status !== undefined || input.doctorIds !== undefined
   if (actorId === targetId && touchesAccess) throw errors.badRequest(STAFF_TEXT.self_change)
 
   return withClinic(deps.db, clinicId, async (tx) => {
@@ -691,6 +781,24 @@ export function updateStaff(
     if (input.roleId && !roles.some((role) => role.id === input.roleId)) {
       throw errors.notFound(STAFF_TEXT.role_not_found)
     }
+
+    const templateOf = (roleId: string | null) =>
+      roles.find((role) => role.id === roleId)?.template ?? ''
+    const currentTemplate = templateOf(target.roleId)
+    const nextTemplate = input.roleId ? templateOf(input.roleId) : currentTemplate
+    const clinic = await clinics.findClinic(tx, clinicId)
+    // Individualda rolni faqat assistentga almashtirish mumkin
+    if (clinic?.kind === 'solo' && input.roleId && nextTemplate !== ASSISTANT) {
+      throw errors.upgradeRequired(STAFF_TEXT.solo_only_assistant)
+    }
+    const doctorIds = await checkStaffRules(tx, clinicId, {
+      targetId,
+      template: nextTemplate,
+      wasAssistant: currentTemplate === ASSISTANT,
+      wasActiveAssistant: currentTemplate === ASSISTANT && target.status === 'active',
+      willBeActive: input.status ? input.status === 'active' : target.status === 'active',
+      doctorIds: input.doctorIds,
+    })
 
     // Egalikdan chiqarish yoki faolsizlantirish — oxirgi egani yoʻqotmasin
     const wasOwner = target.roleId !== null && ownerRoleIds.includes(target.roleId)
@@ -708,6 +816,7 @@ export function updateStaff(
       ...(input.salaryAmount === undefined ? {} : { salaryAmount: input.salaryAmount }),
       ...(input.payPercent === undefined ? {} : { payPercent: input.payPercent }),
     })
+    if (doctorIds !== null) await repo.setAssistantDoctors(tx, targetId, doctorIds)
     await writeAudit(tx, {
       userId: actorId,
       action: input.roleId ? AUDIT_ACTION.role_changed : AUDIT_ACTION.staff_changed,
@@ -715,6 +824,7 @@ export function updateStaff(
       entityId: targetId,
       meta: { ...input },
     })
-    return updated
+    const role = roles.find((item) => item.id === updated.roleId)
+    return toMember(updated, role, doctorIds ?? (await repo.doctorIdsOf(tx, targetId)))
   })
 }

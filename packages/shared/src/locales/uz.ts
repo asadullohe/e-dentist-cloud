@@ -21,6 +21,7 @@ export const ERROR_TEXT = {
   subscription_expired:
     'Obuna muddati tugagan. Maʼlumot koʻrinadi, lekin yangi yozuv qoʻshib boʻlmaydi',
   internal: 'Kutilmagan xatolik yuz berdi. Biroz oʻtib qayta urinib koʻring',
+  upgrade_required: 'Bu imkoniyat klinika hisobida bor',
 } as const
 
 // Forma tekshiruvi matnlari
@@ -719,7 +720,8 @@ export const TOAST_TEXT = {
 // Xodimlar va rollar
 export const STAFF_TEXT = {
   not_found: 'Xodim topilmadi',
-  email_taken: 'Bu pochta bilan hisob allaqachon bor',
+  // Bitta pochta = bitta joy (tz.md 20-boʻlim): hisob boshqa kabinetda boʻlishi mumkin
+  email_taken: 'Bu pochta bilan hisob allaqachon bor — boshqa pochta kiriting',
   role_not_found: 'Rol topilmadi',
   self_change: 'Oʻz rolingizni yoki holatingizni oʻzgartira olmaysiz',
   last_owner: 'Klinikada kamida bitta faol egasi qolishi shart',
@@ -729,6 +731,12 @@ export const STAFF_TEXT = {
   password_same: 'Yangi parol eskisidan farq qilishi kerak',
   salary_negative: 'Oylik manfiy boʻlishi mumkin emas',
   percent_range: 'Foiz 0 dan 100 gacha boʻlishi kerak',
+  // Assistent va individual (tz.md 20-boʻlim)
+  doctors_required: 'Assistent kimga yordam berishini tanlang',
+  doctor_not_found: 'Tanlangan shifokor topilmadi',
+  solo_only_assistant: 'Individual kabinetda faqat assistent qoʻshiladi',
+  solo_assistant_limit: (max: number) =>
+    `Individual kabinetda ${max} tagacha faol assistent boʻladi`,
 } as const
 
 // Sozlamalar → Xodimlar va Rollar
@@ -766,6 +774,18 @@ export const STAFF_UI = {
   percent: 'Foiz (%)',
   pay_none: 'Belgilanmagan',
   pay_optional_hint: 'Keyin ham oʻzgartirish mumkin',
+  // Assistent (tz.md 20-boʻlim)
+  doctors: 'Shifokorlari',
+  doctors_hint: 'Assistent shu shifokorlarning bemorlari va qabullarini koʻradi',
+  doctors_title: (name: string) => `Kimga yordam beradi — ${name}`,
+  doctors_none: 'Shifokor tanlanmagan',
+  solo_role: 'Assistent — sizga yordam beradi',
+  assistant_of: (names: string) => `Yordamchi: ${names}`,
+  // «Klinikaga oʻting» oynasi — individual chegarasi
+  upgrade_title: 'Bu klinika hisobida bor',
+  upgrade_text: (max: number) =>
+    `Individual kabinetda faqat assistent qoʻshiladi, ${max} tagacha. Shifokor, qabulxona yoki texnik kerak boʻlsa — kabinetni klinikaga oʻtkazing: maʼlumotlaringiz joyida qoladi.`,
+  upgrade_ok: 'Tushunarli',
   // Oʻz parolini almashtirish
   change_password: 'Parolni almashtirish',
   current_password: 'Joriy parol',

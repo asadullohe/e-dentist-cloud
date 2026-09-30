@@ -38,6 +38,7 @@ export const ru: DeepPartial<Strings> = {
     rate_limited: 'Слишком много попыток. Подождите немного и попробуйте снова',
     subscription_expired: 'Срок подписки истёк. Данные видны, но добавить новую запись нельзя',
     internal: 'Произошла непредвиденная ошибка. Попробуйте позже',
+    upgrade_required: 'Эта возможность есть в аккаунте клиники',
   },
 
   VALIDATION_TEXT: {
@@ -684,7 +685,7 @@ export const ru: DeepPartial<Strings> = {
 
   STAFF_TEXT: {
     not_found: 'Сотрудник не найден',
-    email_taken: 'Аккаунт с этой почтой уже есть',
+    email_taken: 'Аккаунт с этой почтой уже есть — укажите другую почту',
     role_not_found: 'Роль не найдена',
     self_change: 'Нельзя изменить свою роль или статус',
     last_owner: 'В клинике должен остаться хотя бы один активный владелец',
@@ -694,6 +695,11 @@ export const ru: DeepPartial<Strings> = {
     password_same: 'Новый пароль должен отличаться от старого',
     salary_negative: 'Оклад не может быть отрицательным',
     percent_range: 'Процент должен быть от 0 до 100',
+    doctors_required: 'Выберите, кому помогает ассистент',
+    doctor_not_found: 'Выбранный врач не найден',
+    solo_only_assistant: 'В частном кабинете можно добавить только ассистента',
+    solo_assistant_limit: (max: number) =>
+      `В частном кабинете — не больше ${max} активных ассистентов`,
   },
 
   STAFF_UI: {
@@ -733,6 +739,16 @@ export const ru: DeepPartial<Strings> = {
     percent: 'Процент (%)',
     pay_none: 'Не задано',
     pay_optional_hint: 'Можно изменить позже',
+    doctors: 'Врачи',
+    doctors_hint: 'Ассистент видит пациентов и приёмы этих врачей',
+    doctors_title: (name: string) => `Кому помогает — ${name}`,
+    doctors_none: 'Врач не выбран',
+    solo_role: 'Ассистент — помогает вам',
+    assistant_of: (names: string) => `Помогает: ${names}`,
+    upgrade_title: 'Это есть в аккаунте клиники',
+    upgrade_text: (max: number) =>
+      `В частном кабинете можно добавить только ассистентов, до ${max}. Если нужен врач, регистратура или техник — переведите кабинет в клинику: данные сохранятся.`,
+    upgrade_ok: 'Понятно',
   },
 
   PERMISSION_LABELS: {
