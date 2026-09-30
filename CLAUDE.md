@@ -28,8 +28,17 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
   Server soʻrovning `Accept-Language` sarlavhasiga qarab javob beradi (xato
   matnlari, xat, Excel) — til AsyncLocalStorage da, global emas
 - **Filial yoʻq**: bitta klinika = bitta joy
-- Rollar **5 ta** tayyor shablon: Egasi · Shifokor · Qabulxona · Texnik · Kuzatuvchi.
-  Klinika ruxsatlarni oʻzgartira oladi, lekin 1-versiyada yangi rol yarata olmaydi
+- Rollar **6 ta** tayyor shablon: Egasi · Shifokor · Qabulxona · Texnik · Kuzatuvchi ·
+  Assistent _(qaror 30/09/2026)_. Klinika ruxsatlarni oʻzgartira oladi, lekin
+  1-versiyada yangi rol yarata olmaydi
+- **Individual shifokor** _(qaror 30/09/2026, tz.md 20-boʻlim)_: alohida mahsulot
+  emas — `clinics.kind = solo`, ijarachilik qatlami oʻsha. Roʻyxatda tur tanlanadi,
+  «Kabinet nomi» ixtiyoriy. Individualda xodim faqat **Assistent, 2 tagacha**;
+  boshqasi → «Klinikaga oʻting». Individual → klinika oʻzi, teskarisi faqat panel.
+  Assistent **bir nechta** shifokorga biriktiriladi (`assistant_doctors`) va
+  ularning bemorlarini koʻradi; pul va tashrif sukut yopiq, ish haqi faqat oylik.
+  Naryad texnikka **yoki tashqi laboratoriyaga** (`labs`). Bitta pochta = bitta
+  joy (koʻp ish joyli hisob — keyin). Narx ochiq
 - Bemorlarni **Excel/CSV dan yuklash** shablon orqali; chiqarilgan fayl = shablon
 - **Texnik** (protez ustasi) klinika xodimi, oʻz hisobi bilan kiradi, faqat oʻz
   naryadlarini koʻradi. Holatlar: berildi → tayyor → topshirildi + «qaytarildi»

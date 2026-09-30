@@ -35,6 +35,7 @@ Klinika **oʻzini oʻzi boshqaradi**: egasi xodim qoʻshadi, oʻchiradi va huquq
 | **Qabulxona** | Administrator | Bemorlar, qabullar, toʻlovlar |
 | **Texnik** | Protez ustasi | Faqat oʻziga biriktirilgan naryadlar. Bemorning puliga aloqasi yoʻq |
 | **Kuzatuvchi** | Buxgalter, stajyor | Faqat oʻqiydi, hech narsa oʻzgartirmaydi |
+| **Assistent** | Yordamchi, hamshira | Biriktirilgan shifokorlarining bemorlari, qabullari, xaritasi. Pulga sukut yopiq (20-boʻlim) |
 | **Platforma admini** | Siz | Klinikalar va obunalar. Bemor maʼlumotini **koʻrmaydi** |
 
 ### 1-versiyaga kiradi
@@ -223,7 +224,7 @@ _Klinika oʻzini toʻliq qamrab oladi. Siz xodim qoʻshish-oʻchirishga aralashm
 
 ### Model
 
-Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga beshta tayyor rol nusxalanadi va ular **oʻsha klinikaga tegishli** boʻlib qoladi: egasi istalganini tahrirlashi mumkin, bu boshqa klinikalarga taʼsir qilmaydi.
+Rol — **ruxsatlar roʻyxati**. Har klinika roʻyxatdan oʻtganda unga oltita tayyor rol nusxalanadi (Assistent — 20-boʻlim) va ular **oʻsha klinikaga tegishli** boʻlib qoladi: egasi istalganini tahrirlashi mumkin, bu boshqa klinikalarga taʼsir qilmaydi.
 
 ### Ruxsatlar roʻyxati
 
@@ -935,3 +936,97 @@ tayanch. Rollarni qoʻlda oʻzgartirish mumkin — 3 tayanchli koʻprik ham boʻ
 Bitta tishga ish ham shu xaritadan qoʻshiladi: tish bosiladi, oyna oʻsha tish
 bilan ochiladi. Xarita telefonda yigʻilgan turadi, kompyuterda ochiq —
 tanlov brauzerda eslab qolinadi.
+
+## 20. Individual shifokor va assistent _(qaror 30/09/2026)_
+
+_Mahsulot faqat klinikaga moslangan edi. Yakka ishlaydigan stomatolog ham
+xuddi shu dasturni ishlatadi — lekin xodimlar, rollar va koʻp shifokorli
+koʻrinishlar unga shovqin._
+
+### Nega alohida mahsulot emas
+
+Individual shifokor mazmunan **bir kishilik klinika**. Alohida ijarachi turi
+(`clinicId` oʻrniga `ownerId`) koʻp ijarachilik qatlamini — RLS, har modul,
+har test — qayta yozishni talab qilardi. Shuning uchun `clinics` jadvaliga
+bitta ustun qoʻshiladi va farq faqat roʻyxatdan oʻtish, koʻrinadigan
+boʻlimlar va atamalarda boʻladi.
+
+### Model
+
+- `clinics.kind`: `clinic` · `solo`. Eski klinikalar `clinic` boʻladi
+- Roʻyxatdan oʻtishda **ikkala turga ham 6 ta rol** nusxalanadi; individualda
+  faqat Egasi va Assistent koʻrinadi. Shunda turni almashtirish = bitta
+  bayroq, maʼlumot koʻchmaydi
+- Yangi rol shabloni **Assistent** (`assistant`) — 6-rol. Eski klinikalarga
+  migratsiyada qoʻshiladi
+- `assistant_doctors` (`assistant_id`, `doctor_id`) — assistent **bir nechta**
+  shifokorga biriktiriladi, kamida bittasiga. Individualda avtomatik egasiga
+
+### Assistent
+
+Shifokor yonida ishlaydi: bemorni yozadi, qabulga qoʻyadi, shifokor aytganini
+xaritaga belgilaydi. Klinik va pul qarorlarini qabul qilmaydi.
+
+| Sukut yoqilgan | Sukut yopiq |
+|---|---|
+| `patients.read`, `patients.write`, `teeth.write`, `schedule.write`, `queue.manage`, `plans.read`, `payroll.own` | `visits.write` (tashrif = shifokor ulushi), `payments.*`, `plans.write`, `lab.*`, hisobot, xarajat, xodim, obuna, eksport |
+
+Egasi ruxsatlarni oʻzi ochadi — masalan individualda assistent pul olsa
+`payments.write` ni yoqadi.
+
+**Koʻrinish.** `patients.all` / `schedule.all` yoʻq assistent **biriktirilgan
+shifokorlarining** bemorlari, qabullari va navbatini koʻradi — shifokorning
+«oʻz bemorlari» filtri shifokorlar roʻyxati bilan ishlaydi. Yangi bemor va
+qabulda shifokor sukut — oxirgi tanlangani (bittasi boʻlsa — oʻsha).
+
+**Ish haqi** — faqat oylik (`salary_amount`). Shifokor ishidan foiz
+1-versiyada yoʻq: u tashrifga assistent snapshotini talab qiladi va ish
+haqining eng nozik qismini ochadi. Talab chiqsa alohida bosqich.
+
+Bemorlar roʻyxatida **«Shifokor» ustuni va shifokor boʻyicha filtr** —
+bir nechta shifokorni koʻradigan hamma uchun (egasi, qabulxona, koʻp
+shifokorli assistent).
+
+### Individual hisob
+
+| | Klinika | Individual |
+|---|---|---|
+| Nomi | «Klinika nomi», majburiy | «Kabinet nomi», ixtiyoriy — boʻsh boʻlsa «Dr. Ism Familiya» |
+| Xodimlar | istalgan rol | faqat Assistent, **2 ta faolgacha** |
+| Ish haqi | hamma xodim | faqat assistentlar |
+| Jadval | shifokor ustunlari | bitta ustun, shifokor tanlovi yoʻq |
+| Fikr sahifasi | shifokor → ism → raqam | shifokor qadami tashlab ketiladi |
+| Hisobot | shifokorlar boʻyicha boʻlak bor | yoʻq |
+
+Boshqa rol yoki 3-assistentni qoʻshmoqchi boʻlsa — «Klinikaga oʻting» oynasi.
+Chegara `packages/shared` da bitta konstanta; server ham tekshiradi.
+Oʻchirilgan (`disabled`) assistent hisobga kirmaydi.
+
+### Turni almashtirish
+
+- **Individual → Klinika** — egasining oʻzi, Sozlamalarda tugma (tasdiq
+  oynasi bilan). Narx farqi keyingi toʻlovda Telegramda hal boʻladi
+- **Klinika → Individual** — faqat boshqaruv panelidan va faqat Egasi va
+  assistentlardan boshqa faol xodim qolmagan boʻlsa
+- Panelda klinikalar roʻyxatiga «Tur» ustuni va filtr
+
+### Tashqi laboratoriya
+
+Yakka shifokorda texnik xodim yoʻq, klinikalar ham koʻpincha tashqi lab bilan
+ishlaydi. `labs` jadvali (nom, telefon) — klinikaning laboratoriyalari.
+Naryad **texnikka** (`tech_id`) **yoki laboratoriyaga** (`lab_id`) beriladi,
+ikkalasi birga emas. Tashqi naryad holatini `lab.write` egasi oʻzi belgilaydi.
+Texnik narxi xarajatga tushishi va ulushdan ayrilishi oʻzgarmaydi.
+
+### Narx va sinov
+
+Narx ochiq qoladi (17-boʻlim, 2-savol). Sinov ikkala turda 14 kun, hamma
+funksiya ochiq. Landingda ikki tarif kartasi narxsiz, tugma — «Narxni
+soʻrash». Kodda narx va shifokor chegarasi yoʻq.
+
+### Hal qilinmagan — ataylab
+
+**Bitta hisob — bir nechta ish joyi.** Shifokor oʻz kabinetida ham, klinikada
+ham ishlasa, `users.email` global unique boʻlgani uchun ikkinchi joyga boshqa
+pochta kerak. Toʻgʻri yechim (`memberships`, kirgandan keyin joy tanlash)
+auth, sessiya va RLS ga tegadi — talab chiqsa alohida bosqich.

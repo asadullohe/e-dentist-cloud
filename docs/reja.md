@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** yoʻq — 14 va 15-bosqichlar tugadi, masterga qoʻshildi _(24/09/2026)_
+**Hozirgi task:** 17.1 — individual shifokor va assistent: model _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1591,6 +1591,57 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       holat tugmasi bosilishi bilan saqlanadi, tanlangan holat rangi va ✓
       bilan ajraladi; material va izoh ham panelda. Telefonda panel xarita
       ostida. Landing dagi xarita nusxasiga tegilmadi
+
+---
+
+## Bosqich 17 — Individual shifokor va assistent · ~2 hafta
+
+> **Nega** _(qaror 30/09/2026)_
+>
+> Mahsulot faqat klinikaga moslangan edi. Yakka stomatolog ham shu dasturni
+> ishlatishi uchun roʻyxatdan oʻtishda «Klinika / Individual» tanlovi,
+> yangi Assistent roli va tashqi laboratoriya qoʻshiladi. Individual —
+> `clinics.kind = solo`, ijarachilik qatlamiga tegilmaydi. Tafsilot:
+> [`tz.md` 20-boʻlim](tz.md).
+
+- [ ] **17.1 Model** — `clinics.kind` (`clinic` · `solo`), rol shabloni
+      `assistant` sukut ruxsatlari bilan (`packages/shared`), jadval
+      `assistant_doctors` + RLS. Migratsiya: eski klinikalar `clinic`,
+      har biriga Assistent roli. Roʻyxatdan oʻtishda 6 ta rol. Ijarachilik
+      testi: A klinikaning assistenti B ning shifokoriga biriktirilmaydi · ~1 kun
+- [ ] **17.2 Roʻyxatdan oʻtish** — birinchi qadam: «Klinika» / «Individual
+      shifokor» kartalari; individualda «Kabinet nomi» ixtiyoriy, boʻsh
+      boʻlsa «Dr. Ism Familiya». `registerSchema` ga `kind`, matnlar uz + ru.
+      Landingdagi tugmalar `?kind=` bilan kelishi mumkin · ~1 kun
+- [ ] **17.3 Xodimlar va assistent** — xodim formasida Assistent roli va
+      shifokorlar tanlovi (kamida bitta). Individualda faqat Assistent,
+      2 ta faolgacha (konstanta); boshqa rol yoki 3-assistent — «Klinikaga
+      oʻting» oynasi. Server ham rad etadi. Rollar sahifasida individualda
+      faqat Egasi va Assistent. Band pochta xatosi maydon ostida · ~1.5 kun
+- [ ] **17.4 Assistent koʻrinishi** ⚠️ — `patients.all` / `schedule.all`
+      yoʻq assistent biriktirilgan shifokorlarining bemorlari, kartochkadagi
+      tashrif va rasmlari, qabullari, navbati va rejalarini koʻradi. Mavjud
+      «oʻz bemorlari» filtri shifokorlar roʻyxati bilan ishlaydi. Yangi
+      bemor/qabulda shifokor sukut — oxirgi tanlangani. Testlar: boshqa
+      shifokorning bemori koʻrinmaydi, biriktirish olinsa darhol yopiladi · ~2 kun
+- [ ] **17.5 Bemorlar roʻyxatida shifokor** — «Shifokor» ustuni va filtr
+      (API parametri `doctorId`). Bitta shifokorni koʻradigan uchun filtr
+      yashirin · ~0.5 kun
+- [ ] **17.6 Individual koʻrinishi** — jadvalda shifokor ustunlari va
+      tanlovi yoʻq, fikr sahifasida shifokor qadami tashlab ketiladi,
+      hisobotda shifokorlar boʻlagi yoʻq, «Ish haqi» faqat assistentlar.
+      Atamalar: «Klinika» → «Kabinet» (uz + ru) · ~1 kun
+- [ ] **17.7 Tashqi laboratoriya** — `labs` jadvali (nom, telefon),
+      Sozlamalarda roʻyxat. Naryad texnikka **yoki** laboratoriyaga; tashqi
+      naryad holatini `lab.write` egasi belgilaydi. Ikkala turga · ~1.5 kun
+- [ ] **17.8 Turni almashtirish** — Sozlamalarda «Klinikaga oʻtish»
+      (tasdiq oynasi). Panelda «Tur» ustuni va filtr, «Individualga
+      oʻtkazish» — faqat Egasi va assistentlardan boshqa faol xodim
+      yoʻq boʻlsa · ~1 kun
+- [ ] **17.9 Landing va hujjatlar** — ikki tarif kartasi narxsiz (uz + ru),
+      «Narxni soʻrash»; CLAUDE.md dagi rollar qarori · ~0.5 kun
+- [ ] **17.10 Tekshirish va chiqarish** — ikkala oqim brauzerda: individual
+      roʻyxat → assistent → klinikaga oʻtish; klinikada assistent koʻrinishi · ~0.5 kun
 
 ---
 
