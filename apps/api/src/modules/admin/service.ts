@@ -6,7 +6,7 @@
 // yopiladi va bu yerga faqat klinikalar roʻyxati kabi umumiy maʼlumot
 // chiqadi (bemor maʼlumoti hech qachon).
 
-import { AUTH_TEXT, addDays, todayISO } from '@e-dentist/shared'
+import { AUTH_TEXT, addDays, type ClinicKind, todayISO } from '@e-dentist/shared'
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
@@ -22,6 +22,7 @@ import type {
   ClinicListInput,
   EventsInput,
   ExtendInput,
+  KindInput,
   StatusInput,
 } from './schema.js'
 
@@ -80,6 +81,7 @@ export interface ClinicSummary {
   /// Logotip havolasi: /api/n/<queueCode>/logo
   queueCode: string
   hasLogo: boolean
+  kind: ClinicKind
 }
 
 function toIso(date: Date): string {
@@ -103,6 +105,7 @@ function toSummary(row: repo.ClinicRow): ClinicSummary {
     inviteSent: row.pending_invite,
     queueCode: row.queue_code,
     hasLogo: row.has_logo,
+    kind: row.kind,
   }
 }
 
@@ -308,6 +311,31 @@ export async function setClinicStatus(
       entityId: clinicId,
     }),
   )
+
+  return clinicCard(deps, clinicId)
+}
+
+/// Klinika ↔ individual (tz.md 20-boʻlim). Individualga — faqat panel va
+/// faqat egasi va assistentlar qolgan boʻlsa; klinikaga — shart yoʻq
+export async function setClinicKind(
+  deps: AdminDeps,
+  adminId: string,
+  clinicId: string,
+  input: KindInput,
+): Promise<ClinicCard> {
+  if (!(await repo.findClinic(deps.db, clinicId))) throw errors.notFound()
+
+  await withClinic(deps.db, clinicId, async (tx) => {
+    if (input.kind === 'solo') await auth.prepareSoloTx(tx)
+    await clinics.setKindTx(tx, clinicId, input.kind)
+    await writeAudit(tx, {
+      userId: adminId,
+      action: AUDIT_ACTION.clinic_kind_changed,
+      entity: 'clinic',
+      entityId: clinicId,
+      meta: { kind: input.kind },
+    })
+  })
 
   return clinicCard(deps, clinicId)
 }

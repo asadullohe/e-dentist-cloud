@@ -672,6 +672,29 @@ async function checkStaffRules(
   return unique
 }
 
+/// Panel: klinikani individualga oʻtkazishdan oldin (tz.md 20-boʻlim).
+/// Faqat egasi va assistentlar qolgan boʻlishi shart — aks holda boshqa
+/// rollardagi xodimlar individual cheklovlari ostida «osilib» qolardi.
+/// Assistentlar shifokorga — individualda u egasining oʻzi — qayta biriktiriladi
+export async function prepareSoloTx(tx: ClinicTx): Promise<void> {
+  const active = (await listStaffTx(tx)).filter((person) => person.status === 'active')
+  const extra = active.filter(
+    (person) => person.roleTemplate !== 'egasi' && person.roleTemplate !== ASSISTANT,
+  )
+  if (extra.length > 0) {
+    const names = extra.map((person) => person.fullName ?? person.email).join(', ')
+    throw errors.conflict(STAFF_TEXT.solo_extra_staff(names))
+  }
+  const assistants = active.filter((person) => person.roleTemplate === ASSISTANT)
+  if (assistants.length > SOLO_MAX_ASSISTANTS) {
+    throw errors.conflict(STAFF_TEXT.solo_assistant_limit(SOLO_MAX_ASSISTANTS))
+  }
+  const doctors = (await listDoctorsTx(tx)).map((doctor) => doctor.id)
+  for (const assistant of assistants) {
+    await repo.setAssistantDoctors(tx, assistant.id, doctors)
+  }
+}
+
 async function countActiveAssistants(tx: ClinicTx): Promise<number> {
   const roles = await clinics.listRolesTx(tx)
   const ids = roles.filter((role) => role.template === ASSISTANT).map((role) => role.id)

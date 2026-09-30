@@ -145,3 +145,9 @@ export async function findByQueueCode(db: Db, code: string): Promise<QueueClinic
   const rows = await db.$queryRaw<QueueClinicRow[]>`SELECT * FROM clinic_by_queue_code(${code})`
   return rows[0] ?? null
 }
+
+/// Klinika ↔ individual (tz.md 20-boʻlim). Rollar oldindan hammasi bor —
+/// turni almashtirish bitta ustun
+export function setKind(tx: ClinicTx, clinicId: string, kind: ClinicKind) {
+  return tx.clinic.update({ where: { id: clinicId }, data: { kind }, select: { kind: true } })
+}

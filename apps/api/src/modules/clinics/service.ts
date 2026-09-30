@@ -2,6 +2,7 @@
 // orqali murojaat qiladi (tz.md 2-boʻlim: modul chegarasi).
 
 import {
+  type ClinicKind,
   IMAGE_TEXT,
   OWNER_REQUIRED_PERMISSIONS,
   PERMISSIONS,
@@ -11,6 +12,7 @@ import {
 import { AUDIT_ACTION, writeAudit } from '../../platform/audit.js'
 import type { Db } from '../../platform/db.js'
 import { errors } from '../../platform/errors.js'
+import type { Notifier } from '../../platform/notify.js'
 import { generatePublicCode } from '../../platform/publicCode.js'
 import type { Storage } from '../../platform/storage.js'
 import { type ClinicTx, withClinic } from '../../platform/tenant.js'
@@ -73,6 +75,13 @@ export interface ClinicDeps {
   db: Db
   /// Logotip fayli shu yerda saqlanadi
   storage: Storage
+}
+
+/// Marshrutlar uchun: turni almashtirishda platforma egasiga xabar ketadi
+export interface ClinicRouteDeps extends ClinicDeps {
+  /// Telegram: individual klinikaga oʻtdi — narx oʻzgaradi
+  notify: Notifier
+  log(message: string, meta?: Record<string, unknown>): void
 }
 
 export function listRoles(deps: ClinicDeps, clinicId: string) {
@@ -222,4 +231,46 @@ export async function logoByQueueCode(
   const clinic = await repo.findByQueueCode(deps.db, code)
   if (!clinic?.logo_key) return null
   return deps.storage.get(clinic.logo_key)
+}
+
+// ─────────────────────  Klinika turi (tz.md 20-boʻlim)  ─────────────────────
+
+/// Ochiq tranzaksiya ichida — panel (individualga oʻtkazish) ham shuni ishlatadi
+export async function setKindTx(tx: ClinicTx, clinicId: string, kind: ClinicKind): Promise<void> {
+  await repo.setKind(tx, clinicId, kind)
+}
+
+/// Individual → klinika: egasining oʻzi, darhol. Rollar oldindan bor,
+/// maʼlumot koʻchmaydi. Narx farqi keyingi toʻlovda — shuning uchun
+/// platforma egasiga xabar ketadi. Takror bosilsa hech narsa oʻzgarmaydi
+export async function upgradeToClinic(
+  deps: ClinicRouteDeps,
+  clinicId: string,
+  userId: string,
+): Promise<{ kind: ClinicKind }> {
+  const name = await withClinic(deps.db, clinicId, async (tx) => {
+    const clinic = await repo.findClinic(tx, clinicId)
+    if (!clinic) throw errors.notFound()
+    if (clinic.kind === 'clinic') return null
+    await repo.setKind(tx, clinicId, 'clinic')
+    await writeAudit(tx, {
+      userId,
+      action: AUDIT_ACTION.clinic_kind_changed,
+      entity: 'clinic',
+      entityId: clinicId,
+      meta: { kind: 'clinic' },
+    })
+    return clinic.name
+  })
+
+  // Xabar tranzaksiyadan keyin va himoyalangan: tur allaqachon oʻzgargan,
+  // Telegram yotgani uchun amalni yiqitib boʻlmaydi
+  if (name !== null) {
+    try {
+      await deps.notify.send(`«${name}» individualdan klinikaga oʻtdi — narxni koʻrib chiqing`)
+    } catch (error) {
+      deps.log('platforma xabarnomasi yuborilmadi', { error: String(error) })
+    }
+  }
+  return { kind: 'clinic' }
 }

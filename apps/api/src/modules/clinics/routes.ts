@@ -8,7 +8,7 @@ import { publicProfileSchema, queueSettingsSchema, rolePermissionsSchema } from 
 import * as service from './service.js'
 
 export interface ClinicRouteOpts {
-  deps: service.ClinicDeps
+  deps: service.ClinicRouteDeps
 }
 
 function clinicOf(req: FastifyRequest): { clinicId: string; userId: string } {
@@ -86,4 +86,14 @@ export const clinicRoutes: FastifyPluginAsync<ClinicRouteOpts> = async (app, opt
     const input = validateInput(publicProfileSchema, req.body)
     return ok(await service.updatePublicProfile(opts.deps, clinicId, input))
   })
+
+  // Individual → klinika (tz.md 20-boʻlim). Obuna masalasi — egasiniki
+  app.post(
+    '/clinic/upgrade',
+    { preHandler: app.requirePermission('billing.manage') },
+    async (req) => {
+      const { clinicId, userId } = clinicOf(req)
+      return ok(await service.upgradeToClinic(opts.deps, clinicId, userId))
+    },
+  )
 }

@@ -199,7 +199,15 @@ export function createServer(config: Config, deps: ServerDeps): FastifyInstance 
   app.register(expenseRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(reportRoutes, { prefix: '/api', deps: { db: deps.db } })
   app.register(payrollRoutes, { prefix: '/api', deps: { db: deps.db } })
-  app.register(clinicRoutes, { prefix: '/api', deps: { db: deps.db, storage: deps.storage } })
+  app.register(clinicRoutes, {
+    prefix: '/api',
+    deps: {
+      db: deps.db,
+      storage: deps.storage,
+      notify: deps.notify,
+      log: (message, meta) => app.log.warn(meta ?? {}, message),
+    },
+  })
   app.register(adminRoutes, {
     prefix: '/api',
     deps: {

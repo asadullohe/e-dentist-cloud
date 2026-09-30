@@ -1,4 +1,4 @@
-import { AUTH_TEXT, phoneDigits } from '@e-dentist/shared'
+import { AUTH_TEXT, CLINIC_KINDS, phoneDigits } from '@e-dentist/shared'
 import { z } from 'zod'
 
 export const clinicListSchema = z.object({
@@ -44,6 +44,13 @@ export type ClinicCreateInput = z.infer<typeof clinicCreateSchema>
 export type ClinicListInput = z.infer<typeof clinicListSchema>
 export type ExtendInput = z.infer<typeof extendSchema>
 export type StatusInput = z.infer<typeof statusSchema>
+
+/// Klinika ↔ individual (tz.md 20-boʻlim)
+export const kindSchema = z.object({
+  kind: z.enum(CLINIC_KINDS),
+})
+
+export type KindInput = z.infer<typeof kindSchema>
 
 export const eventsSchema = z.object({
   /// Faqat platforma hodisalari: roʻyxatdan oʻtish, kirish urinishlari,

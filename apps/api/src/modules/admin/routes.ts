@@ -9,6 +9,7 @@ import {
   clinicListSchema,
   eventsSchema,
   extendSchema,
+  kindSchema,
   statusSchema,
 } from './schema.js'
 import * as service from './service.js'
@@ -92,5 +93,12 @@ export const adminRoutes: FastifyPluginAsync<AdminRouteOpts> = async (app, opts)
     const { id } = req.params as { id: string }
     const input = validateInput(statusSchema, req.body)
     return ok(await service.setClinicStatus(opts.deps, session.userId, id, input))
+  })
+
+  app.post('/admin/clinics/:id/kind', async (req) => {
+    const session = requirePlatformAdmin(req)
+    const { id } = req.params as { id: string }
+    const input = validateInput(kindSchema, req.body)
+    return ok(await service.setClinicKind(opts.deps, session.userId, id, input))
   })
 }

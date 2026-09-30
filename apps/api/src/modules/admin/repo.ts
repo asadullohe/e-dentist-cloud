@@ -3,6 +3,7 @@
 // migratsiyada belgilangan tor SECURITY DEFINER funksiyasi orqali boradi.
 // Panel qaysi ustunlarni koʻrishi shu funksiyalarda qatʼiy belgilangan.
 
+import type { ClinicKind } from '@e-dentist/shared'
 import type { Db } from '../../platform/db.js'
 
 export interface ClinicRow {
@@ -21,6 +22,8 @@ export interface ClinicRow {
   /// Logotip havolasi shu koddan yasaladi: /api/n/<kod>/logo
   queue_code: string
   has_logo: boolean
+  /// Klinika yoki individual shifokor (tz.md 20-boʻlim)
+  kind: ClinicKind
 }
 
 export function listClinics(db: Db, search: string) {

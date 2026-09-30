@@ -61,6 +61,8 @@ export const AUDIT_ACTION = {
   subscription_extended: 'subscription_extended',
   clinic_blocked: 'clinic_blocked',
   clinic_unblocked: 'clinic_unblocked',
+  /// Klinika ↔ individual (tz.md 20-boʻlim): narxga taʼsir qiladi
+  clinic_kind_changed: 'clinic_kind_changed',
 } as const
 
 export type AuditAction = (typeof AUDIT_ACTION)[keyof typeof AUDIT_ACTION]
