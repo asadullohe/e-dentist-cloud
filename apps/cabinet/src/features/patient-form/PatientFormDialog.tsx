@@ -6,11 +6,12 @@ import {
   QUEUE_CABINET_UI,
 } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import type { Patient } from '@/entities/patient'
+import { useDoctorScope } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
-import { applyServerErrors } from '@/shared/lib'
+import { applyServerErrors, saveLastDoctor } from '@/shared/lib'
 import {
   Button,
   Checkbox,
@@ -73,7 +74,16 @@ export function PatientFormDialog({
   onCreated,
 }: PatientFormDialogProps) {
   const { mutateAsync, isPending } = useSavePatient(patient?.id ?? null)
-  const { data: doctors } = useDoctors()
+  const { data: allDoctors } = useDoctors()
+  // Cheklangan koʻruvchi (shifokor, assistent) faqat oʻz doirasiga biriktiradi —
+  // aks holda bemor saqlangach uning roʻyxatidan gʻoyib boʻlardi. Tahrirdagi
+  // bemorning hozirgi shifokori roʻyxatda qoladi (tz.md 20-boʻlim)
+  const scope = useDoctorScope('patients.all')
+  const doctors = (allDoctors ?? []).filter(
+    (item) => scope.allows(item.id) || item.id === patient?.doctorId,
+  )
+  const scopeRef = useRef(scope)
+  scopeRef.current = scope
   const [formError, setFormError] = useState('')
   // Yangi bemor odatda oldida turadi — qabulxona uni darhol shifokor
   // navbatiga qoʻyadi. Sukut yoqilgan; tahrirda koʻrinmaydi (10.3)
@@ -88,7 +98,9 @@ export function PatientFormDialog({
   // Oyna qayta ochilganda maydonlar tanlangan bemorga moslanadi
   useEffect(() => {
     if (open) {
-      form.reset(toValues(patient))
+      // Assistentda yangi bemor — oxirgi tanlangan yoki yagona shifokori
+      const fallback = !patient ? scopeRef.current.fallback() : ''
+      form.reset({ ...toValues(patient), ...(fallback ? { doctorId: fallback } : {}) })
       setFormError('')
       setEnqueueToday(true)
     }
@@ -109,6 +121,7 @@ export function PatientFormDialog({
         note: values.note || undefined,
         doctorId: values.doctorId || null,
       })
+      if (scope.proxy && values.doctorId) saveLastDoctor(values.doctorId)
       onOpenChange(false)
       if (!patient) onCreated?.(saved, { enqueueToday: canEnqueue && enqueueToday })
     } catch (error) {
@@ -189,7 +202,7 @@ export function PatientFormDialog({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value={NO_DOCTOR}>{PATIENT_UI.doctor_none}</SelectItem>
-                      {doctors?.map((item) => (
+                      {doctors.map((item) => (
                         <SelectItem key={item.id} value={item.id}>
                           {item.fullName}
                         </SelectItem>

@@ -8,11 +8,11 @@ import {
   VALIDATION_TEXT,
 } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import type { TimeBlock } from '@/entities/appointment'
-import { useSession } from '@/entities/session'
+import { useDoctorScope, useSession } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import { applyServerErrors } from '@/shared/lib'
 import {
@@ -33,13 +33,9 @@ import {
   FormMessage,
   Input,
   Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   TimePicker,
 } from '@/shared/ui'
+import { DoctorSelect } from './DoctorSelect'
 import { useSaveTimeBlock } from './hooks'
 import { localTime } from './slots'
 
@@ -116,8 +112,15 @@ export function TimeBlockDialog({
   ownOnly?: boolean
 }) {
   const { mutateAsync, isPending } = useSaveTimeBlock(block?.id ?? null)
-  const { data: doctors } = useDoctors()
+  const { data: allDoctors } = useDoctors()
   const { data: session } = useSession()
+  const scope = useDoctorScope('schedule.all')
+  const doctors = (allDoctors ?? []).filter((item) => scope.allows(item.id))
+  // Assistent bir nechta shifokorga yordam bersa — tanlov faqat ular bilan
+  const picksDoctor = !ownOnly || scope.doctorIds.length > 1
+  // Effekt ichida oʻqiladi — `scope` har chizishda yangi obyekt
+  const scopeRef = useRef(scope)
+  scopeRef.current = scope
   const [allDay, setAllDay] = useState(false)
   const [formError, setFormError] = useState('')
   const form = useForm<Values>({
@@ -128,10 +131,14 @@ export function TimeBlockDialog({
   useEffect(() => {
     if (open) {
       // Sukut: jadvaldagi shifokor filtri; shifokorning oʻzi boʻlsa — oʻzi
-      // (tanlovda koʻrinib turadi, yashirin emas)
+      // (tanlovda koʻrinib turadi, yashirin emas); assistentda — oxirgi
+      // tanlangan yoki yagona shifokori
+      const own = scopeRef.current.proxy
+        ? scopeRef.current.fallback(defaultDoctorId)
+        : (defaultDoctorId ?? session?.user.id)
       const values = toValues(block, {
         date: defaultDate,
-        doctorId: defaultDoctorId ?? (ownOnly ? session?.user.id : undefined),
+        doctorId: ownOnly ? own : defaultDoctorId,
       })
       form.reset(values)
       setAllDay(!block || (values.fromTime === DAY_FROM && values.toTime === DAY_TO))
@@ -151,7 +158,7 @@ export function TimeBlockDialog({
     setFormError('')
     try {
       await mutateAsync({
-        ...(ownOnly ? {} : { doctorId: values.doctorId }),
+        ...(picksDoctor ? { doctorId: values.doctorId } : {}),
         fromDate: parseDisplayDate(values.fromDate) as string,
         fromTime: values.fromTime,
         toDate: parseDisplayDate(values.toDate) as string,
@@ -173,31 +180,8 @@ export function TimeBlockDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3.5">
-            {!ownOnly && (
-              <FormField
-                control={form.control}
-                name="doctorId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{SCHEDULE_UI.doctor}</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder={SCHEDULE_UI.doctor} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {doctors?.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.fullName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {picksDoctor && (
+              <DoctorSelect control={form.control} name="doctorId" doctors={doctors} />
             )}
 
             <div className="flex items-center gap-2">

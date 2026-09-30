@@ -978,6 +978,11 @@ Egasi ruxsatlarni oʻzi ochadi — masalan individualda assistent pul olsa
 shifokorlarining** bemorlari, qabullari va navbatini koʻradi — shifokorning
 «oʻz bemorlari» filtri shifokorlar roʻyxati bilan ishlaydi. Yangi bemor va
 qabulda shifokor sukut — oxirgi tanlangani (bittasi boʻlsa — oʻsha).
+Doira har soʻrovda ruxsatlar bilan birga yuklanadi (`ScopedViewer.doctorIds`):
+bogʻlanish olinsa yoki shifokor faolsizlantirilsa — keyingi soʻrovdayoq yopiladi.
+Navbatda hali shifokorsiz yozuvlar (ochiq sahifadan) ham koʻrinadi — ularni
+kimdir tasdiqlashi kerak. Muallif maʼnosidagi joylar (rasmni kim yuklagan,
+naryadni kim yozgan, audit) odamning oʻzida qoladi.
 
 **Ish haqi** — faqat oylik (`salary_amount`). Shifokor ishidan foiz
 1-versiyada yoʻq: u tashrifga assistent snapshotini talab qiladi va ish

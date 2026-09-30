@@ -47,4 +47,7 @@ export interface Session {
   subscription: SessionSubscription | null
   role: SessionRole | null
   permissions: Permission[]
+  /// Kimning bemorlari va qabullari (tz.md 20-boʻlim): shifokorda — oʻzi,
+  /// assistentda — biriktirilgan shifokorlari. `*.all` ruxsatida ishlatilmaydi
+  scopeDoctorIds: string[]
 }

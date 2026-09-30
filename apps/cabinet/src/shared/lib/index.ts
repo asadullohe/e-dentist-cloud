@@ -1,5 +1,6 @@
 export { applyServerErrors } from './form'
 export { initialsOf } from './initials'
+export { readLastDoctor, saveLastDoctor } from './lastDoctor'
 export { LocaleProvider, useLocale } from './locale'
 export { type Theme, useTheme } from './theme'
 export { useDebounced } from './useDebounced'

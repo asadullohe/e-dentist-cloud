@@ -10,12 +10,13 @@ import {
   VALIDATION_TEXT,
 } from '@e-dentist/shared'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import type { Appointment, AppointmentStatus } from '@/entities/appointment'
+import { useDoctorScope } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
-import { applyServerErrors } from '@/shared/lib'
+import { applyServerErrors, saveLastDoctor } from '@/shared/lib'
 import {
   Button,
   DatePicker,
@@ -38,13 +39,12 @@ import {
   SelectValue,
   Textarea,
 } from '@/shared/ui'
+import { DoctorSelect } from './DoctorSelect'
 import { useCreatePatientInline, useSaveAppointment } from './hooks'
 import { type NewPatient, PatientBlock } from './PatientBlock'
 import { localTime } from './slots'
 import { TimeSection } from './TimeSection'
 
-/// Radix Select boʻsh satrni qabul qilmaydi — «shifokorsiz» uchun belgi
-const NO_DOCTOR = '__none__'
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 
 /// Maydon nomlari server sxemasi bilan bir xil — serverdan kelgan xato
@@ -85,7 +85,9 @@ interface AppointmentFormDialogProps {
   patient?: { id: string; fio: string; doctorId: string | null } | undefined
   appointment?: Appointment | undefined
   /// `schedule.all` yoʻq (shifokor): qabul doim oʻziga yoziladi — shifokor
-  /// tanlovi koʻrsatilmaydi, server oʻzi qoʻyadi (10.7)
+  /// tanlovi koʻrsatilmaydi, server oʻzi qoʻyadi (10.7). Bir nechta
+  /// shifokorga yordam beradigan assistentda tanlov bor — faqat oʻz
+  /// shifokorlari bilan (tz.md 20-boʻlim)
   ownOnly?: boolean
   /// Saqlangan qabul — sahifa kalendarni oʻsha kunga oʻtkazadi
   onSaved?(appointment: Appointment): void
@@ -130,7 +132,16 @@ export function AppointmentFormDialog({
 }: AppointmentFormDialogProps) {
   const { mutateAsync, isPending } = useSaveAppointment(appointment?.id ?? null)
   const createPatient = useCreatePatientInline()
-  const { data: doctors } = useDoctors()
+  const { data: allDoctors } = useDoctors()
+  const scope = useDoctorScope('schedule.all')
+  const doctors = (allDoctors ?? []).filter((item) => scope.allows(item.id))
+  // Tanlov kerakmi: hammani koʻradigan — ha; cheklanganda faqat doirada
+  // bir nechta shifokor boʻlsa (assistent). Shifokorning oʻzida — yoʻq
+  const picksDoctor = !ownOnly || scope.doctorIds.length > 1
+  // Effekt ichida oʻqiladi, bogʻliqlik emas: `scope` har chizishda yangi
+  // obyekt — aks holda ochiq oynada forma har safar tozalanardi
+  const scopeRef = useRef(scope)
+  scopeRef.current = scope
   const [patientName, setPatientName] = useState('')
   const [newPatient, setNewPatient] = useState<NewPatient | null>(null)
   const [patientError, setPatientError] = useState('')
@@ -150,7 +161,9 @@ export function AppointmentFormDialog({
         toValues(appointment, {
           date: defaultDate,
           time: defaultTime,
-          doctorId: defaultDoctorId ?? patient?.doctorId ?? undefined,
+          doctorId: ownOnly
+            ? scopeRef.current.fallback(defaultDoctorId ?? patient?.doctorId)
+            : (defaultDoctorId ?? patient?.doctorId ?? undefined),
           patientId: patient?.id,
         }),
       )
@@ -160,7 +173,7 @@ export function AppointmentFormDialog({
       setFormError('')
       setSavedId(null)
     }
-  }, [open, appointment, defaultDate, defaultTime, defaultDoctorId, patient, form])
+  }, [open, appointment, defaultDate, defaultTime, defaultDoctorId, patient, form, ownOnly])
 
   const [date, time, duration, doctorId] = form.watch(['date', 'time', 'duration', 'doctorId'])
   const isoDate = parseDisplayDate(date)
@@ -185,15 +198,19 @@ export function AppointmentFormDialog({
         patientId = created.id
       }
       if (!appointment && !patientId) return setPatientError(APPOINTMENT_TEXT.patient_required)
+      if (ownOnly && picksDoctor && !values.doctorId) {
+        return form.setError('doctorId', { message: APPOINTMENT_TEXT.block_doctor_required })
+      }
 
       const saved = await mutateAsync({
         ...(appointment ? { status: values.status } : { patientId }),
-        ...(ownOnly ? {} : { doctorId: values.doctorId || null }),
+        ...(picksDoctor ? { doctorId: values.doctorId || null } : {}),
         date: parseDisplayDate(values.date) as string,
         time: values.time,
         duration: values.duration,
         note: values.note || null,
       })
+      if (scope.proxy && values.doctorId) saveLastDoctor(values.doctorId)
       setSavedId(saved.id)
       onOpenChange(false)
       onSaved?.(saved)
@@ -235,7 +252,9 @@ export function AppointmentFormDialog({
                   form.setValue('patientId', id)
                   setPatientName(fio)
                   // Bemorning biriktirilgan shifokori — sukut (10.2)
-                  if (!ownOnly && patient.doctorId) form.setValue('doctorId', patient.doctorId)
+                  if (picksDoctor && patient.doctorId && scope.allows(patient.doctorId)) {
+                    form.setValue('doctorId', patient.doctorId)
+                  }
                   setPatientError('')
                 }}
               />
@@ -255,41 +274,19 @@ export function AppointmentFormDialog({
                   </FormItem>
                 )}
               />
-              {!ownOnly && (
-                <FormField
+              {picksDoctor && (
+                <DoctorSelect
                   control={form.control}
                   name="doctorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{SCHEDULE_UI.doctor}</FormLabel>
-                      <Select
-                        value={field.value || NO_DOCTOR}
-                        onValueChange={(value) => field.onChange(value === NO_DOCTOR ? '' : value)}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={NO_DOCTOR}>{SCHEDULE_UI.doctor_none}</SelectItem>
-                          {doctors?.map((item) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.fullName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  doctors={doctors}
+                  noneLabel={ownOnly ? undefined : SCHEDULE_UI.doctor_none}
                 />
               )}
             </div>
 
             <TimeSection
               date={isoDate}
-              doctorId={ownOnly ? (appointment?.doctorId ?? null) : doctorId || null}
+              doctorId={picksDoctor ? doctorId || null : (appointment?.doctorId ?? null)}
               time={time}
               duration={duration}
               excludeId={appointment?.id ?? savedId ?? undefined}

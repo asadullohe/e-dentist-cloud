@@ -8,7 +8,7 @@
 
 **Belgilar:** `[ ]` boshlanmagan · `[~]` jarayonda · `[x]` tayyor
 
-**Hozirgi task:** 17.4 — individual shifokor va assistent: assistent koʻrinishi _(30/09/2026)_
+**Hozirgi task:** 17.5 — individual shifokor va assistent: bemorlar roʻyxatida shifokor _(30/09/2026)_
 
 0 dan 13 gacha barcha bosqichlar yopiq _(23/09/2026)_. Server ishlayapti: kabinet,
 boshqaruv paneli va landing ochiq _(09/09/2026)_. 13-bosqich — raqobat tahlilidan
@@ -1618,7 +1618,7 @@ ikonkalar. Farqi — asosiy rang logotipdagi koʻk _(qaror 12/09/2026)_.
       2 ta faolgacha (konstanta); boshqa rol yoki 3-assistent — «Klinikaga
       oʻting» oynasi. Server ham rad etadi. Rollar sahifasida individualda
       faqat Egasi va Assistent. Band pochta xatosi maydon ostida · ~1.5 kun
-- [ ] **17.4 Assistent koʻrinishi** ⚠️ — `patients.all` / `schedule.all`
+- [x] **17.4 Assistent koʻrinishi** ⚠️ — `patients.all` / `schedule.all`
       yoʻq assistent biriktirilgan shifokorlarining bemorlari, kartochkadagi
       tashrif va rasmlari, qabullari, navbati va rejalarini koʻradi. Mavjud
       «oʻz bemorlari» filtri shifokorlar roʻyxati bilan ishlaydi. Yangi

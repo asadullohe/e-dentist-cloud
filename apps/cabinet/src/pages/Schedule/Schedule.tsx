@@ -25,7 +25,7 @@ import {
   useAppointments,
   useTimeBlocks,
 } from '@/entities/appointment'
-import { useHasPermission } from '@/entities/session'
+import { useDoctorScope, useHasPermission } from '@/entities/session'
 import { useDoctors } from '@/entities/staff'
 import {
   AppointmentFormDialog,
@@ -156,11 +156,16 @@ export function Schedule() {
   // `schedule.all` yoʻq (shifokor): server faqat oʻz qabullarini qaytaradi —
   // shifokor filtri va formadagi tanlov maʼnosiz (10.7)
   const seesAll = useHasPermission()('schedule.all')
-  const { data: doctors } = useDoctors()
+  // Assistent bir nechta shifokorga yordam bersa — ular ustunlarda, xuddi
+  // qabulxonadagidek, lekin faqat oʻz shifokorlari (tz.md 20-boʻlim)
+  const scope = useDoctorScope('schedule.all')
+  const manyDoctors = seesAll || scope.doctorIds.length > 1
+  const { data: allDoctors } = useDoctors()
+  const doctors = (allDoctors ?? []).filter((doctor) => scope.allows(doctor.id))
 
-  // «Oy» faqat `schedule.all` yoʻq rolda: boshqa hisob bilan kirilganda
+  // «Oy» faqat bitta shifokorli rolda: boshqa hisob bilan kirilganda
   // saqlangan tanlov shu rolda yoʻq boʻlishi mumkin — kunga qaytariladi
-  const view: View = seesAll && savedView === 'month' ? 'doctors' : savedView
+  const view: View = manyDoctors && savedView === 'month' ? 'doctors' : savedView
 
   const { from, to, title } = rangeOf(view, selected)
   const { data: appointments, isPending } = useAppointments(from, to, doctorFilter || undefined)
@@ -171,7 +176,7 @@ export function Schedule() {
 
   // Ustunlar: tanlangan shifokor boʻlsa — bitta. Shifokorsiz qabullar boʻlsa,
   // ular uchun oxirida alohida ustun
-  const heads: DoctorHead[] = (doctors ?? [])
+  const heads: DoctorHead[] = doctors
     .filter((doctor) => !doctorFilter || doctor.id === doctorFilter)
     .map((doctor) => ({
       id: doctor.id,
@@ -186,7 +191,7 @@ export function Schedule() {
   // Toʻr ish soatlarini koʻrsatadi; tashqarida yozuv boʻlsa kengayadi
   const { startHour, endHour } = hourRange(appointments ?? [], blocks ?? [])
 
-  const byDoctor = view === 'doctors' && seesAll && heads.length > 0
+  const byDoctor = view === 'doctors' && manyDoctors && heads.length > 0
   const days = view === 'doctors' ? [selected] : weekOf(selected)
   // Sarlavha toʻrning ichida — u bilan birga suriladi, chetdan chiqmaydi
   const columns: GridColumn[] = byDoctor
@@ -272,7 +277,7 @@ export function Schedule() {
     setBlockOpen(true)
   }
 
-  const doctorSelect = seesAll && (
+  const doctorSelect = manyDoctors && (
     <Select
       value={doctorFilter || ALL_DOCTORS}
       onValueChange={(value) => setDoctorFilter(value === ALL_DOCTORS ? '' : value)}
@@ -286,7 +291,7 @@ export function Schedule() {
       </SelectTrigger>
       <SelectContent>
         <SelectItem value={ALL_DOCTORS}>{SCHEDULE_UI.all_doctors}</SelectItem>
-        {doctors?.map((item) => (
+        {doctors.map((item) => (
           <SelectItem key={item.id} value={item.id}>
             {item.fullName}
           </SelectItem>
@@ -342,7 +347,7 @@ export function Schedule() {
       value={view}
       onChange={changeView}
       options={
-        seesAll
+        manyDoctors
           ? [
               ['doctors', SCHEDULE_UI.group_doctors],
               ['week', SCHEDULE_UI.view_week],
