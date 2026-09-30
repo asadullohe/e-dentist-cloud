@@ -937,7 +937,10 @@ Bitta tishga ish ham shu xaritadan qoʻshiladi: tish bosiladi, oyna oʻsha tish
 bilan ochiladi. Xarita telefonda yigʻilgan turadi, kompyuterda ochiq —
 tanlov brauzerda eslab qolinadi.
 
-## 20. Individual shifokor va assistent _(qaror 30/09/2026)_
+## 20. Yakka shifokor va assistent _(qaror 30/09/2026)_
+
+_Atama: foydalanuvchi matnida **«yakka shifokor»** («individual» emas — u
+inglizcha); kodda `solo`. Ruschasi «частный врач»._
 
 _Mahsulot faqat klinikaga moslangan edi. Yakka ishlaydigan stomatolog ham
 xuddi shu dasturni ishlatadi — lekin xodimlar, rollar va koʻp shifokorli
@@ -945,7 +948,7 @@ koʻrinishlar unga shovqin._
 
 ### Nega alohida mahsulot emas
 
-Individual shifokor mazmunan **bir kishilik klinika**. Alohida ijarachi turi
+Yakka shifokor mazmunan **bir kishilik klinika**. Alohida ijarachi turi
 (`clinicId` oʻrniga `ownerId`) koʻp ijarachilik qatlamini — RLS, har modul,
 har test — qayta yozishni talab qilardi. Shuning uchun `clinics` jadvaliga
 bitta ustun qoʻshiladi va farq faqat roʻyxatdan oʻtish, koʻrinadigan
@@ -954,13 +957,13 @@ boʻlimlar va atamalarda boʻladi.
 ### Model
 
 - `clinics.kind`: `clinic` · `solo`. Eski klinikalar `clinic` boʻladi
-- Roʻyxatdan oʻtishda **ikkala turga ham 6 ta rol** nusxalanadi; individualda
+- Roʻyxatdan oʻtishda **ikkala turga ham 6 ta rol** nusxalanadi; yakka shifokorda
   faqat Egasi va Assistent koʻrinadi. Shunda turni almashtirish = bitta
   bayroq, maʼlumot koʻchmaydi
 - Yangi rol shabloni **Assistent** (`assistent` — mavjud shablon nomlari kabi oʻzbekcha) — 6-rol. Eski klinikalarga
   migratsiyada qoʻshiladi
 - `assistant_doctors` (`assistant_id`, `doctor_id`) — assistent **bir nechta**
-  shifokorga biriktiriladi, kamida bittasiga. Individualda avtomatik egasiga
+  shifokorga biriktiriladi, kamida bittasiga. Yakka shifokorda avtomatik egasiga
 
 ### Assistent
 
@@ -971,7 +974,7 @@ xaritaga belgilaydi. Klinik va pul qarorlarini qabul qilmaydi.
 |---|---|
 | `patients.read`, `patients.write`, `teeth.write`, `schedule.read`, `schedule.write`, `queue.manage`, `plans.read`, `payroll.own` | `visits.write` (tashrif = shifokor ulushi), `payments.*`, `plans.write`, `lab.*`, hisobot, xarajat, xodim, obuna, eksport |
 
-Egasi ruxsatlarni oʻzi ochadi — masalan individualda assistent pul olsa
+Egasi ruxsatlarni oʻzi ochadi — masalan yakka shifokorda assistent pul olsa
 `payments.write` ni yoqadi.
 
 **Koʻrinish.** `patients.all` / `schedule.all` yoʻq assistent **biriktirilgan
@@ -992,9 +995,9 @@ Bemorlar roʻyxatida **«Shifokor» ustuni va shifokor boʻyicha filtr** —
 bir nechta shifokorni koʻradigan hamma uchun (egasi, qabulxona, koʻp
 shifokorli assistent).
 
-### Individual hisob
+### Yakka shifokor hisobi
 
-| | Klinika | Individual |
+| | Klinika | Yakka shifokor |
 |---|---|---|
 | Nomi | «Klinika nomi», majburiy | «Kabinet nomi», ixtiyoriy — boʻsh boʻlsa «Dr. Ism Familiya» |
 | Xodimlar | istalgan rol | faqat Assistent, **2 ta faolgacha** |
@@ -1009,11 +1012,11 @@ Oʻchirilgan (`disabled`) assistent hisobga kirmaydi.
 
 ### Turni almashtirish
 
-- **Individual → Klinika** — egasining oʻzi (`billing.manage`), Sozlamalar →
+- **Yakka shifokor → Klinika** — egasining oʻzi (`billing.manage`), Sozlamalar →
   Kabinet dagi karta yoki «Bu klinika hisobida bor» oynasi (tasdiq bilan).
   Narx farqi keyingi toʻlovda Telegramda hal boʻladi — oʻtishda platforma
   egasiga Telegram xabari ketadi, `clinic_kind_changed` platforma hodisasi
-- **Klinika → Individual** — faqat boshqaruv panelidan va faqat Egasi va
+- **Klinika → Yakka shifokor** — faqat boshqaruv panelidan va faqat Egasi va
   assistentlardan (2 tagacha) boshqa faol xodim qolmagan boʻlsa; aks holda
   sabab ismlar bilan. Assistentlar egasiga qayta biriktiriladi
 - Panelda klinikalar roʻyxatiga «Tur» ustuni va filtr

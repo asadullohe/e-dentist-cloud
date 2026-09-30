@@ -160,7 +160,7 @@ export async function register(
     await deps.notify.send(
       [
         input.kind === 'solo'
-          ? 'Yangi individual shifokor roʻyxatdan oʻtdi'
+          ? 'Yangi yakka shifokor roʻyxatdan oʻtdi'
           : 'Yangi klinika roʻyxatdan oʻtdi',
         `Nomi: ${clinicName}`,
         `Egasi: ${input.fullName} (${input.email})`,

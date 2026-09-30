@@ -659,7 +659,7 @@ describe('individual shifokor roʻyxati', () => {
     expect(clinic?.name).toBe('Dr. Karimov Aziz')
     // Klinikaga oʻtganda rollar tayyor turishi uchun — oltitasi ham
     expect(await ownerDb.role.count({ where: { clinicId: soloId } })).toBe(6)
-    expect(notify.sent.at(-1)).toContain('Yangi individual shifokor roʻyxatdan oʻtdi')
+    expect(notify.sent.at(-1)).toContain('Yangi yakka shifokor roʻyxatdan oʻtdi')
   })
 
   it('yozilgan nom juda qisqa boʻlsa — kabinet nomi xatosi', async () => {

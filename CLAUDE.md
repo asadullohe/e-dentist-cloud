@@ -31,10 +31,11 @@ Bular muhokama qilinib tasdiqlangan — qayta ochmang, faqat foydalanuvchi soʻr
 - Rollar **6 ta** tayyor shablon: Egasi · Shifokor · Qabulxona · Texnik · Kuzatuvchi ·
   Assistent _(qaror 30/09/2026)_. Klinika ruxsatlarni oʻzgartira oladi, lekin
   1-versiyada yangi rol yarata olmaydi
-- **Individual shifokor** _(qaror 30/09/2026, tz.md 20-boʻlim)_: alohida mahsulot
+- **Yakka shifokor** _(qaror 30/09/2026, tz.md 20-boʻlim)_: matnda «yakka shifokor»
+  («individual» emas), kodda `solo`. Alohida mahsulot
   emas — `clinics.kind = solo`, ijarachilik qatlami oʻsha. Roʻyxatda tur tanlanadi,
-  «Kabinet nomi» ixtiyoriy. Individualda xodim faqat **Assistent, 2 tagacha**;
-  boshqasi → «Klinikaga oʻting». Individual → klinika oʻzi, teskarisi faqat panel.
+  «Kabinet nomi» ixtiyoriy. Yakka shifokorda xodim faqat **Assistent, 2 tagacha**;
+  boshqasi → «Klinikaga oʻting». Yakka shifokor → klinika oʻzi, teskarisi faqat panel.
   Assistent **bir nechta** shifokorga biriktiriladi (`assistant_doctors`) va
   ularning bemorlarini koʻradi; pul va tashrif sukut yopiq, ish haqi faqat oylik.
   Naryad texnikka **yoki tashqi laboratoriyaga** (`labs`). Bitta pochta = bitta

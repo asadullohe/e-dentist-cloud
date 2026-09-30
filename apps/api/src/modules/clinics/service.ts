@@ -267,7 +267,7 @@ export async function upgradeToClinic(
   // Telegram yotgani uchun amalni yiqitib boʻlmaydi
   if (name !== null) {
     try {
-      await deps.notify.send(`«${name}» individualdan klinikaga oʻtdi — narxni koʻrib chiqing`)
+      await deps.notify.send(`«${name}» yakka shifokordan klinikaga oʻtdi — narxni koʻrib chiqing`)
     } catch (error) {
       deps.log('platforma xabarnomasi yuborilmadi', { error: String(error) })
     }

@@ -96,7 +96,7 @@ export const UI_TEXT = {
   kind_title: 'Kim uchun ochamiz?',
   kind_clinic: 'Klinika',
   kind_clinic_hint: 'Bir nechta shifokor, qabulxona va boshqa xodimlar',
-  kind_solo: 'Individual shifokor',
+  kind_solo: 'Yakka shifokor',
   kind_solo_hint: 'Oʻzim ishlayman, yonimda assistent boʻlishi mumkin',
   kind_change: 'Turni oʻzgartirish',
   cabinet_name: 'Kabinet nomi',
@@ -739,12 +739,12 @@ export const STAFF_TEXT = {
   // Assistent va individual (tz.md 20-boʻlim)
   doctors_required: 'Assistent kimga yordam berishini tanlang',
   doctor_not_found: 'Tanlangan shifokor topilmadi',
-  solo_only_assistant: 'Individual kabinetda faqat assistent qoʻshiladi',
+  solo_only_assistant: 'Yakka shifokor kabinetida faqat assistent qoʻshiladi',
   solo_assistant_limit: (max: number) =>
-    `Individual kabinetda ${max} tagacha faol assistent boʻladi`,
+    `Yakka shifokor kabinetida ${max} tagacha faol assistent boʻladi`,
   // Panel: individualga oʻtkazish (tz.md 20-boʻlim)
   solo_extra_staff: (names: string) =>
-    `Individualga oʻtkazib boʻlmaydi: egasi va assistentlardan boshqa faol xodimlar bor — ${names}`,
+    `Yakka shifokorga oʻtkazib boʻlmaydi: egasi va assistentlardan boshqa faol xodimlar bor — ${names}`,
 } as const
 
 // Sozlamalar → Xodimlar va Rollar
@@ -794,7 +794,7 @@ export const STAFF_UI = {
   // «Klinikaga oʻting» oynasi — individual chegarasi
   upgrade_title: 'Bu klinika hisobida bor',
   upgrade_text: (max: number) =>
-    `Individual kabinetda faqat assistent qoʻshiladi, ${max} tagacha. Shifokor, qabulxona yoki texnik kerak boʻlsa — kabinetni klinikaga oʻtkazing: maʼlumotlaringiz joyida qoladi.`,
+    `Yakka shifokor kabinetida faqat assistent qoʻshiladi, ${max} tagacha. Shifokor, qabulxona yoki texnik kerak boʻlsa — kabinetni klinikaga oʻtkazing: maʼlumotlaringiz joyida qoladi.`,
   upgrade_ok: 'Tushunarli',
   upgrade_action: 'Klinikaga oʻtish',
   upgrade_confirm_title: 'Kabinet klinikaga oʻtkazilsinmi?',
@@ -1507,9 +1507,9 @@ export const ADMIN_UI = {
   unblock: 'Blokdan chiqarish',
   // Klinika turi (tz.md 20-boʻlim)
   kind_clinic: 'Klinika',
-  kind_solo: 'Individual',
+  kind_solo: 'Yakka shifokor',
   kind_all: 'Hammasi',
-  to_solo: 'Individualga oʻtkazish',
+  to_solo: 'Yakka shifokorga oʻtkazish',
   to_clinic: 'Klinikaga oʻtkazish',
   history: 'Tarix',
   never: 'hech qachon',
@@ -1592,7 +1592,7 @@ export const AUDIT_LABELS = {
   subscription_extended: 'Muddat uzaytirildi',
   clinic_blocked: 'Bloklandi',
   clinic_unblocked: 'Blokdan chiqarildi',
-  clinic_kind_changed: 'Turi oʻzgardi (klinika / individual)',
+  clinic_kind_changed: 'Turi oʻzgardi (klinika / yakka shifokor)',
 } as const
 
 // Excel: ustun sarlavhalari. Import ham, eksport ham shu roʻyxatga tayanadi —
