@@ -1,4 +1,4 @@
-// Rol shablonlari. Klinika roʻyxatdan oʻtganda beshtasi ham oʻsha klinikaga
+// Rol shablonlari. Klinika roʻyxatdan oʻtganda oltitasi ham oʻsha klinikaga
 // nusxalanadi va uniki boʻlib qoladi: egasi istalganini tahrirlashi mumkin,
 // bu boshqa klinikalarga taʼsir qilmaydi (tz.md 6-boʻlim).
 
@@ -110,6 +110,29 @@ export const ROLE_TEMPLATE_SPECS: Record<RoleTemplate, RoleTemplateSpec> = {
       'expenses.read',
       'reports.read',
       'plans.read',
+    ],
+  },
+
+  // Shifokor yordamchisi (tz.md 20-boʻlim): bemorni yozadi, qabulga qoʻyadi,
+  // shifokor aytganini xaritaga belgilaydi. Tashrif yozmaydi — tashrif
+  // shifokor ulushi va ish haqi. Pul sukut yopiq: kerak boʻlsa egasi ochadi.
+  // `patients.all` / `schedule.all` yoʻq — biriktirilgan shifokorlarining
+  // bemorlari va qabullarini koʻradi (`assistant_doctors`)
+  assistent: {
+    template: 'assistent',
+    get label() {
+      return ROLE_LABELS.assistent
+    },
+    isOwner: false,
+    permissions: [
+      'patients.read',
+      'patients.write',
+      'teeth.write',
+      'schedule.read',
+      'schedule.write',
+      'queue.manage',
+      'plans.read',
+      'payroll.own',
     ],
   },
 }

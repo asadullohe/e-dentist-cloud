@@ -103,11 +103,24 @@ export type PlanItemStatus = (typeof PLAN_ITEM_STATUSES)[number]
 
 export type Permission = (typeof PERMISSIONS)[number]
 
+// --- Klinika turi ---
+// Individual shifokor — bir kishilik klinika (tz.md 20-boʻlim)
+
+export const CLINIC_KINDS = ['clinic', 'solo'] as const
+export type ClinicKind = (typeof CLINIC_KINDS)[number]
+
 // --- Rollar ---
-// Klinika roʻyxatdan oʻtganda shu beshtasi nusxalanadi va oʻsha klinikaga
+// Klinika roʻyxatdan oʻtganda shu oltitasi nusxalanadi va oʻsha klinikaga
 // tegishli boʻlib qoladi. Ruxsatlar toʻplami 1.6 dagi seed da beriladi.
 
-export const ROLE_TEMPLATES = ['egasi', 'shifokor', 'qabulxona', 'texnik', 'kuzatuvchi'] as const
+export const ROLE_TEMPLATES = [
+  'egasi',
+  'shifokor',
+  'qabulxona',
+  'texnik',
+  'kuzatuvchi',
+  'assistent',
+] as const
 
 export type RoleTemplate = (typeof ROLE_TEMPLATES)[number]
 

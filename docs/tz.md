@@ -957,7 +957,7 @@ boʻlimlar va atamalarda boʻladi.
 - Roʻyxatdan oʻtishda **ikkala turga ham 6 ta rol** nusxalanadi; individualda
   faqat Egasi va Assistent koʻrinadi. Shunda turni almashtirish = bitta
   bayroq, maʼlumot koʻchmaydi
-- Yangi rol shabloni **Assistent** (`assistant`) — 6-rol. Eski klinikalarga
+- Yangi rol shabloni **Assistent** (`assistent` — mavjud shablon nomlari kabi oʻzbekcha) — 6-rol. Eski klinikalarga
   migratsiyada qoʻshiladi
 - `assistant_doctors` (`assistant_id`, `doctor_id`) — assistent **bir nechta**
   shifokorga biriktiriladi, kamida bittasiga. Individualda avtomatik egasiga
@@ -969,7 +969,7 @@ xaritaga belgilaydi. Klinik va pul qarorlarini qabul qilmaydi.
 
 | Sukut yoqilgan | Sukut yopiq |
 |---|---|
-| `patients.read`, `patients.write`, `teeth.write`, `schedule.write`, `queue.manage`, `plans.read`, `payroll.own` | `visits.write` (tashrif = shifokor ulushi), `payments.*`, `plans.write`, `lab.*`, hisobot, xarajat, xodim, obuna, eksport |
+| `patients.read`, `patients.write`, `teeth.write`, `schedule.read`, `schedule.write`, `queue.manage`, `plans.read`, `payroll.own` | `visits.write` (tashrif = shifokor ulushi), `payments.*`, `plans.write`, `lab.*`, hisobot, xarajat, xodim, obuna, eksport |
 
 Egasi ruxsatlarni oʻzi ochadi — masalan individualda assistent pul olsa
 `payments.write` ni yoqadi.

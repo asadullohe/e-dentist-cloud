@@ -1,13 +1,14 @@
 // clinics moduli `clinics` va `roles` jadvallariga egalik qiladi.
 // Boshqa modullar bu yerga emas, service.ts ga murojaat qiladi.
 
-import { ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
+import { type ClinicKind, ROLE_TEMPLATE_SPECS, ROLE_TEMPLATES } from '@e-dentist/shared'
 import type { Db } from '../../platform/db.js'
 import { type ClinicTx, tenantScoped } from '../../platform/tenant.js'
 
 export interface NewClinic {
   clinicId: string
   name: string
+  kind: ClinicKind
   phone: string | null
   expiresAt: Date
   queueCode: string
@@ -18,6 +19,7 @@ export async function create(tx: ClinicTx, m: NewClinic): Promise<void> {
     data: {
       id: m.clinicId,
       name: m.name,
+      kind: m.kind,
       phone: m.phone,
       isTrial: true,
       expiresAt: m.expiresAt,
@@ -26,7 +28,9 @@ export async function create(tx: ClinicTx, m: NewClinic): Promise<void> {
   })
 }
 
-/// Beshta rol shablonini nusxalaydi va egasi rolining id sini qaytaradi
+/// Oltita rol shablonini nusxalaydi va egasi rolining id sini qaytaradi.
+/// Individualga ham hammasi: klinikaga oʻtganda rollar tayyor turadi,
+/// oʻtish bitta bayroq boʻladi (tz.md 20-boʻlim)
 export async function createRoleTemplates(tx: ClinicTx): Promise<string> {
   let ownerRoleId = ''
   for (const template of ROLE_TEMPLATES) {
@@ -64,6 +68,7 @@ export async function findClinic(tx: ClinicTx, clinicId: string) {
     select: {
       id: true,
       name: true,
+      kind: true,
       isTrial: true,
       expiresAt: true,
       status: true,

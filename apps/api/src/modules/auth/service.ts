@@ -107,6 +107,7 @@ export async function register(
       const { ownerRoleId } = await clinics.createClinicWithRoles(tx, {
         clinicId,
         name: input.clinicName,
+        kind: 'clinic',
         phone: input.phone ?? null,
         expiresAt,
       })

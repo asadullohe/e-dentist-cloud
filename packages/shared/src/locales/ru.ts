@@ -60,6 +60,7 @@ export const ru: DeepPartial<Strings> = {
     qabulxona: 'Регистратура',
     techRole: 'Техник',
     kuzatuvchi: 'Наблюдатель',
+    assistent: 'Ассистент',
   },
 
   AUTH_TEXT: {

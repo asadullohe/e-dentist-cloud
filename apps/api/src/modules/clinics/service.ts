@@ -20,7 +20,7 @@ import type { PublicProfileInput } from './schema.js'
 
 export type { NewClinic, RoleInfo } from './repo.js'
 
-/// Roʻyxatdan oʻtishda chaqiriladi: klinika va beshta rol bitta tranzaksiyada.
+/// Roʻyxatdan oʻtishda chaqiriladi: klinika va oltita rol bitta tranzaksiyada.
 /// Egasi rolining id si qaytadi
 export async function createClinicWithRoles(
   tx: ClinicTx,

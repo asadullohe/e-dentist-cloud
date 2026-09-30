@@ -25,12 +25,20 @@ enum ClinicStatus {
   blocked
 }
 
+/// Individual shifokor — bir kishilik klinika (tz.md 20-boʻlim). Farq faqat
+/// roʻyxatdan oʻtish, koʻrinadigan boʻlimlar va xodim cheklovida
+enum ClinicKind {
+  clinic
+  solo
+}
+
 /// Ijarachi. Sinov ham shu qator, faqat is_trial = true
 model Clinic {
   id           String       @id @default(uuid(7)) @db.Uuid
   name         String
   phone        String?
   status       ClinicStatus @default(active)
+  kind         ClinicKind   @default(clinic)
   /// Tarif nomi. Narx modeli hali belgilanmagan (reja.md, ochiq savol 1) —
   /// shuning uchun enum emas, matn
   plan         String       @default("asosiy")
@@ -54,29 +62,30 @@ model Clinic {
   createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  users        User[]
-  roles        Role[]
-  invites      Invite[]
-  auditLog     AuditLog[]
-  patients     Patient[]
-  visits       Visit[]
-  teeth        Tooth[]
-  bridges      Bridge[]
-  payments     Payment[]
-  allocations  PaymentAllocation[]
-  appointments Appointment[]
-  services     Service[]
-  serviceTypes ServiceType[]
-  images       PatientImage[]
-  expenses     Expense[]
-  labOrders    LabOrder[]
-  staffPayouts StaffPayout[]
-  feedback     Feedback[]
-  timeBlocks   TimeBlock[]
-  plans        TreatmentPlan[]
-  planStages   TreatmentPlanStage[]
-  planGroups   TreatmentPlanGroup[]
-  planItems    TreatmentPlanItem[]
+  users            User[]
+  roles            Role[]
+  invites          Invite[]
+  auditLog         AuditLog[]
+  patients         Patient[]
+  visits           Visit[]
+  teeth            Tooth[]
+  bridges          Bridge[]
+  payments         Payment[]
+  allocations      PaymentAllocation[]
+  appointments     Appointment[]
+  services         Service[]
+  serviceTypes     ServiceType[]
+  images           PatientImage[]
+  expenses         Expense[]
+  labOrders        LabOrder[]
+  staffPayouts     StaffPayout[]
+  feedback         Feedback[]
+  timeBlocks       TimeBlock[]
+  plans            TreatmentPlan[]
+  planStages       TreatmentPlanStage[]
+  planGroups       TreatmentPlanGroup[]
+  planItems        TreatmentPlanItem[]
+  assistantDoctors AssistantDoctor[]
 
   @@index([status])
   @@map("clinics")
@@ -84,7 +93,7 @@ model Clinic {
 
 // ──────────────────────────  Rollar va ruxsatlar  ──────────────────────────
 
-/// Rol shablonlari. Klinika roʻyxatdan oʻtganda beshtasi ham nusxalanadi
+/// Rol shablonlari. Klinika roʻyxatdan oʻtganda oltitasi ham nusxalanadi
 /// va oʻsha klinikaga tegishli boʻlib qoladi (tz.md 6-boʻlim)
 enum RoleTemplate {
   egasi
@@ -92,6 +101,8 @@ enum RoleTemplate {
   qabulxona
   texnik
   kuzatuvchi
+  /// Shifokor yordamchisi (tz.md 20-boʻlim)
+  assistent
 }
 
 model Role {
@@ -151,8 +162,33 @@ model User {
   clinic Clinic? @relation(fields: [clinicId], references: [id], onDelete: Restrict)
   role   Role?   @relation(fields: [roleId], references: [id], onDelete: Restrict)
 
+  /// Assistent boʻlsa — kimga yordam beradi; shifokor boʻlsa — kim yordam beradi
+  assistantOf AssistantDoctor[] @relation("AssistantDoctorAssistant")
+  assistedBy  AssistantDoctor[] @relation("AssistantDoctorDoctor")
+
+  @@unique([clinicId, id])
   @@index([clinicId])
   @@map("users")
+}
+
+/// Assistent ↔ shifokor, koʻp-koʻpga (tz.md 20-boʻlim). Assistent shu
+/// shifokorlarning bemorlari, qabullari va navbatini koʻradi.
+/// FK `clinic_id` bilan birga: boshqa klinikaning xodimini bogʻlab
+/// boʻlmaydi — RLS dan tashqari bazaning oʻzi ham rad etadi
+model AssistantDoctor {
+  clinicId    String @map("clinic_id") @db.Uuid
+  assistantId String @map("assistant_id") @db.Uuid
+  doctorId    String @map("doctor_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  clinic    Clinic @relation(fields: [clinicId], references: [id], onDelete: Restrict)
+  assistant User   @relation("AssistantDoctorAssistant", fields: [clinicId, assistantId], references: [clinicId, id], onDelete: Cascade)
+  doctor    User   @relation("AssistantDoctorDoctor", fields: [clinicId, doctorId], references: [clinicId, id], onDelete: Cascade)
+
+  @@id([assistantId, doctorId])
+  @@index([clinicId, doctorId])
+  @@map("assistant_doctors")
 }
 
 // ────────────────────────────  Taklifnomalar  ────────────────────────────

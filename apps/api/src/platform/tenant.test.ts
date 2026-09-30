@@ -198,3 +198,61 @@ describe('koʻp ijarachilik qamrovi', () => {
     expect(Number(rows[0]?.n)).toBe(TENANT_MODELS.size)
   })
 })
+
+// Assistent ↔ shifokor (tz.md 20-boʻlim). RLS FK tekshiruviga taʼsir
+// qilmaydi: `doctor_id` ga boshqa klinikaning xodimi yozilsa, oddiy FK uni
+// oʻtkazib yuborardi. Shuning uchun FK `clinic_id` bilan birga qurilgan
+describe('assistant_doctors — boshqa klinikaning xodimi bogʻlanmaydi', () => {
+  const assistantA = randomUUID()
+  const doctorA = randomUUID()
+  const doctorB = randomUUID()
+
+  beforeAll(async () => {
+    for (const [id, clinicId, roleId] of [
+      [assistantA, A, roleAId],
+      [doctorA, A, roleAId],
+      [doctorB, B, roleBId],
+    ] as const) {
+      await ownerDb.user.create({
+        data: { id, clinicId, roleId, email: `${id}@example.com`, passwordHash: 'x' },
+      })
+    }
+  })
+
+  afterAll(async () => {
+    await ownerDb.assistantDoctor.deleteMany({ where: { clinicId: { in: [A, B] } } })
+    await ownerDb.user.deleteMany({ where: { id: { in: [assistantA, doctorA, doctorB] } } })
+  })
+
+  it('oʻz klinikasining shifokoriga bogʻlanadi', async () => {
+    await withClinic(app, A, (tx) =>
+      tx.assistantDoctor.create({
+        data: tenantScoped({ assistantId: assistantA, doctorId: doctorA }),
+      }),
+    )
+    const rows = await withClinic(app, A, (tx) => tx.assistantDoctor.findMany())
+    expect(rows).toHaveLength(1)
+  })
+
+  it('B ning shifokoriga — A sessiyasidan ham, bazaning oʻzida ham rad', async () => {
+    await expect(
+      withClinic(app, A, (tx) =>
+        tx.assistantDoctor.create({
+          data: tenantScoped({ assistantId: assistantA, doctorId: doctorB }),
+        }),
+      ),
+    ).rejects.toThrow()
+
+    // RLS dan ozod ulanish ham oʻtkaza olmaydi — himoya FK da
+    await expect(
+      ownerDb.assistantDoctor.create({
+        data: { clinicId: A, assistantId: assistantA, doctorId: doctorB },
+      }),
+    ).rejects.toThrow()
+  })
+
+  it('B sessiyasi A ning bogʻlanishini koʻrmaydi', async () => {
+    const rows = await withClinic(app, B, (tx) => tx.assistantDoctor.findMany())
+    expect(rows).toHaveLength(0)
+  })
+})

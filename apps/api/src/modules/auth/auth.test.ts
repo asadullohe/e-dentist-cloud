@@ -101,7 +101,7 @@ afterAll(async () => {
 })
 
 describe('roʻyxatdan oʻtish', () => {
-  it('klinika, beshta rol va egasi yaratiladi', async () => {
+  it('klinika, oltita rol va egasi yaratiladi', async () => {
     const r = await app.inject({
       remoteAddress: CLIENT_IP,
       method: 'POST',
@@ -120,9 +120,11 @@ describe('roʻyxatdan oʻtish', () => {
     const clinic = await ownerDb.clinic.findUnique({ where: { id: clinicId } })
     expect(clinic?.name).toBe(CLINIC)
     expect(clinic?.isTrial).toBe(true)
+    expect(clinic?.kind).toBe('clinic')
 
     const roles = await ownerDb.role.findMany({ where: { clinicId } })
-    expect(roles).toHaveLength(5)
+    expect(roles).toHaveLength(6)
+    expect(roles.map((r) => r.template)).toContain('assistent')
 
     const owner = await ownerDb.user.findFirst({ where: { clinicId }, include: { role: true } })
     expect(owner?.email).toBe(EMAIL)

@@ -5,8 +5,8 @@ import { PERMISSIONS, ROLE_TEMPLATES } from './types.js'
 const specs = ROLE_TEMPLATES.map((s) => ROLE_TEMPLATE_SPECS[s])
 
 describe('rol shablonlari', () => {
-  it('beshtasi ham mavjud', () => {
-    expect(specs).toHaveLength(5)
+  it('oltitasi ham mavjud', () => {
+    expect(specs).toHaveLength(6)
   })
 
   it('faqat mavjud ruxsatlarni ishlatadi — nomi notoʻgʻri yozilgani oʻtmaydi', () => {
@@ -64,5 +64,22 @@ describe('boshqa rollar chegarasi', () => {
       expect(t.permissions).not.toContain('lab.cost')
       expect(t.permissions).not.toContain('data.export')
     }
+  })
+})
+
+describe('assistent', () => {
+  const perms: readonly string[] = ROLE_TEMPLATE_SPECS.assistent.permissions
+
+  it('tashrif yozmaydi — tashrif shifokor ulushi va ish haqi', () => {
+    expect(perms).not.toContain('visits.write')
+  })
+
+  it('pul sukut yopiq — kerak boʻlsa egasi ochadi', () => {
+    expect(perms.some((r) => r.startsWith('payments.'))).toBe(false)
+  })
+
+  it('hamma bemorni koʻrmaydi — faqat biriktirilgan shifokorlariniki', () => {
+    expect(perms).not.toContain('patients.all')
+    expect(perms).not.toContain('schedule.all')
   })
 })

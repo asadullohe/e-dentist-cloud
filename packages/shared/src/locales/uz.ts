@@ -48,6 +48,7 @@ export const ROLE_LABELS = {
   qabulxona: 'Qabulxona',
   techRole: 'Texnik',
   kuzatuvchi: 'Kuzatuvchi',
+  assistent: 'Assistent',
 } as const
 
 // Kirish va roʻyxatdan oʻtish

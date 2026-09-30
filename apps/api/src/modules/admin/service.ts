@@ -196,6 +196,7 @@ export async function createClinic(
     const { ownerRoleId } = await clinics.createClinicWithRoles(tx, {
       clinicId,
       name: input.name,
+      kind: 'clinic',
       phone: input.phone ?? null,
       expiresAt,
     })

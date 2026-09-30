@@ -1,4 +1,4 @@
-import type { Permission } from '@e-dentist/shared'
+import type { ClinicKind, Permission } from '@e-dentist/shared'
 
 export interface SessionUser {
   id: string
@@ -9,6 +9,8 @@ export interface SessionUser {
 export interface SessionClinic {
   id: string
   name: string
+  /// Klinika yoki individual shifokor (tz.md 20-boʻlim)
+  kind: ClinicKind
   isTrial: boolean
   /// ISO sana: 2026-09-21T00:00:00.000Z
   expiresAt: string

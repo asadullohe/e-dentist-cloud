@@ -87,7 +87,7 @@ function accept(token: string, fullName = 'Yangi Egasi', password = OWNER_PASSWO
 }
 
 describe('panelidan klinika ochish', () => {
-  it('klinika, beshta rol va taklifnoma yaratadi', async () => {
+  it('klinika, oltita rol va taklifnoma yaratadi', async () => {
     const email = `egasi-${Date.now()}@example.com`
     const { res, card } = await createClinic(email)
 
@@ -97,7 +97,7 @@ describe('panelidan klinika ochish', () => {
     expect(card?.staffCount).toBe(0)
 
     const roles = await h.ownerDb.role.count({ where: { clinicId: card?.id } })
-    expect(roles).toBe(5)
+    expect(roles).toBe(6)
 
     const mail = [...h.sentMail].reverse().find((m) => m.to === email)
     expect(mail?.body).toContain('/taklif?token=')
