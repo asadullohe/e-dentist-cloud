@@ -838,7 +838,10 @@ describe('ochiq sahifa /r/:kod', () => {
     const plan = await sentPlan()
     // Ochiq sahifa sessiyaga qaramaydi — kod qaysi klinikaniki boʻlsa,
     // javob oʻshaniki. Kod boshqa klinikada yoʻq boʻlsa — 404
-    const alien = await open('GET', `/api/r/${plan.publicCode.slice(0, 7)}z`)
+    // Oxirgi belgi albatta boshqa: kod oʻzi «z» bilan tugasa, «…z» asl
+    // kodning oʻzi boʻlib qolardi va test tasodifan yiqilardi
+    const last = plan.publicCode.endsWith('z') ? 'y' : 'z'
+    const alien = await open('GET', `/api/r/${plan.publicCode.slice(0, 7)}${last}`)
     expect(alien.statusCode).toBe(404)
   })
 })
